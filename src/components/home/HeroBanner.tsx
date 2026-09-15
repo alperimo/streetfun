@@ -34,7 +34,7 @@ export function HeroBanner({ onOpenLaunch }: HeroBannerProps) {
 
         {/* Right: Compact Metrics Grid (balances horizontal space without empty voids) */}
         <div className="grid grid-cols-3 gap-3 w-full lg:w-auto shrink-0">
-          <div className="rounded-xl border border-border bg-card-subtle px-4 py-3 min-w-[120px] shadow-xs">
+          <div className="rounded-xl border border-border-active/50 bg-card-hover/40 px-4 py-3 min-w-[120px] shadow-xs">
             <div className="text-[10px] text-muted uppercase font-semibold tracking-wider">
               24h Volume
             </div>
@@ -42,7 +42,7 @@ export function HeroBanner({ onOpenLaunch }: HeroBannerProps) {
               $4.82M
             </div>
           </div>
-          <div className="rounded-xl border border-border bg-card-subtle px-4 py-3 min-w-[120px] shadow-xs">
+          <div className="rounded-xl border border-border-active/50 bg-card-hover/40 px-4 py-3 min-w-[120px] shadow-xs">
             <div className="text-[10px] text-muted uppercase font-semibold tracking-wider">
               Equity TVL
             </div>
@@ -50,7 +50,7 @@ export function HeroBanner({ onOpenLaunch }: HeroBannerProps) {
               $40.7M
             </div>
           </div>
-          <div className="rounded-xl border border-border bg-card-subtle px-4 py-3 min-w-[120px] shadow-xs">
+          <div className="rounded-xl border border-border-active/50 bg-card-hover/40 px-4 py-3 min-w-[120px] shadow-xs">
             <div className="text-[10px] text-muted uppercase font-semibold tracking-wider">
               Graduated
             </div>

@@ -84,13 +84,28 @@ export default function TokenDetailPage({ params }: PageProps) {
 
                 <div className="mt-1 flex items-center gap-2 text-xs">
                   <span className="text-muted">Backed with</span>
-                  <span className="font-semibold text-foreground">
-                    {token.targetEquity.name} ({token.targetEquity.symbol})
+                  <div className="relative h-4 w-4 overflow-hidden rounded-full border border-border flex-shrink-0">
+                    <Image
+                      src={token.targetEquity.logoUrl}
+                      alt={token.targetEquity.name}
+                      fill
+                      className="object-cover"
+                      sizes="16px"
+                    />
+                  </div>
+                  <span className="font-bold text-foreground">
+                    {token.targetEquity.symbol.replace(/^\$/, "")}
+                  </span>
+                  <span className="text-muted text-[11px] hidden sm:inline">
+                    ({token.targetEquity.name})
+                  </span>
+                  <span className="rounded bg-brand-cyan/10 text-brand-cyan border border-brand-cyan/25 px-1.5 py-0.2 text-[9px] font-mono font-semibold">
+                    xStocks
                   </span>
 
                   <button
                     onClick={handleCopyCa}
-                    className="flex items-center gap-1 rounded border border-border bg-card-subtle px-2 py-0.5 text-muted hover:text-foreground transition-colors font-mono text-[10px]"
+                    className="flex items-center gap-1 rounded border border-border-active/40 bg-card-hover/40 px-2 py-0.5 text-muted hover:text-foreground transition-colors font-mono text-[10px]"
                   >
                     {copied ? (
                       <Check className="h-3 w-3 text-brand-emerald" />
@@ -140,7 +155,7 @@ export default function TokenDetailPage({ params }: PageProps) {
                       <span className="text-xs font-normal text-muted">/ $60K</span>
                     </div>
                     <div className="flex items-center gap-1.5 mt-0.5">
-                      <span className="rounded bg-card-subtle border border-border px-1.5 py-0.5 text-[10px] font-mono font-medium text-slate-300">
+                      <span className="rounded-md bg-emerald-500/10 border border-emerald-500/20 px-1.5 py-0.5 text-[10px] font-mono font-bold text-emerald-400">
                         {(1 + (token.bondingCurve.progressPct / 100) * 1.8).toFixed(1)}x from genesis
                       </span>
                     </div>
@@ -172,7 +187,7 @@ export default function TokenDetailPage({ params }: PageProps) {
                 </span>
               </div>
 
-              <div className="h-1.5 w-full overflow-hidden rounded-full bg-card-subtle border border-border">
+              <div className="h-1.5 w-full overflow-hidden rounded-full bg-card-hover/40 border border-border">
                 <div
                   className="h-full rounded-full bg-brand-cyan transition-all duration-300"
                   style={{ width: `${Math.min(token.bondingCurve.progressPct, 100)}%` }}

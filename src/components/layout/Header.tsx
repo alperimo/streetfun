@@ -6,6 +6,8 @@ import { usePathname } from "next/navigation";
 import dynamic from "next/dynamic";
 import { Search, Plus, TrendingUp, Send, Twitter } from "lucide-react";
 
+import { StreetFunLogo } from "@/components/common/StreetFunLogo";
+
 const WalletMultiButton = dynamic(
   async () =>
     (await import("@solana/wallet-adapter-react-ui")).WalletMultiButton,
@@ -26,11 +28,9 @@ export function Header({ onOpenSearch, onOpenLaunch }: HeaderProps) {
         {/* Left: Brand + Nav */}
         <div className="flex items-center gap-8">
           <Link href="/" className="flex items-center gap-2.5">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-cyan text-slate-950 font-bold">
-              <TrendingUp className="h-4 w-4 stroke-[2.5]" />
-            </div>
+            <StreetFunLogo size={28} className="h-7 w-7 flex-shrink-0" />
             <span className="text-lg font-black tracking-tight text-foreground">
-              Street<span className="text-brand-cyan">Fun</span>
+              StreetFun
             </span>
           </Link>
 

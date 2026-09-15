@@ -61,7 +61,7 @@ export function TokenCard({ token }: TokenCardProps) {
           <button
             onClick={handleCopyCa}
             title="Copy Contract Address"
-            className="flex items-center gap-1 rounded-md border border-border bg-card-subtle px-2 py-1 text-[11px] text-muted hover:border-border-active hover:text-foreground transition-colors"
+            className="flex items-center gap-1 rounded-lg border border-border-active/40 bg-card-hover/40 px-2 py-1 text-[11px] text-muted hover:border-border-active hover:text-foreground hover:bg-card-hover transition-colors"
           >
             {copied ? (
               <Check className="h-3 w-3 text-brand-emerald" />
@@ -72,12 +72,24 @@ export function TokenCard({ token }: TokenCardProps) {
           </button>
         </div>
 
-        {/* Backed by badge */}
+        {/* Backed by badge: Stock Logo + Plain Ticker (no $ sign, no bulky background) + xStocks tag */}
         <div className="mt-3 flex items-center justify-between gap-1.5 text-xs">
           <div className="flex items-center gap-1.5">
             <span className="text-muted">Backed with</span>
-            <span className="inline-flex items-center gap-1 rounded-md bg-card-subtle px-2 py-0.5 text-xs font-medium text-slate-300 border border-border">
-              {token.targetEquity.symbol}
+            <div className="relative h-4 w-4 overflow-hidden rounded-full border border-border flex-shrink-0">
+              <Image
+                src={token.targetEquity.logoUrl}
+                alt={token.targetEquity.name}
+                fill
+                className="object-cover"
+                sizes="16px"
+              />
+            </div>
+            <span className="font-bold text-foreground">
+              {token.targetEquity.symbol.replace(/^\$/, "")}
+            </span>
+            <span className="rounded bg-brand-cyan/10 text-brand-cyan border border-brand-cyan/25 px-1.5 py-0.2 text-[9px] font-mono font-semibold">
+              xStocks
             </span>
           </div>
           <span className="font-mono text-xs font-bold text-muted">
@@ -86,7 +98,7 @@ export function TokenCard({ token }: TokenCardProps) {
         </div>
 
         {/* Progress Bar moved directly under the stock badge */}
-        <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-card-subtle border border-border">
+        <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-card-hover/40 border border-border">
           <div
             className="h-full rounded-full bg-brand-cyan transition-all duration-300"
             style={{ width: `${Math.min(token.bondingCurve.progressPct, 100)}%` }}
@@ -114,7 +126,7 @@ export function TokenCard({ token }: TokenCardProps) {
                   ${(token.bondingCurve.realQuoteReservesUsd / 1_000).toFixed(1)}K{" "}
                   <span className="text-xs font-normal text-muted">/ $60K USDC</span>
                 </div>
-                <span className="rounded bg-card-subtle border border-border px-2 py-0.5 font-mono text-[11px] font-medium text-slate-300">
+                <span className="rounded-md bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 font-mono text-[11px] font-bold text-emerald-400">
                   {(1 + (token.bondingCurve.progressPct / 100) * 1.8).toFixed(1)}x from genesis
                 </span>
               </div>
