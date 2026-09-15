@@ -35,7 +35,7 @@ export function FilterBar({
     <div className="mt-8 flex flex-col gap-4">
       {/* Search Bar + Sort Options Row */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-        {/* Search Input Box (Recessed input bed) */}
+        {/* Search Input Box */}
         <div className="relative w-full sm:max-w-md">
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted" />
           <input
@@ -43,13 +43,13 @@ export function FilterBar({
             placeholder="Search name, ticker, or contract address"
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
-            className="w-full rounded-xl border border-border/80 bg-card-subtle pl-10 pr-4 py-2.5 text-sm text-foreground placeholder-muted focus:border-border-active focus:bg-card focus:outline-none focus:ring-1 focus:ring-border-active/40 transition-all shadow-xs"
+            className="w-full rounded-xl border border-border bg-card pl-10 pr-4 py-2.5 text-sm text-foreground placeholder-muted focus:border-border-active focus:outline-none focus:ring-1 focus:ring-border-active/40 transition-all shadow-xs"
           />
         </div>
 
         {/* Sort Segmented Control: StonkFun style (only active option is a pill, others are text) */}
-        <div className="flex items-center gap-1 self-end sm:self-auto text-xs">
-          <span className="text-muted mr-1.5 font-medium">Sort:</span>
+        <div className="flex items-center gap-3 self-end sm:self-auto text-xs">
+          <span className="text-muted mr-1 font-medium">Sort:</span>
           {(
             [
               { id: "mcap", label: "Market cap" },
@@ -63,8 +63,8 @@ export function FilterBar({
               onClick={() => onSortChange(item.id)}
               className={`transition-all ${
                 sortBy === item.id
-                  ? "rounded-lg bg-card-hover border border-border-active px-3 py-1.5 font-semibold text-foreground shadow-xs"
-                  : "px-2.5 py-1.5 text-muted hover:text-foreground font-medium"
+                  ? "rounded-xl bg-card border border-border-active px-3 py-1.5 font-semibold text-foreground shadow-xs"
+                  : "px-1 text-muted hover:text-foreground font-medium"
               }`}
             >
               {item.label}

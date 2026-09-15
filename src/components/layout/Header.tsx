@@ -60,40 +60,41 @@ export function Header({ onOpenSearch, onOpenLaunch }: HeaderProps) {
         </div>
 
         {/* Right: Search, Socials, Launch CTA, Wallet */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2.5">
           <button
             onClick={onOpenSearch}
-            className="flex items-center gap-2.5 rounded-lg border border-border bg-card px-3.5 py-1.5 text-xs text-muted hover:border-border-active hover:text-foreground transition-colors"
+            className="flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2 text-xs text-muted hover:border-border-active hover:text-foreground transition-all shadow-xs"
           >
             <Search className="h-3.5 w-3.5 text-muted" />
-            <span className="hidden sm:inline">Search token, ticker, address...</span>
-            <kbd className="rounded border border-border bg-card-subtle px-1.5 py-0.5 text-[10px] text-muted font-mono">
-              Ctrl K
+            <span className="text-xs">Search</span>
+            <kbd className="rounded border border-border bg-card-hover/60 px-1.5 py-0.5 text-[10px] text-muted font-mono ml-1">
+              ⌘ K
             </kbd>
           </button>
 
-          <div className="hidden lg:flex items-center gap-1 border-x border-border px-2">
-            <a
-              href="https://t.me"
-              target="_blank"
-              rel="noreferrer"
-              className="p-1.5 text-muted hover:text-foreground rounded-md hover:bg-card-hover transition-colors"
-            >
-              <Send className="h-4 w-4" />
-            </a>
-            <a
-              href="https://x.com"
-              target="_blank"
-              rel="noreferrer"
-              className="p-1.5 text-muted hover:text-foreground rounded-md hover:bg-card-hover transition-colors"
-            >
-              <Twitter className="h-4 w-4" />
-            </a>
-          </div>
+          <a
+            href="https://t.me"
+            target="_blank"
+            rel="noreferrer"
+            className="flex h-9 w-9 items-center justify-center rounded-xl border border-border bg-card text-muted hover:border-border-active hover:text-foreground hover:bg-card-hover transition-all shadow-xs"
+            title="Telegram"
+          >
+            <Send className="h-4 w-4" />
+          </a>
+
+          <a
+            href="https://x.com"
+            target="_blank"
+            rel="noreferrer"
+            className="flex h-9 w-9 items-center justify-center rounded-xl border border-border bg-card text-muted hover:border-border-active hover:text-foreground hover:bg-card-hover transition-all shadow-xs"
+            title="Twitter / X"
+          >
+            <Twitter className="h-4 w-4" />
+          </a>
 
           <button
             onClick={onOpenLaunch}
-            className="flex items-center gap-1.5 rounded-lg bg-brand-cyan px-3.5 py-2 text-xs font-bold text-slate-950 hover:opacity-90 transition-opacity shadow-sm"
+            className="flex items-center gap-1.5 rounded-xl bg-brand-cyan px-3.5 py-2 text-xs font-bold text-slate-950 hover:opacity-90 transition-opacity shadow-sm"
           >
             <Plus className="h-4 w-4 stroke-[2.5]" />
             <span>Launch token</span>
