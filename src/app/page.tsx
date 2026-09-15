@@ -20,11 +20,9 @@ export default function ExplorePage() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isLaunchOpen, setIsLaunchOpen] = useState(false);
 
-  // Filter & Sort Logic
   const filteredTokens = useMemo(() => {
     return tokens
       .filter((token) => {
-        // Tag filter
         if (selectedTag === "graduated" && !token.bondingCurve.isGraduated) {
           return false;
         }
@@ -40,7 +38,6 @@ export default function ExplorePage() {
           return false;
         }
 
-        // Search query filter
         if (searchQuery.trim()) {
           const q = searchQuery.toLowerCase();
           return (
@@ -59,7 +56,7 @@ export default function ExplorePage() {
         if (sortBy === "volume") return b.volume24hUsd - a.volume24hUsd;
         if (sortBy === "progress")
           return b.bondingCurve.progressPct - a.bondingCurve.progressPct;
-        return 0; // Newest preserves default array order
+        return 0;
       });
   }, [tokens, selectedTag, searchQuery, sortBy]);
 
@@ -74,11 +71,9 @@ export default function ExplorePage() {
         onOpenLaunch={() => setIsLaunchOpen(true)}
       />
 
-      <main className="mx-auto flex-1 w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
-        {/* Hero Section */}
+      <main className="mx-auto flex-1 w-full max-w-[1536px] px-6 lg:px-10 py-6">
         <HeroBanner onOpenLaunch={() => setIsLaunchOpen(true)} />
 
-        {/* Filters & Search Row */}
         <FilterBar
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
@@ -88,41 +83,35 @@ export default function ExplorePage() {
           onSortChange={setSortBy}
         />
 
-        {/* Section Heading */}
         <div className="mt-8 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <h2 className="text-xl font-bold text-white tracking-tight">
-              All Tokens
+              All tokens
             </h2>
-            <span className="rounded-full bg-[#101b25] px-2.5 py-0.5 text-xs font-mono text-muted">
-              {filteredTokens.length} active
+            <span className="rounded bg-[#101b25] px-2 py-0.5 text-xs font-mono text-muted">
+              {filteredTokens.length}
             </span>
           </div>
-          <span className="text-xs text-muted">
-            Continuous bonding curve liquidity
-          </span>
         </div>
 
-        {/* Token Grid */}
-        <div className="mt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+        {/* 3 Columns Grid matching StonkFun */}
+        <div className="mt-4 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
           {filteredTokens.map((token) => (
             <TokenCard key={token.mint} token={token} />
           ))}
         </div>
 
         {filteredTokens.length === 0 && (
-          <div className="mt-12 rounded-2xl border border-border bg-[#0b1218] p-12 text-center">
-            <p className="text-sm text-muted">
-              No tokens found matching your filters.
-            </p>
+          <div className="mt-12 rounded-xl border border-border bg-[#0b1218] p-12 text-center">
+            <p className="text-sm text-muted">No tokens found.</p>
             <button
               onClick={() => {
                 setSearchQuery("");
                 setSelectedTag("all");
               }}
-              className="mt-3 text-xs font-bold text-brand-cyan hover:underline"
+              className="mt-2 text-xs font-bold text-brand-cyan hover:underline"
             >
-              Clear filters
+              Reset filters
             </button>
           </div>
         )}
@@ -130,7 +119,6 @@ export default function ExplorePage() {
 
       <Footer />
 
-      {/* Global Modals */}
       <SearchModal
         isOpen={isSearchOpen}
         onClose={() => setIsSearchOpen(false)}
