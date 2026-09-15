@@ -35,7 +35,7 @@ export function FilterBar({
     <div className="mt-8 flex flex-col gap-4">
       {/* Search Bar + Sort Options Row */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-        {/* Search Input Box */}
+        {/* Search Input Box (Recessed input bed) */}
         <div className="relative w-full sm:max-w-md">
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted" />
           <input
@@ -43,67 +43,47 @@ export function FilterBar({
             placeholder="Search name, ticker, or contract address"
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
-            className="w-full rounded-xl border border-border bg-card pl-10 pr-4 py-2.5 text-sm text-foreground placeholder-muted focus:border-border-active focus:outline-none focus:ring-1 focus:ring-border-active/40 transition-all shadow-xs"
+            className="w-full rounded-xl border border-border/80 bg-card-subtle pl-10 pr-4 py-2.5 text-sm text-foreground placeholder-muted focus:border-border-active focus:bg-card focus:outline-none focus:ring-1 focus:ring-border-active/40 transition-all shadow-xs"
           />
         </div>
 
-        {/* Sort Pills */}
-        <div className="flex items-center gap-1.5 self-end sm:self-auto text-xs">
-          <span className="text-muted mr-1">Sort:</span>
-          <button
-            onClick={() => onSortChange("mcap")}
-            className={`px-3 py-1.5 rounded-lg font-medium transition-all ${
-              sortBy === "mcap"
-                ? "bg-card-hover text-foreground font-semibold border border-border-active shadow-xs"
-                : "text-muted hover:text-foreground hover:bg-card-hover"
-            }`}
-          >
-            Market cap
-          </button>
-          <button
-            onClick={() => onSortChange("newest")}
-            className={`px-3 py-1.5 rounded-lg font-medium transition-all ${
-              sortBy === "newest"
-                ? "bg-card-hover text-foreground font-semibold border border-border-active shadow-xs"
-                : "text-muted hover:text-foreground hover:bg-card-hover"
-            }`}
-          >
-            Newest
-          </button>
-          <button
-            onClick={() => onSortChange("volume")}
-            className={`px-3 py-1.5 rounded-lg font-medium transition-all ${
-              sortBy === "volume"
-                ? "bg-card-hover text-foreground font-semibold border border-border-active shadow-xs"
-                : "text-muted hover:text-foreground hover:bg-card-hover"
-            }`}
-          >
-            24h volume
-          </button>
-          <button
-            onClick={() => onSortChange("progress")}
-            className={`px-3 py-1.5 rounded-lg font-medium transition-all ${
-              sortBy === "progress"
-                ? "bg-card-hover text-foreground font-semibold border border-border-active shadow-xs"
-                : "text-muted hover:text-foreground hover:bg-card-hover"
-            }`}
-          >
-            % Graduated
-          </button>
+        {/* Sort Segmented Control: StonkFun style (only active option is a pill, others are text) */}
+        <div className="flex items-center gap-1 self-end sm:self-auto text-xs">
+          <span className="text-muted mr-1.5 font-medium">Sort:</span>
+          {(
+            [
+              { id: "mcap", label: "Market cap" },
+              { id: "newest", label: "Newest" },
+              { id: "volume", label: "24h volume" },
+              { id: "progress", label: "% Graduated" },
+            ] as const
+          ).map((item) => (
+            <button
+              key={item.id}
+              onClick={() => onSortChange(item.id)}
+              className={`transition-all ${
+                sortBy === item.id
+                  ? "rounded-lg bg-card-hover border border-border-active px-3 py-1.5 font-semibold text-foreground shadow-xs"
+                  : "px-2.5 py-1.5 text-muted hover:text-foreground font-medium"
+              }`}
+            >
+              {item.label}
+            </button>
+          ))}
         </div>
       </div>
 
-      {/* Target Equity Filter Tags */}
+      {/* Target Equity Filter Tags: Inactive are transparent ghost pills, active is distinct with seafoam tint */}
       <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs">
-        <span className="text-muted whitespace-nowrap mr-1">Backed with:</span>
+        <span className="text-muted whitespace-nowrap mr-1 font-medium">Backed with:</span>
         {TAGS.map((tag) => (
           <button
             key={tag.id}
             onClick={() => onTagChange(tag.id)}
-            className={`whitespace-nowrap rounded-lg px-3 py-1.5 font-medium transition-all ${
+            className={`whitespace-nowrap rounded-lg px-3 py-1.5 transition-all ${
               selectedTag === tag.id
-                ? "bg-card-hover text-foreground border border-border-active shadow-xs font-semibold"
-                : "border border-border bg-card text-muted hover:border-border-active hover:text-foreground"
+                ? "bg-brand-cyan/15 text-white border border-brand-cyan/40 font-bold shadow-xs"
+                : "border border-border/60 bg-transparent text-muted hover:border-border-active hover:text-foreground font-medium"
             }`}
           >
             {tag.label}

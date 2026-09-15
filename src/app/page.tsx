@@ -89,15 +89,10 @@ export default function ExplorePage() {
           onSortChange={setSortBy}
         />
 
-        <div className="mt-8 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <h2 className="text-xl font-bold text-foreground tracking-tight">
-              All tokens
-            </h2>
-            <span className="rounded bg-card-subtle border border-border px-2 py-0.5 text-xs font-mono text-muted">
-              {filteredTokens.length}
-            </span>
-          </div>
+        <div className="mt-8">
+          <h2 className="text-xl font-bold text-foreground tracking-tight">
+            All tokens
+          </h2>
         </div>
 
         {/* 3 Columns Grid matching StonkFun */}
