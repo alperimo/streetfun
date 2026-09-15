@@ -44,7 +44,7 @@ export default function TokenDetailPage({ params }: PageProps) {
         onOpenLaunch={() => setIsLaunchOpen(true)}
       />
 
-      <main className="mx-auto flex-1 w-full max-w-[1536px] px-6 lg:px-10 py-6">
+      <main className="mx-auto flex-1 w-full px-6 md:px-12 xl:px-[164px] py-6">
         <div className="mb-4">
           <Link
             href="/"
