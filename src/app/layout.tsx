@@ -4,8 +4,7 @@ import { WalletProvider } from "@/components/layout/WalletProvider";
 
 export const metadata: Metadata = {
   title: "Streetfun · Memecoins With A Wall Street Floor",
-  description:
-    "Trade viral momentum. Graduate to real tokenized stocks. Never go to zero.",
+  description: "Trade viral momentum. Graduate to real tokenized equities.",
   icons: {
     icon: "/favicon.ico",
   },

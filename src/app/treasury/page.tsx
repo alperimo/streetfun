@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { ArrowUpRight, Flame } from "lucide-react";
+import { ArrowUpRight, Wallet } from "lucide-react";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { SearchModal } from "@/components/modals/SearchModal";
@@ -156,8 +156,8 @@ export default function TreasuryPage() {
                   className="py-3 flex items-center justify-between hover:bg-[#0f1922] px-2 rounded-lg transition-colors"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#111e29] text-brand-rose border border-border">
-                      <Flame className="h-4 w-4" />
+                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#0e1720] text-muted border border-border">
+                      <Wallet className="h-4 w-4 text-brand-cyan" />
                     </div>
                     <div>
                       <div className="font-bold text-white text-xs">

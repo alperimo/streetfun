@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo } from "react";
 import { useWallet } from "@solana/wallet-adapter-react";
-import { ArrowDownUp, Settings, ShieldCheck, AlertCircle, Check } from "lucide-react";
+import { Settings, AlertCircle, Check } from "lucide-react";
 import { TokenMetadata } from "@/lib/types";
 import { simulateBuyTokensOut, simulateSellQuoteOut } from "@/sdk/math";
 
@@ -173,23 +173,6 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
 
       {tradeMode === "redeem" ? (
         <div className="mt-4 space-y-4">
-          {/* Status Badge */}
-          <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-xs">
-            <div className="flex items-center gap-1.5 text-amber-400 font-bold">
-              <ShieldCheck className="h-4 w-4" />
-              <span>
-                {isGraduated
-                  ? "Equity Vault Active (Redemption Live)"
-                  : "Floor Simulator (Unlocks at $60K Graduation)"}
-              </span>
-            </div>
-            <p className="mt-1 text-[11px] text-muted">
-              {isGraduated
-                ? `Burn $${token.symbol} tokens to redeem your pro-rata share of real ${token.targetEquity.name} stock or exit instantly in USDC.`
-                : `Preview your guaranteed stock floor claim. When curve reaches $60,000, $30,000 buys real ${token.targetEquity.symbol} stock into the treasury vault.`}
-            </p>
-          </div>
-
           {/* Dual Action Toggle */}
           <div className="flex items-center gap-1 rounded-lg bg-[#070c10] p-1 border border-border">
             <button
@@ -438,12 +421,6 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
           </button>
         </>
       )}
-
-      {/* Backing Badge Note */}
-      <div className="mt-3 flex items-center justify-center gap-1.5 text-[10px] text-muted">
-        <ShieldCheck className="h-3 w-3 text-brand-cyan" />
-        <span>Dual floor backed by {token.targetEquity.name}</span>
-      </div>
     </div>
   );
 }

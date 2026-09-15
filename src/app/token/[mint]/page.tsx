@@ -3,12 +3,11 @@
 import React, { useState, use } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowLeft, Copy, Check, ShieldCheck } from "lucide-react";
+import { ArrowLeft, Copy, Check } from "lucide-react";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { TradingViewChart } from "@/components/tokens/TradingViewChart";
 import { TradeTerminal } from "@/components/tokens/TradeTerminal";
-import { BurnRedeemModule } from "@/components/tokens/BurnRedeemModule";
 import { SearchModal } from "@/components/modals/SearchModal";
 import { LaunchModal } from "@/components/modals/LaunchModal";
 import { INITIAL_TOKENS } from "@/lib/mockData";
@@ -162,96 +161,85 @@ export default function TokenDetailPage({ params }: PageProps) {
               floorPrice={0.0031}
             />
 
-            {/* Progress Bar Card */}
-            <div className="rounded-2xl border border-border bg-[#0b1218] p-5">
+            {/* Simplified Single-Line Progress Bar */}
+            <div className="rounded-xl border border-border bg-[#0b1218] p-4">
               <div className="flex items-center justify-between text-xs mb-2">
-                <span className="text-muted font-medium">
+                <span className="text-muted font-medium">Graduation Progress</span>
+                <span className="font-mono font-bold text-white">
                   {token.bondingCurve.isGraduated
-                    ? "Bonding Curve Graduated"
-                    : "Progress to Equity Graduation"}
-                </span>
-                <span className="font-mono font-bold text-brand-cyan text-sm">
-                  {token.bondingCurve.progressPct}%
+                    ? "100% (Graduated to AMM)"
+                    : `${token.bondingCurve.progressPct}% ($${(token.bondingCurve.realQuoteReservesUsd / 1_000).toFixed(1)}K / $60K USDC)`}
                 </span>
               </div>
 
-              <div className="h-2 w-full overflow-hidden rounded-full bg-[#080d12]">
+              <div className="h-1.5 w-full overflow-hidden rounded-full bg-[#080d12]">
                 <div
                   className="h-full rounded-full bg-gradient-to-r from-blue-500 to-brand-cyan transition-all duration-300"
                   style={{ width: `${Math.min(token.bondingCurve.progressPct, 100)}%` }}
                 />
               </div>
-
-              <div className="mt-3 flex items-center justify-between text-xs font-mono text-muted">
-                <span>
-                  Reserves: ${token.bondingCurve.realQuoteReservesUsd.toLocaleString()} / $60,000 USDC
-                </span>
-                <span className="text-brand-cyan font-semibold">
-                  {token.bondingCurve.isGraduated
-                    ? "100% Locked in AMM & Treasury"
-                    : "50% buys stock at $60K"}
-                </span>
-              </div>
             </div>
 
-            {/* Active Guaranteed Stock Floor (NAV Engine) */}
-            <div className="rounded-2xl border border-amber-500/30 bg-gradient-to-br from-[#0e161c] via-[#091016] to-[#0c141a] p-5 shadow-lg">
-              <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-border/70">
+            {/* Live Trades Table */}
+            <div className="rounded-xl border border-border bg-[#0b1218] p-4 shadow-lg">
+              <div className="flex items-center justify-between border-b border-border/80 pb-3">
                 <div className="flex items-center gap-2">
-                  <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-500/20 text-amber-400">
-                    <ShieldCheck className="h-4 w-4" />
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-black text-white tracking-tight">
-                      Guaranteed Stock Floor (NAV Engine)
-                    </h3>
-                    <p className="text-[11px] text-amber-400/90 font-mono">
-                      $0.0031 Floor Price · Dual Redemption Guarantee
-                    </p>
-                  </div>
+                  <h3 className="text-xs font-bold text-white tracking-tight uppercase">
+                    Live Trades
+                  </h3>
+                  <span className="flex h-1.5 w-1.5 relative">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-emerald opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-brand-emerald"></span>
+                  </span>
                 </div>
-
-                <span className="rounded-md bg-amber-500/10 border border-amber-500/25 px-2 py-0.5 text-xs font-mono font-bold text-amber-300">
-                  Backed with {token.targetEquity.name}
-                </span>
+                <span className="text-[10px] font-mono text-muted">Solana Mainnet</span>
               </div>
 
-              <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
-                <div className="rounded-xl border border-border/80 bg-[#060a0e]/60 p-3">
-                  <div className="text-[10px] text-muted uppercase font-semibold">
-                    Vault Allocation
-                  </div>
-                  <div className="mt-1 font-mono text-sm font-bold text-white">
-                    $30,000 USDC
-                  </div>
-                  <div className="mt-0.5 text-[10px] text-muted">
-                    Auto-buys {token.targetEquity.symbol} stock at graduation
-                  </div>
-                </div>
-
-                <div className="rounded-xl border border-border/80 bg-[#060a0e]/60 p-3">
-                  <div className="text-[10px] text-muted uppercase font-semibold">
-                    Downside Protection
-                  </div>
-                  <div className="mt-1 font-mono text-sm font-bold text-amber-400">
-                    Never Goes to Zero
-                  </div>
-                  <div className="mt-0.5 text-[10px] text-muted">
-                    Underpinned by verified equity in protocol vault
-                  </div>
-                </div>
-
-                <div className="rounded-xl border border-border/80 bg-[#060a0e]/60 p-3">
-                  <div className="text-[10px] text-muted uppercase font-semibold">
-                    Exit Options
-                  </div>
-                  <div className="mt-1 font-mono text-sm font-bold text-brand-emerald">
-                    Stock or 1-Click USDC
-                  </div>
-                  <div className="mt-0.5 text-[10px] text-muted">
-                    Burn meme tokens to redeem pro-rata stock
-                  </div>
-                </div>
+              <div className="mt-2.5 overflow-x-auto">
+                <table className="w-full text-left text-xs font-mono">
+                  <thead>
+                    <tr className="text-muted border-b border-border/40 text-[10px]">
+                      <th className="pb-2 font-medium">Type</th>
+                      <th className="pb-2 font-medium">Price</th>
+                      <th className="pb-2 font-medium">Tokens</th>
+                      <th className="pb-2 font-medium">Value (USDC)</th>
+                      <th className="pb-2 font-medium text-right">Time</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border/20">
+                    {[
+                      { type: "BUY", price: token.priceUsd, tokens: 28450, usdc: 28450 * token.priceUsd, time: "12s ago", isBuy: true },
+                      { type: "BUY", price: token.priceUsd * 0.995, tokens: 65120, usdc: 65120 * token.priceUsd * 0.995, time: "48s ago", isBuy: true },
+                      { type: "REDEEM", price: 0.0031, tokens: 100000, usdc: 310.00, time: "2m ago", isRedeem: true },
+                      { type: "SELL", price: token.priceUsd * 0.98, tokens: 14200, usdc: 14200 * token.priceUsd * 0.98, time: "4m ago", isBuy: false },
+                      { type: "BUY", price: token.priceUsd * 0.97, tokens: 82000, usdc: 82000 * token.priceUsd * 0.97, time: "7m ago", isBuy: true },
+                    ].map((trade, idx) => (
+                      <tr key={idx} className="hover:bg-[#0e1720] transition-colors">
+                        <td className="py-2">
+                          <span
+                            className={`rounded px-1.5 py-0.5 text-[9px] font-bold ${
+                              trade.isRedeem
+                                ? "bg-amber-400/15 text-amber-400 border border-amber-400/30"
+                                : trade.isBuy
+                                ? "bg-brand-emerald/15 text-brand-emerald"
+                                : "bg-brand-rose/15 text-brand-rose"
+                            }`}
+                          >
+                            {trade.type}
+                          </span>
+                        </td>
+                        <td className="py-2 text-white">${trade.price.toFixed(4)}</td>
+                        <td className="py-2 text-white">
+                          {trade.tokens.toLocaleString()} {token.symbol}
+                        </td>
+                        <td className="py-2 font-bold text-white">
+                          ${trade.usdc.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </td>
+                        <td className="py-2 text-right text-muted">{trade.time}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             </div>
           </div>

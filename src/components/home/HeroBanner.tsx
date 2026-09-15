@@ -19,7 +19,7 @@ export function HeroBanner({ onOpenLaunch }: HeroBannerProps) {
           </h1>
 
           <p className="text-xs sm:text-sm text-muted">
-            Trade viral momentum. Graduate to real tokenized stocks. Never go to zero.
+            Trade viral momentum. Graduate to real tokenized equities.
           </p>
 
           <div className="pt-1">
