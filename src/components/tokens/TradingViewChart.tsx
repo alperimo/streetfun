@@ -1,16 +1,18 @@
 "use client";
 
 import React, { useEffect, useRef } from "react";
-import { createChart, ColorType, IChartApi } from "lightweight-charts";
+import { createChart, ColorType, IChartApi, LineStyle } from "lightweight-charts";
 
 interface TradingViewChartProps {
   tokenSymbol: string;
   initialPrice: number;
+  floorPrice?: number;
 }
 
 export function TradingViewChart({
   tokenSymbol,
   initialPrice,
+  floorPrice = 0.0031,
 }: TradingViewChartProps) {
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
@@ -67,6 +69,17 @@ export function TradingViewChart({
     }
 
     areaSeries.setData(dataPoints);
+
+    // Guaranteed Stock Floor (NAV Line in Amber/Yellow)
+    areaSeries.createPriceLine({
+      price: floorPrice,
+      color: "#f59e0b",
+      lineWidth: 2,
+      lineStyle: LineStyle.Dashed,
+      axisLabelVisible: true,
+      title: "Guaranteed Stock Floor",
+    });
+
     chart.timeScale().fitContent();
 
     const handleResize = () => {
@@ -83,20 +96,26 @@ export function TradingViewChart({
       window.removeEventListener("resize", handleResize);
       chart.remove();
     };
-  }, [initialPrice]);
+  }, [initialPrice, floorPrice]);
 
   return (
     <div className="relative w-full rounded-xl border border-border bg-[#080e14] p-4 shadow-lg">
-      <div className="flex items-center justify-between pb-3 border-b border-border/60 text-xs">
+      <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-border/60 text-xs">
         <div className="flex items-center gap-2">
           <span className="font-bold text-white">${tokenSymbol} / USDC</span>
           <span className="rounded bg-brand-cyan/15 px-1.5 py-0.5 text-[10px] font-mono text-brand-cyan border border-brand-cyan/30">
             Bonding Curve Discovery
           </span>
         </div>
-        <div className="flex items-center gap-3 font-mono text-muted text-[11px]">
-          <span>Current: <strong className="text-white">${initialPrice.toFixed(6)}</strong></span>
-          <span className="text-brand-emerald font-semibold">+47.7%</span>
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1.5 rounded-md bg-amber-500/10 border border-amber-500/30 px-2 py-0.5 text-[10px] font-mono font-bold text-amber-400">
+            <span className="inline-block w-2.5 h-0.5 bg-amber-400 border-b border-dashed" />
+            <span>${floorPrice.toFixed(4)} Guaranteed Stock Floor</span>
+          </div>
+          <div className="hidden sm:flex items-center gap-2 font-mono text-muted text-[11px]">
+            <span>Current: <strong className="text-white">${initialPrice.toFixed(6)}</strong></span>
+            <span className="text-brand-emerald font-semibold">+47.7%</span>
+          </div>
         </div>
       </div>
 

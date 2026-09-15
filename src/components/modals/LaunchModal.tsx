@@ -151,9 +151,9 @@ export function LaunchModal({
           {/* Target Backed Equity Selection */}
           <div>
             <label className="block text-muted font-medium mb-1 flex items-center justify-between">
-              <span>Target Equity Backing (Anchor PDA Vault)</span>
-              <span className="text-[10px] text-brand-cyan flex items-center gap-1">
-                <ShieldCheck className="h-3 w-3" /> Backpack UCC Art. 8 Custody
+              <span>Target Equity Backing</span>
+              <span className="text-[10px] text-brand-emerald flex items-center gap-1 font-semibold">
+                <ShieldCheck className="h-3.5 w-3.5" /> Verified Equity Vault
               </span>
             </label>
             <div className="grid grid-cols-3 gap-2">
@@ -248,7 +248,7 @@ export function LaunchModal({
           <div className="rounded-lg border border-[#1e3347] bg-[#09131c] p-3 text-[11px] text-muted flex items-start gap-2">
             <Info className="h-4 w-4 text-brand-cyan flex-shrink-0 mt-0.5" />
             <span>
-              Fixed supply of 1,000,000,000 tokens minted to curve PDA. When 60,000 USDC is reached, 50% automatically swaps into {selectedEquity.symbol} stock via Jupiter and locks into immutable Treasury PDA for pro-rata redemption.
+              When $60,000 USDC is reached, 50% automatically buys real {selectedEquity.symbol} shares into an immutable treasury vault for token burning.
             </span>
           </div>
 

@@ -14,12 +14,12 @@ export function HeroBanner({ onOpenLaunch }: HeroBannerProps) {
         {/* Left: Headline & Concise Description & Action */}
         <div className="flex flex-col gap-2 max-w-xl">
           <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white leading-tight">
-            Launch coins backed by{" "}
-            <span className="text-brand-cyan">real equities</span>
+            Memecoins With A{" "}
+            <span className="text-brand-cyan">Wall Street Floor.</span>
           </h1>
 
           <p className="text-xs sm:text-sm text-muted">
-            Trade coins backed by tokenized stocks. Graduated coins lock real equity in treasury.
+            Trade viral momentum. Graduate to real tokenized stocks. Never go to zero.
           </p>
 
           <div className="pt-1">

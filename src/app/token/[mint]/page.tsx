@@ -3,7 +3,7 @@
 import React, { useState, use } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowLeft, Copy, Check } from "lucide-react";
+import { ArrowLeft, Copy, Check, ShieldCheck } from "lucide-react";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { TradingViewChart } from "@/components/tokens/TradingViewChart";
@@ -123,13 +123,30 @@ export default function TokenDetailPage({ params }: PageProps) {
               </div>
 
               <div className="border-l border-border/80 pl-6">
-                <div className="text-[10px] uppercase text-muted">Market Cap</div>
-                <div className="font-mono text-xl font-bold text-white">
-                  ${(token.marketCapUsd / 1_000_000).toFixed(2)}M
-                </div>
-                <div className="font-mono text-xs text-muted">
-                  Vol ${(token.volume24hUsd / 1_000).toFixed(0)}K
-                </div>
+                {token.bondingCurve.isGraduated ? (
+                  <>
+                    <div className="text-[10px] uppercase text-muted">Market Cap</div>
+                    <div className="font-mono text-xl font-bold text-white">
+                      ${(token.marketCapUsd / 1_000_000).toFixed(2)}M
+                    </div>
+                    <div className="font-mono text-xs text-muted">
+                      Vol ${(token.volume24hUsd / 1_000).toFixed(0)}K
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="text-[10px] uppercase text-muted">Bonding Reserves</div>
+                    <div className="font-mono text-xl font-bold text-white">
+                      ${(token.bondingCurve.realQuoteReservesUsd / 1_000).toFixed(1)}K{" "}
+                      <span className="text-xs font-normal text-muted">/ $60K</span>
+                    </div>
+                    <div className="flex items-center gap-1.5 mt-0.5">
+                      <span className="rounded bg-brand-cyan/15 border border-brand-cyan/25 px-1.5 py-0.2 text-[10px] font-mono font-bold text-brand-cyan">
+                        {(1 + (token.bondingCurve.progressPct / 100) * 1.8).toFixed(1)}x from genesis
+                      </span>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           </div>
@@ -142,15 +159,18 @@ export default function TokenDetailPage({ params }: PageProps) {
             <TradingViewChart
               tokenSymbol={token.symbol}
               initialPrice={token.priceUsd}
+              floorPrice={0.0031}
             />
 
             {/* Progress Bar Card */}
             <div className="rounded-2xl border border-border bg-[#0b1218] p-5">
               <div className="flex items-center justify-between text-xs mb-2">
-                <span className="text-muted">
-                  Bonding curve progress
+                <span className="text-muted font-medium">
+                  {token.bondingCurve.isGraduated
+                    ? "Bonding Curve Graduated"
+                    : "Progress to Equity Graduation"}
                 </span>
-                <span className="font-mono font-bold text-white text-sm">
+                <span className="font-mono font-bold text-brand-cyan text-sm">
                   {token.bondingCurve.progressPct}%
                 </span>
               </div>
@@ -166,23 +186,74 @@ export default function TokenDetailPage({ params }: PageProps) {
                 <span>
                   Reserves: ${token.bondingCurve.realQuoteReservesUsd.toLocaleString()} / $60,000 USDC
                 </span>
-                <span>
-                  {token.bondingCurve.isGraduated ? "Graduated to AMM" : "50% buys stock at $60K"}
+                <span className="text-brand-cyan font-semibold">
+                  {token.bondingCurve.isGraduated
+                    ? "100% Locked in AMM & Treasury"
+                    : "50% buys stock at $60K"}
                 </span>
               </div>
             </div>
 
-            {/* Post-Graduation Module or Info */}
-            {token.bondingCurve.isGraduated ? (
-              <BurnRedeemModule token={token} />
-            ) : (
-              <div className="rounded-2xl border border-border bg-[#0b1218] p-5 text-xs text-muted">
-                <div className="font-bold text-white mb-1">
-                  Redemption Floor
+            {/* Active Guaranteed Stock Floor (NAV Engine) */}
+            <div className="rounded-2xl border border-amber-500/30 bg-gradient-to-br from-[#0e161c] via-[#091016] to-[#0c141a] p-5 shadow-lg">
+              <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-border/70">
+                <div className="flex items-center gap-2">
+                  <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-500/20 text-amber-400">
+                    <ShieldCheck className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-black text-white tracking-tight">
+                      Guaranteed Stock Floor (NAV Engine)
+                    </h3>
+                    <p className="text-[11px] text-amber-400/90 font-mono">
+                      $0.0031 Floor Price · Dual Redemption Guarantee
+                    </p>
+                  </div>
                 </div>
-                At graduation, $30,000 USDC automatically buys real {token.targetEquity.name} ({token.targetEquity.symbol}) shares into treasury. Holders can then burn ${token.symbol} tokens to redeem stock shares pro-rata.
+
+                <span className="rounded-md bg-amber-500/10 border border-amber-500/25 px-2 py-0.5 text-xs font-mono font-bold text-amber-300">
+                  Backed with {token.targetEquity.name}
+                </span>
               </div>
-            )}
+
+              <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                <div className="rounded-xl border border-border/80 bg-[#060a0e]/60 p-3">
+                  <div className="text-[10px] text-muted uppercase font-semibold">
+                    Vault Allocation
+                  </div>
+                  <div className="mt-1 font-mono text-sm font-bold text-white">
+                    $30,000 USDC
+                  </div>
+                  <div className="mt-0.5 text-[10px] text-muted">
+                    Auto-buys {token.targetEquity.symbol} stock at graduation
+                  </div>
+                </div>
+
+                <div className="rounded-xl border border-border/80 bg-[#060a0e]/60 p-3">
+                  <div className="text-[10px] text-muted uppercase font-semibold">
+                    Downside Protection
+                  </div>
+                  <div className="mt-1 font-mono text-sm font-bold text-amber-400">
+                    Never Goes to Zero
+                  </div>
+                  <div className="mt-0.5 text-[10px] text-muted">
+                    Underpinned by verified equity in protocol vault
+                  </div>
+                </div>
+
+                <div className="rounded-xl border border-border/80 bg-[#060a0e]/60 p-3">
+                  <div className="text-[10px] text-muted uppercase font-semibold">
+                    Exit Options
+                  </div>
+                  <div className="mt-1 font-mono text-sm font-bold text-brand-emerald">
+                    Stock or 1-Click USDC
+                  </div>
+                  <div className="mt-0.5 text-[10px] text-muted">
+                    Burn meme tokens to redeem pro-rata stock
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Right Column (4 cols) */}

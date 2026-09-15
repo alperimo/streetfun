@@ -3,8 +3,9 @@ import "./globals.css";
 import { WalletProvider } from "@/components/layout/WalletProvider";
 
 export const metadata: Metadata = {
-  title: "Streetfun · Launch coins backed by real equities",
-  description: "Launch coins backed by real equities",
+  title: "Streetfun · Memecoins With A Wall Street Floor",
+  description:
+    "Trade viral momentum. Graduate to real tokenized stocks. Never go to zero.",
   icons: {
     icon: "/favicon.ico",
   },
