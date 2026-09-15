@@ -47,7 +47,7 @@ export default function TreasuryPage() {
 
           <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
             <div className="text-xs text-muted font-medium">Total Distributed</div>
-            <div className="mt-1 font-mono text-2xl sm:text-3xl font-bold text-brand-cyan tracking-tight">
+            <div className="mt-1 font-mono text-2xl sm:text-3xl font-bold text-foreground tracking-tight">
               ${stats.totalRedemptionsUsd.toLocaleString()}
             </div>
             <div className="mt-1 text-[11px] text-muted">
@@ -106,7 +106,7 @@ export default function TreasuryPage() {
                         <span className="font-bold text-foreground text-sm">
                           {asset.name}
                         </span>
-                        <span className="rounded bg-brand-cyan/10 border border-brand-cyan/25 px-1.5 py-0.5 text-[10px] font-bold text-brand-cyan">
+                        <span className="rounded bg-card-subtle border border-border px-1.5 py-0.5 text-[10px] font-mono text-slate-300">
                           {asset.symbol}
                         </span>
                       </div>
@@ -124,7 +124,7 @@ export default function TreasuryPage() {
                       href="https://sunrise.trade"
                       target="_blank"
                       rel="noreferrer"
-                      className="inline-flex items-center gap-1 text-[10px] text-brand-cyan hover:underline"
+                      className="inline-flex items-center gap-1 text-[10px] text-muted hover:text-foreground transition-colors hover:underline"
                     >
                       <span>Explorer</span>
                       <ArrowUpRight className="h-3 w-3" />
@@ -156,7 +156,7 @@ export default function TreasuryPage() {
                   className="py-3 flex items-center justify-between hover:bg-card-subtle px-2 rounded-lg transition-colors"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-cyan/10 text-brand-cyan border border-brand-cyan/25">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-card-subtle text-slate-300 border border-border">
                       <Wallet className="h-4 w-4" />
                     </div>
                     <div>

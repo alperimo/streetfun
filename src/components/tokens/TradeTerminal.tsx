@@ -158,8 +158,8 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
                 onClick={() => setSlippage(s)}
                 className={`px-2 py-0.5 rounded font-mono text-[11px] ${
                   slippage === s
-                    ? "bg-brand-cyan text-white font-bold"
-                    : "bg-border text-muted hover:text-foreground"
+                    ? "bg-card-hover border border-border-active text-foreground font-bold"
+                    : "bg-card text-muted hover:text-foreground border border-border"
                 }`}
               >
                 {s}%
@@ -308,9 +308,9 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
                 placeholder="0.00"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
-                className="w-full rounded-xl border border-border bg-card-subtle pl-3.5 pr-20 py-3 text-lg font-mono text-foreground placeholder-muted focus:border-brand-cyan focus:bg-card focus:outline-none shadow-sm"
+                className="w-full rounded-xl border border-border bg-card-subtle pl-3.5 pr-20 py-3 text-lg font-mono text-foreground placeholder-muted focus:border-border-active focus:bg-card focus:outline-none shadow-sm"
               />
-              <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 font-mono text-xs font-bold text-brand-cyan">
+              <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 font-mono text-xs font-bold text-slate-300">
                 {tradeMode === "buy" ? "USDC" : token.symbol}
               </div>
             </div>
@@ -322,7 +322,7 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
                     <button
                       key={val}
                       onClick={() => setAmount(val)}
-                      className="rounded-md border border-border bg-card-subtle py-1 text-muted hover:border-brand-cyan hover:text-foreground transition-colors shadow-xs"
+                      className="rounded-md border border-border bg-card-subtle py-1 text-muted hover:border-border-active hover:text-foreground transition-colors shadow-xs"
                     >
                       ${val}
                     </button>

@@ -39,7 +39,7 @@ export function Header({ onOpenSearch, onOpenLaunch }: HeaderProps) {
               href="/"
               className={`px-3 py-1.5 rounded-md font-medium transition-colors ${
                 pathname === "/"
-                  ? "bg-card text-brand-cyan border border-border"
+                  ? "bg-card text-foreground font-semibold border border-border"
                   : "text-muted hover:text-foreground"
               }`}
             >
@@ -50,7 +50,7 @@ export function Header({ onOpenSearch, onOpenLaunch }: HeaderProps) {
               href="/treasury"
               className={`px-3 py-1.5 rounded-md font-medium transition-colors ${
                 pathname === "/treasury"
-                  ? "bg-card text-brand-cyan border border-border"
+                  ? "bg-card text-foreground font-semibold border border-border"
                   : "text-muted hover:text-foreground"
               }`}
             >

@@ -185,7 +185,7 @@ export function LaunchModal({
                     <span className="text-[10px] text-muted truncate w-full mt-1">
                       {eq.name}
                     </span>
-                    <span className="text-[9px] font-mono text-brand-cyan mt-0.5">
+                    <span className="text-[9px] font-mono text-slate-300 mt-0.5">
                       ${eq.currentStockPriceUsd}/sh
                     </span>
                   </button>
@@ -204,7 +204,7 @@ export function LaunchModal({
               placeholder="Tell the community about your thesis, meme lore, and equity redemption goal..."
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="w-full rounded-lg border border-border bg-card-subtle px-3 py-2 text-xs text-foreground placeholder-muted focus:border-brand-cyan focus:bg-card focus:outline-none shadow-xs"
+              className="w-full rounded-lg border border-border bg-card-subtle px-3 py-2 text-xs text-foreground placeholder-muted focus:border-border-active focus:bg-card focus:outline-none shadow-xs"
             />
           </div>
 
@@ -218,7 +218,7 @@ export function LaunchModal({
               placeholder="https://..."
               value={avatarUrl}
               onChange={(e) => setAvatarUrl(e.target.value)}
-              className="w-full rounded-lg border border-border bg-card-subtle px-3 py-2 text-xs text-foreground placeholder-muted focus:border-brand-cyan focus:bg-card focus:outline-none shadow-xs"
+              className="w-full rounded-lg border border-border bg-card-subtle px-3 py-2 text-xs text-foreground placeholder-muted focus:border-border-active focus:bg-card focus:outline-none shadow-xs"
             />
           </div>
 
@@ -236,17 +236,17 @@ export function LaunchModal({
                 placeholder="0.00"
                 value={initialBuyUsdc}
                 onChange={(e) => setInitialBuyUsdc(e.target.value)}
-                className="w-full rounded-lg border border-border bg-card-subtle pl-3 pr-16 py-2 text-sm text-foreground placeholder-muted focus:border-brand-cyan focus:bg-card focus:outline-none shadow-xs"
+                className="w-full rounded-lg border border-border bg-card-subtle pl-3 pr-16 py-2 text-sm text-foreground placeholder-muted focus:border-border-active focus:bg-card focus:outline-none shadow-xs"
               />
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 font-mono text-xs font-bold text-brand-cyan">
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 font-mono text-xs font-bold text-slate-300">
                 USDC
               </span>
             </div>
           </div>
 
           {/* Mechanism Explainer Alert */}
-          <div className="rounded-lg border border-brand-cyan/25 bg-brand-cyan/10 p-3 text-[11px] text-muted flex items-start gap-2">
-            <Info className="h-4 w-4 text-brand-cyan flex-shrink-0 mt-0.5" />
+          <div className="rounded-lg border border-border bg-card-subtle p-3 text-[11px] text-muted flex items-start gap-2">
+            <Info className="h-4 w-4 text-slate-400 flex-shrink-0 mt-0.5" />
             <span>
               When $60,000 USDC is reached, 50% automatically buys real {selectedEquity.symbol} shares into an immutable treasury vault for token burning.
             </span>

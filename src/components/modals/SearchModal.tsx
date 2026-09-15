@@ -112,7 +112,7 @@ export function SearchModal({ isOpen, onClose, tokens }: SearchModalProps) {
                         <span className="font-bold text-foreground text-sm">
                           ${token.symbol}
                         </span>
-                        <span className="rounded bg-brand-cyan/10 px-1.5 py-0.5 text-[9px] font-bold text-brand-cyan border border-brand-cyan/25">
+                        <span className="rounded bg-card-subtle px-1.5 py-0.5 text-[9px] font-mono text-slate-300 border border-border">
                           {token.targetEquity.symbol}
                         </span>
                       </div>
@@ -148,7 +148,7 @@ export function SearchModal({ isOpen, onClose, tokens }: SearchModalProps) {
             <span>↵ open</span>
             <span>esc close</span>
           </div>
-          <span className="text-brand-cyan font-semibold">Streetfun Search</span>
+          <span className="text-muted font-medium">StreetFun Search</span>
         </div>
       </div>
     </div>

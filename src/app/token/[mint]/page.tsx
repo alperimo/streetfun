@@ -76,7 +76,7 @@ export default function TokenDetailPage({ params }: PageProps) {
                     {token.name}
                   </span>
                   {token.bondingCurve.isGraduated && (
-                    <span className="rounded bg-brand-cyan/10 border border-brand-cyan/25 px-2 py-0.5 text-[10px] font-bold text-brand-cyan">
+                    <span className="rounded bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 text-[10px] font-bold text-emerald-400">
                       GRADUATED
                     </span>
                   )}
@@ -84,7 +84,7 @@ export default function TokenDetailPage({ params }: PageProps) {
 
                 <div className="mt-1 flex items-center gap-2 text-xs">
                   <span className="text-muted">Backed with</span>
-                  <span className="font-semibold text-brand-cyan">
+                  <span className="font-semibold text-foreground">
                     {token.targetEquity.name} ({token.targetEquity.symbol})
                   </span>
 
@@ -140,7 +140,7 @@ export default function TokenDetailPage({ params }: PageProps) {
                       <span className="text-xs font-normal text-muted">/ $60K</span>
                     </div>
                     <div className="flex items-center gap-1.5 mt-0.5">
-                      <span className="rounded bg-brand-cyan/10 border border-brand-cyan/25 px-1.5 py-0.5 text-[10px] font-mono font-bold text-brand-cyan">
+                      <span className="rounded bg-card-subtle border border-border px-1.5 py-0.5 text-[10px] font-mono font-medium text-slate-300">
                         {(1 + (token.bondingCurve.progressPct / 100) * 1.8).toFixed(1)}x from genesis
                       </span>
                     </div>
@@ -268,7 +268,7 @@ export default function TokenDetailPage({ params }: PageProps) {
               </div>
               <div className="flex justify-between text-muted">
                 <span>Underlying asset:</span>
-                <span className="font-mono text-brand-cyan">{token.targetEquity.name}</span>
+                <span className="font-mono text-foreground font-semibold">{token.targetEquity.name}</span>
               </div>
             </div>
           </div>
