@@ -3,9 +3,8 @@ import "./globals.css";
 import { WalletProvider } from "@/components/layout/WalletProvider";
 
 export const metadata: Metadata = {
-  title: "Streetfun | The World's First Equity-Backed Memecoin Engine on Solana",
-  description:
-    "Launch and trade instant-liquidity coins backed by real tokenized equities (SpaceX, Nvidia, Grindr). Dual redemption floor ensures your meme token never goes to zero.",
+  title: "Streetfun · Launch coins backed by real equities",
+  description: "Launch coins backed by real equities",
   icons: {
     icon: "/favicon.ico",
   },
