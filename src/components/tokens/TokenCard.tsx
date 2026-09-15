@@ -86,12 +86,12 @@ export function TokenCard({ token }: TokenCardProps) {
         </div>
 
         {/* Progress Bar moved directly under the stock badge */}
-        <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-card-subtle border border-border/40">
+        <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-card-subtle border border-border">
           <div
             className={`h-full rounded-full transition-all duration-300 ${
               token.bondingCurve.isGraduated
                 ? "bg-brand-cyan"
-                : "bg-gradient-to-r from-sky-500 to-cyan-400"
+                : "bg-brand-cyan"
             }`}
             style={{ width: `${Math.min(token.bondingCurve.progressPct, 100)}%` }}
           />

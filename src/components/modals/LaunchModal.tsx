@@ -256,7 +256,7 @@ export function LaunchModal({
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full rounded-lg bg-brand-cyan py-3 text-sm font-bold text-white hover:bg-sky-700 transition-colors disabled:opacity-50 shadow-md shadow-brand-cyan/20 flex items-center justify-center gap-2"
+            className="w-full rounded-lg bg-brand-cyan py-3 text-sm font-bold text-slate-950 hover:opacity-90 transition-opacity disabled:opacity-50 shadow-md shadow-brand-cyan/20 flex items-center justify-center gap-2"
           >
             {isSubmitting ? (
               <span>Deploying to Solana...</span>

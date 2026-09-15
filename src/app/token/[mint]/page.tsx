@@ -172,9 +172,9 @@ export default function TokenDetailPage({ params }: PageProps) {
                 </span>
               </div>
 
-              <div className="h-1.5 w-full overflow-hidden rounded-full bg-card-subtle border border-border/40">
+              <div className="h-1.5 w-full overflow-hidden rounded-full bg-card-subtle border border-border">
                 <div
-                  className="h-full rounded-full bg-gradient-to-r from-sky-500 to-cyan-400 transition-all duration-300"
+                  className="h-full rounded-full bg-brand-cyan transition-all duration-300"
                   style={{ width: `${Math.min(token.bondingCurve.progressPct, 100)}%` }}
                 />
               </div>
@@ -192,7 +192,6 @@ export default function TokenDetailPage({ params }: PageProps) {
                     <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-brand-emerald"></span>
                   </span>
                 </div>
-                <span className="text-[10px] font-mono text-muted">Solana Mainnet</span>
               </div>
 
               <div className="mt-2.5 overflow-x-auto">

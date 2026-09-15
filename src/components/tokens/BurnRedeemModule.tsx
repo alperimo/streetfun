@@ -146,7 +146,7 @@ export function BurnRedeemModule({ token }: BurnRedeemModuleProps) {
             handleExecuteRedeem();
           }}
           disabled={!numMeme || isProcessing}
-          className="flex items-center justify-center gap-2 rounded-xl bg-brand-cyan py-3 text-sm font-bold text-white hover:bg-sky-700 transition-colors disabled:opacity-50 shadow-sm shadow-brand-cyan/20"
+          className="flex items-center justify-center gap-2 rounded-xl bg-brand-cyan py-3 text-sm font-bold text-slate-950 hover:opacity-90 transition-opacity disabled:opacity-50 shadow-sm shadow-brand-cyan/20"
         >
           {isProcessing && redeemMode === "stock" ? (
             <RefreshCw className="h-4 w-4 animate-spin" />

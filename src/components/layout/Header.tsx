@@ -5,7 +5,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import dynamic from "next/dynamic";
 import { Search, Plus, TrendingUp, Send, Twitter } from "lucide-react";
-import { ThemeToggle } from "./ThemeToggle";
 
 const WalletMultiButton = dynamic(
   async () =>
@@ -40,7 +39,7 @@ export function Header({ onOpenSearch, onOpenLaunch }: HeaderProps) {
               href="/"
               className={`px-3 py-1.5 rounded-md font-medium transition-colors ${
                 pathname === "/"
-                  ? "bg-card text-brand-cyan border border-border/60"
+                  ? "bg-card text-brand-cyan border border-border"
                   : "text-muted hover:text-foreground"
               }`}
             >
@@ -51,7 +50,7 @@ export function Header({ onOpenSearch, onOpenLaunch }: HeaderProps) {
               href="/treasury"
               className={`px-3 py-1.5 rounded-md font-medium transition-colors ${
                 pathname === "/treasury"
-                  ? "bg-card text-brand-cyan border border-border/60"
+                  ? "bg-card text-brand-cyan border border-border"
                   : "text-muted hover:text-foreground"
               }`}
             >
@@ -60,7 +59,7 @@ export function Header({ onOpenSearch, onOpenLaunch }: HeaderProps) {
           </nav>
         </div>
 
-        {/* Right: Search, Socials, ThemeToggle, Launch CTA, Wallet */}
+        {/* Right: Search, Socials, Launch CTA, Wallet */}
         <div className="flex items-center gap-3">
           <button
             onClick={onOpenSearch}
@@ -73,7 +72,7 @@ export function Header({ onOpenSearch, onOpenLaunch }: HeaderProps) {
             </kbd>
           </button>
 
-          <div className="hidden lg:flex items-center gap-1 border-x border-border/60 px-2">
+          <div className="hidden lg:flex items-center gap-1 border-x border-border px-2">
             <a
               href="https://t.me"
               target="_blank"
@@ -91,9 +90,6 @@ export function Header({ onOpenSearch, onOpenLaunch }: HeaderProps) {
               <Twitter className="h-4 w-4" />
             </a>
           </div>
-
-          {/* Theme Switcher Toggle */}
-          <ThemeToggle />
 
           <button
             onClick={onOpenLaunch}
