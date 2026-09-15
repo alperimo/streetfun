@@ -20,31 +20,31 @@ export function TradingViewChart({
 
     const chart = createChart(chartContainerRef.current, {
       layout: {
-        background: { type: ColorType.Solid, color: "#080e14" },
-        textColor: "#8295a5",
+        background: { type: ColorType.Solid, color: "#ffffff" },
+        textColor: "#64748b",
       },
       grid: {
-        vertLines: { color: "#131f2b" },
-        horzLines: { color: "#131f2b" },
+        vertLines: { color: "#f1f5f9" },
+        horzLines: { color: "#f1f5f9" },
       },
       width: chartContainerRef.current.clientWidth,
       height: 380,
       timeScale: {
-        borderColor: "#182531",
+        borderColor: "#e2e8f0",
         timeVisible: true,
         secondsVisible: false,
       },
       rightPriceScale: {
-        borderColor: "#182531",
+        borderColor: "#e2e8f0",
       },
     });
 
     chartRef.current = chart;
 
     const areaSeries = chart.addAreaSeries({
-      lineColor: "#00f0ff",
-      topColor: "rgba(0, 240, 255, 0.35)",
-      bottomColor: "rgba(0, 240, 255, 0.0)",
+      lineColor: "#0284c7",
+      topColor: "rgba(2, 132, 199, 0.2)",
+      bottomColor: "rgba(2, 132, 199, 0.0)",
       lineWidth: 2,
     });
 
@@ -86,16 +86,16 @@ export function TradingViewChart({
   }, [initialPrice]);
 
   return (
-    <div className="relative w-full rounded-xl border border-border bg-[#080e14] p-4 shadow-lg">
-      <div className="flex items-center justify-between pb-3 border-b border-border/60 text-xs">
+    <div className="relative w-full rounded-xl border border-border bg-white p-4 shadow-sm">
+      <div className="flex items-center justify-between pb-3 border-b border-border text-xs">
         <div className="flex items-center gap-2">
-          <span className="font-bold text-white">${tokenSymbol} / USDC</span>
-          <span className="rounded bg-brand-cyan/15 px-1.5 py-0.5 text-[10px] font-mono text-brand-cyan border border-brand-cyan/30">
+          <span className="font-bold text-slate-900">${tokenSymbol} / USDC</span>
+          <span className="rounded bg-sky-50 px-1.5 py-0.5 text-[10px] font-mono text-brand-cyan border border-sky-200">
             Bonding Curve Discovery
           </span>
         </div>
         <div className="flex items-center gap-3 font-mono text-muted text-[11px]">
-          <span>Current: <strong className="text-white">${initialPrice.toFixed(6)}</strong></span>
+          <span>Current: <strong className="text-slate-900">${initialPrice.toFixed(6)}</strong></span>
           <span className="text-brand-emerald font-semibold">+47.7%</span>
         </div>
       </div>

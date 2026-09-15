@@ -48,7 +48,7 @@ export default function TokenDetailPage({ params }: PageProps) {
         <div className="mb-4">
           <Link
             href="/"
-            className="inline-flex items-center gap-1.5 text-xs text-muted hover:text-white transition-colors"
+            className="inline-flex items-center gap-1.5 text-xs text-muted hover:text-slate-900 transition-colors"
           >
             <ArrowLeft className="h-4 w-4" />
             <span>Back to Explore</span>
@@ -56,10 +56,10 @@ export default function TokenDetailPage({ params }: PageProps) {
         </div>
 
         {/* Token Header */}
-        <div className="rounded-2xl border border-border bg-[#0b1218] p-5 mb-6">
+        <div className="rounded-2xl border border-border bg-white p-5 mb-6 shadow-sm">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="flex items-center gap-4">
-              <div className="relative h-14 w-14 overflow-hidden rounded-full border border-border bg-[#101b25]">
+              <div className="relative h-14 w-14 overflow-hidden rounded-full border border-border bg-slate-100">
                 <Image
                   src={token.avatarUrl}
                   alt={token.name}
@@ -70,14 +70,14 @@ export default function TokenDetailPage({ params }: PageProps) {
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <h1 className="text-2xl font-black text-white tracking-tight">
+                  <h1 className="text-2xl font-black text-slate-900 tracking-tight">
                     ${token.symbol}
                   </h1>
                   <span className="text-sm text-muted">
                     {token.name}
                   </span>
                   {token.bondingCurve.isGraduated && (
-                    <span className="rounded bg-brand-cyan/15 px-2 py-0.5 text-[10px] font-bold text-brand-cyan">
+                    <span className="rounded bg-sky-50 border border-sky-200 px-2 py-0.5 text-[10px] font-bold text-brand-cyan">
                       GRADUATED
                     </span>
                   )}
@@ -91,7 +91,7 @@ export default function TokenDetailPage({ params }: PageProps) {
 
                   <button
                     onClick={handleCopyCa}
-                    className="flex items-center gap-1 rounded border border-border bg-[#091118] px-2 py-0.5 text-muted hover:text-white transition-colors font-mono text-[10px]"
+                    className="flex items-center gap-1 rounded border border-border bg-slate-50 px-2 py-0.5 text-muted hover:text-slate-900 transition-colors font-mono text-[10px]"
                   >
                     {copied ? (
                       <Check className="h-3 w-3 text-brand-emerald" />
@@ -106,10 +106,10 @@ export default function TokenDetailPage({ params }: PageProps) {
               </div>
             </div>
 
-            <div className="flex items-center gap-6 self-end md:self-auto border-t md:border-t-0 pt-3 md:pt-0 border-border/60">
+            <div className="flex items-center gap-6 self-end md:self-auto border-t md:border-t-0 pt-3 md:pt-0 border-border">
               <div>
                 <div className="text-[10px] uppercase text-muted">Price</div>
-                <div className="font-mono text-xl font-bold text-white">
+                <div className="font-mono text-xl font-bold text-slate-900">
                   ${token.priceUsd.toFixed(4)}
                 </div>
                 <div
@@ -122,9 +122,9 @@ export default function TokenDetailPage({ params }: PageProps) {
                 </div>
               </div>
 
-              <div className="border-l border-border/80 pl-6">
+              <div className="border-l border-border pl-6">
                 <div className="text-[10px] uppercase text-muted">Market Cap</div>
-                <div className="font-mono text-xl font-bold text-white">
+                <div className="font-mono text-xl font-bold text-slate-900">
                   ${(token.marketCapUsd / 1_000_000).toFixed(2)}M
                 </div>
                 <div className="font-mono text-xs text-muted">
@@ -145,19 +145,19 @@ export default function TokenDetailPage({ params }: PageProps) {
             />
 
             {/* Progress Bar Card */}
-            <div className="rounded-2xl border border-border bg-[#0b1218] p-5">
+            <div className="rounded-2xl border border-border bg-white p-5 shadow-sm">
               <div className="flex items-center justify-between text-xs mb-2">
                 <span className="text-muted">
                   Bonding curve progress
                 </span>
-                <span className="font-mono font-bold text-white text-sm">
+                <span className="font-mono font-bold text-slate-900 text-sm">
                   {token.bondingCurve.progressPct}%
                 </span>
               </div>
 
-              <div className="h-2 w-full overflow-hidden rounded-full bg-[#080d12]">
+              <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100">
                 <div
-                  className="h-full rounded-full bg-gradient-to-r from-blue-500 to-brand-cyan transition-all duration-300"
+                  className="h-full rounded-full bg-gradient-to-r from-sky-500 to-cyan-500 transition-all duration-300"
                   style={{ width: `${Math.min(token.bondingCurve.progressPct, 100)}%` }}
                 />
               </div>
@@ -176,8 +176,8 @@ export default function TokenDetailPage({ params }: PageProps) {
             {token.bondingCurve.isGraduated ? (
               <BurnRedeemModule token={token} />
             ) : (
-              <div className="rounded-2xl border border-border bg-[#0b1218] p-5 text-xs text-muted">
-                <div className="font-bold text-white mb-1">
+              <div className="rounded-2xl border border-border bg-white p-5 text-xs text-muted shadow-sm">
+                <div className="font-bold text-slate-900 mb-1">
                   Redemption Floor
                 </div>
                 At graduation, $30,000 USDC automatically buys real {token.targetEquity.name} ({token.targetEquity.symbol}) shares into treasury. Holders can then burn ${token.symbol} tokens to redeem stock shares pro-rata.
@@ -192,21 +192,21 @@ export default function TokenDetailPage({ params }: PageProps) {
               onTradeSuccess={() => {}}
             />
 
-            <div className="rounded-2xl border border-border bg-[#0b1218] p-4 text-xs space-y-2.5">
-              <div className="font-bold text-white pb-2 border-b border-border/60">
+            <div className="rounded-2xl border border-border bg-white p-4 text-xs space-y-2.5 shadow-sm">
+              <div className="font-bold text-slate-900 pb-2 border-b border-border">
                 Token details
               </div>
               <div className="flex justify-between text-muted">
                 <span>Total supply:</span>
-                <span className="font-mono text-white">1,000,000,000</span>
+                <span className="font-mono text-slate-900">1,000,000,000</span>
               </div>
               <div className="flex justify-between text-muted">
                 <span>Bonding curve pool:</span>
-                <span className="font-mono text-white">800,000,000 (80%)</span>
+                <span className="font-mono text-slate-900">800,000,000 (80%)</span>
               </div>
               <div className="flex justify-between text-muted">
                 <span>AMM pool reserve:</span>
-                <span className="font-mono text-white">200,000,000 (20%)</span>
+                <span className="font-mono text-slate-900">200,000,000 (20%)</span>
               </div>
               <div className="flex justify-between text-muted">
                 <span>Underlying asset:</span>

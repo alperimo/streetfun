@@ -50,23 +50,23 @@ export function BurnRedeemModule({ token }: BurnRedeemModuleProps) {
   };
 
   return (
-    <div className="rounded-2xl border border-brand-cyan/30 bg-[#0a131b] p-6 shadow-xl">
+    <div className="rounded-2xl border border-sky-200 bg-white p-6 shadow-sm">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border/70 pb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border pb-4">
         <div>
-          <h3 className="text-base font-bold text-white">Redeem Equity</h3>
+          <h3 className="text-base font-bold text-slate-900">Redeem Equity</h3>
           <p className="text-xs text-muted">
             Burn ${token.symbol} to redeem your pro-rata share of {token.targetEquity.symbol} stock.
           </p>
         </div>
 
-        <div className="flex items-center gap-1 rounded-lg bg-[#070c10] p-1 border border-border">
+        <div className="flex items-center gap-1 rounded-lg bg-slate-100 p-1 border border-border">
           <button
             onClick={() => setRedeemMode("stock")}
             className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all ${
               redeemMode === "stock"
-                ? "bg-brand-cyan text-black"
-                : "text-muted hover:text-white"
+                ? "bg-brand-cyan text-white shadow-sm"
+                : "text-muted hover:text-slate-900"
             }`}
           >
             Withdraw Stock
@@ -75,8 +75,8 @@ export function BurnRedeemModule({ token }: BurnRedeemModuleProps) {
             onClick={() => setRedeemMode("usdc")}
             className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all ${
               redeemMode === "usdc"
-                ? "bg-brand-emerald text-black"
-                : "text-muted hover:text-white"
+                ? "bg-brand-emerald text-white shadow-sm"
+                : "text-muted hover:text-slate-900"
             }`}
           >
             Swap to USDC
@@ -99,16 +99,16 @@ export function BurnRedeemModule({ token }: BurnRedeemModuleProps) {
             placeholder="0"
             value={memeAmount}
             onChange={(e) => setMemeAmount(e.target.value)}
-            className="w-full rounded-xl border border-border bg-[#060b0f] pl-4 pr-24 py-3 text-lg font-mono text-white placeholder-muted focus:border-brand-cyan focus:outline-none"
+            className="w-full rounded-xl border border-border bg-slate-50 pl-4 pr-24 py-3 text-lg font-mono text-slate-900 placeholder-muted focus:border-brand-cyan focus:bg-white focus:outline-none shadow-sm"
           />
           <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
             <button
               onClick={() => setMemeAmount("50000")}
-              className="rounded bg-[#111e29] px-2 py-1 text-[10px] font-mono text-brand-cyan hover:bg-[#162736]"
+              className="rounded bg-sky-50 px-2 py-1 text-[10px] font-mono text-brand-cyan border border-sky-200 hover:bg-sky-100"
             >
               MAX
             </button>
-            <span className="font-mono text-xs font-bold text-white">
+            <span className="font-mono text-xs font-bold text-slate-900">
               ${token.symbol}
             </span>
           </div>
@@ -116,9 +116,9 @@ export function BurnRedeemModule({ token }: BurnRedeemModuleProps) {
       </div>
 
       {/* Pro-Rata Output Box */}
-      <div className="mt-4 rounded-xl border border-border bg-[#070e14] p-4">
+      <div className="mt-4 rounded-xl border border-border bg-slate-50 p-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-          <div className="font-mono text-base font-bold text-white flex items-center gap-2">
+          <div className="font-mono text-base font-bold text-slate-900 flex items-center gap-2">
             <span>{numMeme.toLocaleString()} ${token.symbol}</span>
             <span className="text-brand-cyan">=</span>
             <span className="text-brand-emerald">
@@ -126,13 +126,13 @@ export function BurnRedeemModule({ token }: BurnRedeemModuleProps) {
             </span>
           </div>
           <div className="font-mono text-xs text-muted">
-            Value: <strong className="text-white">${entitledUsdcValue.toFixed(2)}</strong>
+            Value: <strong className="text-slate-900">${entitledUsdcValue.toFixed(2)}</strong>
           </div>
         </div>
       </div>
 
       {txSuccess && (
-        <div className="mt-3 flex items-center gap-2 rounded-lg border border-brand-emerald/40 bg-emerald-950/30 p-2.5 text-xs text-brand-emerald">
+        <div className="mt-3 flex items-center gap-2 rounded-lg border border-brand-emerald/30 bg-emerald-50 p-2.5 text-xs text-brand-emerald">
           <Check className="h-4 w-4 flex-shrink-0" />
           <span>{txSuccess}</span>
         </div>
@@ -146,7 +146,7 @@ export function BurnRedeemModule({ token }: BurnRedeemModuleProps) {
             handleExecuteRedeem();
           }}
           disabled={!numMeme || isProcessing}
-          className="flex items-center justify-center gap-2 rounded-xl bg-brand-cyan py-3 text-sm font-bold text-black hover:bg-cyan-300 transition-colors disabled:opacity-50"
+          className="flex items-center justify-center gap-2 rounded-xl bg-brand-cyan py-3 text-sm font-bold text-white hover:bg-sky-700 transition-colors disabled:opacity-50 shadow-sm shadow-brand-cyan/20"
         >
           {isProcessing && redeemMode === "stock" ? (
             <RefreshCw className="h-4 w-4 animate-spin" />
@@ -160,7 +160,7 @@ export function BurnRedeemModule({ token }: BurnRedeemModuleProps) {
             handleExecuteRedeem();
           }}
           disabled={!numMeme || isProcessing}
-          className="flex items-center justify-center gap-2 rounded-xl border border-brand-emerald/40 bg-[#0c1f19] py-3 text-sm font-bold text-brand-emerald hover:bg-[#112a22] transition-colors disabled:opacity-50"
+          className="flex items-center justify-center gap-2 rounded-xl border border-brand-emerald/40 bg-emerald-50 py-3 text-sm font-bold text-brand-emerald hover:bg-emerald-100 transition-colors disabled:opacity-50 shadow-sm"
         >
           {isProcessing && redeemMode === "usdc" ? (
             <RefreshCw className="h-4 w-4 animate-spin" />

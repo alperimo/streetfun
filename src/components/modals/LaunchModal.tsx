@@ -90,19 +90,19 @@ export function LaunchModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-150">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-150">
       <div
-        className="w-full max-w-lg rounded-2xl border border-border bg-[#0b1218] p-6 shadow-2xl"
+        className="w-full max-w-lg rounded-2xl border border-border bg-white p-6 shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-border/80 pb-4">
+        <div className="flex items-center justify-between border-b border-border pb-4">
           <div className="flex items-center gap-2.5">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-cyan/15 text-brand-cyan border border-brand-cyan/30">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-sky-50 text-brand-cyan border border-sky-200">
               <Rocket className="h-4 w-4 stroke-[2.5]" />
             </div>
             <div>
-              <h2 className="text-lg font-bold text-white">Launch a Stonk</h2>
+              <h2 className="text-lg font-bold text-slate-900">Launch a Stonk</h2>
               <p className="text-xs text-muted">
                 Create an instant bonding curve backed by real tokenized equity
               </p>
@@ -110,7 +110,7 @@ export function LaunchModal({
           </div>
           <button
             onClick={onClose}
-            className="rounded p-1 text-muted hover:text-white transition-colors"
+            className="rounded p-1 text-muted hover:text-slate-900 transition-colors"
           >
             <X className="h-5 w-5" />
           </button>
@@ -130,7 +130,7 @@ export function LaunchModal({
                 placeholder="e.g. Mars Colony"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full rounded-lg border border-border bg-[#070c10] px-3 py-2 text-sm text-white placeholder-muted focus:border-brand-cyan focus:outline-none"
+                className="w-full rounded-lg border border-border bg-slate-50 px-3 py-2 text-sm text-slate-900 placeholder-muted focus:border-brand-cyan focus:bg-white focus:outline-none shadow-xs"
               />
             </div>
             <div>
@@ -143,7 +143,7 @@ export function LaunchModal({
                 placeholder="e.g. MARS"
                 value={symbol}
                 onChange={(e) => setSymbol(e.target.value)}
-                className="w-full rounded-lg border border-border bg-[#070c10] px-3 py-2 text-sm text-white placeholder-muted uppercase focus:border-brand-cyan focus:outline-none"
+                className="w-full rounded-lg border border-border bg-slate-50 px-3 py-2 text-sm text-slate-900 placeholder-muted uppercase focus:border-brand-cyan focus:bg-white focus:outline-none shadow-xs"
               />
             </div>
           </div>
@@ -166,8 +166,8 @@ export function LaunchModal({
                     onClick={() => setSelectedEquitySymbol(eq.symbol)}
                     className={`flex flex-col items-start p-2.5 rounded-lg border text-left transition-all ${
                       isSelected
-                        ? "border-brand-cyan bg-[#10202d] text-white shadow-sm shadow-brand-cyan/20"
-                        : "border-border/70 bg-[#070c10] text-muted hover:border-border hover:text-white"
+                        ? "border-brand-cyan bg-sky-50 text-slate-900 shadow-sm"
+                        : "border-border bg-white text-muted hover:border-slate-300 hover:text-slate-900"
                     }`}
                   >
                     <div className="flex items-center gap-1.5 w-full">
@@ -204,7 +204,7 @@ export function LaunchModal({
               placeholder="Tell the community about your thesis, meme lore, and equity redemption goal..."
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="w-full rounded-lg border border-border bg-[#070c10] px-3 py-2 text-xs text-white placeholder-muted focus:border-brand-cyan focus:outline-none"
+              className="w-full rounded-lg border border-border bg-slate-50 px-3 py-2 text-xs text-slate-900 placeholder-muted focus:border-brand-cyan focus:bg-white focus:outline-none shadow-xs"
             />
           </div>
 
@@ -218,7 +218,7 @@ export function LaunchModal({
               placeholder="https://..."
               value={avatarUrl}
               onChange={(e) => setAvatarUrl(e.target.value)}
-              className="w-full rounded-lg border border-border bg-[#070c10] px-3 py-2 text-xs text-white placeholder-muted focus:border-brand-cyan focus:outline-none"
+              className="w-full rounded-lg border border-border bg-slate-50 px-3 py-2 text-xs text-slate-900 placeholder-muted focus:border-brand-cyan focus:bg-white focus:outline-none shadow-xs"
             />
           </div>
 
@@ -236,7 +236,7 @@ export function LaunchModal({
                 placeholder="0.00"
                 value={initialBuyUsdc}
                 onChange={(e) => setInitialBuyUsdc(e.target.value)}
-                className="w-full rounded-lg border border-border bg-[#070c10] pl-3 pr-16 py-2 text-sm text-white placeholder-muted focus:border-brand-cyan focus:outline-none"
+                className="w-full rounded-lg border border-border bg-slate-50 pl-3 pr-16 py-2 text-sm text-slate-900 placeholder-muted focus:border-brand-cyan focus:bg-white focus:outline-none shadow-xs"
               />
               <span className="absolute right-3 top-1/2 -translate-y-1/2 font-mono text-xs font-bold text-brand-cyan">
                 USDC
@@ -245,7 +245,7 @@ export function LaunchModal({
           </div>
 
           {/* Mechanism Explainer Alert */}
-          <div className="rounded-lg border border-[#1e3347] bg-[#09131c] p-3 text-[11px] text-muted flex items-start gap-2">
+          <div className="rounded-lg border border-sky-200 bg-sky-50 p-3 text-[11px] text-slate-700 flex items-start gap-2">
             <Info className="h-4 w-4 text-brand-cyan flex-shrink-0 mt-0.5" />
             <span>
               Fixed supply of 1,000,000,000 tokens minted to curve PDA. When 60,000 USDC is reached, 50% automatically swaps into {selectedEquity.symbol} stock via Jupiter and locks into immutable Treasury PDA for pro-rata redemption.
@@ -256,7 +256,7 @@ export function LaunchModal({
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full rounded-lg bg-gradient-to-r from-brand-cyan to-blue-500 py-3 text-sm font-bold text-black hover:opacity-95 transition-opacity disabled:opacity-50 shadow-md shadow-brand-cyan/20 flex items-center justify-center gap-2"
+            className="w-full rounded-lg bg-brand-cyan py-3 text-sm font-bold text-white hover:bg-sky-700 transition-colors disabled:opacity-50 shadow-md shadow-brand-cyan/20 flex items-center justify-center gap-2"
           >
             {isSubmitting ? (
               <span>Deploying to Solana...</span>

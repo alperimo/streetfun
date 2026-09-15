@@ -9,25 +9,25 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        background: "#060a0e",
+        background: "#f8fafc",
         card: {
-          DEFAULT: "#0b1218",
-          hover: "#0f1922",
+          DEFAULT: "#ffffff",
+          hover: "#f1f5f9",
         },
         border: {
-          DEFAULT: "#182531",
-          active: "#2a3d4f",
+          DEFAULT: "#e2e8f0",
+          active: "#cbd5e1",
         },
         brand: {
-          cyan: "#00f0ff",
-          emerald: "#10b981",
-          purple: "#a855f7",
-          amber: "#f59e0b",
-          rose: "#f43f5e",
+          cyan: "#0284c7",
+          emerald: "#059669",
+          purple: "#9333ea",
+          amber: "#d97706",
+          rose: "#e11d48",
         },
         muted: {
-          DEFAULT: "#8295a5",
-          foreground: "#526373",
+          DEFAULT: "#64748b",
+          foreground: "#94a3b8",
         },
       },
       fontFamily: {

@@ -26,13 +26,13 @@ export function TokenCard({ token }: TokenCardProps) {
   return (
     <Link
       href={`/token/${token.mint}`}
-      className="group relative flex flex-col justify-between rounded-2xl border border-border bg-[#0b1218] p-5 transition-all hover:border-[#25394b] hover:bg-[#0e1720]"
+      className="group relative flex flex-col justify-between rounded-2xl border border-border bg-white p-5 transition-all hover:border-slate-300 hover:bg-slate-50/50 shadow-sm hover:shadow-md"
     >
       <div>
         {/* Top: Avatar, Name, CA button */}
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="relative h-12 w-12 overflow-hidden rounded-full border border-border bg-[#101b25]">
+            <div className="relative h-12 w-12 overflow-hidden rounded-full border border-border bg-slate-100">
               <Image
                 src={token.avatarUrl}
                 alt={token.name}
@@ -47,12 +47,12 @@ export function TokenCard({ token }: TokenCardProps) {
                   ${token.symbol}
                 </span>
                 {token.bondingCurve.isGraduated && (
-                  <span className="rounded bg-brand-cyan/15 px-1.5 py-0.2 text-[9px] font-bold text-brand-cyan">
+                  <span className="rounded bg-sky-50 border border-sky-200 px-1.5 py-0.5 text-[9px] font-bold text-brand-cyan">
                     GRADUATED
                   </span>
                 )}
               </div>
-              <div className="text-sm font-bold text-white group-hover:text-brand-cyan transition-colors">
+              <div className="text-sm font-bold text-slate-900 group-hover:text-brand-cyan transition-colors">
                 {token.name}
               </div>
             </div>
@@ -61,7 +61,7 @@ export function TokenCard({ token }: TokenCardProps) {
           <button
             onClick={handleCopyCa}
             title="Copy Contract Address"
-            className="flex items-center gap-1 rounded-md border border-border bg-[#0e1720] px-2 py-1 text-[11px] text-muted hover:border-brand-cyan hover:text-white transition-colors"
+            className="flex items-center gap-1 rounded-md border border-border bg-slate-50 px-2 py-1 text-[11px] text-muted hover:border-brand-cyan hover:text-slate-900 transition-colors"
           >
             {copied ? (
               <Check className="h-3 w-3 text-brand-emerald" />
@@ -74,7 +74,7 @@ export function TokenCard({ token }: TokenCardProps) {
 
         {/* Market Cap & Price Change */}
         <div className="mt-4">
-          <div className="font-mono text-2xl font-extrabold text-white tracking-tight">
+          <div className="font-mono text-2xl font-extrabold text-slate-900 tracking-tight">
             ${(token.marketCapUsd / 1_000_000).toFixed(2)}M
           </div>
         </div>
@@ -82,31 +82,31 @@ export function TokenCard({ token }: TokenCardProps) {
         {/* Backed by badge */}
         <div className="mt-2.5 flex items-center gap-1.5 text-xs">
           <span className="text-muted">Backed with</span>
-          <span className="inline-flex items-center gap-1 rounded-md bg-[#111e29] px-2 py-0.5 text-xs font-semibold text-brand-cyan border border-brand-cyan/20">
+          <span className="inline-flex items-center gap-1 rounded-md bg-sky-50 px-2 py-0.5 text-xs font-semibold text-brand-cyan border border-sky-200">
             {token.targetEquity.symbol}
           </span>
         </div>
       </div>
 
       {/* Bottom: Progress Bar + Vol / Change */}
-      <div className="mt-5 pt-3 border-t border-border/50">
+      <div className="mt-5 pt-3 border-t border-border">
         <div className="flex items-center justify-between text-[11px] mb-1.5">
           <span className="text-muted">
             {token.bondingCurve.isGraduated
               ? "Graduated"
               : `$${token.bondingCurve.realQuoteReservesUsd.toLocaleString()} / $60,000`}
           </span>
-          <span className="font-mono font-bold text-white">
+          <span className="font-mono font-bold text-slate-900">
             {token.bondingCurve.progressPct}%
           </span>
         </div>
 
-        <div className="h-1.5 w-full overflow-hidden rounded-full bg-[#111c26]">
+        <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
           <div
             className={`h-full rounded-full transition-all duration-300 ${
               token.bondingCurve.isGraduated
                 ? "bg-brand-cyan"
-                : "bg-gradient-to-r from-blue-500 to-brand-cyan"
+                : "bg-gradient-to-r from-sky-500 to-cyan-500"
             }`}
             style={{ width: `${Math.min(token.bondingCurve.progressPct, 100)}%` }}
           />

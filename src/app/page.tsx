@@ -85,10 +85,10 @@ export default function ExplorePage() {
 
         <div className="mt-8 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <h2 className="text-xl font-bold text-white tracking-tight">
+            <h2 className="text-xl font-bold text-slate-900 tracking-tight">
               All tokens
             </h2>
-            <span className="rounded bg-[#101b25] px-2 py-0.5 text-xs font-mono text-muted">
+            <span className="rounded bg-slate-100 border border-border px-2 py-0.5 text-xs font-mono text-muted">
               {filteredTokens.length}
             </span>
           </div>
@@ -102,7 +102,7 @@ export default function ExplorePage() {
         </div>
 
         {filteredTokens.length === 0 && (
-          <div className="mt-12 rounded-xl border border-border bg-[#0b1218] p-12 text-center">
+          <div className="mt-12 rounded-xl border border-border bg-white p-12 text-center shadow-sm">
             <p className="text-sm text-muted">No tokens found.</p>
             <button
               onClick={() => {
