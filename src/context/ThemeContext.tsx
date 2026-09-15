@@ -1,54 +1,79 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useContext, useEffect, useState, useMemo } from "react";
+import {
+  ThemeId,
+  ThemeTokens,
+  THEMES,
+  THEME_LIST,
+  THEME_STORAGE_KEY,
+  DEFAULT_THEME_ID,
+  isThemeId,
+  getThemeConfig,
+} from "@/config/themes";
 
-export type ThemeMode = "street-dark" | "dark" | "light";
+export type ThemeMode = ThemeId;
 
 interface ThemeContextType {
-  theme: ThemeMode;
-  setTheme: (theme: ThemeMode) => void;
+  theme: ThemeId;
+  themeConfig: ThemeTokens;
+  setTheme: (theme: ThemeId) => void;
+  themes: ThemeTokens[];
 }
 
 const ThemeContext = createContext<ThemeContextType>({
-  theme: "street-dark",
+  theme: DEFAULT_THEME_ID,
+  themeConfig: THEMES[DEFAULT_THEME_ID],
   setTheme: () => {},
+  themes: THEME_LIST,
 });
 
-const STORAGE_KEY = "streetfun-theme";
-
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setThemeState] = useState<ThemeMode>("street-dark");
+  const [theme, setThemeState] = useState<ThemeId>(DEFAULT_THEME_ID);
 
   useEffect(() => {
     try {
       const params = new URLSearchParams(window.location.search);
-      const queryTheme = params.get("theme") as ThemeMode | null;
-      const stored = localStorage.getItem(STORAGE_KEY) as ThemeMode | null;
-      const valid = ["street-dark", "dark", "light"];
-      const active = (queryTheme && valid.includes(queryTheme))
-        ? queryTheme
-        : (stored && valid.includes(stored))
-        ? stored
-        : "street-dark";
+      const queryTheme = params.get("theme");
+      const stored = localStorage.getItem(THEME_STORAGE_KEY);
 
-      setThemeState(active);
-      document.documentElement.setAttribute("data-theme", active);
-      localStorage.setItem(STORAGE_KEY, active);
+      const resolvedTheme: ThemeId = isThemeId(queryTheme)
+        ? queryTheme
+        : isThemeId(stored)
+        ? stored
+        : DEFAULT_THEME_ID;
+
+      setThemeState(resolvedTheme);
+      document.documentElement.setAttribute("data-theme", resolvedTheme);
+      localStorage.setItem(THEME_STORAGE_KEY, resolvedTheme);
     } catch {
-      document.documentElement.setAttribute("data-theme", "street-dark");
+      document.documentElement.setAttribute("data-theme", DEFAULT_THEME_ID);
     }
   }, []);
 
-  const setTheme = (newTheme: ThemeMode) => {
+  const setTheme = (newTheme: ThemeId) => {
+    if (!isThemeId(newTheme)) return;
     setThemeState(newTheme);
     try {
-      localStorage.setItem(STORAGE_KEY, newTheme);
+      localStorage.setItem(THEME_STORAGE_KEY, newTheme);
     } catch {}
     document.documentElement.setAttribute("data-theme", newTheme);
   };
 
+  const themeConfig = useMemo(() => getThemeConfig(theme), [theme]);
+
+  const value = useMemo(
+    () => ({
+      theme,
+      themeConfig,
+      setTheme,
+      themes: THEME_LIST,
+    }),
+    [theme, themeConfig]
+  );
+
   return (
-    <ThemeContext.Provider value={{ theme, setTheme }}>
+    <ThemeContext.Provider value={value}>
       {children}
     </ThemeContext.Provider>
   );

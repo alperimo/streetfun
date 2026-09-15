@@ -17,48 +17,40 @@ export function TradingViewChart({
 }: TradingViewChartProps) {
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
-  const { theme } = useTheme();
+  const { themeConfig } = useTheme();
 
   useEffect(() => {
     if (!chartContainerRef.current) return;
 
-    const isLight = theme === "light";
-    const isDarkOnyx = theme === "dark";
-
-    const bgColor = isLight ? "#ffffff" : isDarkOnyx ? "#060a0e" : "#0c1218";
-    const textColor = isLight ? "#64748b" : isDarkOnyx ? "#8295a5" : "#94a3b8";
-    const gridColor = isLight ? "#f1f5f9" : isDarkOnyx ? "#131f2b" : "#162432";
-    const borderColor = isLight ? "#e2e8f0" : isDarkOnyx ? "#182531" : "#1f3042";
-    const lineColor = isLight ? "#0284c7" : "#00f0ff";
-    const topColor = isLight ? "rgba(2, 132, 199, 0.2)" : "rgba(0, 240, 255, 0.28)";
+    const { chart: chartTheme } = themeConfig;
 
     const chart = createChart(chartContainerRef.current, {
       layout: {
-        background: { type: ColorType.Solid, color: bgColor },
-        textColor: textColor,
+        background: { type: ColorType.Solid, color: chartTheme.background },
+        textColor: chartTheme.textColor,
       },
       grid: {
-        vertLines: { color: gridColor },
-        horzLines: { color: gridColor },
+        vertLines: { color: chartTheme.gridColor },
+        horzLines: { color: chartTheme.gridColor },
       },
       width: chartContainerRef.current.clientWidth,
       height: 380,
       timeScale: {
-        borderColor: borderColor,
+        borderColor: chartTheme.borderColor,
         timeVisible: true,
         secondsVisible: false,
       },
       rightPriceScale: {
-        borderColor: borderColor,
+        borderColor: chartTheme.borderColor,
       },
     });
 
     chartRef.current = chart;
 
     const areaSeries = chart.addAreaSeries({
-      lineColor: lineColor,
-      topColor: topColor,
-      bottomColor: "rgba(0, 0, 0, 0.0)",
+      lineColor: chartTheme.lineColor,
+      topColor: chartTheme.topColor,
+      bottomColor: chartTheme.bottomColor,
       lineWidth: 2,
     });
 
@@ -82,10 +74,10 @@ export function TradingViewChart({
 
     areaSeries.setData(dataPoints);
 
-    // Guaranteed Stock Floor (NAV Line in Amber/Yellow)
+    // Guaranteed Stock Floor (NAV Line)
     areaSeries.createPriceLine({
       price: floorPrice,
-      color: "#f59e0b",
+      color: chartTheme.floorLineColor,
       lineWidth: 2,
       lineStyle: LineStyle.Dashed,
       axisLabelVisible: true,
@@ -108,7 +100,7 @@ export function TradingViewChart({
       window.removeEventListener("resize", handleResize);
       chart.remove();
     };
-  }, [initialPrice, floorPrice, theme]);
+  }, [initialPrice, floorPrice, themeConfig]);
 
   return (
     <div className="relative w-full rounded-xl border border-border bg-card p-4 shadow-sm">

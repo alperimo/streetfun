@@ -1,11 +1,18 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
-import { useTheme, ThemeMode } from "@/context/ThemeContext";
+import { useTheme } from "@/context/ThemeContext";
+import { ThemeId } from "@/config/themes";
 import { Moon, Sun, Sparkles, ChevronDown } from "lucide-react";
 
+function ThemeIcon({ id, className = "h-3.5 w-3.5" }: { id: ThemeId; className?: string }) {
+  if (id === "street-dark") return <Sparkles className={`${className} text-brand-cyan`} />;
+  if (id === "dark") return <Moon className={`${className} text-purple-400`} />;
+  return <Sun className={`${className} text-amber-500`} />;
+}
+
 export function ThemeToggle() {
-  const { theme, setTheme } = useTheme();
+  const { theme, themeConfig, setTheme, themes } = useTheme();
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -19,29 +26,6 @@ export function ThemeToggle() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const themes: { id: ThemeMode; label: string; icon: React.ReactNode; desc: string }[] = [
-    {
-      id: "street-dark",
-      label: "Street Dark",
-      icon: <Sparkles className="h-3.5 w-3.5 text-brand-cyan" />,
-      desc: "Midnight Slate (Degen Wall St)",
-    },
-    {
-      id: "dark",
-      label: "Onyx Dark",
-      icon: <Moon className="h-3.5 w-3.5 text-purple-400" />,
-      desc: "Deep Black Terminal",
-    },
-    {
-      id: "light",
-      label: "Clean Light",
-      icon: <Sun className="h-3.5 w-3.5 text-amber-500" />,
-      desc: "Paper White Mode",
-    },
-  ];
-
-  const currentTheme = themes.find((t) => t.id === theme) || themes[0];
-
   return (
     <div className="relative" ref={dropdownRef}>
       <button
@@ -49,8 +33,8 @@ export function ThemeToggle() {
         className="flex items-center gap-1.5 rounded-lg border border-border bg-card px-2.5 py-1.5 text-xs text-foreground hover:border-border-active transition-colors shadow-xs"
         title="Change Theme"
       >
-        {currentTheme.icon}
-        <span className="hidden sm:inline font-medium text-[11px]">{currentTheme.label}</span>
+        <ThemeIcon id={theme} />
+        <span className="hidden sm:inline font-medium text-[11px]">{themeConfig.name}</span>
         <ChevronDown className="h-3 w-3 text-muted" />
       </button>
 
@@ -75,10 +59,10 @@ export function ThemeToggle() {
                 }`}
               >
                 <div className="flex items-center gap-2">
-                  {t.icon}
+                  <ThemeIcon id={t.id} />
                   <div>
-                    <div className="text-xs font-semibold">{t.label}</div>
-                    <div className="text-[10px] text-muted font-normal">{t.desc}</div>
+                    <div className="text-xs font-semibold">{t.name}</div>
+                    <div className="text-[10px] text-muted font-normal">{t.description}</div>
                   </div>
                 </div>
                 {active && (
