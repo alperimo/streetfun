@@ -1,0 +1,23 @@
+[package]
+name = "streetfun"
+version = "0.1.0"
+description = "Streetfun - The World's First Equity-Backed Memecoin Engine on Solana"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+name = "streetfun"
+
+[features]
+no-entrypoint = []
+no-idl = []
+no-log-ix-name = []
+cpi = ["no-entrypoint"]
+default = []
+idl-build = ["anchor-lang/idl-build", "anchor-spl/idl-build"]
+
+[dependencies]
+anchor-lang = { version = "0.31.0", features = ["init-if-needed"] }
+anchor-spl = { version = "0.31.0", features = ["token", "associated_token"] }
+solana-program = ">=2.1.0, <2.3.0"
+thiserror = "2.0"
