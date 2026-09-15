@@ -8,7 +8,6 @@ import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { TradingViewChart } from "@/components/tokens/TradingViewChart";
 import { TradeTerminal } from "@/components/tokens/TradeTerminal";
-import { BurnRedeemModule } from "@/components/tokens/BurnRedeemModule";
 import { SearchModal } from "@/components/modals/SearchModal";
 import { LaunchModal } from "@/components/modals/LaunchModal";
 import { INITIAL_TOKENS } from "@/lib/mockData";
@@ -123,13 +122,30 @@ export default function TokenDetailPage({ params }: PageProps) {
               </div>
 
               <div className="border-l border-border pl-6">
-                <div className="text-[10px] uppercase text-muted">Market Cap</div>
-                <div className="font-mono text-xl font-bold text-slate-900">
-                  ${(token.marketCapUsd / 1_000_000).toFixed(2)}M
-                </div>
-                <div className="font-mono text-xs text-muted">
-                  Vol ${(token.volume24hUsd / 1_000).toFixed(0)}K
-                </div>
+                {token.bondingCurve.isGraduated ? (
+                  <>
+                    <div className="text-[10px] uppercase text-muted">Market Cap</div>
+                    <div className="font-mono text-xl font-bold text-slate-900">
+                      ${(token.marketCapUsd / 1_000_000).toFixed(2)}M
+                    </div>
+                    <div className="font-mono text-xs text-muted">
+                      Vol ${(token.volume24hUsd / 1_000).toFixed(0)}K
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="text-[10px] uppercase text-muted">Bonding Reserves</div>
+                    <div className="font-mono text-xl font-bold text-slate-900">
+                      ${(token.bondingCurve.realQuoteReservesUsd / 1_000).toFixed(1)}K{" "}
+                      <span className="text-xs font-normal text-muted">/ $60K</span>
+                    </div>
+                    <div className="flex items-center gap-1.5 mt-0.5">
+                      <span className="rounded bg-sky-50 border border-sky-200 px-1.5 py-0.5 text-[10px] font-mono font-bold text-brand-cyan">
+                        {(1 + (token.bondingCurve.progressPct / 100) * 1.8).toFixed(1)}x from genesis
+                      </span>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           </div>
@@ -142,47 +158,90 @@ export default function TokenDetailPage({ params }: PageProps) {
             <TradingViewChart
               tokenSymbol={token.symbol}
               initialPrice={token.priceUsd}
+              floorPrice={0.0031}
             />
 
-            {/* Progress Bar Card */}
-            <div className="rounded-2xl border border-border bg-white p-5 shadow-sm">
+            {/* Simplified Single-Line Progress Bar */}
+            <div className="rounded-xl border border-border bg-white p-4 shadow-sm">
               <div className="flex items-center justify-between text-xs mb-2">
-                <span className="text-muted">
-                  Bonding curve progress
-                </span>
-                <span className="font-mono font-bold text-slate-900 text-sm">
-                  {token.bondingCurve.progressPct}%
+                <span className="text-muted font-medium">Graduation Progress</span>
+                <span className="font-mono font-bold text-slate-900">
+                  {token.bondingCurve.isGraduated
+                    ? "100% (Graduated to AMM)"
+                    : `${token.bondingCurve.progressPct}% ($${(token.bondingCurve.realQuoteReservesUsd / 1_000).toFixed(1)}K / $60K USDC)`}
                 </span>
               </div>
 
-              <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100">
+              <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
                 <div
                   className="h-full rounded-full bg-gradient-to-r from-sky-500 to-cyan-500 transition-all duration-300"
                   style={{ width: `${Math.min(token.bondingCurve.progressPct, 100)}%` }}
                 />
               </div>
-
-              <div className="mt-3 flex items-center justify-between text-xs font-mono text-muted">
-                <span>
-                  Reserves: ${token.bondingCurve.realQuoteReservesUsd.toLocaleString()} / $60,000 USDC
-                </span>
-                <span>
-                  {token.bondingCurve.isGraduated ? "Graduated to AMM" : "50% buys stock at $60K"}
-                </span>
-              </div>
             </div>
 
-            {/* Post-Graduation Module or Info */}
-            {token.bondingCurve.isGraduated ? (
-              <BurnRedeemModule token={token} />
-            ) : (
-              <div className="rounded-2xl border border-border bg-white p-5 text-xs text-muted shadow-sm">
-                <div className="font-bold text-slate-900 mb-1">
-                  Redemption Floor
+            {/* Live Trades Table */}
+            <div className="rounded-xl border border-border bg-white p-4 shadow-sm">
+              <div className="flex items-center justify-between border-b border-border pb-3">
+                <div className="flex items-center gap-2">
+                  <h3 className="text-xs font-bold text-slate-900 tracking-tight uppercase">
+                    Live Trades
+                  </h3>
+                  <span className="flex h-1.5 w-1.5 relative">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-emerald opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-brand-emerald"></span>
+                  </span>
                 </div>
-                At graduation, $30,000 USDC automatically buys real {token.targetEquity.name} ({token.targetEquity.symbol}) shares into treasury. Holders can then burn ${token.symbol} tokens to redeem stock shares pro-rata.
+                <span className="text-[10px] font-mono text-muted">Solana Mainnet</span>
               </div>
-            )}
+
+              <div className="mt-2.5 overflow-x-auto">
+                <table className="w-full text-left text-xs font-mono">
+                  <thead>
+                    <tr className="text-muted border-b border-border text-[10px]">
+                      <th className="pb-2 font-medium">Type</th>
+                      <th className="pb-2 font-medium">Price</th>
+                      <th className="pb-2 font-medium">Tokens</th>
+                      <th className="pb-2 font-medium">Value (USDC)</th>
+                      <th className="pb-2 font-medium text-right">Time</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border">
+                    {[
+                      { type: "BUY", price: token.priceUsd, tokens: 28450, usdc: 28450 * token.priceUsd, time: "12s ago", isBuy: true },
+                      { type: "BUY", price: token.priceUsd * 0.995, tokens: 65120, usdc: 65120 * token.priceUsd * 0.995, time: "48s ago", isBuy: true },
+                      { type: "REDEEM", price: 0.0031, tokens: 100000, usdc: 310.00, time: "2m ago", isRedeem: true },
+                      { type: "SELL", price: token.priceUsd * 0.98, tokens: 14200, usdc: 14200 * token.priceUsd * 0.98, time: "4m ago", isBuy: false },
+                      { type: "BUY", price: token.priceUsd * 0.97, tokens: 82000, usdc: 82000 * token.priceUsd * 0.97, time: "7m ago", isBuy: true },
+                    ].map((trade, idx) => (
+                      <tr key={idx} className="hover:bg-slate-50 transition-colors">
+                        <td className="py-2">
+                          <span
+                            className={`rounded px-1.5 py-0.5 text-[9px] font-bold ${
+                              trade.isRedeem
+                                ? "bg-amber-50 text-amber-700 border border-amber-200"
+                                : trade.isBuy
+                                ? "bg-emerald-50 text-brand-emerald"
+                                : "bg-rose-50 text-brand-rose"
+                            }`}
+                          >
+                            {trade.type}
+                          </span>
+                        </td>
+                        <td className="py-2 text-slate-900">${trade.price.toFixed(4)}</td>
+                        <td className="py-2 text-slate-900">
+                          {trade.tokens.toLocaleString()} {token.symbol}
+                        </td>
+                        <td className="py-2 font-bold text-slate-900">
+                          ${trade.usdc.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </td>
+                        <td className="py-2 text-right text-muted">{trade.time}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
           </div>
 
           {/* Right Column (4 cols) */}

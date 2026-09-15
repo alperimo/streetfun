@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { HeroBanner } from "@/components/home/HeroBanner";
@@ -19,6 +19,12 @@ export default function ExplorePage() {
 
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isLaunchOpen, setIsLaunchOpen] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== "undefined" && new URLSearchParams(window.location.search).get("launch") === "true") {
+      setIsLaunchOpen(true);
+    }
+  }, []);
 
   const filteredTokens = useMemo(() => {
     return tokens

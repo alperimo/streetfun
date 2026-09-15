@@ -72,36 +72,21 @@ export function TokenCard({ token }: TokenCardProps) {
           </button>
         </div>
 
-        {/* Market Cap & Price Change */}
-        <div className="mt-4">
-          <div className="font-mono text-2xl font-extrabold text-slate-900 tracking-tight">
-            ${(token.marketCapUsd / 1_000_000).toFixed(2)}M
-          </div>
-        </div>
-
         {/* Backed by badge */}
-        <div className="mt-2.5 flex items-center gap-1.5 text-xs">
-          <span className="text-muted">Backed with</span>
-          <span className="inline-flex items-center gap-1 rounded-md bg-sky-50 px-2 py-0.5 text-xs font-semibold text-brand-cyan border border-sky-200">
-            {token.targetEquity.symbol}
-          </span>
-        </div>
-      </div>
-
-      {/* Bottom: Progress Bar + Vol / Change */}
-      <div className="mt-5 pt-3 border-t border-border">
-        <div className="flex items-center justify-between text-[11px] mb-1.5">
-          <span className="text-muted">
-            {token.bondingCurve.isGraduated
-              ? "Graduated"
-              : `$${token.bondingCurve.realQuoteReservesUsd.toLocaleString()} / $60,000`}
-          </span>
-          <span className="font-mono font-bold text-slate-900">
-            {token.bondingCurve.progressPct}%
+        <div className="mt-3 flex items-center justify-between gap-1.5 text-xs">
+          <div className="flex items-center gap-1.5">
+            <span className="text-muted">Backed with</span>
+            <span className="inline-flex items-center gap-1 rounded-md bg-sky-50 px-2 py-0.5 text-xs font-semibold text-brand-cyan border border-sky-200">
+              {token.targetEquity.symbol}
+            </span>
+          </div>
+          <span className="font-mono text-xs font-bold text-muted">
+            {token.bondingCurve.isGraduated ? "Graduated" : `${token.bondingCurve.progressPct}%`}
           </span>
         </div>
 
-        <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
+        {/* Progress Bar moved directly under the stock badge */}
+        <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
           <div
             className={`h-full rounded-full transition-all duration-300 ${
               token.bondingCurve.isGraduated
@@ -112,19 +97,49 @@ export function TokenCard({ token }: TokenCardProps) {
           />
         </div>
 
-        <div className="mt-3 flex items-center justify-between text-xs font-mono">
-          <span className="text-muted">
-            Vol ${(token.volume24hUsd / 1_000).toFixed(0)}K
-          </span>
-          <span
-            className={`font-semibold ${
-              isPositive ? "text-brand-emerald" : "text-brand-rose"
-            }`}
-          >
-            {isPositive ? "+" : ""}
-            {token.priceChange24h.toFixed(1)}%
-          </span>
+        {/* Primary Metric: Only graduated tokens show Market Cap; bonding tokens show Reserves & Multiplier */}
+        <div className="mt-4">
+          {token.bondingCurve.isGraduated ? (
+            <div>
+              <div className="text-[10px] text-muted uppercase font-semibold tracking-wider">
+                Market Cap
+              </div>
+              <div className="mt-0.5 font-mono text-2xl font-extrabold text-slate-900 tracking-tight">
+                ${(token.marketCapUsd / 1_000_000).toFixed(2)}M
+              </div>
+            </div>
+          ) : (
+            <div>
+              <div className="text-[10px] text-muted uppercase font-semibold tracking-wider">
+                Bonding Reserves
+              </div>
+              <div className="mt-0.5 flex items-baseline justify-between gap-2">
+                <div className="font-mono text-2xl font-extrabold text-slate-900 tracking-tight">
+                  ${(token.bondingCurve.realQuoteReservesUsd / 1_000).toFixed(1)}K{" "}
+                  <span className="text-xs font-normal text-muted">/ $60K USDC</span>
+                </div>
+                <span className="rounded bg-sky-50 border border-sky-200 px-2 py-0.5 font-mono text-[11px] font-bold text-brand-cyan">
+                  {(1 + (token.bondingCurve.progressPct / 100) * 1.8).toFixed(1)}x from genesis
+                </span>
+              </div>
+            </div>
+          )}
         </div>
+      </div>
+
+      {/* Bottom: 24h Volume & Price Change */}
+      <div className="mt-4 pt-3 border-t border-border/50 flex items-center justify-between text-xs font-mono">
+        <span className="text-muted">
+          Vol ${(token.volume24hUsd / 1_000).toFixed(0)}K
+        </span>
+        <span
+          className={`font-semibold ${
+            isPositive ? "text-brand-emerald" : "text-brand-rose"
+          }`}
+        >
+          {isPositive ? "+" : ""}
+          {token.priceChange24h.toFixed(1)}%
+        </span>
       </div>
     </Link>
   );
