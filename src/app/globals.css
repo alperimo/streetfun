@@ -3,16 +3,16 @@
 @tailwind utilities;
 
 @layer base {
-  /* Default: Street Dark (Deep Obsidian Terminal) */
+  /* Default: Street Dark (Midnight Slate - 1 Notch Lighter, Degen Wall Street) */
   :root,
   [data-theme="street-dark"] {
-    --background: #06090e;
+    --background: #0c1218;
     --foreground: #f1f5f9;
-    --card: #0e1620;
-    --card-hover: #141f2d;
-    --card-subtle: #090e15;
-    --border: #1a2634;
-    --border-active: #25374a;
+    --card: #131d27;
+    --card-hover: #192734;
+    --card-subtle: #090e13;
+    --border: #1f3042;
+    --border-active: #2d455e;
     --muted: #94a3b8;
     --muted-foreground: #64748b;
     --brand-cyan: #00f0ff;
@@ -20,9 +20,9 @@
     --brand-purple: #a855f7;
     --brand-amber: #f59e0b;
     --brand-rose: #f43f5e;
-    --scrollbar-track: #06090e;
-    --scrollbar-thumb: #1a2634;
-    --scrollbar-thumb-hover: #25374a;
+    --scrollbar-track: #0c1218;
+    --scrollbar-thumb: #1f3042;
+    --scrollbar-thumb-hover: #2d455e;
   }
 
   /* Theme 2: Onyx Dark (Original Deep Pitch Black Terminal) */
