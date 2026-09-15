@@ -1,5 +1,14 @@
 import type { Config } from "tailwindcss";
 
+function withOpacity(variableName: string) {
+  return ({ opacityValue }: { opacityValue?: string }) => {
+    if (opacityValue !== undefined) {
+      return `color-mix(in srgb, var(${variableName}) calc(${opacityValue} * 100%), transparent)`;
+    }
+    return `var(${variableName})`;
+  };
+}
+
 const config: Config = {
   content: [
     "./src/pages/**/*.{js,ts,jsx,tsx,mdx}",
@@ -8,28 +17,31 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      borderColor: {
+        DEFAULT: "var(--border)",
+      },
       colors: {
-        background: "var(--background)",
-        foreground: "var(--foreground)",
+        background: withOpacity("--background"),
+        foreground: withOpacity("--foreground"),
         card: {
-          DEFAULT: "var(--card)",
-          hover: "var(--card-hover)",
-          subtle: "var(--card-subtle)",
+          DEFAULT: withOpacity("--card"),
+          hover: withOpacity("--card-hover"),
+          subtle: withOpacity("--card-subtle"),
         },
         border: {
-          DEFAULT: "var(--border)",
-          active: "var(--border-active)",
+          DEFAULT: withOpacity("--border"),
+          active: withOpacity("--border-active"),
         },
         brand: {
-          cyan: "var(--brand-cyan)",
-          emerald: "var(--brand-emerald)",
-          purple: "var(--brand-purple)",
-          amber: "var(--brand-amber)",
-          rose: "var(--brand-rose)",
+          cyan: withOpacity("--brand-cyan"),
+          emerald: withOpacity("--brand-emerald"),
+          purple: withOpacity("--brand-purple"),
+          amber: withOpacity("--brand-amber"),
+          rose: withOpacity("--brand-rose"),
         },
         muted: {
-          DEFAULT: "var(--muted)",
-          foreground: "var(--muted-foreground)",
+          DEFAULT: withOpacity("--muted"),
+          foreground: withOpacity("--muted-foreground"),
         },
       },
       fontFamily: {
