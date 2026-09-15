@@ -50,23 +50,23 @@ export function BurnRedeemModule({ token }: BurnRedeemModuleProps) {
   };
 
   return (
-    <div className="rounded-2xl border border-sky-200 bg-white p-6 shadow-sm">
+    <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border pb-4">
         <div>
-          <h3 className="text-base font-bold text-slate-900">Redeem Equity</h3>
+          <h3 className="text-base font-bold text-foreground">Redeem Equity</h3>
           <p className="text-xs text-muted">
             Burn ${token.symbol} to redeem your pro-rata share of {token.targetEquity.symbol} stock.
           </p>
         </div>
 
-        <div className="flex items-center gap-1 rounded-lg bg-slate-100 p-1 border border-border">
+        <div className="flex items-center gap-1 rounded-lg bg-card-subtle p-1 border border-border">
           <button
             onClick={() => setRedeemMode("stock")}
             className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all ${
               redeemMode === "stock"
                 ? "bg-brand-cyan text-white shadow-sm"
-                : "text-muted hover:text-slate-900"
+                : "text-muted hover:text-foreground"
             }`}
           >
             Withdraw Stock
@@ -76,7 +76,7 @@ export function BurnRedeemModule({ token }: BurnRedeemModuleProps) {
             className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all ${
               redeemMode === "usdc"
                 ? "bg-brand-emerald text-white shadow-sm"
-                : "text-muted hover:text-slate-900"
+                : "text-muted hover:text-foreground"
             }`}
           >
             Swap to USDC
@@ -99,16 +99,16 @@ export function BurnRedeemModule({ token }: BurnRedeemModuleProps) {
             placeholder="0"
             value={memeAmount}
             onChange={(e) => setMemeAmount(e.target.value)}
-            className="w-full rounded-xl border border-border bg-slate-50 pl-4 pr-24 py-3 text-lg font-mono text-slate-900 placeholder-muted focus:border-brand-cyan focus:bg-white focus:outline-none shadow-sm"
+            className="w-full rounded-xl border border-border bg-card-subtle pl-4 pr-24 py-3 text-lg font-mono text-foreground placeholder-muted focus:border-brand-cyan focus:bg-card focus:outline-none shadow-sm"
           />
           <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
             <button
               onClick={() => setMemeAmount("50000")}
-              className="rounded bg-sky-50 px-2 py-1 text-[10px] font-mono text-brand-cyan border border-sky-200 hover:bg-sky-100"
+              className="rounded bg-brand-cyan/10 px-2 py-1 text-[10px] font-mono text-brand-cyan border border-brand-cyan/25 hover:bg-brand-cyan/20"
             >
               MAX
             </button>
-            <span className="font-mono text-xs font-bold text-slate-900">
+            <span className="font-mono text-xs font-bold text-foreground">
               ${token.symbol}
             </span>
           </div>
@@ -116,9 +116,9 @@ export function BurnRedeemModule({ token }: BurnRedeemModuleProps) {
       </div>
 
       {/* Pro-Rata Output Box */}
-      <div className="mt-4 rounded-xl border border-border bg-slate-50 p-4">
+      <div className="mt-4 rounded-xl border border-border bg-card-subtle p-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-          <div className="font-mono text-base font-bold text-slate-900 flex items-center gap-2">
+          <div className="font-mono text-base font-bold text-foreground flex items-center gap-2">
             <span>{numMeme.toLocaleString()} ${token.symbol}</span>
             <span className="text-brand-cyan">=</span>
             <span className="text-brand-emerald">
@@ -126,13 +126,13 @@ export function BurnRedeemModule({ token }: BurnRedeemModuleProps) {
             </span>
           </div>
           <div className="font-mono text-xs text-muted">
-            Value: <strong className="text-slate-900">${entitledUsdcValue.toFixed(2)}</strong>
+            Value: <strong className="text-foreground">${entitledUsdcValue.toFixed(2)}</strong>
           </div>
         </div>
       </div>
 
       {txSuccess && (
-        <div className="mt-3 flex items-center gap-2 rounded-lg border border-brand-emerald/30 bg-emerald-50 p-2.5 text-xs text-brand-emerald">
+        <div className="mt-3 flex items-center gap-2 rounded-lg border border-brand-emerald/30 bg-emerald-500/10 p-2.5 text-xs text-brand-emerald">
           <Check className="h-4 w-4 flex-shrink-0" />
           <span>{txSuccess}</span>
         </div>
@@ -160,7 +160,7 @@ export function BurnRedeemModule({ token }: BurnRedeemModuleProps) {
             handleExecuteRedeem();
           }}
           disabled={!numMeme || isProcessing}
-          className="flex items-center justify-center gap-2 rounded-xl border border-brand-emerald/40 bg-emerald-50 py-3 text-sm font-bold text-brand-emerald hover:bg-emerald-100 transition-colors disabled:opacity-50 shadow-sm"
+          className="flex items-center justify-center gap-2 rounded-xl border border-brand-emerald/40 bg-emerald-500/10 py-3 text-sm font-bold text-brand-emerald hover:bg-emerald-500/20 transition-colors disabled:opacity-50 shadow-sm"
         >
           {isProcessing && redeemMode === "usdc" ? (
             <RefreshCw className="h-4 w-4 animate-spin" />

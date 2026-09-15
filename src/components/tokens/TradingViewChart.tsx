@@ -2,6 +2,7 @@
 
 import React, { useEffect, useRef } from "react";
 import { createChart, ColorType, IChartApi, LineStyle } from "lightweight-charts";
+import { useTheme } from "@/context/ThemeContext";
 
 interface TradingViewChartProps {
   tokenSymbol: string;
@@ -16,37 +17,48 @@ export function TradingViewChart({
 }: TradingViewChartProps) {
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
+  const { theme } = useTheme();
 
   useEffect(() => {
     if (!chartContainerRef.current) return;
 
+    const isLight = theme === "light";
+    const isDarkOnyx = theme === "dark";
+
+    const bgColor = isLight ? "#ffffff" : isDarkOnyx ? "#060a0e" : "#0c1218";
+    const textColor = isLight ? "#64748b" : isDarkOnyx ? "#8295a5" : "#94a3b8";
+    const gridColor = isLight ? "#f1f5f9" : isDarkOnyx ? "#131f2b" : "#162432";
+    const borderColor = isLight ? "#e2e8f0" : isDarkOnyx ? "#182531" : "#1f3042";
+    const lineColor = isLight ? "#0284c7" : "#00f0ff";
+    const topColor = isLight ? "rgba(2, 132, 199, 0.2)" : "rgba(0, 240, 255, 0.28)";
+
     const chart = createChart(chartContainerRef.current, {
       layout: {
-        background: { type: ColorType.Solid, color: "#ffffff" },
-        textColor: "#64748b",
+        background: { type: ColorType.Solid, color: bgColor },
+        textColor: textColor,
       },
       grid: {
-        vertLines: { color: "#f1f5f9" },
-        horzLines: { color: "#f1f5f9" },
+        vertLines: { color: gridColor },
+        horzLines: { color: gridColor },
       },
       width: chartContainerRef.current.clientWidth,
       height: 380,
       timeScale: {
-        borderColor: "#e2e8f0",
+        borderColor: borderColor,
         timeVisible: true,
         secondsVisible: false,
       },
       rightPriceScale: {
-        borderColor: "#e2e8f0",
+        borderColor: borderColor,
       },
     });
 
     chartRef.current = chart;
 
     const areaSeries = chart.addAreaSeries({
-      lineColor: "#0284c7",
-      topColor: "rgba(2, 132, 199, 0.2)",
-      bottomColor: "rgba(2, 132, 199, 0.0)",
+      lineColor: lineColor,
+      topColor: topColor,
+      bottomColor: "rgba(0, 0, 0, 0.0)",
       lineWidth: 2,
     });
 
@@ -96,24 +108,24 @@ export function TradingViewChart({
       window.removeEventListener("resize", handleResize);
       chart.remove();
     };
-  }, [initialPrice, floorPrice]);
+  }, [initialPrice, floorPrice, theme]);
 
   return (
-    <div className="relative w-full rounded-xl border border-border bg-white p-4 shadow-sm">
+    <div className="relative w-full rounded-xl border border-border bg-card p-4 shadow-sm">
       <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-border text-xs">
         <div className="flex items-center gap-2">
-          <span className="font-bold text-slate-900">${tokenSymbol} / USDC</span>
-          <span className="rounded bg-sky-50 px-1.5 py-0.5 text-[10px] font-mono text-brand-cyan border border-sky-200">
+          <span className="font-bold text-foreground">${tokenSymbol} / USDC</span>
+          <span className="rounded bg-brand-cyan/10 px-1.5 py-0.5 text-[10px] font-mono text-brand-cyan border border-brand-cyan/25">
             Bonding Curve Discovery
           </span>
         </div>
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1.5 rounded-md bg-amber-50 border border-amber-200 px-2 py-0.5 text-[10px] font-mono font-bold text-amber-700">
+          <div className="flex items-center gap-1.5 rounded-md bg-amber-500/10 border border-amber-500/30 px-2 py-0.5 text-[10px] font-mono font-bold text-amber-500">
             <span className="inline-block w-2.5 h-0.5 bg-amber-500 border-b border-dashed" />
             <span>${floorPrice.toFixed(4)} Guaranteed Stock Floor</span>
           </div>
           <div className="hidden sm:flex items-center gap-2 font-mono text-muted text-[11px]">
-            <span>Current: <strong className="text-slate-900">${initialPrice.toFixed(6)}</strong></span>
+            <span>Current: <strong className="text-foreground">${initialPrice.toFixed(6)}</strong></span>
             <span className="text-brand-emerald font-semibold">+47.7%</span>
           </div>
         </div>

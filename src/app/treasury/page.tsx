@@ -25,7 +25,7 @@ export default function TreasuryPage() {
 
       <main className="mx-auto flex-1 w-full px-6 md:px-12 xl:px-[164px] py-8">
         <div className="flex flex-col gap-2 mb-8">
-          <h1 className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight">
+          <h1 className="text-3xl sm:text-4xl font-black text-foreground tracking-tight">
             Treasury
           </h1>
           <p className="max-w-2xl text-sm text-muted">
@@ -35,9 +35,9 @@ export default function TreasuryPage() {
 
         {/* 4 Stats Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="rounded-2xl border border-border bg-white p-5 shadow-sm">
+          <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
             <div className="text-xs text-muted font-medium">Total Equity Locked</div>
-            <div className="mt-1 font-mono text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
+            <div className="mt-1 font-mono text-2xl sm:text-3xl font-bold text-foreground tracking-tight">
               ${stats.totalEquityValueLockedUsd.toLocaleString()}
             </div>
             <div className="mt-1 text-[11px] text-muted">
@@ -45,7 +45,7 @@ export default function TreasuryPage() {
             </div>
           </div>
 
-          <div className="rounded-2xl border border-border bg-white p-5 shadow-sm">
+          <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
             <div className="text-xs text-muted font-medium">Total Distributed</div>
             <div className="mt-1 font-mono text-2xl sm:text-3xl font-bold text-brand-cyan tracking-tight">
               ${stats.totalRedemptionsUsd.toLocaleString()}
@@ -55,9 +55,9 @@ export default function TreasuryPage() {
             </div>
           </div>
 
-          <div className="rounded-2xl border border-border bg-white p-5 shadow-sm">
+          <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
             <div className="text-xs text-muted font-medium">Graduated Vaults</div>
-            <div className="mt-1 font-mono text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
+            <div className="mt-1 font-mono text-2xl sm:text-3xl font-bold text-foreground tracking-tight">
               {stats.totalGraduatedCurves.toLocaleString()}
             </div>
             <div className="mt-1 text-[11px] text-muted">
@@ -65,9 +65,9 @@ export default function TreasuryPage() {
             </div>
           </div>
 
-          <div className="rounded-2xl border border-border bg-white p-5 shadow-sm">
+          <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
             <div className="text-xs text-muted font-medium">Holder Payouts</div>
-            <div className="mt-1 font-mono text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
+            <div className="mt-1 font-mono text-2xl sm:text-3xl font-bold text-foreground tracking-tight">
               {stats.walletsRedeemed.toLocaleString()}
             </div>
             <div className="mt-1 text-[11px] text-muted">
@@ -79,10 +79,10 @@ export default function TreasuryPage() {
         {/* Two Tables */}
         <div className="mt-8 grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* Left Table: Top Equity Holdings */}
-          <div className="lg:col-span-7 rounded-2xl border border-border bg-white p-5 shadow-sm">
+          <div className="lg:col-span-7 rounded-2xl border border-border bg-card p-5 shadow-sm">
             <div className="flex items-center justify-between border-b border-border pb-3">
               <div>
-                <h3 className="text-base font-bold text-slate-900">
+                <h3 className="text-base font-bold text-foreground">
                   Top Vault Holdings
                 </h3>
                 <p className="text-xs text-muted">
@@ -95,7 +95,7 @@ export default function TreasuryPage() {
               {stats.assetBreakdown.map((asset, index) => (
                 <div
                   key={asset.symbol}
-                  className="py-3.5 flex items-center justify-between hover:bg-slate-50 px-2 rounded-lg transition-colors"
+                  className="py-3.5 flex items-center justify-between hover:bg-card-subtle px-2 rounded-lg transition-colors"
                 >
                   <div className="flex items-center gap-3">
                     <span className="font-mono text-xs font-bold text-muted w-4">
@@ -103,10 +103,10 @@ export default function TreasuryPage() {
                     </span>
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="font-bold text-slate-900 text-sm">
+                        <span className="font-bold text-foreground text-sm">
                           {asset.name}
                         </span>
-                        <span className="rounded bg-sky-50 border border-sky-200 px-1.5 py-0.5 text-[10px] font-bold text-brand-cyan">
+                        <span className="rounded bg-brand-cyan/10 border border-brand-cyan/25 px-1.5 py-0.5 text-[10px] font-bold text-brand-cyan">
                           {asset.symbol}
                         </span>
                       </div>
@@ -117,7 +117,7 @@ export default function TreasuryPage() {
                   </div>
 
                   <div className="text-right">
-                    <div className="font-mono text-sm font-bold text-slate-900">
+                    <div className="font-mono text-sm font-bold text-foreground">
                       ${(asset.valueUsd / 1_000_000).toFixed(2)}M
                     </div>
                     <a
@@ -136,10 +136,10 @@ export default function TreasuryPage() {
           </div>
 
           {/* Right Table: Recent Redemptions */}
-          <div className="lg:col-span-5 rounded-2xl border border-border bg-white p-5 shadow-sm">
+          <div className="lg:col-span-5 rounded-2xl border border-border bg-card p-5 shadow-sm">
             <div className="flex items-center justify-between border-b border-border pb-3">
               <div>
-                <h3 className="text-base font-bold text-slate-900">
+                <h3 className="text-base font-bold text-foreground">
                   Recent Redemptions
                 </h3>
                 <p className="text-xs text-muted">
@@ -153,14 +153,14 @@ export default function TreasuryPage() {
               {stats.recentRedemptions.map((rdm) => (
                 <div
                   key={rdm.id}
-                  className="py-3 flex items-center justify-between hover:bg-slate-50 px-2 rounded-lg transition-colors"
+                  className="py-3 flex items-center justify-between hover:bg-card-subtle px-2 rounded-lg transition-colors"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-sky-50 text-brand-cyan border border-sky-200">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-cyan/10 text-brand-cyan border border-brand-cyan/25">
                       <Wallet className="h-4 w-4" />
                     </div>
                     <div>
-                      <div className="font-bold text-slate-900 text-xs">
+                      <div className="font-bold text-foreground text-xs">
                         Burned {rdm.burnedMemeAmount}
                       </div>
                       <div className="text-[11px] text-muted mt-0.5">

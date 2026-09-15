@@ -53,9 +53,9 @@ export function SearchModal({ isOpen, onClose, tokens }: SearchModalProps) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center pt-20 px-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-150">
+    <div className="fixed inset-0 z-50 flex items-start justify-center pt-20 px-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-150">
       <div
-        className="w-full max-w-lg rounded-2xl border border-border bg-white p-4 shadow-2xl"
+        className="w-full max-w-lg rounded-2xl border border-border bg-card p-4 shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Search Header */}
@@ -70,11 +70,11 @@ export function SearchModal({ isOpen, onClose, tokens }: SearchModalProps) {
               setQuery(e.target.value);
               setSelectedIndex(0);
             }}
-            className="w-full bg-transparent pl-9 pr-8 text-sm text-slate-900 placeholder-muted focus:outline-none"
+            className="w-full bg-transparent pl-9 pr-8 text-sm text-foreground placeholder-muted focus:outline-none"
           />
           <button
             onClick={onClose}
-            className="rounded p-1 text-muted hover:text-slate-900 transition-colors"
+            className="rounded p-1 text-muted hover:text-foreground transition-colors"
           >
             <X className="h-4 w-4" />
           </button>
@@ -94,11 +94,11 @@ export function SearchModal({ isOpen, onClose, tokens }: SearchModalProps) {
                   key={token.mint}
                   onClick={() => handleSelect(token)}
                   className={`flex items-center justify-between p-3 rounded-lg cursor-pointer transition-colors ${
-                    idx === selectedIndex ? "bg-slate-100" : "hover:bg-slate-50"
+                    idx === selectedIndex ? "bg-card-subtle" : "hover:bg-card-subtle"
                   }`}
                 >
                   <div className="flex items-center gap-3">
-                    <div className="relative h-9 w-9 overflow-hidden rounded-lg border border-border bg-slate-100">
+                    <div className="relative h-9 w-9 overflow-hidden rounded-lg border border-border bg-card-subtle">
                       <Image
                         src={token.avatarUrl}
                         alt={token.name}
@@ -109,10 +109,10 @@ export function SearchModal({ isOpen, onClose, tokens }: SearchModalProps) {
                     </div>
                     <div>
                       <div className="flex items-center gap-1.5">
-                        <span className="font-bold text-slate-900 text-sm">
+                        <span className="font-bold text-foreground text-sm">
                           ${token.symbol}
                         </span>
-                        <span className="rounded bg-sky-50 px-1.5 py-0.5 text-[9px] font-bold text-brand-cyan border border-sky-200">
+                        <span className="rounded bg-brand-cyan/10 px-1.5 py-0.5 text-[9px] font-bold text-brand-cyan border border-brand-cyan/25">
                           {token.targetEquity.symbol}
                         </span>
                       </div>
@@ -123,7 +123,7 @@ export function SearchModal({ isOpen, onClose, tokens }: SearchModalProps) {
                   </div>
 
                   <div className="text-right">
-                    <div className="font-mono text-sm font-bold text-slate-900">
+                    <div className="font-mono text-sm font-bold text-foreground">
                       ${(token.marketCapUsd / 1_000_000).toFixed(2)}M
                     </div>
                     <div

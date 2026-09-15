@@ -43,7 +43,7 @@ export function FilterBar({
             placeholder="Search name, ticker, or contract address"
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
-            className="w-full rounded-xl border border-border bg-white pl-10 pr-4 py-2.5 text-sm text-slate-900 placeholder-muted focus:border-brand-cyan focus:outline-none focus:ring-1 focus:ring-brand-cyan/30 transition-all shadow-sm"
+            className="w-full rounded-xl border border-border bg-card pl-10 pr-4 py-2.5 text-sm text-foreground placeholder-muted focus:border-brand-cyan focus:outline-none focus:ring-1 focus:ring-brand-cyan/30 transition-all shadow-xs"
           />
         </div>
 
@@ -54,8 +54,8 @@ export function FilterBar({
             onClick={() => onSortChange("mcap")}
             className={`px-3 py-1.5 rounded-lg font-medium transition-all ${
               sortBy === "mcap"
-                ? "bg-sky-50 text-brand-cyan border border-sky-200"
-                : "text-muted hover:text-slate-900 hover:bg-slate-100"
+                ? "bg-brand-cyan/10 text-brand-cyan border border-brand-cyan/30"
+                : "text-muted hover:text-foreground hover:bg-card-hover"
             }`}
           >
             Market cap
@@ -64,8 +64,8 @@ export function FilterBar({
             onClick={() => onSortChange("newest")}
             className={`px-3 py-1.5 rounded-lg font-medium transition-all ${
               sortBy === "newest"
-                ? "bg-sky-50 text-brand-cyan border border-sky-200"
-                : "text-muted hover:text-slate-900 hover:bg-slate-100"
+                ? "bg-brand-cyan/10 text-brand-cyan border border-brand-cyan/30"
+                : "text-muted hover:text-foreground hover:bg-card-hover"
             }`}
           >
             Newest
@@ -74,8 +74,8 @@ export function FilterBar({
             onClick={() => onSortChange("volume")}
             className={`px-3 py-1.5 rounded-lg font-medium transition-all ${
               sortBy === "volume"
-                ? "bg-sky-50 text-brand-cyan border border-sky-200"
-                : "text-muted hover:text-slate-900 hover:bg-slate-100"
+                ? "bg-brand-cyan/10 text-brand-cyan border border-brand-cyan/30"
+                : "text-muted hover:text-foreground hover:bg-card-hover"
             }`}
           >
             24h volume
@@ -84,8 +84,8 @@ export function FilterBar({
             onClick={() => onSortChange("progress")}
             className={`px-3 py-1.5 rounded-lg font-medium transition-all ${
               sortBy === "progress"
-                ? "bg-sky-50 text-brand-cyan border border-sky-200"
-                : "text-muted hover:text-slate-900 hover:bg-slate-100"
+                ? "bg-brand-cyan/10 text-brand-cyan border border-brand-cyan/30"
+                : "text-muted hover:text-foreground hover:bg-card-hover"
             }`}
           >
             % Graduated
@@ -102,8 +102,8 @@ export function FilterBar({
             onClick={() => onTagChange(tag.id)}
             className={`whitespace-nowrap rounded-lg px-3 py-1.5 font-medium transition-all ${
               selectedTag === tag.id
-                ? "bg-sky-50 text-brand-cyan border border-sky-200 shadow-sm font-semibold"
-                : "border border-border bg-white text-muted hover:border-slate-300 hover:text-slate-900"
+                ? "bg-brand-cyan/10 text-brand-cyan border border-brand-cyan/30 shadow-xs font-semibold"
+                : "border border-border bg-card text-muted hover:border-border-active hover:text-foreground"
             }`}
           >
             {tag.label}

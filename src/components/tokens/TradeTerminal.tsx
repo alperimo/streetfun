@@ -89,10 +89,10 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
   };
 
   return (
-    <div className="rounded-xl border border-border bg-white p-5 shadow-sm">
+    <div className="rounded-xl border border-border bg-card p-5 shadow-sm">
       {/* 3-Tab Switch: Buy / Sell / Redeem Stock */}
       <div className="flex items-center justify-between border-b border-border pb-3">
-        <div className="flex items-center gap-1 rounded-lg bg-slate-100 p-1 border border-border">
+        <div className="flex items-center gap-1 rounded-lg bg-card-subtle p-1 border border-border">
           <button
             onClick={() => {
               setTradeMode("buy");
@@ -101,7 +101,7 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
             className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all ${
               tradeMode === "buy"
                 ? "bg-brand-emerald text-white shadow-sm"
-                : "text-muted hover:text-slate-900"
+                : "text-muted hover:text-foreground"
             }`}
           >
             Buy
@@ -114,7 +114,7 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
             className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all ${
               tradeMode === "sell"
                 ? "bg-brand-rose text-white shadow-sm"
-                : "text-muted hover:text-slate-900"
+                : "text-muted hover:text-foreground"
             }`}
           >
             Sell
@@ -127,7 +127,7 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
             className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all flex items-center gap-1 ${
               tradeMode === "redeem"
                 ? "bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 shadow-sm font-black"
-                : "text-amber-700 hover:text-amber-900 font-medium"
+                : "text-amber-500 hover:text-amber-400 font-medium"
             }`}
           >
             <span>Redeem Stock</span>
@@ -139,7 +139,7 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
         {tradeMode !== "redeem" && (
           <button
             onClick={() => setShowSettings(!showSettings)}
-            className="flex items-center gap-1 text-xs text-muted hover:text-slate-900 transition-colors"
+            className="flex items-center gap-1 text-xs text-muted hover:text-foreground transition-colors"
           >
             <Settings className="h-3.5 w-3.5" />
             <span className="font-mono">{slippage}%</span>
@@ -149,7 +149,7 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
 
       {/* Slippage drawer */}
       {showSettings && tradeMode !== "redeem" && (
-        <div className="mt-3 rounded-lg bg-slate-50 p-3 border border-border text-xs flex items-center justify-between">
+        <div className="mt-3 rounded-lg bg-card-subtle p-3 border border-border text-xs flex items-center justify-between">
           <span className="text-muted">Max Slippage:</span>
           <div className="flex items-center gap-1">
             {[0.5, 1.0, 2.5].map((s) => (
@@ -159,7 +159,7 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
                 className={`px-2 py-0.5 rounded font-mono text-[11px] ${
                   slippage === s
                     ? "bg-brand-cyan text-white font-bold"
-                    : "bg-slate-200/70 text-muted hover:text-slate-900"
+                    : "bg-border text-muted hover:text-foreground"
                 }`}
               >
                 {s}%
@@ -172,13 +172,13 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
       {tradeMode === "redeem" ? (
         <div className="mt-4 space-y-4">
           {/* Dual Action Toggle */}
-          <div className="flex items-center gap-1 rounded-lg bg-slate-100 p-1 border border-border">
+          <div className="flex items-center gap-1 rounded-lg bg-card-subtle p-1 border border-border">
             <button
               onClick={() => setRedeemActionType("stock")}
               className={`flex-1 py-1.5 rounded-md text-xs font-bold transition-all ${
                 redeemActionType === "stock"
                   ? "bg-amber-400 text-slate-950 shadow-sm"
-                  : "text-muted hover:text-slate-900"
+                  : "text-muted hover:text-foreground"
               }`}
             >
               Withdraw {token.targetEquity.symbol} Stock
@@ -188,7 +188,7 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
               className={`flex-1 py-1.5 rounded-md text-xs font-bold transition-all ${
                 redeemActionType === "usdc"
                   ? "bg-brand-emerald text-white shadow-sm"
-                  : "text-muted hover:text-slate-900"
+                  : "text-muted hover:text-foreground"
               }`}
             >
               1-Click USDC Exit
@@ -210,9 +210,9 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
                 placeholder="0"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
-                className="w-full rounded-xl border border-border bg-slate-50 pl-3.5 pr-20 py-3 text-lg font-mono text-slate-900 placeholder-muted focus:border-amber-500 focus:bg-white focus:outline-none shadow-sm"
+                className="w-full rounded-xl border border-border bg-card-subtle pl-3.5 pr-20 py-3 text-lg font-mono text-foreground placeholder-muted focus:border-amber-500 focus:bg-card focus:outline-none shadow-sm"
               />
-              <div className="absolute right-3 top-1/2 -translate-y-1/2 font-mono text-xs font-bold text-amber-600">
+              <div className="absolute right-3 top-1/2 -translate-y-1/2 font-mono text-xs font-bold text-amber-500">
                 {token.symbol}
               </div>
             </div>
@@ -223,7 +223,7 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
                 <button
                   key={val}
                   onClick={() => setAmount(val)}
-                  className="rounded-md border border-border bg-slate-50 py-1 text-muted hover:border-amber-500 hover:text-slate-900 transition-colors shadow-xs"
+                  className="rounded-md border border-border bg-card-subtle py-1 text-muted hover:border-amber-500 hover:text-foreground transition-colors shadow-xs"
                 >
                   {parseInt(val) >= 1000 ? `${parseInt(val) / 1000}K` : val}
                 </button>
@@ -232,17 +232,17 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
           </div>
 
           {/* Interactive Calculation Card */}
-          <div className="rounded-xl border border-border bg-slate-50 p-3.5 space-y-2.5 text-xs">
+          <div className="rounded-xl border border-border bg-card-subtle p-3.5 space-y-2.5 text-xs">
             <div className="flex items-center justify-between">
               <span className="text-muted">Target Equity Asset:</span>
-              <span className="font-bold text-slate-900 flex items-center gap-1">
+              <span className="font-bold text-foreground flex items-center gap-1">
                 {token.targetEquity.name} ({token.targetEquity.symbol})
               </span>
             </div>
 
             <div className="flex items-center justify-between">
               <span className="text-muted">You Claim (Pro-Rata):</span>
-              <span className="font-mono font-bold text-amber-700 text-sm">
+              <span className="font-mono font-bold text-amber-500 text-sm">
                 {entitledStockShares.toFixed(4)} Shares
               </span>
             </div>
@@ -256,7 +256,7 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
 
             <div className="flex items-center justify-between border-t border-border pt-2 text-[11px]">
               <span className="text-muted">Guaranteed NAV Floor:</span>
-              <span className="font-mono text-amber-700 font-semibold">
+              <span className="font-mono text-amber-500 font-semibold">
                 ${floorPricePerToken} / token
               </span>
             </div>
@@ -264,7 +264,7 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
 
           {/* Success Notification */}
           {tradeSuccessMsg && (
-            <div className="flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 p-2.5 text-xs text-brand-emerald">
+            <div className="flex items-center gap-2 rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-2.5 text-xs text-brand-emerald">
               <Check className="h-4 w-4 flex-shrink-0" />
               <span>{tradeSuccessMsg}</span>
             </div>
@@ -308,7 +308,7 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
                 placeholder="0.00"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
-                className="w-full rounded-xl border border-border bg-slate-50 pl-3.5 pr-20 py-3 text-lg font-mono text-slate-900 placeholder-muted focus:border-brand-cyan focus:bg-white focus:outline-none shadow-sm"
+                className="w-full rounded-xl border border-border bg-card-subtle pl-3.5 pr-20 py-3 text-lg font-mono text-foreground placeholder-muted focus:border-brand-cyan focus:bg-card focus:outline-none shadow-sm"
               />
               <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 font-mono text-xs font-bold text-brand-cyan">
                 {tradeMode === "buy" ? "USDC" : token.symbol}
@@ -322,7 +322,7 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
                     <button
                       key={val}
                       onClick={() => setAmount(val)}
-                      className="rounded-md border border-border bg-slate-50 py-1 text-muted hover:border-brand-cyan hover:text-slate-900 transition-colors shadow-xs"
+                      className="rounded-md border border-border bg-card-subtle py-1 text-muted hover:border-brand-cyan hover:text-foreground transition-colors shadow-xs"
                     >
                       ${val}
                     </button>
@@ -334,7 +334,7 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
                         const frac = parseInt(pct) / 100;
                         setAmount((500_000 * frac).toString());
                       }}
-                      className="rounded-md border border-border bg-slate-50 py-1 text-muted hover:border-brand-rose hover:text-slate-900 transition-colors shadow-xs"
+                      className="rounded-md border border-border bg-card-subtle py-1 text-muted hover:border-brand-rose hover:text-foreground transition-colors shadow-xs"
                     >
                       {pct}
                     </button>
@@ -344,10 +344,10 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
 
           {/* Trade Simulation Breakdown */}
           {simulation && !("error" in simulation) && (
-            <div className="mt-4 rounded-lg bg-slate-50 p-3 border border-border space-y-2 text-xs">
+            <div className="mt-4 rounded-lg bg-card-subtle p-3 border border-border space-y-2 text-xs">
               <div className="flex items-center justify-between text-muted">
                 <span>You Receive (Estimated):</span>
-                <span className="font-mono font-bold text-slate-900">
+                <span className="font-mono font-bold text-foreground">
                   {simulation.type === "buy"
                     ? `${(Number(simulation.tokensOut) / 1_000_000).toLocaleString(undefined, { maximumFractionDigits: 2 })} ${token.symbol}`
                     : `${(Number(simulation.netQuoteOut) / 1_000_000).toFixed(2)} USDC`}
@@ -356,7 +356,7 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
 
               <div className="flex items-center justify-between text-muted text-[11px]">
                 <span>Effective Price:</span>
-                <span className="font-mono text-slate-900">
+                <span className="font-mono text-foreground">
                   ${simulation.effectivePriceUsd.toFixed(6)}
                 </span>
               </div>
@@ -376,7 +376,7 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
 
               <div className="flex items-center justify-between text-muted text-[11px]">
                 <span>Protocol Fee (1%):</span>
-                <span className="font-mono text-slate-900">
+                <span className="font-mono text-foreground">
                   ${(Number(simulation.feeQuote) / 1_000_000).toFixed(2)} USDC
                 </span>
               </div>
@@ -385,7 +385,7 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
 
           {/* Simulation Error */}
           {simulation && "error" in simulation && (
-            <div className="mt-3 flex items-center gap-2 rounded-lg border border-rose-200 bg-rose-50 p-2.5 text-xs text-brand-rose">
+            <div className="mt-3 flex items-center gap-2 rounded-lg border border-rose-500/30 bg-rose-500/10 p-2.5 text-xs text-brand-rose">
               <AlertCircle className="h-4 w-4 flex-shrink-0" />
               <span>{simulation.error}</span>
             </div>
@@ -393,7 +393,7 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
 
           {/* Success Notification */}
           {tradeSuccessMsg && (
-            <div className="mt-3 flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 p-2.5 text-xs text-brand-emerald">
+            <div className="mt-3 flex items-center gap-2 rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-2.5 text-xs text-brand-emerald">
               <Check className="h-4 w-4 flex-shrink-0" />
               <span>{tradeSuccessMsg}</span>
             </div>

@@ -47,7 +47,7 @@ export default function TokenDetailPage({ params }: PageProps) {
         <div className="mb-4">
           <Link
             href="/"
-            className="inline-flex items-center gap-1.5 text-xs text-muted hover:text-slate-900 transition-colors"
+            className="inline-flex items-center gap-1.5 text-xs text-muted hover:text-foreground transition-colors"
           >
             <ArrowLeft className="h-4 w-4" />
             <span>Back to Explore</span>
@@ -55,10 +55,10 @@ export default function TokenDetailPage({ params }: PageProps) {
         </div>
 
         {/* Token Header */}
-        <div className="rounded-2xl border border-border bg-white p-5 mb-6 shadow-sm">
+        <div className="rounded-2xl border border-border bg-card p-5 mb-6 shadow-sm">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div className="flex items-center gap-4">
-              <div className="relative h-14 w-14 overflow-hidden rounded-full border border-border bg-slate-100">
+            <div className="flex items-center gap-3">
+              <div className="relative h-14 w-14 overflow-hidden rounded-full border border-border bg-card-subtle flex-shrink-0">
                 <Image
                   src={token.avatarUrl}
                   alt={token.name}
@@ -69,14 +69,14 @@ export default function TokenDetailPage({ params }: PageProps) {
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <h1 className="text-2xl font-black text-slate-900 tracking-tight">
+                  <h1 className="text-2xl font-black text-foreground tracking-tight">
                     ${token.symbol}
                   </h1>
                   <span className="text-sm text-muted">
                     {token.name}
                   </span>
                   {token.bondingCurve.isGraduated && (
-                    <span className="rounded bg-sky-50 border border-sky-200 px-2 py-0.5 text-[10px] font-bold text-brand-cyan">
+                    <span className="rounded bg-brand-cyan/10 border border-brand-cyan/25 px-2 py-0.5 text-[10px] font-bold text-brand-cyan">
                       GRADUATED
                     </span>
                   )}
@@ -90,7 +90,7 @@ export default function TokenDetailPage({ params }: PageProps) {
 
                   <button
                     onClick={handleCopyCa}
-                    className="flex items-center gap-1 rounded border border-border bg-slate-50 px-2 py-0.5 text-muted hover:text-slate-900 transition-colors font-mono text-[10px]"
+                    className="flex items-center gap-1 rounded border border-border bg-card-subtle px-2 py-0.5 text-muted hover:text-foreground transition-colors font-mono text-[10px]"
                   >
                     {copied ? (
                       <Check className="h-3 w-3 text-brand-emerald" />
@@ -108,7 +108,7 @@ export default function TokenDetailPage({ params }: PageProps) {
             <div className="flex items-center gap-6 self-end md:self-auto border-t md:border-t-0 pt-3 md:pt-0 border-border">
               <div>
                 <div className="text-[10px] uppercase text-muted">Price</div>
-                <div className="font-mono text-xl font-bold text-slate-900">
+                <div className="font-mono text-xl font-bold text-foreground">
                   ${token.priceUsd.toFixed(4)}
                 </div>
                 <div
@@ -125,7 +125,7 @@ export default function TokenDetailPage({ params }: PageProps) {
                 {token.bondingCurve.isGraduated ? (
                   <>
                     <div className="text-[10px] uppercase text-muted">Market Cap</div>
-                    <div className="font-mono text-xl font-bold text-slate-900">
+                    <div className="font-mono text-xl font-bold text-foreground">
                       ${(token.marketCapUsd / 1_000_000).toFixed(2)}M
                     </div>
                     <div className="font-mono text-xs text-muted">
@@ -135,12 +135,12 @@ export default function TokenDetailPage({ params }: PageProps) {
                 ) : (
                   <>
                     <div className="text-[10px] uppercase text-muted">Bonding Reserves</div>
-                    <div className="font-mono text-xl font-bold text-slate-900">
+                    <div className="font-mono text-xl font-bold text-foreground">
                       ${(token.bondingCurve.realQuoteReservesUsd / 1_000).toFixed(1)}K{" "}
                       <span className="text-xs font-normal text-muted">/ $60K</span>
                     </div>
                     <div className="flex items-center gap-1.5 mt-0.5">
-                      <span className="rounded bg-sky-50 border border-sky-200 px-1.5 py-0.5 text-[10px] font-mono font-bold text-brand-cyan">
+                      <span className="rounded bg-brand-cyan/10 border border-brand-cyan/25 px-1.5 py-0.5 text-[10px] font-mono font-bold text-brand-cyan">
                         {(1 + (token.bondingCurve.progressPct / 100) * 1.8).toFixed(1)}x from genesis
                       </span>
                     </div>
@@ -162,29 +162,29 @@ export default function TokenDetailPage({ params }: PageProps) {
             />
 
             {/* Simplified Single-Line Progress Bar */}
-            <div className="rounded-xl border border-border bg-white p-4 shadow-sm">
+            <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
               <div className="flex items-center justify-between text-xs mb-2">
                 <span className="text-muted font-medium">Graduation Progress</span>
-                <span className="font-mono font-bold text-slate-900">
+                <span className="font-mono font-bold text-foreground">
                   {token.bondingCurve.isGraduated
                     ? "100% (Graduated to AMM)"
                     : `${token.bondingCurve.progressPct}% ($${(token.bondingCurve.realQuoteReservesUsd / 1_000).toFixed(1)}K / $60K USDC)`}
                 </span>
               </div>
 
-              <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
+              <div className="h-1.5 w-full overflow-hidden rounded-full bg-card-subtle border border-border/40">
                 <div
-                  className="h-full rounded-full bg-gradient-to-r from-sky-500 to-cyan-500 transition-all duration-300"
+                  className="h-full rounded-full bg-gradient-to-r from-sky-500 to-cyan-400 transition-all duration-300"
                   style={{ width: `${Math.min(token.bondingCurve.progressPct, 100)}%` }}
                 />
               </div>
             </div>
 
             {/* Live Trades Table */}
-            <div className="rounded-xl border border-border bg-white p-4 shadow-sm">
+            <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
               <div className="flex items-center justify-between border-b border-border pb-3">
                 <div className="flex items-center gap-2">
-                  <h3 className="text-xs font-bold text-slate-900 tracking-tight uppercase">
+                  <h3 className="text-xs font-bold text-foreground tracking-tight uppercase">
                     Live Trades
                   </h3>
                   <span className="flex h-1.5 w-1.5 relative">
@@ -214,25 +214,25 @@ export default function TokenDetailPage({ params }: PageProps) {
                       { type: "SELL", price: token.priceUsd * 0.98, tokens: 14200, usdc: 14200 * token.priceUsd * 0.98, time: "4m ago", isBuy: false },
                       { type: "BUY", price: token.priceUsd * 0.97, tokens: 82000, usdc: 82000 * token.priceUsd * 0.97, time: "7m ago", isBuy: true },
                     ].map((trade, idx) => (
-                      <tr key={idx} className="hover:bg-slate-50 transition-colors">
+                      <tr key={idx} className="hover:bg-card-hover transition-colors">
                         <td className="py-2">
                           <span
                             className={`rounded px-1.5 py-0.5 text-[9px] font-bold ${
                               trade.isRedeem
-                                ? "bg-amber-50 text-amber-700 border border-amber-200"
+                                ? "bg-amber-500/10 text-amber-500 border border-amber-500/30"
                                 : trade.isBuy
-                                ? "bg-emerald-50 text-brand-emerald"
-                                : "bg-rose-50 text-brand-rose"
+                                ? "bg-emerald-500/10 text-brand-emerald border border-emerald-500/20"
+                                : "bg-rose-500/10 text-brand-rose border border-rose-500/20"
                             }`}
                           >
                             {trade.type}
                           </span>
                         </td>
-                        <td className="py-2 text-slate-900">${trade.price.toFixed(4)}</td>
-                        <td className="py-2 text-slate-900">
+                        <td className="py-2 text-foreground">${trade.price.toFixed(4)}</td>
+                        <td className="py-2 text-foreground">
                           {trade.tokens.toLocaleString()} {token.symbol}
                         </td>
-                        <td className="py-2 font-bold text-slate-900">
+                        <td className="py-2 font-bold text-foreground">
                           ${trade.usdc.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </td>
                         <td className="py-2 text-right text-muted">{trade.time}</td>
@@ -251,21 +251,21 @@ export default function TokenDetailPage({ params }: PageProps) {
               onTradeSuccess={() => {}}
             />
 
-            <div className="rounded-2xl border border-border bg-white p-4 text-xs space-y-2.5 shadow-sm">
-              <div className="font-bold text-slate-900 pb-2 border-b border-border">
+            <div className="rounded-2xl border border-border bg-card p-4 text-xs space-y-2.5 shadow-sm">
+              <div className="font-bold text-foreground pb-2 border-b border-border">
                 Token details
               </div>
               <div className="flex justify-between text-muted">
                 <span>Total supply:</span>
-                <span className="font-mono text-slate-900">1,000,000,000</span>
+                <span className="font-mono text-foreground">1,000,000,000</span>
               </div>
               <div className="flex justify-between text-muted">
                 <span>Bonding curve pool:</span>
-                <span className="font-mono text-slate-900">800,000,000 (80%)</span>
+                <span className="font-mono text-foreground">800,000,000 (80%)</span>
               </div>
               <div className="flex justify-between text-muted">
                 <span>AMM pool reserve:</span>
-                <span className="font-mono text-slate-900">200,000,000 (20%)</span>
+                <span className="font-mono text-foreground">200,000,000 (20%)</span>
               </div>
               <div className="flex justify-between text-muted">
                 <span>Underlying asset:</span>
