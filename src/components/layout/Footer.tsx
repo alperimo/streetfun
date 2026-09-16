@@ -16,24 +16,21 @@ export function Footer() {
   return (
     <>
       <footer className="mt-20 border-t border-border bg-card py-6 text-xs text-muted">
-        <div className="mx-auto flex w-full items-center justify-center gap-3 sm:gap-6 px-6 md:px-12 xl:px-[164px]">
-          <Link href="/" className="hover:text-foreground transition-colors font-medium">
-            Explore
-          </Link>
-          <span className="text-muted/40">•</span>
-          <Link href="/treasury" className="hover:text-foreground transition-colors font-medium">
-            Treasury
-          </Link>
-          <span className="text-muted/40">•</span>
+        <div className="mx-auto flex w-full items-center justify-center gap-6 sm:gap-8 px-6 md:px-12 xl:px-[164px]">
           <a
             href="https://x.com"
             target="_blank"
             rel="noreferrer"
             className="hover:text-foreground transition-colors font-medium"
           >
-            X (Twitter)
+            X
           </a>
-          <span className="text-muted/40">•</span>
+          <Link href="/" className="hover:text-foreground transition-colors font-medium">
+            Explore
+          </Link>
+          <Link href="/treasury" className="hover:text-foreground transition-colors font-medium">
+            Treasury
+          </Link>
           <button
             onClick={() => setIsTermsOpen(true)}
             className="hover:text-foreground transition-colors font-medium"
