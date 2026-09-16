@@ -30,6 +30,7 @@ pub struct CurveAccount {
     pub creator: Pubkey,
     pub meme_mint: Pubkey,
     pub target_equity_mint: Pubkey,
+    pub meteora_dbc_pool: Pubkey,
     pub virtual_quote_reserves: u64,
     pub virtual_token_reserves: u64,
     pub real_quote_reserves: u64,

@@ -8,13 +8,14 @@ use anchor_spl::token::spl_token::instruction::AuthorityType;
 use anchor_spl::token::{self, Mint, MintTo, SetAuthority, Token, TokenAccount};
 
 pub const TOTAL_MEME_SUPPLY: u64 = 1_000_000_000_000_000; // 1 Billion tokens with 6 decimals
-pub const SALE_SUPPLY: u64 = 800_000_000_000_000; // 800M for bonding curve, 200M reserved for Raydium liquidity
+pub const SALE_SUPPLY: u64 = 800_000_000_000_000; // 800M for bonding curve, 200M reserved for Meteora DLMM liquidity
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone)]
 pub struct LaunchStonkParams {
     pub name: String,
     pub symbol: String,
     pub uri: String,
+    pub meteora_dbc_pool: Option<Pubkey>,
 }
 
 #[derive(Accounts)]
@@ -90,7 +91,7 @@ pub struct LaunchStonk<'info> {
 
 pub fn handle_launch_stonk(
     ctx: Context<LaunchStonk>,
-    _params: LaunchStonkParams,
+    params: LaunchStonkParams,
 ) -> Result<()> {
     let curve_key = ctx.accounts.curve.key();
     let meme_mint_key = ctx.accounts.meme_mint.key();
@@ -133,6 +134,7 @@ pub fn handle_launch_stonk(
     curve.creator = ctx.accounts.creator.key();
     curve.meme_mint = ctx.accounts.meme_mint.key();
     curve.target_equity_mint = ctx.accounts.target_equity_mint.key();
+    curve.meteora_dbc_pool = params.meteora_dbc_pool.unwrap_or(Pubkey::default());
     curve.virtual_quote_reserves = ctx.accounts.global_config.initial_virtual_quote_reserves;
     curve.virtual_token_reserves = ctx.accounts.global_config.initial_virtual_token_reserves;
     curve.real_quote_reserves = 0;

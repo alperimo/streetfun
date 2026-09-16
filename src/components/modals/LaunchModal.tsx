@@ -23,7 +23,7 @@ export function LaunchModal({
   const [avatarUrl, setAvatarUrl] = useState(
     "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=160&q=80"
   );
-  const [selectedEquitySymbol, setSelectedEquitySymbol] = useState("$SPCX");
+  const [selectedEquitySymbol, setSelectedEquitySymbol] = useState("$TSPACEX");
   const [initialBuyUsdc, setInitialBuyUsdc] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -50,7 +50,7 @@ export function LaunchModal({
         mint: randomMint,
         name,
         symbol: symbol.toUpperCase(),
-        description: description || `Decentralized culture coin backed by ${selectedEquity.name} ($${selectedEquity.symbol}) via Backpack Securities UCC Article 8 custody.`,
+        description: description || `Decentralized culture coin backed by ${selectedEquity.name} ($${selectedEquity.symbol}) via ${selectedEquity.issuer || "Tessera Private Equity"} ${selectedEquity.legalFramework}.`,
         avatarUrl: avatarUrl || "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=160&q=80",
         creator: "You (Connected Wallet)",
         createdAt: "Just now",
@@ -62,10 +62,14 @@ export function LaunchModal({
           symbol: selectedEquity.symbol,
           name: selectedEquity.name,
           mintAddress: selectedEquity.mintAddress,
+          issuer: selectedEquity.issuer,
           custodian: selectedEquity.custodian,
           legalFramework: selectedEquity.legalFramework,
+          proofOfReserve: selectedEquity.proofOfReserve,
+          meteoraPoolAddress: selectedEquity.meteoraPoolAddress,
           logoUrl: selectedEquity.logoUrl,
           stockPriceUsd: selectedEquity.currentStockPriceUsd,
+          isPreIpo: selectedEquity.isPreIpo,
         },
         bondingCurve: {
           realQuoteReservesUsd: initialQuoteReserves,
@@ -75,11 +79,16 @@ export function LaunchModal({
           virtualTokenReserves: "1073000000000000",
           realTokenReserves: "800000000000000",
           isGraduated: false,
+          meteoraPoolAddress: `METdbc${randomMint.slice(0, 6)}Pool`,
+          dynamicFeeBps: 20,
+          equityPurchaseBudgetUsd: 30_000,
+          ammLiquidityBudgetUsd: 30_000,
         },
         treasury: {
           totalEquityLocked: 0,
           totalEquityValueUsd: 0,
           vaultPda: `${randomMint.slice(0, 4)}...Vault`,
+          proofOfReserveVerified: true,
         },
       };
 
@@ -98,19 +107,19 @@ export function LaunchModal({
         {/* Header */}
         <div className="flex items-center justify-between border-b border-border pb-4">
           <div className="flex items-center gap-2.5">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-cyan/10 text-brand-cyan border border-brand-cyan/25">
-              <Rocket className="h-4 w-4 stroke-[2.5]" />
+            <div className="p-2 rounded-lg bg-brand-cyan/15 text-brand-cyan border border-brand-cyan/30">
+              <Rocket className="h-5 w-5" />
             </div>
             <div>
-              <h2 className="text-lg font-bold text-foreground">Launch a Stonk</h2>
+              <h2 className="text-lg font-bold text-foreground">Launch on Meteora DBC</h2>
               <p className="text-xs text-muted">
-                Create an instant bonding curve backed by real tokenized equity
+                Dynamic Bonding Curve with Tessera Pre-IPO Treasury Backing
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="rounded p-1 text-muted hover:text-foreground transition-colors"
+            className="p-1.5 rounded-lg text-muted hover:text-foreground hover:bg-card-subtle transition-colors"
           >
             <X className="h-5 w-5" />
           </button>
@@ -119,44 +128,46 @@ export function LaunchModal({
         {/* Form */}
         <form onSubmit={handleSubmit} className="mt-5 space-y-4 text-xs">
           {/* Token Name & Ticker */}
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="block text-muted font-medium mb-1">
-                Token Name *
+                Token Name <span className="text-rose-400">*</span>
               </label>
               <input
                 type="text"
                 required
-                placeholder="e.g. Mars Colony"
+                placeholder="e.g. Starship Doge"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full rounded-lg border border-border bg-card-subtle px-3 py-2 text-sm text-foreground placeholder-muted focus:border-brand-cyan focus:bg-card focus:outline-none shadow-xs"
+                className="w-full rounded-lg border border-border bg-card-subtle px-3 py-2 text-xs text-foreground placeholder-muted focus:border-border-active focus:bg-card focus:outline-none shadow-xs"
               />
             </div>
             <div>
               <label className="block text-muted font-medium mb-1">
-                Ticker Symbol *
+                Ticker Symbol <span className="text-rose-400">*</span>
               </label>
               <input
                 type="text"
                 required
-                placeholder="e.g. MARS"
+                placeholder="e.g. STAR"
                 value={symbol}
                 onChange={(e) => setSymbol(e.target.value)}
-                className="w-full rounded-lg border border-border bg-card-subtle px-3 py-2 text-sm text-foreground placeholder-muted uppercase focus:border-brand-cyan focus:bg-card focus:outline-none shadow-xs"
+                className="w-full rounded-lg border border-border bg-card-subtle px-3 py-2 text-xs text-foreground placeholder-muted focus:border-border-active focus:bg-card focus:outline-none uppercase shadow-xs"
               />
             </div>
           </div>
 
           {/* Target Backed Equity Selection */}
           <div>
-            <label className="block text-muted font-medium mb-1 flex items-center justify-between">
-              <span>Target Equity Backing</span>
-              <span className="text-[10px] text-brand-emerald flex items-center gap-1 font-semibold">
-                <ShieldCheck className="h-3.5 w-3.5" /> Verified Equity Vault
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="text-muted font-medium">
+                Select Backing Asset (Tessera Pre-IPO / Tokenized Equity)
+              </label>
+              <span className="text-[10px] text-brand-cyan font-mono flex items-center gap-1">
+                <ShieldCheck className="h-3 w-3" /> Chainlink PoR Verified
               </span>
-            </label>
-            <div className="grid grid-cols-3 gap-2">
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
               {VERIFIED_TOKENIZED_EQUITIES.map((eq) => {
                 const isSelected = selectedEquitySymbol === eq.symbol;
                 return (
@@ -164,23 +175,30 @@ export function LaunchModal({
                     type="button"
                     key={eq.symbol}
                     onClick={() => setSelectedEquitySymbol(eq.symbol)}
-                    className={`flex flex-col items-start p-2.5 rounded-lg border text-left transition-all ${
+                    className={`flex flex-col items-start p-2.5 rounded-xl border text-left transition-all ${
                       isSelected
                         ? "border-brand-cyan bg-brand-cyan/10 text-foreground shadow-sm"
                         : "border-border bg-card text-muted hover:border-brand-cyan/40 hover:text-foreground"
                     }`}
                   >
-                    <div className="flex items-center gap-1.5 w-full">
-                      <div className="relative h-4 w-4 rounded-full overflow-hidden flex-shrink-0">
-                        <Image
-                          src={eq.logoUrl}
-                          alt={eq.name}
-                          fill
-                          className="object-cover"
-                          sizes="16px"
-                        />
+                    <div className="flex items-center justify-between w-full">
+                      <div className="flex items-center gap-1.5">
+                        <div className="relative h-4 w-4 rounded-full overflow-hidden flex-shrink-0">
+                          <Image
+                            src={eq.logoUrl}
+                            alt={eq.name}
+                            fill
+                            className="object-cover"
+                            sizes="16px"
+                          />
+                        </div>
+                        <span className="font-bold text-xs">{eq.symbol}</span>
                       </div>
-                      <span className="font-bold text-xs">{eq.symbol}</span>
+                      {eq.isPreIpo ? (
+                        <span className="text-[8px] uppercase tracking-wider font-bold px-1.5 py-0.2 rounded bg-brand-cyan/20 text-brand-cyan border border-brand-cyan/30">
+                          Pre-IPO
+                        </span>
+                      ) : null}
                     </div>
                     <span className="text-[10px] text-muted truncate w-full mt-1">
                       {eq.name}
@@ -245,10 +263,10 @@ export function LaunchModal({
           </div>
 
           {/* Mechanism Explainer Alert */}
-          <div className="rounded-lg border border-border bg-card-subtle p-3 text-[11px] text-muted flex items-start gap-2">
-            <Info className="h-4 w-4 text-slate-400 flex-shrink-0 mt-0.5" />
-            <span>
-              When $60,000 USDC is reached, 50% automatically buys real {selectedEquity.symbol} shares into an immutable treasury vault for token burning.
+          <div className="rounded-xl border border-border bg-card-subtle p-3 text-[11px] text-muted flex items-start gap-2">
+            <Info className="h-4 w-4 text-brand-cyan flex-shrink-0 mt-0.5" />
+            <span className="leading-relaxed">
+              <strong>Meteora DBC Graduation:</strong> At 60,000 USDC, 50% ($30k) spot-buys {selectedEquity.symbol} shares via Jupiter/Meteora into the Anchor Treasury PDA, and 50% ($30k) + leftover meme supply migrates to a permanent Meteora DLMM pool.
             </span>
           </div>
 
@@ -256,7 +274,7 @@ export function LaunchModal({
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full rounded-lg bg-brand-cyan py-3 text-sm font-bold text-slate-950 hover:opacity-90 transition-opacity disabled:opacity-50 shadow-md shadow-brand-cyan/20 flex items-center justify-center gap-2"
+            className="w-full rounded-xl bg-brand-cyan py-3 text-sm font-bold text-slate-950 hover:opacity-90 transition-opacity disabled:opacity-50 shadow-md shadow-brand-cyan/20 flex items-center justify-center gap-2"
           >
             {isSubmitting ? (
               <span>Deploying to Solana...</span>

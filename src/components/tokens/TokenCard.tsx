@@ -89,7 +89,7 @@ export function TokenCard({ token }: TokenCardProps) {
               {token.targetEquity.symbol.replace(/^\$/, "")}
             </span>
             <span className="rounded bg-brand-cyan/10 text-brand-cyan border border-brand-cyan/25 px-1.5 py-0.2 text-[9px] font-mono font-semibold">
-              xStocks
+              {token.targetEquity.isPreIpo ? "Pre-IPO" : "xStocks"}
             </span>
           </div>
           <span className="font-mono text-xs font-bold text-muted">

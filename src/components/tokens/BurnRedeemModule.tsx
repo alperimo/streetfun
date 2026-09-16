@@ -115,8 +115,8 @@ export function BurnRedeemModule({ token }: BurnRedeemModuleProps) {
         </div>
       </div>
 
-      {/* Pro-Rata Output Box */}
-      <div className="mt-4 rounded-xl border border-border bg-card-subtle p-4">
+      {/* Pro-Rata Output Box & Formula */}
+      <div className="mt-4 rounded-xl border border-border bg-card-subtle p-4 space-y-3">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div className="font-mono text-base font-bold text-foreground flex items-center gap-2">
             <span>{numMeme.toLocaleString()} ${token.symbol}</span>
@@ -129,6 +129,16 @@ export function BurnRedeemModule({ token }: BurnRedeemModuleProps) {
             Value: <strong className="text-foreground">${entitledUsdcValue.toFixed(2)}</strong>
           </div>
         </div>
+
+        <div className="pt-2 border-t border-border/60 flex flex-col sm:flex-row sm:items-center justify-between text-[11px] text-muted gap-2">
+          <span className="font-mono">
+            Formula: (Burn Amount / Total Supply) × {token.treasury.totalEquityLocked} {token.targetEquity.symbol}
+          </span>
+          <span className="flex items-center gap-1 text-brand-cyan font-mono font-medium">
+            <ShieldCheck className="h-3.5 w-3.5" />
+            Chainlink Proof of Reserve (100% Backed)
+          </span>
+        </div>
       </div>
 
       {txSuccess && (
@@ -138,7 +148,7 @@ export function BurnRedeemModule({ token }: BurnRedeemModuleProps) {
         </div>
       )}
 
-      {/* Action Buttons */}
+      {/* Action Buttons with explicit routing description */}
       <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-3">
         <button
           onClick={() => {
@@ -146,12 +156,17 @@ export function BurnRedeemModule({ token }: BurnRedeemModuleProps) {
             handleExecuteRedeem();
           }}
           disabled={!numMeme || isProcessing}
-          className="flex items-center justify-center gap-2 rounded-xl bg-brand-cyan py-3 text-sm font-bold text-slate-950 hover:opacity-90 transition-opacity disabled:opacity-50 shadow-sm shadow-brand-cyan/20"
+          className="flex flex-col items-center justify-center gap-1 rounded-xl bg-brand-cyan py-3 px-4 text-xs font-bold text-slate-950 hover:opacity-90 transition-opacity disabled:opacity-50 shadow-sm shadow-brand-cyan/20"
         >
-          {isProcessing && redeemMode === "stock" ? (
-            <RefreshCw className="h-4 w-4 animate-spin" />
-          ) : null}
-          <span>Withdraw Stock to Wallet</span>
+          <div className="flex items-center gap-1.5">
+            {isProcessing && redeemMode === "stock" ? (
+              <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+            ) : null}
+            <span className="text-sm">Withdraw {token.targetEquity.symbol} to Wallet</span>
+          </div>
+          <span className="text-[10px] text-slate-800 font-normal">
+            Direct SPL token transfer to your address
+          </span>
         </button>
 
         <button
@@ -160,12 +175,17 @@ export function BurnRedeemModule({ token }: BurnRedeemModuleProps) {
             handleExecuteRedeem();
           }}
           disabled={!numMeme || isProcessing}
-          className="flex items-center justify-center gap-2 rounded-xl border border-brand-emerald/40 bg-emerald-500/10 py-3 text-sm font-bold text-brand-emerald hover:bg-emerald-500/20 transition-colors disabled:opacity-50 shadow-sm"
+          className="flex flex-col items-center justify-center gap-1 rounded-xl border border-brand-emerald/40 bg-emerald-500/10 py-3 px-4 text-xs font-bold text-brand-emerald hover:bg-emerald-500/20 transition-colors disabled:opacity-50 shadow-sm"
         >
-          {isProcessing && redeemMode === "usdc" ? (
-            <RefreshCw className="h-4 w-4 animate-spin" />
-          ) : null}
-          <span>1-Click Swap to USDC</span>
+          <div className="flex items-center gap-1.5">
+            {isProcessing && redeemMode === "usdc" ? (
+              <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+            ) : null}
+            <span className="text-sm">1-Click Swap to USDC</span>
+          </div>
+          <span className="text-[10px] text-emerald-400 font-normal">
+            Instant Jupiter swap to USDC
+          </span>
         </button>
       </div>
     </div>

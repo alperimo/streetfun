@@ -267,23 +267,41 @@ export default function TokenDetailPage({ params }: PageProps) {
 
             <div className="rounded-2xl border border-border bg-card p-4 text-xs space-y-2.5 shadow-sm">
               <div className="font-bold text-foreground pb-2 border-b border-border">
-                Token details
+                Protocol details
               </div>
               <div className="flex justify-between text-muted">
                 <span>Total supply:</span>
                 <span className="font-mono text-foreground">1,000,000,000</span>
               </div>
               <div className="flex justify-between text-muted">
-                <span>Bonding curve pool:</span>
+                <span>Meteora DBC curve:</span>
                 <span className="font-mono text-foreground">800,000,000 (80%)</span>
               </div>
               <div className="flex justify-between text-muted">
-                <span>AMM pool reserve:</span>
+                <span>Meteora DLMM reserve:</span>
                 <span className="font-mono text-foreground">200,000,000 (20%)</span>
+              </div>
+              <div className="flex justify-between text-muted">
+                <span>Graduation threshold:</span>
+                <span className="font-mono text-foreground">$60,000 USDC</span>
+              </div>
+              <div className="flex justify-between text-muted">
+                <span>Graduation split:</span>
+                <span className="font-mono text-foreground">50% Spot Buy / 50% DLMM</span>
               </div>
               <div className="flex justify-between text-muted">
                 <span>Underlying asset:</span>
                 <span className="font-mono text-foreground font-semibold">{token.targetEquity.name}</span>
+              </div>
+              <div className="flex justify-between text-muted">
+                <span>Legal structure:</span>
+                <span className="font-mono text-foreground truncate max-w-[180px]" title={token.targetEquity.legalFramework}>
+                  {token.targetEquity.legalFramework}
+                </span>
+              </div>
+              <div className="flex justify-between text-muted">
+                <span>Proof of Reserve:</span>
+                <span className="font-mono text-brand-cyan font-semibold">Chainlink PoR Verified</span>
               </div>
             </div>
           </div>

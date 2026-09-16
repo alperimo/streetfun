@@ -14,10 +14,14 @@ export interface TokenMetadata {
     symbol: string;
     name: string;
     mintAddress: string;
+    issuer?: string;
     custodian: string;
     legalFramework: string;
+    proofOfReserve?: string;
+    meteoraPoolAddress?: string;
     logoUrl: string;
     stockPriceUsd: number;
+    isPreIpo?: boolean;
   };
   bondingCurve: {
     realQuoteReservesUsd: number;
@@ -28,13 +32,19 @@ export interface TokenMetadata {
     realTokenReserves: string;
     isGraduated: boolean;
     graduatedAt?: string;
+    meteoraPoolAddress?: string;
+    dynamicFeeBps?: number;
+    equityPurchaseBudgetUsd?: number;
+    ammLiquidityBudgetUsd?: number;
   };
   treasury: {
-    totalEquityLocked: number; // e.g. 154.5 shares
+    totalEquityLocked: number; // e.g. 139.27 $TSPACEX shares
     totalEquityValueUsd: number;
     vaultPda: string;
+    proofOfReserveVerified?: boolean;
   };
 }
+
 
 export interface TreasuryGlobalStats {
   totalEquityValueLockedUsd: number;

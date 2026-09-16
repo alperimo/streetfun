@@ -114,3 +114,6 @@ export function calculateEntitledStock(
   }
   return (memeAmountBurned * totalEquityLocked) / totalMemeSupply;
 }
+
+export const calculateProRataEquity = calculateEntitledStock;
+

@@ -14,10 +14,10 @@ interface FilterBarProps {
 
 const TAGS = [
   { id: "all", label: "All" },
-  { id: "$SPCX", label: "SpaceX ($SPCX)" },
+  { id: "$TSPACEX", label: "SpaceX ($TSPACEX)" },
+  { id: "$TOPAI", label: "OpenAI ($TOPAI)" },
+  { id: "$TSTRIPE", label: "Stripe ($TSTRIPE)" },
   { id: "$NVDA", label: "Nvidia ($NVDA)" },
-  { id: "$GRND", label: "Grindr ($GRND)" },
-  { id: "$SNDK", label: "SanDisk ($SNDK)" },
   { id: "$TSLA", label: "Tesla ($TSLA)" },
   { id: "graduated", label: "Graduated" },
   { id: "bonding", label: "In Curve" },

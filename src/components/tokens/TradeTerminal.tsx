@@ -291,6 +291,30 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
         </div>
       ) : (
         <>
+          {/* Meteora DBC Curve Indicator */}
+          <div className="mt-4 rounded-xl border border-border bg-card-subtle p-3 text-xs">
+            <div className="flex items-center justify-between mb-1.5">
+              <span className="font-semibold text-foreground flex items-center gap-1.5">
+                <span className="h-2 w-2 rounded-full bg-brand-cyan animate-pulse" />
+                Meteora DBC Dynamic Curve
+              </span>
+              <span className="font-mono text-brand-cyan font-bold">
+                {token.bondingCurve.progressPct}% Graduated
+              </span>
+            </div>
+            {/* Progress bar */}
+            <div className="h-2 w-full rounded-full bg-border overflow-hidden">
+              <div
+                className="h-full bg-gradient-to-r from-brand-cyan to-brand-emerald rounded-full transition-all duration-500"
+                style={{ width: `${Math.min(token.bondingCurve.progressPct, 100)}%` }}
+              />
+            </div>
+            <div className="flex items-center justify-between text-[10px] text-muted mt-1.5 font-mono">
+              <span>${token.bondingCurve.realQuoteReservesUsd.toLocaleString()} / $60,000 USDC</span>
+              <span>50% {token.targetEquity.symbol} Buy + 50% DLMM</span>
+            </div>
+          </div>
+
           {/* Input Box */}
           <div className="mt-4">
             <div className="flex items-center justify-between text-xs text-muted mb-1.5">

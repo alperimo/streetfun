@@ -29,7 +29,7 @@ export default function TreasuryPage() {
             Treasury
           </h1>
           <p className="max-w-2xl text-sm text-muted">
-            Total tokenized equities held in protocol vaults from graduated coins.
+            Non-custodial Anchor Treasury PDA vaults holding Tessera Pre-IPO shares ($TSPACEX) and tokenized equities backed by Chainlink Proof of Reserve.
           </p>
         </div>
 
@@ -121,12 +121,12 @@ export default function TreasuryPage() {
                       ${(asset.valueUsd / 1_000_000).toFixed(2)}M
                     </div>
                     <a
-                      href="https://sunrise.trade"
+                      href="https://docs.tessera.pe"
                       target="_blank"
                       rel="noreferrer"
-                      className="inline-flex items-center gap-1 text-[10px] text-muted hover:text-foreground transition-colors hover:underline"
+                      className="inline-flex items-center gap-1 text-[10px] text-brand-cyan hover:underline transition-colors"
                     >
-                      <span>Explorer</span>
+                      <span>Tessera PoR</span>
                       <ArrowUpRight className="h-3 w-3" />
                     </a>
                   </div>

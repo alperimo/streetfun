@@ -39,7 +39,8 @@ export default function ExplorePage() {
           selectedTag !== "all" &&
           selectedTag !== "graduated" &&
           selectedTag !== "bonding" &&
-          token.targetEquity.symbol !== selectedTag
+          token.targetEquity.symbol !== selectedTag &&
+          token.targetEquity.symbol.replace("T", "") !== selectedTag.replace("T", "")
         ) {
           return false;
         }
