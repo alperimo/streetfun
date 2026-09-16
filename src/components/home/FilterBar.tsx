@@ -26,6 +26,13 @@ const EQUITY_TAGS = [
   { id: "$TSLA", label: "Tesla ($TSLA)" },
 ];
 
+const SORT_OPTIONS: { id: SortOption; label: string }[] = [
+  { id: "mcap", label: "Market cap" },
+  { id: "newest", label: "Newest" },
+  { id: "volume", label: "24h volume" },
+  { id: "progress", label: "% Graduated" },
+];
+
 export function FilterBar({
   searchQuery,
   onSearchChange,
@@ -37,7 +44,7 @@ export function FilterBar({
   onSortChange,
 }: FilterBarProps) {
   return (
-    <div className="mt-8 flex flex-col gap-4">
+    <div className="mt-8 flex flex-col gap-3.5">
       {/* Top Controls Row: Search Input + Status Filter + Sort */}
       <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4">
         {/* Search Input Box */}
@@ -48,14 +55,14 @@ export function FilterBar({
             placeholder="Search name, ticker, or contract address"
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
-            className="w-full rounded-xl border border-border bg-card pl-10 pr-4 py-2.5 text-sm text-foreground placeholder-muted focus:border-border-active focus:outline-none focus:ring-1 focus:ring-border-active/40 transition-all shadow-xs"
+            className="w-full rounded-lg border border-border bg-card pl-10 pr-4 py-2 text-sm text-foreground placeholder-muted focus:border-border-active focus:outline-none transition-colors shadow-xs"
           />
         </div>
 
         {/* Right Controls: Status Segments + Sort Segments */}
         <div className="flex flex-wrap items-center gap-4 text-xs">
           {/* Status Segmented Control (All / In Curve / Graduated) */}
-          <div className="flex items-center rounded-xl border border-border bg-card p-1 shadow-xs">
+          <div className="flex items-center rounded-lg border border-border bg-card/60 p-1 shadow-xs gap-1">
             {(
               [
                 { id: "all", label: "All status" },
@@ -66,10 +73,10 @@ export function FilterBar({
               <button
                 key={item.id}
                 onClick={() => onStatusFilterChange(item.id)}
-                className={`rounded-lg px-2.5 py-1 transition-all ${
+                className={`rounded-md px-2.5 py-1 text-xs transition-colors duration-150 ${
                   statusFilter === item.id
-                    ? "bg-slate-800 border border-slate-700 text-foreground font-semibold shadow-xs"
-                    : "text-muted hover:text-foreground font-medium"
+                    ? "bg-slate-800 border border-slate-700/80 text-slate-100 font-semibold"
+                    : "text-slate-400 hover:text-slate-100 hover:bg-white/[0.03] font-medium"
                 }`}
               >
                 {item.label}
@@ -80,22 +87,15 @@ export function FilterBar({
           {/* Sort Segmented Control */}
           <div className="flex items-center gap-2 text-xs">
             <span className="text-muted font-medium">Sort:</span>
-            <div className="flex items-center gap-1">
-              {(
-                [
-                  { id: "mcap", label: "Market cap" },
-                  { id: "newest", label: "Newest" },
-                  { id: "volume", label: "24h volume" },
-                  { id: "progress", label: "% Graduated" },
-                ] as const
-              ).map((item) => (
+            <div className="flex items-center gap-1.5">
+              {SORT_OPTIONS.map((item) => (
                 <button
                   key={item.id}
                   onClick={() => onSortChange(item.id)}
-                  className={`transition-all ${
+                  className={`whitespace-nowrap rounded-lg px-2.5 py-1 text-xs transition-colors duration-150 ${
                     sortBy === item.id
-                      ? "rounded-xl bg-slate-800 border border-slate-700 px-3 py-1.5 font-semibold text-foreground shadow-xs"
-                      : "px-1.5 text-muted hover:text-foreground font-medium"
+                      ? "bg-slate-800 border border-slate-700/80 text-slate-100 font-semibold"
+                      : "border border-border/80 bg-card/40 text-slate-400 font-medium hover:text-slate-100 hover:bg-white/[0.03]"
                   }`}
                 >
                   {item.label}
@@ -106,17 +106,17 @@ export function FilterBar({
         </div>
       </div>
 
-      {/* Target Equity Filter Tags: Clean StonkFun-aligned muted styling without harsh neon */}
+      {/* Target Equity Filter Tags: Uniform Pill-Box Wrapper for every single category */}
       <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs scrollbar-none">
-        <span className="text-muted whitespace-nowrap mr-1 font-medium">Backed with:</span>
+        <span className="text-muted whitespace-nowrap mr-0.5 font-medium">Backed with:</span>
         {EQUITY_TAGS.map((tag) => (
           <button
             key={tag.id}
             onClick={() => onTagChange(tag.id)}
-            className={`whitespace-nowrap rounded-lg px-3 py-1.5 transition-all ${
+            className={`whitespace-nowrap rounded-lg px-3 py-1 text-xs transition-colors duration-150 ${
               selectedTag === tag.id
-                ? "bg-slate-800 text-foreground border border-slate-700 font-semibold shadow-xs"
-                : "border border-transparent bg-transparent text-muted hover:text-foreground hover:bg-white/[0.04] font-medium"
+                ? "bg-slate-800 border border-slate-700/80 text-slate-100 font-semibold"
+                : "border border-border/80 bg-card/40 text-slate-400 font-medium hover:text-slate-100 hover:bg-white/[0.03]"
             }`}
           >
             {tag.label}

@@ -91,7 +91,7 @@ export default function ExplorePage() {
           onSortChange={setSortBy}
         />
 
-        <div className="mt-8">
+        <div className="mt-5">
           <h2 className="text-xl font-bold text-foreground tracking-tight">
             All tokens
           </h2>
