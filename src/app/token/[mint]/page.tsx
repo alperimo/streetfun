@@ -99,7 +99,7 @@ export default function TokenDetailPage({ params }: PageProps) {
                   <span className="text-muted text-[11px] hidden sm:inline">
                     ({token.targetEquity.name})
                   </span>
-                  <span className="rounded bg-card-subtle text-slate-300 border border-border px-1.5 py-0.5 text-[9px] font-mono font-medium">
+                  <span className="rounded bg-white/[0.06] text-slate-400 border border-white/[0.08] px-1.5 py-0.5 text-[9px] font-mono font-medium">
                     {token.targetEquity.isPreIpo ? "Pre-IPO" : "xStocks"}
                   </span>
 
@@ -113,7 +113,7 @@ export default function TokenDetailPage({ params }: PageProps) {
                       <Copy className="h-3 w-3" />
                     )}
                     <span>
-                      {token.mint.slice(0, 6)}...{token.mint.slice(-4)}
+                      {copied ? "Copied" : `${token.mint.slice(0, 4)}...${token.mint.slice(-4)}`}
                     </span>
                   </button>
                 </div>
@@ -155,7 +155,7 @@ export default function TokenDetailPage({ params }: PageProps) {
                       <span className="text-xs font-normal text-muted">/ $60K</span>
                     </div>
                     <div className="flex items-center gap-1.5 mt-0.5">
-                      <span className="rounded-md bg-card-subtle border border-border px-1.5 py-0.5 text-[10px] font-mono font-medium text-slate-300">
+                      <span className="font-mono text-xs font-medium text-emerald-400">
                         {(1 + (token.bondingCurve.progressPct / 100) * 1.8).toFixed(1)}x from genesis
                       </span>
                     </div>

@@ -88,7 +88,7 @@ export function TokenCard({ token }: TokenCardProps) {
             <span className="font-bold text-foreground">
               {token.targetEquity.symbol.replace(/^\$/, "")}
             </span>
-            <span className="rounded bg-card-subtle text-slate-300 border border-border px-1.5 py-0.5 text-[9px] font-mono font-medium">
+            <span className="rounded bg-white/[0.06] text-slate-400 border border-white/[0.08] px-1.5 py-0.5 text-[9px] font-mono font-medium">
               {token.targetEquity.isPreIpo ? "Pre-IPO" : "xStocks"}
             </span>
           </div>
@@ -128,7 +128,7 @@ export function TokenCard({ token }: TokenCardProps) {
                   ${(token.bondingCurve.realQuoteReservesUsd / 1_000).toFixed(1)}K{" "}
                   <span className="text-xs font-normal text-muted">/ $60K USDC</span>
                 </div>
-                <span className="rounded-md bg-card-subtle border border-border px-2 py-0.5 font-mono text-[11px] font-medium text-slate-300">
+                <span className="font-mono text-xs font-medium text-emerald-400">
                   {(1 + (token.bondingCurve.progressPct / 100) * 1.8).toFixed(1)}x from genesis
                 </span>
               </div>

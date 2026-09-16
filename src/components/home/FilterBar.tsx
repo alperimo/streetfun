@@ -68,7 +68,7 @@ export function FilterBar({
                 onClick={() => onStatusFilterChange(item.id)}
                 className={`rounded-lg px-2.5 py-1 transition-all ${
                   statusFilter === item.id
-                    ? "bg-card-hover border border-border-active/70 text-foreground font-semibold shadow-xs"
+                    ? "bg-slate-800 border border-slate-700 text-foreground font-semibold shadow-xs"
                     : "text-muted hover:text-foreground font-medium"
                 }`}
               >
@@ -94,7 +94,7 @@ export function FilterBar({
                   onClick={() => onSortChange(item.id)}
                   className={`transition-all ${
                     sortBy === item.id
-                      ? "rounded-xl bg-card border border-border-active px-3 py-1.5 font-semibold text-foreground shadow-xs"
+                      ? "rounded-xl bg-slate-800 border border-slate-700 px-3 py-1.5 font-semibold text-foreground shadow-xs"
                       : "px-1.5 text-muted hover:text-foreground font-medium"
                   }`}
                 >
@@ -115,8 +115,8 @@ export function FilterBar({
             onClick={() => onTagChange(tag.id)}
             className={`whitespace-nowrap rounded-lg px-3 py-1.5 transition-all ${
               selectedTag === tag.id
-                ? "bg-card-hover text-foreground border border-border-active font-semibold shadow-xs"
-                : "border border-transparent bg-transparent text-muted hover:text-foreground hover:border-border/60 font-medium"
+                ? "bg-slate-800 text-foreground border border-slate-700 font-semibold shadow-xs"
+                : "border border-transparent bg-transparent text-muted hover:text-foreground hover:bg-white/[0.04] font-medium"
             }`}
           >
             {tag.label}
