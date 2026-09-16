@@ -4,14 +4,20 @@ import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import dynamic from "next/dynamic";
-import { Search, Plus, TrendingUp, Send, Twitter } from "lucide-react";
+import { Search, Plus, TrendingUp, Send } from "lucide-react";
 
 import { StreetFunLogo } from "@/components/common/StreetFunLogo";
 
-const WalletMultiButton = dynamic(
-  async () =>
-    (await import("@solana/wallet-adapter-react-ui")).WalletMultiButton,
-  { ssr: false }
+const WalletButton = dynamic(
+  () => import("./WalletButton").then((mod) => mod.WalletButton),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex h-9 items-center gap-1.5 rounded-lg bg-[#5eb0c5] px-3.5 text-xs font-bold text-slate-950 opacity-80">
+        <span>Connect wallet</span>
+      </div>
+    ),
+  }
 );
 
 interface HeaderProps {
@@ -60,47 +66,56 @@ export function Header({ onOpenSearch, onOpenLaunch }: HeaderProps) {
         </div>
 
         {/* Right: Search, Socials, Launch CTA, Wallet */}
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-2">
+          {/* Search textfield */}
           <button
             onClick={onOpenSearch}
-            className="flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2 text-xs text-muted hover:border-border-active hover:text-foreground transition-all shadow-xs"
+            className="flex h-9 w-40 items-center justify-between rounded-lg border border-[#1f3042] bg-[#0f1922] px-2.5 text-xs text-muted hover:border-border-active hover:text-foreground transition-all"
           >
-            <Search className="h-3.5 w-3.5 text-muted" />
-            <span className="text-xs">Search</span>
-            <kbd className="rounded border border-border bg-card-hover/60 px-1.5 py-0.5 text-[10px] text-muted font-mono ml-1">
+            <div className="flex items-center gap-2">
+              <Search className="h-3.5 w-3.5 text-muted" />
+              <span className="text-xs">Search</span>
+            </div>
+            <kbd className="rounded border border-[#1f3042] bg-[#090e13] px-1.5 py-0.5 text-[10px] text-muted font-mono">
               ⌘ K
             </kbd>
           </button>
 
+          {/* Telegram */}
           <a
             href="https://t.me"
             target="_blank"
             rel="noreferrer"
-            className="flex h-9 w-9 items-center justify-center rounded-xl border border-border bg-card text-muted hover:border-border-active hover:text-foreground hover:bg-card-hover transition-all shadow-xs"
+            className="flex h-9 w-9 items-center justify-center rounded-lg border border-[#1f3042] bg-[#0f1922] text-slate-200 hover:border-border-active hover:text-white transition-all"
             title="Telegram"
           >
-            <Send className="h-4 w-4" />
+            <Send className="h-3.5 w-3.5 -rotate-12 translate-y-[-0.5px]" />
           </a>
 
+          {/* X */}
           <a
             href="https://x.com"
             target="_blank"
             rel="noreferrer"
-            className="flex h-9 w-9 items-center justify-center rounded-xl border border-border bg-card text-muted hover:border-border-active hover:text-foreground hover:bg-card-hover transition-all shadow-xs"
-            title="Twitter / X"
+            className="flex h-9 w-9 items-center justify-center rounded-lg border border-[#1f3042] bg-[#0f1922] text-slate-200 hover:border-border-active hover:text-white transition-all"
+            title="X"
           >
-            <Twitter className="h-4 w-4" />
+            <svg className="h-3.5 w-3.5 fill-current" viewBox="0 0 24 24">
+              <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+            </svg>
           </a>
 
+          {/* Launch token CTA */}
           <button
             onClick={onOpenLaunch}
-            className="flex items-center gap-1.5 rounded-xl bg-brand-cyan px-3.5 py-2 text-xs font-bold text-slate-950 hover:opacity-90 transition-opacity shadow-sm"
+            className="flex h-9 items-center gap-1.5 rounded-lg bg-[#5eb0c5] px-3.5 text-xs font-bold text-slate-950 hover:bg-[#52a1b5] transition-colors"
           >
-            <Plus className="h-4 w-4 stroke-[2.5]" />
+            <Plus className="h-3.5 w-3.5 stroke-[2.5]" />
             <span>Launch token</span>
           </button>
 
-          <WalletMultiButton />
+          {/* Connect wallet */}
+          <WalletButton />
         </div>
       </div>
     </header>

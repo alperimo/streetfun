@@ -55,19 +55,6 @@ export function TradingViewChart({
       bottomColor: chartTheme.bottomColor,
       lineWidth: 2,
       priceLineVisible: false,
-      autoscaleInfoProvider: (original: any) => {
-        const res = original();
-        if (res && res.priceRange) {
-          return {
-            priceRange: {
-              minValue: 0,
-              maxValue: res.priceRange.maxValue * 1.08,
-            },
-            margins: res.margins,
-          };
-        }
-        return res;
-      },
     });
 
     // Generate realistic bonding curve price curve progression
@@ -90,15 +77,18 @@ export function TradingViewChart({
 
     areaSeries.setData(dataPoints);
 
-    // Vault NAV Floor Price Line (Turuncu / Amber kesikli çizgi, grafiğin tabanında durur)
-    areaSeries.createPriceLine({
-      price: floorPrice,
-      color: "#f59e0b",
-      lineWidth: 2,
-      lineStyle: LineStyle.Dashed,
-      axisLabelVisible: true,
-      title: isGraduated ? "NAV Floor" : "Projected Floor",
-    });
+    // Only for graduated tokens where NAV floor is physically locked: show a subtle reference floor line
+    // with axisLabelVisible=false so it NEVER overlaps or collides with Y-axis price scale labels
+    if (isGraduated) {
+      areaSeries.createPriceLine({
+        price: floorPrice,
+        color: "#d97706", // warm subdued amber
+        lineWidth: 1,
+        lineStyle: LineStyle.Dashed,
+        axisLabelVisible: false,
+        title: "",
+      });
+    }
 
     chart.timeScale().fitContent();
 
@@ -134,11 +124,11 @@ export function TradingViewChart({
           )}
         </div>
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1.5 rounded-md bg-amber-950/40 border border-amber-500/30 px-2.5 py-1 text-[11px] font-mono shadow-xs">
-            <span className="inline-block w-3 border-b-2 border-dashed border-amber-400 mr-0.5 select-none" />
-            <span className="text-amber-300 font-medium">
+          <div className="flex items-center gap-1.5 rounded-md border border-slate-700/50 bg-slate-800/40 px-2.5 py-1 text-[11px] font-mono text-slate-300">
+            <span className="h-1.5 w-1.5 rounded-full bg-amber-400 flex-shrink-0" />
+            <span>
               {isGraduated
-                ? `$${floorPrice.toFixed(4)} NAV Floor`
+                ? `NAV Floor: $${floorPrice.toFixed(4)}`
                 : `Projected NAV Floor: ~$${floorPrice.toFixed(4)}`}
             </span>
           </div>
