@@ -76,7 +76,7 @@ export default function TokenDetailPage({ params }: PageProps) {
                     {token.name}
                   </span>
                   {token.bondingCurve.isGraduated && (
-                    <span className="rounded-md bg-slate-800/80 border border-slate-700/60 px-2 py-0.5 text-[10px] font-medium text-slate-400">
+                    <span className="rounded-md bg-cyan-950/60 border border-cyan-500/30 px-2 py-0.5 text-[10px] font-medium text-cyan-200 shadow-xs">
                       Graduated
                     </span>
                   )}
@@ -94,12 +94,12 @@ export default function TokenDetailPage({ params }: PageProps) {
                     />
                   </div>
                   <span className="font-bold text-foreground">
-                    {token.targetEquity.symbol.replace(/^\$/, "")}
+                    {token.targetEquity.name.replace(/\s*\(.*?\)/g, "").trim()}
                   </span>
-                  <span className="text-muted text-[11px] hidden sm:inline">
-                    ({token.targetEquity.name})
+                  <span className="font-mono text-muted text-xs">
+                    ({token.targetEquity.symbol.startsWith("$") ? token.targetEquity.symbol : `$${token.targetEquity.symbol}`})
                   </span>
-                  <span className="rounded bg-white/[0.06] text-slate-400 border border-white/[0.08] px-1.5 py-0.5 text-[9px] font-mono font-medium">
+                  <span className="rounded-md bg-cyan-950/20 border border-cyan-500/25 px-2 py-0.5 text-[10px] font-mono font-medium text-cyan-300/80">
                     {token.targetEquity.isPreIpo ? "Pre-IPO" : "xStocks"}
                   </span>
 
@@ -174,6 +174,7 @@ export default function TokenDetailPage({ params }: PageProps) {
               tokenSymbol={token.symbol}
               initialPrice={token.priceUsd}
               floorPrice={0.0031}
+              isGraduated={token.bondingCurve.isGraduated}
             />
 
             {/* Graduation Progress vs Meteora DLMM Active Liquidity Band */}
@@ -198,7 +199,7 @@ export default function TokenDetailPage({ params }: PageProps) {
                 <div className="flex items-center justify-between text-xs mb-2">
                   <span className="text-muted font-medium">Graduation Progress</span>
                   <span className="font-mono font-bold text-foreground">
-                    {token.bondingCurve.progressPct}% ($${(token.bondingCurve.realQuoteReservesUsd / 1_000).toFixed(1)}K / $60K USDC)
+                    {token.bondingCurve.progressPct}% (${(token.bondingCurve.realQuoteReservesUsd / 1_000).toFixed(1)}K / $60K USDC)
                   </span>
                 </div>
 

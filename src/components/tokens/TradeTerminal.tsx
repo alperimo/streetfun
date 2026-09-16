@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
+import Image from "next/image";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { Settings, AlertCircle, Check } from "lucide-react";
 import { TokenMetadata } from "@/lib/types";
@@ -202,7 +203,7 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
               <span className="font-mono">Balance: 500,000 ${token.symbol}</span>
             </div>
 
-            <div className="relative">
+            <div className="relative flex items-center rounded-xl border border-white/[0.08] bg-[#0B1015] transition-all focus-within:border-amber-500/50 focus-within:ring-1 focus-within:ring-amber-500/30">
               <input
                 type="number"
                 step="any"
@@ -210,10 +211,19 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
                 placeholder="0"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
-                className="w-full rounded-xl border border-border bg-card-subtle pl-3.5 pr-20 py-3 text-lg font-mono text-foreground placeholder-muted focus:border-amber-500 focus:bg-card focus:outline-none shadow-sm"
+                className="w-full bg-transparent pl-3.5 pr-28 py-3 text-lg sm:text-xl font-mono font-medium text-white placeholder:text-slate-500 focus:outline-none"
               />
-              <div className="absolute right-3 top-1/2 -translate-y-1/2 font-mono text-xs font-bold text-amber-500">
-                {token.symbol}
+              <div className="absolute right-2.5 flex items-center gap-1.5 rounded-lg bg-white/[0.05] border border-white/[0.08] px-2.5 py-1 text-xs font-semibold text-slate-300">
+                <div className="relative h-4 w-4 overflow-hidden rounded-full border border-white/10 flex-shrink-0">
+                  <Image
+                    src={token.avatarUrl}
+                    alt={token.symbol}
+                    fill
+                    className="object-cover"
+                    sizes="16px"
+                  />
+                </div>
+                <span className="font-mono">${token.symbol}</span>
               </div>
             </div>
 
@@ -223,7 +233,7 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
                 <button
                   key={val}
                   onClick={() => setAmount(val)}
-                  className="rounded-md border border-border bg-card-subtle py-1 text-muted hover:border-amber-500 hover:text-foreground transition-colors shadow-xs"
+                  className="rounded-lg border border-white/[0.06] bg-white/[0.03] py-1.5 text-slate-400 hover:border-amber-500/50 hover:bg-white/[0.08] hover:text-white transition-all shadow-xs"
                 >
                   {parseInt(val) >= 1000 ? `${parseInt(val) / 1000}K` : val}
                 </button>
@@ -324,7 +334,7 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
               </span>
             </div>
 
-            <div className="relative">
+            <div className="relative flex items-center rounded-xl border border-white/[0.08] bg-[#0B1015] transition-all focus-within:border-border-active focus-within:ring-1 focus-within:ring-border-active/30">
               <input
                 type="number"
                 step="any"
@@ -332,10 +342,30 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
                 placeholder="0.00"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
-                className="w-full rounded-xl border border-border bg-card-subtle pl-3.5 pr-20 py-3 text-lg font-mono text-foreground placeholder-muted focus:border-border-active focus:bg-card focus:outline-none shadow-sm"
+                className="w-full bg-transparent pl-3.5 pr-28 py-3 text-lg sm:text-xl font-mono font-medium text-white placeholder:text-slate-500 focus:outline-none"
               />
-              <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 font-mono text-xs font-bold text-slate-300">
-                {tradeMode === "buy" ? "USDC" : token.symbol}
+              <div className="absolute right-2.5 flex items-center gap-1.5 rounded-lg bg-white/[0.05] border border-white/[0.08] px-2.5 py-1 text-xs font-semibold text-slate-300">
+                {tradeMode === "buy" ? (
+                  <>
+                    <div className="h-4 w-4 rounded-full bg-blue-500/20 text-blue-400 flex items-center justify-center text-[10px] font-bold">
+                      $
+                    </div>
+                    <span className="font-mono">USDC</span>
+                  </>
+                ) : (
+                  <>
+                    <div className="relative h-4 w-4 overflow-hidden rounded-full border border-white/10 flex-shrink-0">
+                      <Image
+                        src={token.avatarUrl}
+                        alt={token.symbol}
+                        fill
+                        className="object-cover"
+                        sizes="16px"
+                      />
+                    </div>
+                    <span className="font-mono">${token.symbol}</span>
+                  </>
+                )}
               </div>
             </div>
 
@@ -346,7 +376,7 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
                     <button
                       key={val}
                       onClick={() => setAmount(val)}
-                      className="rounded-md border border-border bg-card-subtle py-1 text-muted hover:border-border-active hover:text-foreground transition-colors shadow-xs"
+                      className="rounded-lg border border-white/[0.06] bg-white/[0.03] py-1.5 text-slate-400 hover:border-brand-emerald/50 hover:bg-white/[0.08] hover:text-white transition-all shadow-xs"
                     >
                       ${val}
                     </button>
@@ -358,7 +388,7 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
                         const frac = parseInt(pct) / 100;
                         setAmount((500_000 * frac).toString());
                       }}
-                      className="rounded-md border border-border bg-card-subtle py-1 text-muted hover:border-brand-rose hover:text-foreground transition-colors shadow-xs"
+                      className="rounded-lg border border-white/[0.06] bg-white/[0.03] py-1.5 text-slate-400 hover:border-brand-rose/50 hover:bg-white/[0.08] hover:text-white transition-all shadow-xs"
                     >
                       {pct}
                     </button>

@@ -8,12 +8,14 @@ interface TradingViewChartProps {
   tokenSymbol: string;
   initialPrice: number;
   floorPrice?: number;
+  isGraduated?: boolean;
 }
 
 export function TradingViewChart({
   tokenSymbol,
   initialPrice,
   floorPrice = 0.0031,
+  isGraduated = false,
 }: TradingViewChartProps) {
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
@@ -107,9 +109,15 @@ export function TradingViewChart({
       <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-border text-xs">
         <div className="flex items-center gap-2">
           <span className="font-bold text-foreground">${tokenSymbol} / USDC</span>
-          <span className="rounded bg-brand-cyan/10 px-1.5 py-0.5 text-[10px] font-mono text-brand-cyan border border-brand-cyan/25">
-            Bonding Curve Discovery
-          </span>
+          {isGraduated ? (
+            <span className="rounded-md bg-cyan-950/60 border border-cyan-500/30 px-2 py-0.5 text-[10px] font-medium text-cyan-200 shadow-xs">
+              Meteora DLMM
+            </span>
+          ) : (
+            <span className="rounded-md bg-cyan-950/20 border border-cyan-500/25 px-2 py-0.5 text-[10px] font-mono font-medium text-cyan-300/80">
+              Bonding Curve Discovery
+            </span>
+          )}
         </div>
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-1.5 rounded-md bg-amber-500/10 border border-amber-500/30 px-2 py-0.5 text-[10px] font-mono font-bold text-amber-500">
