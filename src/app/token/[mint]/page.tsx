@@ -76,7 +76,7 @@ export default function TokenDetailPage({ params }: PageProps) {
                     {token.name}
                   </span>
                   {token.bondingCurve.isGraduated && (
-                    <span className="rounded-md bg-cyan-950/60 border border-cyan-500/30 px-2 py-0.5 text-[10px] font-medium text-cyan-200 shadow-xs">
+                    <span className="rounded-md border border-slate-700/60 bg-slate-800/50 px-2 py-0.5 text-[10px] font-medium text-slate-300">
                       Graduated
                     </span>
                   )}
@@ -99,7 +99,7 @@ export default function TokenDetailPage({ params }: PageProps) {
                   <span className="font-mono text-muted text-xs">
                     ({token.targetEquity.symbol.startsWith("$") ? token.targetEquity.symbol : `$${token.targetEquity.symbol}`})
                   </span>
-                  <span className="rounded-md bg-cyan-950/20 border border-cyan-500/25 px-2 py-0.5 text-[10px] font-mono font-medium text-cyan-300/80">
+                  <span className="rounded-md border border-slate-700/50 bg-slate-800/30 px-2 py-0.5 text-[10px] tracking-wide font-mono font-medium text-slate-400">
                     {token.targetEquity.isPreIpo ? "Pre-IPO" : "xStocks"}
                   </span>
 

@@ -54,6 +54,20 @@ export function TradingViewChart({
       topColor: chartTheme.topColor,
       bottomColor: chartTheme.bottomColor,
       lineWidth: 2,
+      priceLineVisible: false,
+      autoscaleInfoProvider: (original: any) => {
+        const res = original();
+        if (res && res.priceRange) {
+          return {
+            priceRange: {
+              minValue: 0,
+              maxValue: res.priceRange.maxValue * 1.08,
+            },
+            margins: res.margins,
+          };
+        }
+        return res;
+      },
     });
 
     // Generate realistic bonding curve price curve progression
@@ -76,14 +90,14 @@ export function TradingViewChart({
 
     areaSeries.setData(dataPoints);
 
-    // Guaranteed Stock Floor (NAV Line)
+    // Vault NAV Floor Price Line (Turuncu / Amber kesikli çizgi, grafiğin tabanında durur)
     areaSeries.createPriceLine({
       price: floorPrice,
-      color: chartTheme.floorLineColor,
+      color: "#f59e0b",
       lineWidth: 2,
       lineStyle: LineStyle.Dashed,
       axisLabelVisible: true,
-      title: "Guaranteed Stock Floor",
+      title: isGraduated ? "NAV Floor" : "Projected Floor",
     });
 
     chart.timeScale().fitContent();
@@ -102,7 +116,7 @@ export function TradingViewChart({
       window.removeEventListener("resize", handleResize);
       chart.remove();
     };
-  }, [initialPrice, floorPrice, themeConfig]);
+  }, [initialPrice, floorPrice, isGraduated, themeConfig]);
 
   return (
     <div className="relative w-full rounded-xl border border-border bg-card p-4 shadow-sm">
@@ -110,19 +124,23 @@ export function TradingViewChart({
         <div className="flex items-center gap-2">
           <span className="font-bold text-foreground">${tokenSymbol} / USDC</span>
           {isGraduated ? (
-            <span className="rounded-md bg-cyan-950/60 border border-cyan-500/30 px-2 py-0.5 text-[10px] font-medium text-cyan-200 shadow-xs">
+            <span className="rounded-md border border-slate-700/60 bg-slate-800/50 px-2 py-0.5 text-[10px] font-medium text-slate-300">
               Meteora DLMM
             </span>
           ) : (
-            <span className="rounded-md bg-cyan-950/20 border border-cyan-500/25 px-2 py-0.5 text-[10px] font-mono font-medium text-cyan-300/80">
+            <span className="rounded-md border border-slate-700/50 bg-slate-800/30 px-2 py-0.5 text-[10px] tracking-wide font-mono font-medium text-slate-400">
               Bonding Curve Discovery
             </span>
           )}
         </div>
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1.5 rounded-md bg-amber-500/10 border border-amber-500/30 px-2 py-0.5 text-[10px] font-mono font-bold text-amber-500">
-            <span className="inline-block w-2.5 h-0.5 bg-amber-500 border-b border-dashed" />
-            <span>${floorPrice.toFixed(4)} Guaranteed Stock Floor</span>
+          <div className="flex items-center gap-1.5 rounded-md bg-amber-950/40 border border-amber-500/30 px-2.5 py-1 text-[11px] font-mono shadow-xs">
+            <span className="inline-block w-3 border-b-2 border-dashed border-amber-400 mr-0.5 select-none" />
+            <span className="text-amber-300 font-medium">
+              {isGraduated
+                ? `$${floorPrice.toFixed(4)} NAV Floor`
+                : `Projected NAV Floor: ~$${floorPrice.toFixed(4)}`}
+            </span>
           </div>
           <div className="hidden sm:flex items-center gap-2 font-mono text-muted text-[11px]">
             <span>Current: <strong className="text-foreground">${initialPrice.toFixed(6)}</strong></span>

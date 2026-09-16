@@ -265,8 +265,8 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
             </div>
 
             <div className="flex items-center justify-between border-t border-border pt-2 text-[11px]">
-              <span className="text-muted">Guaranteed NAV Floor:</span>
-              <span className="font-mono text-amber-500 font-semibold">
+              <span className="text-muted">NAV Floor:</span>
+              <span className="font-mono text-amber-400 font-semibold">
                 ${floorPricePerToken} / token
               </span>
             </div>
