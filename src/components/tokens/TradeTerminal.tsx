@@ -286,7 +286,7 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
             disabled={!numTokensToRedeem || isTrading}
             className={`w-full rounded-lg py-3 text-sm font-bold transition-colors shadow-xs disabled:opacity-50 ${
               !connected
-                ? "bg-[#5eb0c5] hover:bg-[#52a1b5] text-slate-950"
+                ? "bg-brand-cyan hover:opacity-90 text-slate-950"
                 : "bg-amber-400 hover:bg-amber-300 text-slate-950"
             }`}
           >
@@ -459,7 +459,7 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
             disabled={!amount || isTrading || Boolean(simulation && "error" in simulation)}
             className={`mt-4 w-full rounded-lg py-3 text-sm font-bold transition-colors shadow-xs disabled:opacity-50 ${
               !connected
-                ? "bg-[#5eb0c5] hover:bg-[#52a1b5] text-slate-950"
+                ? "bg-brand-cyan hover:opacity-90 text-slate-950"
                 : tradeMode === "buy"
                 ? "bg-emerald-500 hover:bg-emerald-600 text-white"
                 : "bg-rose-500 hover:bg-rose-600 text-white"
