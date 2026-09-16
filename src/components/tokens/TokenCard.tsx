@@ -73,9 +73,9 @@ export function TokenCard({ token }: TokenCardProps) {
         </div>
 
         {/* Backed by badge: Stock Logo + Plain Ticker (no $ sign, no bulky background) + subtle tag */}
-        <div className="mt-3 flex items-center justify-between gap-1.5 text-xs">
-          <div className="flex items-center gap-1.5">
-            <span className="text-muted">Backed with</span>
+        <div className="mt-3 flex items-center justify-between gap-2 text-xs">
+          <div className="flex items-center gap-1.5 min-w-0">
+            <span className="text-muted whitespace-nowrap flex-shrink-0">Backed with</span>
             <div className="relative h-4 w-4 overflow-hidden rounded-full border border-border flex-shrink-0">
               <Image
                 src={token.targetEquity.logoUrl}
@@ -85,19 +85,15 @@ export function TokenCard({ token }: TokenCardProps) {
                 sizes="16px"
               />
             </div>
-            <span className="font-bold text-foreground">
+            <span className="font-bold text-foreground whitespace-nowrap flex-shrink-0">
               {token.targetEquity.symbol.replace(/^\$/, "")}
             </span>
-            <span className="rounded-md border border-slate-700/50 bg-slate-800/30 px-2 py-0.5 text-[10px] tracking-wide font-mono font-medium text-slate-400">
+            <span className="rounded-md border border-slate-700/50 bg-slate-800/30 px-2 py-0.5 text-[10px] tracking-wide font-mono font-medium text-slate-400 flex-shrink-0">
               {token.targetEquity.isPreIpo ? "Pre-IPO" : "xStocks"}
             </span>
           </div>
-          {token.bondingCurve.isGraduated ? (
-            <span className="font-mono text-xs font-medium text-slate-400">
-              Backed: ${(token.treasury.totalEquityValueUsd / 1_000_000).toFixed(1)}M
-            </span>
-          ) : (
-            <span className="font-mono text-xs font-medium text-muted">
+          {!token.bondingCurve.isGraduated && (
+            <span className="font-mono text-xs font-medium text-muted flex-shrink-0">
               {token.bondingCurve.progressPct}%
             </span>
           )}
@@ -119,14 +115,24 @@ export function TokenCard({ token }: TokenCardProps) {
         <div className="mt-4">
           {token.bondingCurve.isGraduated ? (
             <div>
-              <div className="text-[10px] text-muted uppercase font-semibold tracking-wider">
-                Market Cap
+              <div className="flex items-center justify-between text-[10px] text-muted uppercase font-semibold tracking-wider">
+                <span>Market Cap</span>
+                <span className="font-mono text-[11px] text-slate-400 lowercase first-letter:uppercase">
+                  Vault: $
+                  {token.targetEquity.symbol === "$TSPACEX"
+                    ? "20.3M"
+                    : token.targetEquity.symbol === "$TOPAI"
+                    ? "10.6M"
+                    : token.targetEquity.symbol === "$TSTRIPE"
+                    ? "5.3M"
+                    : "4.5M"}
+                </span>
               </div>
               <div className="mt-0.5 flex items-baseline justify-between gap-2">
                 <div className="font-mono text-2xl font-extrabold text-foreground tracking-tight">
                   ${(token.marketCapUsd / 1_000_000).toFixed(2)}M
                 </div>
-                <span className="font-mono text-xs font-medium text-amber-400">
+                <span className="font-mono text-xs font-semibold text-amber-400">
                   NAV Floor: $0.0031
                 </span>
               </div>
