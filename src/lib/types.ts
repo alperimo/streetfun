@@ -58,6 +58,7 @@ export interface TreasuryGlobalStats {
     valueUsd: number;
     backingPercentage: number;
     mintAddress: string;
+    logoUrl?: string;
   }[];
   recentRedemptions: {
     id: string;
@@ -68,5 +69,7 @@ export interface TreasuryGlobalStats {
     sharesRedeemed: number;
     redeemerAddress: string;
     txHash: string;
+    tokenAvatarUrl?: string;
+    estimatedValueUsd?: number;
   }[];
 }

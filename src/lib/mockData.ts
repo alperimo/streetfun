@@ -244,6 +244,7 @@ export const INITIAL_TREASURY_STATS: TreasuryGlobalStats = {
       valueUsd: 20_301_450,
       backingPercentage: 49.8,
       mintAddress: VERIFIED_TESSERA_PRE_IPO_ASSETS[0].mintAddress,
+      logoUrl: VERIFIED_TESSERA_PRE_IPO_ASSETS[0].logoUrl,
     },
     {
       symbol: "$TOPAI",
@@ -252,6 +253,7 @@ export const INITIAL_TREASURY_STATS: TreasuryGlobalStats = {
       valueUsd: 10_588_400,
       backingPercentage: 26.0,
       mintAddress: VERIFIED_TESSERA_PRE_IPO_ASSETS[1].mintAddress,
+      logoUrl: VERIFIED_TESSERA_PRE_IPO_ASSETS[1].logoUrl,
     },
     {
       symbol: "$TSTRIPE",
@@ -260,6 +262,7 @@ export const INITIAL_TREASURY_STATS: TreasuryGlobalStats = {
       valueUsd: 5_328_000,
       backingPercentage: 13.1,
       mintAddress: VERIFIED_TESSERA_PRE_IPO_ASSETS[2].mintAddress,
+      logoUrl: VERIFIED_TESSERA_PRE_IPO_ASSETS[2].logoUrl,
     },
     {
       symbol: "$NVDA",
@@ -268,6 +271,7 @@ export const INITIAL_TREASURY_STATS: TreasuryGlobalStats = {
       valueUsd: 4_483_650,
       backingPercentage: 11.1,
       mintAddress: VERIFIED_TESSERA_PRE_IPO_ASSETS[3].mintAddress,
+      logoUrl: VERIFIED_TESSERA_PRE_IPO_ASSETS[3].logoUrl,
     },
   ],
   recentRedemptions: [
@@ -280,6 +284,8 @@ export const INITIAL_TREASURY_STATS: TreasuryGlobalStats = {
       sharesRedeemed: 6.96,
       redeemerAddress: "8xKP...3vFa",
       txHash: "5Kt8...9vB1",
+      tokenAvatarUrl: "https://images.unsplash.com/photo-1614728894747-a83421e2b9c9?w=160&q=80",
+      estimatedValueUsd: 1499.18,
     },
     {
       id: "rdm-2",
@@ -290,6 +296,8 @@ export const INITIAL_TREASURY_STATS: TreasuryGlobalStats = {
       sharesRedeemed: 49.65,
       redeemerAddress: "3rMq...1wXz",
       txHash: "3mP2...7cE9",
+      tokenAvatarUrl: "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=160&q=80",
+      estimatedValueUsd: 3599.63,
     },
     {
       id: "rdm-3",
@@ -300,6 +308,8 @@ export const INITIAL_TREASURY_STATS: TreasuryGlobalStats = {
       sharesRedeemed: 2.08,
       redeemerAddress: "9pQw...8uTr",
       txHash: "2jNx...4kLm",
+      tokenAvatarUrl: "https://images.unsplash.com/photo-1614728894747-a83421e2b9c9?w=160&q=80",
+      estimatedValueUsd: 448.03,
     },
     {
       id: "rdm-4",
@@ -310,6 +320,8 @@ export const INITIAL_TREASURY_STATS: TreasuryGlobalStats = {
       sharesRedeemed: 124.13,
       redeemerAddress: "4xLy...2sVb",
       txHash: "8bTk...1qZp",
+      tokenAvatarUrl: "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=160&q=80",
+      estimatedValueUsd: 8999.43,
     },
   ],
 };
