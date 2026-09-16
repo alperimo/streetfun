@@ -50,7 +50,7 @@ export default function TokenDetailPage({ params }: PageProps) {
             className="inline-flex items-center gap-1.5 text-xs text-muted hover:text-foreground transition-colors"
           >
             <ArrowLeft className="h-4 w-4" />
-            <span>Back to Explore</span>
+            <span>Markets</span>
           </Link>
         </div>
 

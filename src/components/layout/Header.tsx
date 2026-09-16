@@ -50,7 +50,7 @@ export function Header({ onOpenSearch, onOpenLaunch }: HeaderProps) {
                   : "text-muted hover:text-foreground"
               }`}
             >
-              Explore
+              Markets
             </Link>
 
             <Link

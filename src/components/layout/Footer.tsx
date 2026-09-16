@@ -26,7 +26,7 @@ export function Footer() {
             X
           </a>
           <Link href="/" className="hover:text-foreground transition-colors font-medium">
-            Explore
+            Markets
           </Link>
           <Link href="/treasury" className="hover:text-foreground transition-colors font-medium">
             Treasury

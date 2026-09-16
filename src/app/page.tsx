@@ -11,7 +11,7 @@ import { LaunchModal } from "@/components/modals/LaunchModal";
 import { INITIAL_TOKENS } from "@/lib/mockData";
 import { TokenMetadata } from "@/lib/types";
 
-export default function ExplorePage() {
+export default function MarketsPage() {
   const [tokens, setTokens] = useState<TokenMetadata[]>(INITIAL_TOKENS);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
