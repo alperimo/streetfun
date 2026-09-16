@@ -4,7 +4,7 @@ import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import dynamic from "next/dynamic";
-import { Search, Plus, TrendingUp, Send } from "lucide-react";
+import { Search, Plus, TrendingUp, Send, Wallet } from "lucide-react";
 
 import { StreetFunLogo } from "@/components/common/StreetFunLogo";
 
@@ -13,7 +13,8 @@ const WalletButton = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="flex h-11 items-center gap-2 rounded-xl bg-[#5eb0c5] px-4 text-sm font-bold text-slate-950 opacity-80">
+      <div className="flex h-11 items-center gap-2 rounded-xl bg-[#5eb0c5] px-4 text-sm font-bold text-slate-950 cursor-pointer select-none">
+        <Wallet className="h-4 w-4 text-slate-950" />
         <span>Connect wallet</span>
       </div>
     ),
