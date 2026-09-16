@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { createChart, ColorType, IChartApi, LineStyle } from "lightweight-charts";
 import { useTheme } from "@/context/ThemeContext";
 
@@ -108,6 +108,8 @@ export function TradingViewChart({
     };
   }, [initialPrice, floorPrice, isGraduated, themeConfig]);
 
+  const [timeframe, setTimeframe] = useState("15m");
+
   return (
     <div className="relative w-full rounded-xl border border-border bg-card p-4 shadow-sm">
       <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-border text-xs">
@@ -123,19 +125,20 @@ export function TradingViewChart({
             </span>
           )}
         </div>
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1.5 rounded-md border border-slate-700/50 bg-slate-800/40 px-2.5 py-1 text-[11px] font-mono text-slate-300">
-            <span className="h-1.5 w-1.5 rounded-full bg-amber-400 flex-shrink-0" />
-            <span>
-              {isGraduated
-                ? `NAV Floor: $${floorPrice.toFixed(4)}`
-                : `Projected NAV Floor: ~$${floorPrice.toFixed(4)}`}
-            </span>
-          </div>
-          <div className="hidden sm:flex items-center gap-2 font-mono text-muted text-[11px]">
-            <span>Current: <strong className="text-foreground">${initialPrice.toFixed(6)}</strong></span>
-            <span className="text-brand-emerald font-semibold">+47.7%</span>
-          </div>
+        <div className="flex items-center gap-1">
+          {["1m", "5m", "15m", "1h", "4h", "1D"].map((tf) => (
+            <button
+              key={tf}
+              onClick={() => setTimeframe(tf)}
+              className={`rounded px-2 py-0.5 text-[11px] font-mono transition-colors ${
+                timeframe === tf
+                  ? "bg-slate-800 text-foreground border border-slate-700 font-medium"
+                  : "text-muted hover:text-foreground hover:bg-card-hover"
+              }`}
+            >
+              {tf}
+            </button>
+          ))}
         </div>
       </div>
 

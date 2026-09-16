@@ -111,6 +111,17 @@
   background: var(--card-hover);
 }
 
+/* Hide HTML5 numeric spin buttons across all number inputs (standard DeFi terminal design) */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
 /* Solana Wallet Adapter Overrides */
 .wallet-adapter-button {
   font-family: inherit !important;

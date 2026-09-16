@@ -57,7 +57,7 @@ export function TokenCard({ token }: TokenCardProps) {
                   ${token.symbol}
                 </span>
                 {token.bondingCurve.isGraduated && (
-                  <span className="border border-cyan-500/20 bg-cyan-950/40 text-cyan-300 rounded px-2 py-0.5 text-[11px] font-medium">
+                  <span className="rounded-md border border-slate-700/60 bg-slate-800/50 px-2 py-0.5 text-[10px] font-medium text-slate-300">
                     Graduated
                   </span>
                 )}
@@ -98,7 +98,7 @@ export function TokenCard({ token }: TokenCardProps) {
             <span className="font-bold text-foreground whitespace-nowrap">
               {token.targetEquity.symbol.replace(/^\$/, "")}
             </span>
-            <span className="border border-slate-700/60 bg-slate-800/40 text-slate-300 font-mono rounded px-1.5 py-0.5 text-[10px] whitespace-nowrap">
+            <span className="rounded-md border border-slate-700/50 bg-slate-800/30 px-2 py-0.5 text-[10px] tracking-wide font-mono font-medium text-slate-400 whitespace-nowrap">
               {token.targetEquity.isPreIpo ? "Pre-IPO" : "xStocks"}
             </span>
           </div>

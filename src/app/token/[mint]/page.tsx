@@ -3,7 +3,7 @@
 import React, { useState, use } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowLeft, Copy, Check } from "lucide-react";
+import { ArrowLeft, Copy, Check, ExternalLink } from "lucide-react";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { TradingViewChart } from "@/components/tokens/TradingViewChart";
@@ -57,7 +57,7 @@ export default function TokenDetailPage({ params }: PageProps) {
         {/* Token Header */}
         <div className="rounded-2xl border border-border bg-card p-5 mb-6 shadow-sm">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3.5">
               <div className="relative h-14 w-14 overflow-hidden rounded-full border border-border bg-card-subtle flex-shrink-0">
                 <Image
                   src={token.avatarUrl}
@@ -72,17 +72,17 @@ export default function TokenDetailPage({ params }: PageProps) {
                   <h1 className="text-2xl font-black text-foreground tracking-tight">
                     ${token.symbol}
                   </h1>
-                  <span className="text-sm text-muted">
+                  <span className="text-sm text-muted font-medium">
                     {token.name}
                   </span>
                   {token.bondingCurve.isGraduated && (
-                    <span className="border border-cyan-500/20 bg-cyan-950/40 text-cyan-300 rounded px-2 py-0.5 text-[11px] font-medium">
+                    <span className="rounded-md border border-slate-700/60 bg-slate-800/50 px-2 py-0.5 text-[10px] font-medium text-slate-300">
                       Graduated
                     </span>
                   )}
                 </div>
 
-                <div className="mt-1 flex items-center gap-2 text-xs">
+                <div className="mt-1 flex items-center gap-2 text-xs flex-wrap">
                   <span className="text-muted">Backed with</span>
                   <div className="relative h-4 w-4 overflow-hidden rounded-full border border-border flex-shrink-0">
                     <Image
@@ -99,7 +99,7 @@ export default function TokenDetailPage({ params }: PageProps) {
                   <span className="font-mono text-muted text-xs">
                     ({token.targetEquity.symbol.startsWith("$") ? token.targetEquity.symbol : `$${token.targetEquity.symbol}`})
                   </span>
-                  <span className="border border-slate-700/60 bg-slate-800/40 text-slate-300 font-mono rounded px-1.5 py-0.5 text-[10px]">
+                  <span className="rounded-md border border-slate-700/50 bg-slate-800/30 px-2 py-0.5 text-[10px] tracking-wide font-mono font-medium text-slate-400">
                     {token.targetEquity.isPreIpo ? "Pre-IPO" : "xStocks"}
                   </span>
 
@@ -120,48 +120,80 @@ export default function TokenDetailPage({ params }: PageProps) {
               </div>
             </div>
 
-            <div className="flex items-center gap-6 self-end md:self-auto border-t md:border-t-0 pt-3 md:pt-0 border-border">
-              <div>
-                <div className="text-[10px] uppercase text-muted">Price</div>
-                <div className="font-mono text-xl font-bold text-foreground">
-                  ${token.priceUsd.toFixed(4)}
-                </div>
-                <div
-                  className={`font-mono text-xs font-semibold ${
+            {/* External Links */}
+            <div className="flex items-center gap-2 self-start md:self-auto">
+              <a
+                href={token.bondingCurve.isGraduated ? "https://meteora.ag" : "#"}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1.5 rounded-lg border border-border bg-card-hover/40 px-3 py-1.5 text-xs text-muted hover:text-foreground hover:border-border-active transition-colors font-medium"
+              >
+                <span>{token.bondingCurve.isGraduated ? "Meteora" : "Bonding Curve"}</span>
+                <ExternalLink className="h-3 w-3" />
+              </a>
+              <a
+                href={`https://solscan.io/token/${token.mint}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1.5 rounded-lg border border-border bg-card-hover/40 px-3 py-1.5 text-xs text-muted hover:text-foreground hover:border-border-active transition-colors font-medium"
+              >
+                <span>Solscan</span>
+                <ExternalLink className="h-3 w-3" />
+              </a>
+            </div>
+          </div>
+
+          {/* Stonkfun 4-Column Horizontal Stats Bar */}
+          <div className="mt-5 pt-4 border-t border-border grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div>
+              <div className="text-[11px] text-muted font-medium">Market cap</div>
+              <div className="mt-1 font-mono text-xl font-bold text-foreground">
+                ${(token.marketCapUsd / 1_000_000).toFixed(2)}M
+              </div>
+            </div>
+
+            <div>
+              <div className="text-[11px] text-muted font-medium">Token price</div>
+              <div className="mt-1 flex items-baseline gap-2 font-mono text-xl font-bold text-foreground">
+                <span>${token.priceUsd.toFixed(4)}</span>
+                <span
+                  className={`text-xs font-semibold ${
                     isPositive ? "text-brand-emerald" : "text-brand-rose"
                   }`}
                 >
                   {isPositive ? "+" : ""}
                   {token.priceChange24h.toFixed(1)}%
-                </div>
+                </span>
               </div>
+            </div>
 
-              <div className="border-l border-border pl-6">
-                {token.bondingCurve.isGraduated ? (
-                  <>
-                    <div className="text-[10px] uppercase text-muted">Market Cap</div>
-                    <div className="font-mono text-xl font-bold text-foreground">
-                      ${(token.marketCapUsd / 1_000_000).toFixed(2)}M
-                    </div>
-                    <div className="font-mono text-xs text-muted">
-                      Vol ${(token.volume24hUsd / 1_000).toFixed(0)}K
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <div className="text-[10px] uppercase text-muted">Bonding Reserves</div>
-                    <div className="font-mono text-xl font-bold text-foreground">
-                      ${(token.bondingCurve.realQuoteReservesUsd / 1_000).toFixed(1)}K{" "}
-                      <span className="text-xs font-normal text-muted">/ $60K</span>
-                    </div>
-                    <div className="flex items-center gap-1.5 mt-0.5">
-                      <span className="font-mono text-xs font-medium text-emerald-400">
-                        {(1 + (token.bondingCurve.progressPct / 100) * 1.8).toFixed(1)}x from genesis
-                      </span>
-                    </div>
-                  </>
-                )}
+            <div>
+              <div className="text-[11px] text-muted font-medium">24h volume</div>
+              <div className="mt-1 font-mono text-xl font-bold text-foreground">
+                ${token.volume24hUsd >= 1_000_000 ? `${(token.volume24hUsd / 1_000_000).toFixed(2)}M` : `${(token.volume24hUsd / 1_000).toFixed(0)}K`}
               </div>
+            </div>
+
+            <div>
+              {token.bondingCurve.isGraduated ? (
+                <>
+                  <div className="text-[11px] text-muted font-medium">NAV Floor</div>
+                  <div className="mt-1 flex items-baseline gap-1.5 font-mono text-xl font-bold text-amber-400">
+                    <span>$0.0031</span>
+                    <span className="text-[10px] font-normal text-muted">/ token</span>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="text-[11px] text-muted font-medium">Bonding curve</div>
+                  <div className="mt-1 font-mono text-xl font-bold text-foreground">
+                    {token.bondingCurve.progressPct}%{" "}
+                    <span className="text-xs font-normal text-muted">
+                      (${(token.bondingCurve.realQuoteReservesUsd / 1_000).toFixed(1)}K / $60K)
+                    </span>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -284,41 +316,41 @@ export default function TokenDetailPage({ params }: PageProps) {
 
             <div className="rounded-2xl border border-border bg-card p-4 text-xs space-y-2.5 shadow-sm">
               <div className="font-bold text-foreground pb-2 border-b border-border">
-                Protocol details
+                Treasury & Security Details
               </div>
               <div className="flex justify-between text-muted">
-                <span>Total supply:</span>
-                <span className="font-mono text-foreground">1,000,000,000</span>
+                <span>Collateral Asset:</span>
+                <span className="font-mono text-foreground font-semibold">
+                  {token.targetEquity.name.replace(/\s*\(.*?\)/g, "").trim()} ({token.targetEquity.symbol.replace(/^\$/, "")})
+                </span>
               </div>
               <div className="flex justify-between text-muted">
-                <span>Meteora DBC curve:</span>
-                <span className="font-mono text-foreground">800,000,000 (80%)</span>
+                <span>Asset Class:</span>
+                <span className="font-mono text-foreground">
+                  {token.targetEquity.isPreIpo ? "Pre-IPO Private Equity" : "Tokenized Public Stock"}
+                </span>
               </div>
               <div className="flex justify-between text-muted">
-                <span>Meteora DLMM reserve:</span>
-                <span className="font-mono text-foreground">200,000,000 (20%)</span>
+                <span>Custodian Vault:</span>
+                <span className="font-mono text-foreground">Tessera Protocol Custody</span>
               </div>
               <div className="flex justify-between text-muted">
-                <span>Graduation threshold:</span>
-                <span className="font-mono text-foreground">$60,000 USDC</span>
+                <span>Proof of Reserve:</span>
+                <span className="font-mono text-slate-300 font-medium">Pyth / On-Chain Verified</span>
               </div>
               <div className="flex justify-between text-muted">
-                <span>Graduation split:</span>
-                <span className="font-mono text-foreground">50% Spot Buy / 50% DLMM</span>
-              </div>
-              <div className="flex justify-between text-muted">
-                <span>Underlying asset:</span>
-                <span className="font-mono text-foreground font-semibold">{token.targetEquity.name}</span>
-              </div>
-              <div className="flex justify-between text-muted">
-                <span>Legal structure:</span>
+                <span>Legal Structure:</span>
                 <span className="font-mono text-foreground truncate max-w-[180px]" title={token.targetEquity.legalFramework}>
                   {token.targetEquity.legalFramework}
                 </span>
               </div>
               <div className="flex justify-between text-muted">
-                <span>Proof of Reserve:</span>
-                <span className="font-mono text-slate-300 font-medium">Pyth / On-Chain Verified</span>
+                <span>Total Supply:</span>
+                <span className="font-mono text-foreground">1,000,000,000</span>
+              </div>
+              <div className="flex justify-between text-muted">
+                <span>Graduation Split:</span>
+                <span className="font-mono text-foreground">50% Stock Collateral · 50% DLMM Reserve</span>
               </div>
             </div>
           </div>

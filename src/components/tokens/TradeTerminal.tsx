@@ -93,7 +93,7 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
     <div className="rounded-xl border border-border bg-card p-5 shadow-sm">
       {/* 3-Tab Switch: Buy / Sell / Redeem Stock */}
       <div className="flex items-center justify-between border-b border-border pb-3">
-        <div className="flex items-center gap-1 rounded-lg bg-card-subtle p-1 border border-border">
+        <div className="flex items-center gap-1 rounded-lg bg-[#0e1620] p-1 border border-border/80">
           <button
             onClick={() => {
               setTradeMode("buy");
@@ -150,7 +150,7 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
 
       {/* Slippage drawer */}
       {showSettings && tradeMode !== "redeem" && (
-        <div className="mt-3 rounded-lg bg-card-subtle p-3 border border-border text-xs flex items-center justify-between">
+        <div className="mt-3 rounded-lg bg-[#0e1620] p-3 border border-border/80 text-xs flex items-center justify-between">
           <span className="text-muted">Max Slippage:</span>
           <div className="flex items-center gap-1">
             {[0.5, 1.0, 2.5].map((s) => (
@@ -173,7 +173,7 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
       {tradeMode === "redeem" ? (
         <div className="mt-4 space-y-4">
           {/* Dual Action Toggle */}
-          <div className="flex items-center gap-1 rounded-lg bg-card-subtle p-1 border border-border">
+          <div className="flex items-center gap-1 rounded-lg bg-[#0e1620] p-1 border border-border/80">
             <button
               onClick={() => setRedeemActionType("stock")}
               className={`flex-1 py-1.5 rounded-md text-xs font-medium transition-colors ${
@@ -182,7 +182,7 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
                   : "text-muted hover:text-foreground"
               }`}
             >
-              Withdraw {token.targetEquity.symbol} Stock
+              Redeem {token.targetEquity.symbol} Stock
             </button>
             <button
               onClick={() => setRedeemActionType("usdc")}
@@ -192,14 +192,14 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
                   : "text-muted hover:text-foreground"
               }`}
             >
-              1-Click USDC Exit
+              Instant USDC Exit
             </button>
           </div>
 
           {/* Input Box */}
           <div>
             <div className="flex items-center justify-between text-xs text-muted mb-1.5">
-              <span>Amount of ${token.symbol} to Burn</span>
+              <span>Amount to Redeem (${token.symbol})</span>
               <span className="font-mono">Balance: 500,000 ${token.symbol}</span>
             </div>
 
@@ -242,30 +242,30 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
           </div>
 
           {/* Interactive Calculation Card */}
-          <div className="rounded-lg border border-border bg-card-subtle p-3.5 space-y-2.5 text-xs">
+          <div className="rounded-lg border border-border/80 bg-[#0e1620] p-3.5 space-y-2.5 text-xs">
             <div className="flex items-center justify-between">
-              <span className="text-muted">Target Equity Asset:</span>
+              <span className="text-muted">Collateral Stock:</span>
               <span className="font-semibold text-foreground flex items-center gap-1">
                 {token.targetEquity.name} ({token.targetEquity.symbol})
               </span>
             </div>
 
             <div className="flex items-center justify-between">
-              <span className="text-muted">You Claim (Pro-Rata):</span>
+              <span className="text-muted">You Receive:</span>
               <span className="font-mono font-bold text-amber-300 text-sm">
                 {entitledStockShares.toFixed(4)} Shares
               </span>
             </div>
 
             <div className="flex items-center justify-between">
-              <span className="text-muted">Estimated Value:</span>
+              <span className="text-muted">Redemption Value:</span>
               <span className="font-mono font-bold text-emerald-400 text-sm">
                 ${entitledUsdcValue.toFixed(2)} USDC
               </span>
             </div>
 
-            <div className="flex items-center justify-between border-t border-border pt-2 text-[11px]">
-              <span className="text-muted">NAV Floor:</span>
+            <div className="flex items-center justify-between border-t border-border/80 pt-2 text-[11px]">
+              <span className="text-muted">Vault Floor:</span>
               <span className="font-mono text-amber-300 font-medium">
                 ${floorPricePerToken} / token
               </span>
@@ -301,15 +301,15 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
         </div>
       ) : (
         <>
-          {/* Meteora DBC Curve Indicator */}
-          <div className="mt-4 rounded-lg border border-border bg-card-subtle p-3 text-xs">
-            <div className="flex items-center justify-between mb-1.5">
-              <span className="font-semibold text-foreground flex items-center gap-1.5">
+          {/* Bonding Curve Progress Indicator */}
+          <div className="mt-4 rounded-lg border border-border/80 bg-[#0e1620] p-3 text-xs">
+            <div className="flex items-center justify-between gap-2 mb-1.5">
+              <span className="font-semibold text-foreground flex items-center gap-1.5 whitespace-nowrap">
                 <span className="h-2 w-2 rounded-full bg-brand-cyan" />
-                Meteora DBC Dynamic Curve
+                Bonding Progress
               </span>
-              <span className="font-mono text-slate-300 font-semibold">
-                {token.bondingCurve.progressPct}% Graduated
+              <span className="font-mono text-slate-300 font-semibold whitespace-nowrap">
+                {token.bondingCurve.progressPct}% Funded
               </span>
             </div>
             {/* Progress bar */}
@@ -321,7 +321,7 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
             </div>
             <div className="flex items-center justify-between text-[10px] text-muted mt-1.5 font-mono">
               <span>${token.bondingCurve.realQuoteReservesUsd.toLocaleString()} / $60,000 USDC</span>
-              <span>50% {token.targetEquity.symbol} Buy + 50% DLMM</span>
+              <span>50% Stock Purchase · 50% Liquidity</span>
             </div>
           </div>
 
@@ -398,7 +398,7 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
 
           {/* Trade Simulation Breakdown */}
           {simulation && !("error" in simulation) && (
-            <div className="mt-4 rounded-lg bg-card-subtle p-3 border border-border space-y-2 text-xs">
+            <div className="mt-4 rounded-lg bg-[#0e1620] p-3 border border-border/80 space-y-2 text-xs">
               <div className="flex items-center justify-between text-muted">
                 <span>You Receive (Estimated):</span>
                 <span className="font-mono font-bold text-foreground">
