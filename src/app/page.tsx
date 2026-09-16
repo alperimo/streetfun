@@ -4,7 +4,7 @@ import React, { useState, useMemo, useEffect } from "react";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { HeroBanner } from "@/components/home/HeroBanner";
-import { FilterBar } from "@/components/home/FilterBar";
+import { FilterBar, StatusFilter, SortOption } from "@/components/home/FilterBar";
 import { TokenCard } from "@/components/tokens/TokenCard";
 import { SearchModal } from "@/components/modals/SearchModal";
 import { LaunchModal } from "@/components/modals/LaunchModal";
@@ -14,8 +14,9 @@ import { TokenMetadata } from "@/lib/types";
 export default function ExplorePage() {
   const [tokens, setTokens] = useState<TokenMetadata[]>(INITIAL_TOKENS);
   const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [selectedTag, setSelectedTag] = useState("all");
-  const [sortBy, setSortBy] = useState<"mcap" | "newest" | "volume" | "progress">("mcap");
+  const [sortBy, setSortBy] = useState<SortOption>("mcap");
 
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isLaunchOpen, setIsLaunchOpen] = useState(false);
@@ -29,16 +30,14 @@ export default function ExplorePage() {
   const filteredTokens = useMemo(() => {
     return tokens
       .filter((token) => {
-        if (selectedTag === "graduated" && !token.bondingCurve.isGraduated) {
+        if (statusFilter === "graduated" && !token.bondingCurve.isGraduated) {
           return false;
         }
-        if (selectedTag === "bonding" && token.bondingCurve.isGraduated) {
+        if (statusFilter === "bonding" && token.bondingCurve.isGraduated) {
           return false;
         }
         if (
           selectedTag !== "all" &&
-          selectedTag !== "graduated" &&
-          selectedTag !== "bonding" &&
           token.targetEquity.symbol !== selectedTag &&
           token.targetEquity.symbol.replace("T", "") !== selectedTag.replace("T", "")
         ) {
@@ -65,7 +64,7 @@ export default function ExplorePage() {
           return b.bondingCurve.progressPct - a.bondingCurve.progressPct;
         return 0;
       });
-  }, [tokens, selectedTag, searchQuery, sortBy]);
+  }, [tokens, statusFilter, selectedTag, searchQuery, sortBy]);
 
   const handleTokenCreated = (newToken: TokenMetadata) => {
     setTokens((prev) => [newToken, ...prev]);
@@ -84,6 +83,8 @@ export default function ExplorePage() {
         <FilterBar
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
+          statusFilter={statusFilter}
+          onStatusFilterChange={setStatusFilter}
           selectedTag={selectedTag}
           onTagChange={setSelectedTag}
           sortBy={sortBy}

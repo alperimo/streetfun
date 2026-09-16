@@ -76,8 +76,8 @@ export default function TokenDetailPage({ params }: PageProps) {
                     {token.name}
                   </span>
                   {token.bondingCurve.isGraduated && (
-                    <span className="rounded bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 text-[10px] font-bold text-emerald-400">
-                      GRADUATED
+                    <span className="rounded-md bg-slate-800/80 border border-slate-700/60 px-2 py-0.5 text-[10px] font-medium text-slate-400">
+                      Graduated
                     </span>
                   )}
                 </div>
@@ -99,8 +99,8 @@ export default function TokenDetailPage({ params }: PageProps) {
                   <span className="text-muted text-[11px] hidden sm:inline">
                     ({token.targetEquity.name})
                   </span>
-                  <span className="rounded bg-brand-cyan/10 text-brand-cyan border border-brand-cyan/25 px-1.5 py-0.2 text-[9px] font-mono font-semibold">
-                    xStocks
+                  <span className="rounded bg-card-subtle text-slate-300 border border-border px-1.5 py-0.5 text-[9px] font-mono font-medium">
+                    {token.targetEquity.isPreIpo ? "Pre-IPO" : "xStocks"}
                   </span>
 
                   <button
@@ -155,7 +155,7 @@ export default function TokenDetailPage({ params }: PageProps) {
                       <span className="text-xs font-normal text-muted">/ $60K</span>
                     </div>
                     <div className="flex items-center gap-1.5 mt-0.5">
-                      <span className="rounded-md bg-emerald-500/10 border border-emerald-500/20 px-1.5 py-0.5 text-[10px] font-mono font-bold text-emerald-400">
+                      <span className="rounded-md bg-card-subtle border border-border px-1.5 py-0.5 text-[10px] font-mono font-medium text-slate-300">
                         {(1 + (token.bondingCurve.progressPct / 100) * 1.8).toFixed(1)}x from genesis
                       </span>
                     </div>
@@ -176,24 +176,40 @@ export default function TokenDetailPage({ params }: PageProps) {
               floorPrice={0.0031}
             />
 
-            {/* Simplified Single-Line Progress Bar */}
-            <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
-              <div className="flex items-center justify-between text-xs mb-2">
-                <span className="text-muted font-medium">Graduation Progress</span>
-                <span className="font-mono font-bold text-foreground">
-                  {token.bondingCurve.isGraduated
-                    ? "100% (Graduated to AMM)"
-                    : `${token.bondingCurve.progressPct}% ($${(token.bondingCurve.realQuoteReservesUsd / 1_000).toFixed(1)}K / $60K USDC)`}
-                </span>
+            {/* Graduation Progress vs Meteora DLMM Active Liquidity Band */}
+            {token.bondingCurve.isGraduated ? (
+              <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+                  <div className="flex items-center gap-2">
+                    <span className="flex h-2 w-2 relative">
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400"></span>
+                    </span>
+                    <span className="font-bold text-foreground">Meteora DLMM Pool Active</span>
+                    <span className="text-muted">· Dynamic Fee Tier 0.25%</span>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-4 text-muted font-mono text-[11px]">
+                    <span>DLMM Liquidity: <strong className="text-foreground">$60,000 USDC</strong></span>
+                    <span>LP Status: <strong className="text-emerald-400">Locked Protocol Reserve</strong></span>
+                  </div>
+                </div>
               </div>
+            ) : (
+              <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
+                <div className="flex items-center justify-between text-xs mb-2">
+                  <span className="text-muted font-medium">Graduation Progress</span>
+                  <span className="font-mono font-bold text-foreground">
+                    {token.bondingCurve.progressPct}% ($${(token.bondingCurve.realQuoteReservesUsd / 1_000).toFixed(1)}K / $60K USDC)
+                  </span>
+                </div>
 
-              <div className="h-1.5 w-full overflow-hidden rounded-full bg-card-hover/40 border border-border">
-                <div
-                  className="h-full rounded-full bg-brand-cyan transition-all duration-300"
-                  style={{ width: `${Math.min(token.bondingCurve.progressPct, 100)}%` }}
-                />
+                <div className="h-1.5 w-full overflow-hidden rounded-full bg-card-hover/40 border border-border">
+                  <div
+                    className="h-full rounded-full bg-brand-cyan transition-all duration-300"
+                    style={{ width: `${Math.min(token.bondingCurve.progressPct, 100)}%` }}
+                  />
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Live Trades Table */}
             <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
@@ -301,7 +317,7 @@ export default function TokenDetailPage({ params }: PageProps) {
               </div>
               <div className="flex justify-between text-muted">
                 <span>Proof of Reserve:</span>
-                <span className="font-mono text-brand-cyan font-semibold">Chainlink PoR Verified</span>
+                <span className="font-mono text-slate-300 font-medium">Pyth / On-Chain Verified</span>
               </div>
             </div>
           </div>

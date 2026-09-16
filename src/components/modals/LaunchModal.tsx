@@ -163,8 +163,8 @@ export function LaunchModal({
               <label className="text-muted font-medium">
                 Select Backing Asset (Tessera Pre-IPO / Tokenized Equity)
               </label>
-              <span className="text-[10px] text-brand-cyan font-mono flex items-center gap-1">
-                <ShieldCheck className="h-3 w-3" /> Chainlink PoR Verified
+              <span className="text-[10px] text-slate-300 font-mono flex items-center gap-1">
+                <ShieldCheck className="h-3 w-3 text-slate-400" /> Pyth / On-Chain Verified
               </span>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">

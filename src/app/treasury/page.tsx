@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { ArrowUpRight, Wallet } from "lucide-react";
+import { ArrowUpRight, Flame } from "lucide-react";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { SearchModal } from "@/components/modals/SearchModal";
@@ -29,7 +29,7 @@ export default function TreasuryPage() {
             Treasury
           </h1>
           <p className="max-w-2xl text-sm text-muted">
-            Non-custodial Anchor Treasury PDA vaults holding Tessera Pre-IPO shares ($TSPACEX) and tokenized equities backed by Chainlink Proof of Reserve.
+            Non-custodial Anchor Treasury PDA vaults holding Tessera Pre-IPO shares ($TSPACEX) and tokenized equities backed by Pyth / On-Chain Verification.
           </p>
         </div>
 
@@ -121,12 +121,12 @@ export default function TreasuryPage() {
                       ${(asset.valueUsd / 1_000_000).toFixed(2)}M
                     </div>
                     <a
-                      href="https://docs.tessera.pe"
+                      href="https://pyth.network"
                       target="_blank"
                       rel="noreferrer"
-                      className="inline-flex items-center gap-1 text-[10px] text-brand-cyan hover:underline transition-colors"
+                      className="inline-flex items-center gap-1 text-[10px] text-muted hover:text-foreground transition-colors"
                     >
-                      <span>Tessera PoR</span>
+                      <span>Pyth PoR</span>
                       <ArrowUpRight className="h-3 w-3" />
                     </a>
                   </div>
@@ -155,22 +155,22 @@ export default function TreasuryPage() {
                   key={rdm.id}
                   className="py-3 flex items-center justify-between hover:bg-card-subtle px-2 rounded-lg transition-colors"
                 >
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-card-subtle text-slate-300 border border-border">
-                      <Wallet className="h-4 w-4" />
+                  <div className="flex items-center gap-2.5">
+                    <div className="flex h-7 w-7 items-center justify-center rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20 flex-shrink-0">
+                      <Flame className="h-3.5 w-3.5" />
                     </div>
                     <div>
                       <div className="font-bold text-foreground text-xs">
                         Burned {rdm.burnedMemeAmount}
                       </div>
-                      <div className="text-[11px] text-muted mt-0.5">
-                        {rdm.redeemerAddress} · {rdm.timestamp}
+                      <div className="text-[11px] text-muted font-mono mt-0.5">
+                        {rdm.redeemerAddress} · <span className="text-muted/70">{rdm.timestamp}</span>
                       </div>
                     </div>
                   </div>
 
                   <div className="text-right">
-                    <div className="font-mono text-xs font-bold text-brand-emerald">
+                    <div className="font-mono text-xs font-semibold text-emerald-400">
                       +{rdm.sharesRedeemed.toFixed(2)} {rdm.equitySymbol}
                     </div>
                     <div className="text-[10px] font-mono text-muted">

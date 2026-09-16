@@ -43,12 +43,12 @@ export function TokenCard({ token }: TokenCardProps) {
             </div>
             <div>
               <div className="flex items-center gap-1.5">
-                <span className="text-xs font-bold text-brand-cyan uppercase">
+                <span className="text-xs font-semibold text-muted uppercase">
                   ${token.symbol}
                 </span>
                 {token.bondingCurve.isGraduated && (
-                  <span className="rounded bg-emerald-500/10 border border-emerald-500/20 px-1.5 py-0.5 text-[9px] font-bold text-emerald-400">
-                    GRADUATED
+                  <span className="rounded-md bg-slate-800/80 border border-slate-700/60 px-1.5 py-0.5 text-[9px] font-medium text-slate-400">
+                    Graduated
                   </span>
                 )}
               </div>
@@ -72,7 +72,7 @@ export function TokenCard({ token }: TokenCardProps) {
           </button>
         </div>
 
-        {/* Backed by badge: Stock Logo + Plain Ticker (no $ sign, no bulky background) + xStocks tag */}
+        {/* Backed by badge: Stock Logo + Plain Ticker (no $ sign, no bulky background) + subtle tag */}
         <div className="mt-3 flex items-center justify-between gap-1.5 text-xs">
           <div className="flex items-center gap-1.5">
             <span className="text-muted">Backed with</span>
@@ -88,19 +88,21 @@ export function TokenCard({ token }: TokenCardProps) {
             <span className="font-bold text-foreground">
               {token.targetEquity.symbol.replace(/^\$/, "")}
             </span>
-            <span className="rounded bg-brand-cyan/10 text-brand-cyan border border-brand-cyan/25 px-1.5 py-0.2 text-[9px] font-mono font-semibold">
+            <span className="rounded bg-card-subtle text-slate-300 border border-border px-1.5 py-0.5 text-[9px] font-mono font-medium">
               {token.targetEquity.isPreIpo ? "Pre-IPO" : "xStocks"}
             </span>
           </div>
-          <span className="font-mono text-xs font-bold text-muted">
+          <span className="font-mono text-xs font-medium text-muted">
             {token.bondingCurve.isGraduated ? "Graduated" : `${token.bondingCurve.progressPct}%`}
           </span>
         </div>
 
-        {/* Progress Bar moved directly under the stock badge */}
+        {/* Progress Bar: Only highlight active bonding curve; graduated is muted */}
         <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-card-hover/40 border border-border">
           <div
-            className="h-full rounded-full bg-brand-cyan transition-all duration-300"
+            className={`h-full rounded-full transition-all duration-300 ${
+              token.bondingCurve.isGraduated ? "bg-slate-600/70" : "bg-brand-cyan"
+            }`}
             style={{ width: `${Math.min(token.bondingCurve.progressPct, 100)}%` }}
           />
         </div>
@@ -126,7 +128,7 @@ export function TokenCard({ token }: TokenCardProps) {
                   ${(token.bondingCurve.realQuoteReservesUsd / 1_000).toFixed(1)}K{" "}
                   <span className="text-xs font-normal text-muted">/ $60K USDC</span>
                 </div>
-                <span className="rounded-md bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 font-mono text-[11px] font-bold text-emerald-400">
+                <span className="rounded-md bg-card-subtle border border-border px-2 py-0.5 font-mono text-[11px] font-medium text-slate-300">
                   {(1 + (token.bondingCurve.progressPct / 100) * 1.8).toFixed(1)}x from genesis
                 </span>
               </div>

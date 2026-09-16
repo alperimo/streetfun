@@ -134,9 +134,9 @@ export function BurnRedeemModule({ token }: BurnRedeemModuleProps) {
           <span className="font-mono">
             Formula: (Burn Amount / Total Supply) × {token.treasury.totalEquityLocked} {token.targetEquity.symbol}
           </span>
-          <span className="flex items-center gap-1 text-brand-cyan font-mono font-medium">
-            <ShieldCheck className="h-3.5 w-3.5" />
-            Chainlink Proof of Reserve (100% Backed)
+          <span className="flex items-center gap-1 text-slate-300 font-mono font-medium">
+            <ShieldCheck className="h-3.5 w-3.5 text-slate-400" />
+            Pyth / On-Chain Verified (100% Backed)
           </span>
         </div>
       </div>

@@ -47,15 +47,15 @@ export function calculateTesseraSharesEntitlement(
 }
 
 /**
- * Queries Tessera's Chainlink Proof-of-Reserve oracle status
- * In production, this reads the Chainlink aggregator round data on Solana.
+ * Queries Tessera's Pyth Network Proof-of-Reserve / On-Chain oracle status
+ * In production, this reads the Pyth Price/Reserve feed on Solana.
  */
 export async function getTesseraProofOfReserveStatus(
   asset: TesseraPreIpoAsset
 ): Promise<TesseraProofOfReserveStatus> {
   return {
     isVerified: true,
-    oracleNetwork: "Chainlink Decentralized Oracle Network (Solana Mainnet)",
+    oracleNetwork: "Pyth Network Oracle / On-Chain PoR (Solana Mainnet)",
     heartbeatTimestamp: new Date().toISOString(),
     collateralRatio: 1.0, // 100% full reserve backing
     custodian: asset.custodian,
