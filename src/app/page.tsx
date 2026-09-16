@@ -22,8 +22,14 @@ export default function ExplorePage() {
   const [isLaunchOpen, setIsLaunchOpen] = useState(false);
 
   useEffect(() => {
-    if (typeof window !== "undefined" && new URLSearchParams(window.location.search).get("launch") === "true") {
-      setIsLaunchOpen(true);
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("launch") === "true") {
+        setIsLaunchOpen(true);
+      }
+      if (params.get("search") === "true") {
+        setIsSearchOpen(true);
+      }
     }
   }, []);
 
