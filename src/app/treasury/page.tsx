@@ -79,106 +79,110 @@ export default function TreasuryPage() {
         {/* Two Tables */}
         <div className="mt-8 grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* Left Table: Top Equity Holdings */}
-          <div className="lg:col-span-7 rounded-2xl border border-border bg-card p-5 shadow-sm">
-            <div className="flex items-center justify-between border-b border-border pb-3">
-              <div>
-                <h3 className="text-base font-bold text-foreground">
-                  Top Vault Holdings
-                </h3>
-                <p className="text-xs text-muted">
-                  Ranked by total stock value locked
-                </p>
-              </div>
-            </div>
-
-            <div className="mt-3 divide-y divide-border">
-              {stats.assetBreakdown.map((asset, index) => (
-                <div
-                  key={asset.symbol}
-                  className="py-3.5 flex items-center justify-between hover:bg-card-subtle px-2 rounded-lg transition-colors"
-                >
-                  <div className="flex items-center gap-3">
-                    <span className="font-mono text-xs font-bold text-muted w-4">
-                      {index + 1}
-                    </span>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="font-bold text-foreground text-sm">
-                          {asset.name}
-                        </span>
-                        <span className="rounded bg-card-subtle border border-border px-1.5 py-0.5 text-[10px] font-mono text-slate-300">
-                          {asset.symbol}
-                        </span>
-                      </div>
-                      <div className="text-[11px] text-muted mt-0.5">
-                        {asset.sharesLocked.toLocaleString()} shares · {asset.backingPercentage}% of TVL
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="text-right">
-                    <div className="font-mono text-sm font-bold text-foreground">
-                      ${(asset.valueUsd / 1_000_000).toFixed(2)}M
-                    </div>
-                    <a
-                      href="https://pyth.network"
-                      target="_blank"
-                      rel="noreferrer"
-                      className="inline-flex items-center gap-1 text-[10px] text-muted hover:text-foreground transition-colors"
-                    >
-                      <span>Pyth PoR</span>
-                      <ArrowUpRight className="h-3 w-3" />
-                    </a>
-                  </div>
+          <div className="lg:col-span-7 rounded-2xl border border-border bg-card p-5 sm:p-6 shadow-sm flex flex-col justify-between">
+            <div>
+              <div className="flex items-center justify-between border-b border-border pb-3.5 mb-2">
+                <div>
+                  <h3 className="text-base font-bold text-foreground">
+                    Top Vault Holdings
+                  </h3>
+                  <p className="text-xs text-muted">
+                    Ranked by total stock value locked
+                  </p>
                 </div>
-              ))}
+              </div>
+
+              <div className="flex flex-col">
+                {stats.assetBreakdown.map((asset, index) => (
+                  <div
+                    key={asset.symbol}
+                    className="py-3.5 px-2.5 flex items-center justify-between gap-4 hover:bg-card-subtle rounded-xl transition-colors border-b border-border/40 last:border-b-0"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <span className="font-mono text-xs font-bold text-muted w-4 flex-shrink-0 text-center">
+                        {index + 1}
+                      </span>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="font-bold text-foreground text-sm truncate">
+                            {asset.name}
+                          </span>
+                          <span className="rounded bg-card-subtle border border-border px-1.5 py-0.5 text-[10px] font-mono text-slate-300 flex-shrink-0">
+                            {asset.symbol}
+                          </span>
+                        </div>
+                        <div className="text-[11px] text-muted mt-0.5">
+                          {asset.sharesLocked.toLocaleString()} shares · {asset.backingPercentage}% of TVL
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col items-end min-w-[110px] flex-shrink-0 text-right">
+                      <div className="font-mono text-sm font-bold text-foreground tabular-nums">
+                        ${(asset.valueUsd / 1_000_000).toFixed(2)}M
+                      </div>
+                      <a
+                        href="https://pyth.network"
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center gap-1 text-[10px] text-muted hover:text-foreground transition-colors mt-0.5"
+                      >
+                        <span>Pyth PoR</span>
+                        <ArrowUpRight className="h-3 w-3" />
+                      </a>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
 
           {/* Right Table: Recent Redemptions */}
-          <div className="lg:col-span-5 rounded-2xl border border-border bg-card p-5 shadow-sm">
-            <div className="flex items-center justify-between border-b border-border pb-3">
-              <div>
-                <h3 className="text-base font-bold text-foreground">
-                  Recent Redemptions
-                </h3>
-                <p className="text-xs text-muted">
-                  Holder stock payouts
-                </p>
-              </div>
-              <span className="text-[10px] text-muted font-mono">Newest first</span>
-            </div>
-
-            <div className="mt-3 divide-y divide-border">
-              {stats.recentRedemptions.map((rdm) => (
-                <div
-                  key={rdm.id}
-                  className="py-3 flex items-center justify-between hover:bg-card-subtle px-2 rounded-lg transition-colors"
-                >
-                  <div className="flex items-center gap-2.5">
-                    <div className="flex h-7 w-7 items-center justify-center rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20 flex-shrink-0">
-                      <Flame className="h-3.5 w-3.5" />
-                    </div>
-                    <div>
-                      <div className="font-bold text-foreground text-xs">
-                        Burned {rdm.burnedMemeAmount}
-                      </div>
-                      <div className="text-[11px] text-muted font-mono mt-0.5">
-                        {rdm.redeemerAddress} · <span className="text-muted/70">{rdm.timestamp}</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="text-right">
-                    <div className="font-mono text-xs font-semibold text-emerald-400">
-                      +{rdm.sharesRedeemed.toFixed(2)} {rdm.equitySymbol}
-                    </div>
-                    <div className="text-[10px] font-mono text-muted">
-                      {rdm.txHash}
-                    </div>
-                  </div>
+          <div className="lg:col-span-5 rounded-2xl border border-border bg-card p-5 sm:p-6 shadow-sm flex flex-col justify-between">
+            <div>
+              <div className="flex items-center justify-between border-b border-border pb-3.5 mb-2">
+                <div>
+                  <h3 className="text-base font-bold text-foreground">
+                    Recent Redemptions
+                  </h3>
+                  <p className="text-xs text-muted">
+                    Holder stock payouts
+                  </p>
                 </div>
-              ))}
+                <span className="text-[10px] text-muted font-mono">Newest first</span>
+              </div>
+
+              <div className="flex flex-col">
+                {stats.recentRedemptions.map((rdm) => (
+                  <div
+                    key={rdm.id}
+                    className="py-3.5 px-2.5 flex items-center justify-between gap-4 hover:bg-card-subtle rounded-xl transition-colors border-b border-border/40 last:border-b-0"
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20 flex-shrink-0">
+                        <Flame className="h-4 w-4" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="font-bold text-foreground text-xs truncate">
+                          Burned {rdm.burnedMemeAmount}
+                        </div>
+                        <div className="text-[11px] text-muted font-mono mt-0.5 truncate">
+                          {rdm.redeemerAddress} · <span className="text-muted/70">{rdm.timestamp}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col items-end min-w-[130px] flex-shrink-0 text-right">
+                      <div className="font-mono text-xs font-semibold text-emerald-400 tabular-nums whitespace-nowrap">
+                        +{rdm.sharesRedeemed.toFixed(2)} {rdm.equitySymbol}
+                      </div>
+                      <div className="text-[10px] font-mono text-muted whitespace-nowrap mt-0.5">
+                        {rdm.txHash}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>
