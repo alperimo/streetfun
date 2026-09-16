@@ -284,10 +284,10 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
           <button
             onClick={handleExecuteTrade}
             disabled={!numTokensToRedeem || isTrading}
-            className={`w-full rounded-lg py-3 text-sm font-bold transition-colors shadow-xs disabled:opacity-50 ${
+            className={`w-full rounded-lg py-3 text-sm font-semibold transition-colors shadow-xs disabled:opacity-50 ${
               !connected
-                ? "bg-brand-cyan hover:opacity-90 text-slate-950"
-                : "bg-amber-400 hover:bg-amber-300 text-slate-950"
+                ? "bg-white/[0.05] border border-white/[0.1] text-white hover:bg-white/[0.08]"
+                : "bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold"
             }`}
           >
             {isTrading
@@ -315,7 +315,7 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
             {/* Progress bar */}
             <div className="h-1.5 w-full rounded-full bg-border overflow-hidden">
               <div
-                className="h-full bg-brand-cyan rounded-full transition-all duration-500"
+                className="bg-gradient-to-r from-[#0891B2] to-[#06B6D4] h-1.5 rounded-full transition-all duration-500"
                 style={{ width: `${Math.min(token.bondingCurve.progressPct, 100)}%` }}
               />
             </div>
@@ -459,7 +459,7 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
             disabled={!amount || isTrading || Boolean(simulation && "error" in simulation)}
             className={`mt-4 w-full rounded-lg py-3 text-sm font-bold transition-colors shadow-xs disabled:opacity-50 ${
               !connected
-                ? "bg-brand-cyan hover:opacity-90 text-slate-950"
+                ? "bg-[#06B6D4] hover:bg-[#22D3EE] text-[#070A0E] font-semibold"
                 : tradeMode === "buy"
                 ? "bg-emerald-500 hover:bg-emerald-600 text-white"
                 : "bg-rose-500 hover:bg-rose-600 text-white"

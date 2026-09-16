@@ -178,8 +178,10 @@ export default function TokenDetailPage({ params }: PageProps) {
               {token.bondingCurve.isGraduated ? (
                 <>
                   <div className="text-[11px] text-muted font-medium">NAV Floor</div>
-                  <div className="mt-1 flex items-baseline gap-1.5 font-mono text-xl font-bold text-amber-400">
-                    <span>$0.0031</span>
+                  <div className="mt-1 flex items-baseline gap-1.5 font-mono">
+                    <span className="rounded-md border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-base font-bold text-amber-300">
+                      $0.0031
+                    </span>
                     <span className="text-[10px] font-normal text-muted">/ token</span>
                   </div>
                 </>
@@ -237,7 +239,7 @@ export default function TokenDetailPage({ params }: PageProps) {
 
                 <div className="h-1.5 w-full overflow-hidden rounded-full bg-card-hover/40 border border-border">
                   <div
-                    className="h-full rounded-full bg-brand-cyan transition-all duration-300"
+                    className="bg-gradient-to-r from-[#0891B2] to-[#06B6D4] h-1.5 rounded-full transition-all duration-300"
                     style={{ width: `${Math.min(token.bondingCurve.progressPct, 100)}%` }}
                   />
                 </div>

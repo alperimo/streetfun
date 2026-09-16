@@ -75,8 +75,8 @@ export function FilterBar({
                 onClick={() => onStatusFilterChange(item.id)}
                 className={`rounded-md px-2.5 py-1 text-xs transition-colors duration-150 ${
                   statusFilter === item.id
-                    ? "bg-slate-800 border border-slate-700/80 text-slate-100 font-semibold"
-                    : "text-slate-400 hover:text-slate-100 hover:bg-white/[0.03] font-medium"
+                    ? "bg-[#06B6D4]/10 border border-[#06B6D4]/40 text-[#A5F3FC] font-medium shadow-xs"
+                    : "border border-transparent text-slate-400 hover:text-slate-100 hover:bg-white/[0.03] font-medium"
                 }`}
               >
                 {item.label}
@@ -94,8 +94,8 @@ export function FilterBar({
                   onClick={() => onSortChange(item.id)}
                   className={`whitespace-nowrap rounded-lg px-2.5 py-1 text-xs transition-colors duration-150 ${
                     sortBy === item.id
-                      ? "bg-slate-800 border border-slate-700/80 text-slate-100 font-semibold"
-                      : "border border-border/80 bg-card/40 text-slate-400 font-medium hover:text-slate-100 hover:bg-white/[0.03]"
+                      ? "bg-[#06B6D4]/10 border border-[#06B6D4]/40 text-[#A5F3FC] font-medium shadow-xs"
+                      : "border border-white/[0.07] bg-transparent text-slate-400 font-medium hover:text-slate-100 hover:bg-white/[0.03]"
                   }`}
                 >
                   {item.label}
@@ -115,8 +115,8 @@ export function FilterBar({
             onClick={() => onTagChange(tag.id)}
             className={`whitespace-nowrap rounded-lg px-3 py-1 text-xs transition-colors duration-150 ${
               selectedTag === tag.id
-                ? "bg-slate-800 border border-slate-700/80 text-slate-100 font-semibold"
-                : "border border-border/80 bg-card/40 text-slate-400 font-medium hover:text-slate-100 hover:bg-white/[0.03]"
+                ? "bg-[#06B6D4]/10 border border-[#06B6D4]/40 text-[#A5F3FC] font-medium shadow-xs"
+                : "border border-white/[0.07] bg-transparent text-slate-400 font-medium hover:text-slate-100 hover:bg-white/[0.03]"
             }`}
           >
             {tag.label}

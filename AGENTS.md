@@ -1,120 +1,83 @@
 # StreetFun Engineering & Design Guidelines
 
-This document serves as the single source of truth for design tokens, component standards, typography, layout rules, and coding conventions across the StreetFun codebase. Every agent and developer must strictly adhere to these principles to maintain consistency and prevent design regression.
+This document defines the architectural principles, color layering mental model, component standards, and development protocols for StreetFun. Keep this guide concise, principled, and actionable.
 
 ---
 
-## 1. Color Palette & Design System Tokens
+## 1. Single Source of Truth & Zero Hardcoding
 
-All colors are configured as CSS variables in `src/app/globals.css` and mapped to Tailwind utilities in `tailwind.config.ts`. **Never hardcode arbitrary hex codes in JSX/TSX components.**
-
-| Token | CSS Variable | Hex Value (Street Dark) | Tailwind Class | Semantic Usage |
-| :--- | :--- | :--- | :--- | :--- |
-| **Background** | `--background` | `#0c1218` | `bg-background`, `text-background` | App background, page canvas |
-| **Foreground** | `--foreground` | `#f1f5f9` | `text-foreground` | Primary text, titles, prominent numbers |
-| **Card / Surface** | `--card` | `#131d27` | `bg-card` | Panels, cards, modal dialog containers |
-| **Card Hover** | `--card-hover` | `#192734` | `bg-card-hover` | Interactive hover states, active list selections |
-| **Card Subtle** | `--card-subtle` | `#090e13` | `bg-card-subtle` | Recessed containers, inset fields |
-| **Border** | `--border` | `#1f3042` | `border-border` | Default dividers, card contours, subtle borders |
-| **Border Active** | `--border-active` | `#2d455e` | `border-border-active` | Hovered borders, active tabs, focused inputs |
-| **Brand Cyan (Primary CTA)** | `--brand-cyan` | `#5eead4` | `bg-brand-cyan`, `text-brand-cyan` | Primary action buttons (Launch, Connect), key accents |
-| **Brand Emerald** | `--brand-emerald` | `#10b981` | `text-brand-emerald` | Positive 24h price delta, completed checkmarks |
-| **Brand Rose** | `--brand-rose` | `#f43f5e` | `text-brand-rose` | Negative 24h price delta, danger actions |
-| **Muted Text** | `--muted` | `#94a3b8` | `text-muted` | Labels, secondary descriptions, metadata |
-| **Muted Subtle** | `--muted-foreground` | `#64748b` | `text-muted-foreground` | Timestamps, tertiary notes, placeholders |
-
-> **Avoid the "Black Hole" Bug**: Never use `bg-card-subtle` (`#090e13`) as an active/selected state or badge background on cards/modals. Since `#090e13` is darker than both `--card` (`#131d27`) and `--background` (`#0c1218`), it creates an unsightly pitch-black cutout. For active selections, always use `bg-card-hover` (`#192734`) with a subtle `border-border-active/60`.
+1. **Tokens Over Hex Codes**:
+   - All theme colors, surfaces, and accents are defined exclusively as CSS variables in `src/app/globals.css` and mapped via `tailwind.config.ts`.
+   - **Never hardcode hex values (`#...`) in JSX/TSX components.** Always use semantic Tailwind utility classes (`bg-card`, `bg-card-hover`, `border-border`, `text-foreground`, `text-muted`, `bg-brand-cyan`, etc.).
+   - If a color needs to be updated, change it in `globals.css`. Components must adapt automatically without manual edits.
 
 ---
 
-## 2. Header & Navigation Component Standards
+## 2. Surface Layering & Depth Architecture
 
-The header sets the standard for terminal-grade alignment and polish:
+StreetFun uses a 4-tier surface elevation system to create depth without visual noise:
 
-1. **Uniform Height (`h-11` / 44px)**:
-   - Search Bar: `h-11 w-44 rounded-xl border border-border/80 bg-card`
-   - Social Icons (Telegram, X): `h-11 w-11 rounded-xl border border-border/80 bg-card`
-   - Launch Token CTA: `h-11 px-4 rounded-xl font-bold text-sm bg-brand-cyan text-slate-950`
-   - Connect Wallet CTA: `h-11 px-4 rounded-xl font-bold text-sm bg-brand-cyan text-slate-950`
-2. **CTA Visual Hierarchy**:
-   - Both **Launch Token** and **Connect Wallet** share the matching `bg-brand-cyan` mint cyan color, mirroring the primary action buttons in the hero section.
-3. **SSR Hydration Shift Elimination**:
-   - Any dynamically imported wallet button or client component MUST declare a `loading` fallback skeleton matching the exact height (`h-11`), width, padding, and inner icon (`<Wallet className="h-4 w-4" />`) to prevent layout jumps during page load.
+1. **Canvas (`bg-background`)**: The base background layer for the entire application canvas.
+2. **Surface (`bg-card`)**: The primary container layer for cards, feed items, panels, and modal boxes.
+3. **Elevated / Active Surface (`bg-card-hover`)**: The raised state used for hover interactions, active list item selections, and focused rows.
+4. **Recessed Well (`bg-card-subtle`)**: An inset, sunken surface used strictly for embedded input fields or formula code blocks.
+
+> **The "Black Hole" Rule**:
+> `card-subtle` is intentionally darker than both `card` and `background`. Therefore, **NEVER** use `bg-card-subtle` as an active/selected state or badge background. Doing so produces a jarring pitch-black void. Active states and selections must always use `bg-card-hover` with a subtle active border or a delicate accent tint.
 
 ---
 
-## 3. Badges & Status Tags
+## 3. Visual Hierarchy & Action States
 
-StreetFun follows Stonkfun's restrained terminal aesthetic rather than flashy consumer crypto neon.
-
-- **Graduated Badge**:
-  ```tsx
-  <span className="rounded-md border border-slate-700/60 bg-slate-800/50 px-2 py-0.5 text-[10px] font-medium text-slate-300">
-    Graduated
-  </span>
-  ```
-- **Asset Class Badge (`Pre-IPO` / `xStocks`)**:
-  ```tsx
-  <span className="rounded-md border border-slate-700/50 bg-slate-800/30 px-2 py-0.5 text-[10px] tracking-wide font-mono font-medium text-slate-400">
-    {token.targetEquity.isPreIpo ? "Pre-IPO" : "xStocks"}
-  </span>
-  ```
-- **Stock Ticker**:
-  Clean bold typography: `<span className="font-bold text-foreground">{symbol}</span>`.
+1. **Primary CTAs (Launch Token, Key Actions)**:
+   - Filled with the primary brand accent.
+   - High-contrast dark text with a subtle hover brightness lift.
+2. **Secondary CTAs (Connect Wallet, Navigation Controls)**:
+   - Subdued, neutral translucent slate styling (`bg-white/[0.05] border border-white/[0.1] text-white`).
+   - Retains polish without competing with primary actions for visual weight.
+3. **Active Pills & Segmented Selectors**:
+   - Inactive: Crisp low-contrast border, transparent background, calm muted slate text.
+   - Active: Delicate accent tint background (e.g. `10%` opacity) paired with a soft accent border and highlighted text. Never use heavy, saturated blocks that overpower the feed.
+4. **Bonding Progress Bars**:
+   - Smooth horizontal gradient fill across the active progress width, embedded in a recessed track.
 
 ---
 
-## 4. Modals & Dialog Overlays
+## 4. Semantic Domain Separation (Launchpad vs. Treasury)
 
-- **Backdrop Styling**:
-  - Always use a soft, translucent overlay: `bg-black/30 backdrop-blur-[1px]` or `bg-black/35`.
-  - **Never** use heavy `bg-black/80` or intense blur that completely blocks out the underlying UI.
-- **Search Modal Result Rows**:
-  - Selected / Focused row: `bg-card-hover border border-border-active/60 rounded-xl`
-  - Unselected row: `hover:bg-card-hover/50 border border-transparent rounded-xl`
-  - Always support keyboard navigation: `↑` / `↓` for row navigation, `Enter` to select, `Escape` or clicking backdrop to dismiss.
+Maintain a strict visual distinction between speculative momentum and institutional backing:
+
+- **Launchpad & Bonding Curve**: Uses the primary brand accent (Cyan) for discovery, progression bars, and trading momentum.
+- **Treasury, NAV Floor & Equity Redemption**: Exclusively uses the Gold/Amber palette (`border-amber-500/30 bg-amber-500/10 text-amber-300`).
+- **Rule**: Never override equity backing markers (NAV Floor, collateral reserves, redeem module) with the launchpad accent. The gold tone is reserved to communicate collateral security and vault solvency.
 
 ---
 
-## 5. Forms, Number Inputs & Controls
+## 5. Component Standards & Alignment
 
-- **Numeric Spinners**:
-  HTML5 default stepper arrows are globally suppressed in `globals.css`:
-  ```css
-  input[type="number"]::-webkit-outer-spin-button,
-  input[type="number"]::-webkit-inner-spin-button {
-    -webkit-appearance: none;
-    margin: 0;
-  }
-  input[type="number"] {
-    -moz-appearance: textfield;
-    appearance: textfield;
-  }
-  ```
-- **Input Focus State**:
-  Terminal focus state: `border border-border bg-card-subtle focus:border-brand-cyan focus:bg-card focus:outline-none`.
+1. **Uniform Header Sizing**:
+   - All interactive elements in the header (Search input, Social icon buttons, Launch Token CTA, Connect Wallet CTA) must share the exact same height (`h-11` / 44px) and border radius (`rounded-xl`).
+2. **Zero SSR Layout Shifts**:
+   - Client-only dynamic imports (such as wallet buttons) must declare a fallback `loading` skeleton matching the exact height (`h-11`), width, padding, and icon placeholders to prevent millisecond jumps during hydration.
+3. **Badges & Status Tags**:
+   - Badges (`Graduated`, `Pre-IPO`, `xStocks`) adhere to a restrained terminal aesthetic with thin slate borders and muted text. Avoid glowing shadows or harsh consumer neon fills.
+4. **Modals & Overlays**:
+   - Backdrops must remain soft and translucent (`bg-black/30 backdrop-blur-[1px]`), keeping the underlying dashboard context visible. Never use pitch-black overlays.
+   - Modals must support keyboard navigation (`↑`/`↓`, `Enter`, `Escape`) and dismiss on backdrop click.
 
 ---
 
-## 6. Copy, Data Formatting & Jargon Rules
+## 6. Copy, Data & Financial Formatting
 
-1. **Jargon-Free UI**:
-   - Never expose internal protocol jargon (e.g., DBC curves, DLMM tick spacing, bin steps) in user-facing views.
-   - Use clean, institutional terminology:
-     - *"Treasury & Security Details"* (not *"Protocol details"*)
-     - *"Vault NAV Floor"* or *"NAV Floor"*
-     - *"Collateral Stock"* / *"Backed with"*
-     - *"Bonding Reserves"* / *"Market Cap"*
-2. **Financial Number Formatting**:
-   - Use standard financial notation: e.g., `$1.41M` instead of `$1410K`.
-   - Prices: use clean fixed precision (e.g., `$0.0031`).
-   - Percentages: always include sign (`+12.4%`, `-3.2%`).
+1. **No Dev Jargon**: Never expose internal protocol jargon (e.g. DBC formulas, DLMM tick spacing, PDA addresses) in user-facing views. Use institutional financial terms (*"Treasury & Security Details"*, *"Vault NAV Floor"*, *"Collateral Stock"*).
+2. **Financial Notation**: Format numbers cleanly using standard abbreviations (e.g. `$1.41M` instead of `$1410K`).
+3. **Numeric Inputs**: HTML5 default number spin arrows are suppressed globally across all inputs.
 
 ---
 
 ## 7. Quality Assurance & Git Protocol
 
-- **Build Verification**: Run `npm run build` to guarantee type safety and zero compile warnings before submitting changes.
-- **Visual Verification First**: Capture and inspect a screenshot of the modified component or screen.
-- **Strict User Approval Constraint**:
-  > **NEVER execute `git push` without presenting the visual screenshot to the user and receiving their explicit approval ("bi resim ver ben onaylarsam pushla").**
+1. **Build First**: Run `npm run build` to ensure type safety and zero compile warnings before committing.
+2. **Visual Verification**: Always capture and inspect screenshots of the affected screens.
+3. **Strict Approval Rule**:
+   > **NEVER execute `git push` without presenting the visual screenshot to the user and receiving explicit approval.**

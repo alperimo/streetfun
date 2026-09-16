@@ -50,12 +50,17 @@ export function BurnRedeemModule({ token }: BurnRedeemModuleProps) {
   };
 
   return (
-    <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+    <div className="rounded-2xl border border-amber-500/30 bg-card p-6 shadow-sm">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border pb-4">
         <div>
-          <h3 className="text-base font-bold text-foreground">Redeem Equity</h3>
-          <p className="text-xs text-muted">
+          <div className="flex items-center gap-2">
+            <h3 className="text-base font-bold text-foreground">Redeem Equity</h3>
+            <span className="rounded-md border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-[10px] font-mono font-medium text-amber-300">
+              NAV Floor Backed
+            </span>
+          </div>
+          <p className="text-xs text-muted mt-0.5">
             Burn ${token.symbol} to redeem your pro-rata share of {token.targetEquity.symbol} stock.
           </p>
         </div>
@@ -65,7 +70,7 @@ export function BurnRedeemModule({ token }: BurnRedeemModuleProps) {
             onClick={() => setRedeemMode("stock")}
             className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all ${
               redeemMode === "stock"
-                ? "bg-brand-cyan text-white shadow-sm"
+                ? "border border-amber-500/30 bg-amber-500/15 text-amber-300 shadow-sm"
                 : "text-muted hover:text-foreground"
             }`}
           >
@@ -156,7 +161,7 @@ export function BurnRedeemModule({ token }: BurnRedeemModuleProps) {
             handleExecuteRedeem();
           }}
           disabled={!numMeme || isProcessing}
-          className="flex flex-col items-center justify-center gap-1 rounded-xl bg-brand-cyan py-3 px-4 text-xs font-bold text-slate-950 hover:opacity-90 transition-opacity disabled:opacity-50 shadow-sm shadow-brand-cyan/20"
+          className="flex flex-col items-center justify-center gap-1 rounded-xl border border-amber-500/40 bg-amber-500/15 py-3 px-4 text-xs font-bold text-amber-300 hover:bg-amber-500/25 transition-colors disabled:opacity-50 shadow-sm"
         >
           <div className="flex items-center gap-1.5">
             {isProcessing && redeemMode === "stock" ? (
@@ -164,7 +169,7 @@ export function BurnRedeemModule({ token }: BurnRedeemModuleProps) {
             ) : null}
             <span className="text-sm">Withdraw {token.targetEquity.symbol} to Wallet</span>
           </div>
-          <span className="text-[10px] text-slate-800 font-normal">
+          <span className="text-[10px] text-amber-400/80 font-normal">
             Direct SPL token transfer to your address
           </span>
         </button>

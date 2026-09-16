@@ -24,7 +24,7 @@ export function HeroBanner({ onOpenLaunch }: HeroBannerProps) {
           <div className="pt-1">
             <button
               onClick={onOpenLaunch}
-              className="inline-flex items-center gap-2 rounded-lg bg-brand-cyan px-4 py-2 text-xs sm:text-sm font-bold text-slate-950 hover:opacity-90 transition-opacity shadow-sm"
+              className="inline-flex items-center gap-2 rounded-xl bg-[#06B6D4] hover:bg-[#22D3EE] px-4 py-2.5 text-xs sm:text-sm font-semibold text-[#070A0E] transition-colors shadow-sm"
             >
               <span>Launch a token</span>
               <ArrowRight className="h-3.5 w-3.5 stroke-[2.5]" />

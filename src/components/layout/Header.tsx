@@ -13,8 +13,8 @@ const WalletButton = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="flex h-11 items-center gap-2 rounded-xl bg-brand-cyan px-4 text-sm font-bold text-slate-950 cursor-pointer select-none">
-        <Wallet className="h-4 w-4 text-slate-950" />
+      <div className="flex h-11 items-center gap-2 rounded-xl bg-white/[0.05] border border-white/[0.1] px-4 text-sm font-semibold text-white cursor-pointer select-none">
+        <Wallet className="h-4 w-4 text-white" />
         <span>Connect wallet</span>
       </div>
     ),
@@ -109,7 +109,7 @@ export function Header({ onOpenSearch, onOpenLaunch }: HeaderProps) {
           {/* Launch token CTA */}
           <button
             onClick={onOpenLaunch}
-            className="flex h-11 items-center gap-2 rounded-xl bg-brand-cyan px-4 text-sm font-bold text-slate-950 hover:opacity-90 transition-opacity"
+            className="flex h-11 items-center gap-2 rounded-xl bg-[#06B6D4] hover:bg-[#22D3EE] px-4 text-sm font-semibold text-[#070A0E] transition-colors"
           >
             <Plus className="h-4 w-4 stroke-[2.5]" />
             <span>Launch token</span>

@@ -17,9 +17,9 @@ export function StreetFunLogo({ className = "h-7 w-7", size = 28 }: StreetFunLog
     >
       <defs>
         <linearGradient id="sf-grad" x1="4" y1="4" x2="28" y2="28" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor="#5eead4" />
-          <stop offset="50%" stopColor="#2dd4bf" />
-          <stop offset="100%" stopColor="#0284c7" />
+          <stop offset="0%" stopColor="#22D3EE" />
+          <stop offset="50%" stopColor="#06B6D4" />
+          <stop offset="100%" stopColor="#0891B2" />
         </linearGradient>
       </defs>
 
@@ -35,7 +35,7 @@ export function StreetFunLogo({ className = "h-7 w-7", size = 28 }: StreetFunLog
       {/* Wall Street Ascent Chevron Accent */}
       <path
         d="M21 10.5L25 6.5L29 10.5"
-        stroke="#5eead4"
+        stroke="#06B6D4"
         strokeWidth="2.5"
         strokeLinecap="round"
         strokeLinejoin="round"

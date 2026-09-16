@@ -123,7 +123,7 @@ export function TokenCard({ token }: TokenCardProps) {
         {!token.bondingCurve.isGraduated ? (
           <div className="mt-2.5 h-1.5 w-full overflow-hidden rounded-full bg-card-hover/40 border border-border">
             <div
-              className="h-full rounded-full bg-brand-cyan transition-all duration-300"
+              className="bg-gradient-to-r from-[#0891B2] to-[#06B6D4] h-1.5 rounded-full transition-all duration-300"
               style={{ width: `${Math.min(token.bondingCurve.progressPct, 100)}%` }}
             />
           </div>
