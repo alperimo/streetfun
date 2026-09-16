@@ -5,11 +5,12 @@ import Image from "next/image";
 import { X, Rocket, ShieldCheck, Info } from "lucide-react";
 import { VERIFIED_TOKENIZED_EQUITIES } from "@/sdk/constants";
 import { TokenMetadata } from "@/lib/types";
+import { useMarket } from "@/context/MarketContext";
 
 interface LaunchModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onTokenCreated: (token: TokenMetadata) => void;
+  onTokenCreated?: (token: TokenMetadata) => void;
 }
 
 export function LaunchModal({
@@ -17,6 +18,7 @@ export function LaunchModal({
   onClose,
   onTokenCreated,
 }: LaunchModalProps) {
+  const { launchToken } = useMarket();
   const [name, setName] = useState("");
   const [symbol, setSymbol] = useState("");
   const [description, setDescription] = useState("");
@@ -34,68 +36,38 @@ export function LaunchModal({
       (e) => e.symbol === selectedEquitySymbol
     ) || VERIFIED_TOKENIZED_EQUITIES[0];
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name || !symbol) return;
 
     setIsSubmitting(true);
 
-    setTimeout(() => {
-      const randomMint = "SF" + Math.random().toString(36).substring(2, 12).toUpperCase() + "Mint";
+    try {
       const initialBuyAmount = parseFloat(initialBuyUsdc) || 0;
-      const initialQuoteReserves = initialBuyAmount;
-      const progress = Math.min(Math.round((initialQuoteReserves / 60_000) * 100), 100);
-
-      const newToken: TokenMetadata = {
-        mint: randomMint,
+      const newToken = await launchToken({
         name,
         symbol: symbol.toUpperCase(),
-        description: description || `Decentralized culture coin backed by ${selectedEquity.name} ($${selectedEquity.symbol}) via ${selectedEquity.issuer || "Tessera Private Equity"} ${selectedEquity.legalFramework}.`,
-        avatarUrl: avatarUrl || "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=160&q=80",
-        creator: "You (Connected Wallet)",
-        createdAt: "Just now",
-        marketCapUsd: 150_000 + initialBuyAmount * 5,
-        priceUsd: 0.00015,
-        priceChange24h: 0.0,
-        volume24hUsd: initialBuyAmount,
-        targetEquity: {
-          symbol: selectedEquity.symbol,
-          name: selectedEquity.name,
-          mintAddress: selectedEquity.mintAddress,
-          issuer: selectedEquity.issuer,
-          custodian: selectedEquity.custodian,
-          legalFramework: selectedEquity.legalFramework,
-          proofOfReserve: selectedEquity.proofOfReserve,
-          meteoraPoolAddress: selectedEquity.meteoraPoolAddress,
-          logoUrl: selectedEquity.logoUrl,
-          stockPriceUsd: selectedEquity.currentStockPriceUsd,
-          isPreIpo: selectedEquity.isPreIpo,
-        },
-        bondingCurve: {
-          realQuoteReservesUsd: initialQuoteReserves,
-          graduationThresholdUsd: 60_000,
-          progressPct: progress,
-          virtualQuoteReserves: "30000000000",
-          virtualTokenReserves: "1073000000000000",
-          realTokenReserves: "800000000000000",
-          isGraduated: false,
-          meteoraPoolAddress: `METdbc${randomMint.slice(0, 6)}Pool`,
-          dynamicFeeBps: 20,
-          equityPurchaseBudgetUsd: 30_000,
-          ammLiquidityBudgetUsd: 30_000,
-        },
-        treasury: {
-          totalEquityLocked: 0,
-          totalEquityValueUsd: 0,
-          vaultPda: `${randomMint.slice(0, 4)}...Vault`,
-          proofOfReserveVerified: true,
-        },
-      };
+        description:
+          description ||
+          `Decentralized culture coin backed by ${selectedEquity.name} ($${selectedEquity.symbol}) via ${
+            selectedEquity.issuer || "Tessera Private Equity"
+          } ${selectedEquity.legalFramework}.`,
+        avatarUrl:
+          avatarUrl ||
+          "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=160&q=80",
+        targetEquitySymbol: selectedEquity.symbol,
+        initialBuyUsdc: initialBuyAmount,
+      });
 
-      onTokenCreated(newToken);
-      setIsSubmitting(false);
+      if (onTokenCreated) {
+        onTokenCreated(newToken);
+      }
       onClose();
-    }, 1000);
+    } catch (err) {
+      console.error("Failed to launch token:", err);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { WalletProvider } from "@/components/layout/WalletProvider";
 import { ThemeProvider } from "@/context/ThemeContext";
+import { MarketProvider } from "@/context/MarketContext";
 
 export const metadata: Metadata = {
   title: "Streetfun · Memecoins With A Wall Street Floor",
@@ -27,7 +28,9 @@ export default function RootLayout({
       </head>
       <body className="min-h-screen bg-background text-foreground antialiased selection:bg-brand-cyan/20 selection:text-brand-cyan">
         <ThemeProvider>
-          <WalletProvider>{children}</WalletProvider>
+          <WalletProvider>
+            <MarketProvider>{children}</MarketProvider>
+          </WalletProvider>
         </ThemeProvider>
       </body>
     </html>

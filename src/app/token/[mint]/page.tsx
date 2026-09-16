@@ -12,6 +12,7 @@ import { SearchModal } from "@/components/modals/SearchModal";
 import { LaunchModal } from "@/components/modals/LaunchModal";
 import { INITIAL_TOKENS } from "@/lib/mockData";
 import { TokenMetadata } from "@/lib/types";
+import { useMarket } from "@/context/MarketContext";
 
 interface PageProps {
   params: Promise<{ mint: string }>;
@@ -21,18 +22,42 @@ export default function TokenDetailPage({ params }: PageProps) {
   const resolvedParams = use(params);
   const mint = resolvedParams.mint;
 
-  const [tokens, setTokens] = useState<TokenMetadata[]>(INITIAL_TOKENS);
+  const { tokens, getToken, loading } = useMarket();
   const [copied, setCopied] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isLaunchOpen, setIsLaunchOpen] = useState(false);
 
-  const token = tokens.find((t) => t.mint === mint) || tokens[0];
+  const token =
+    getToken(mint) ||
+    tokens.find((t) => t.mint.toLowerCase() === mint.toLowerCase()) ||
+    INITIAL_TOKENS.find((t) => t.mint.toLowerCase() === mint.toLowerCase()) ||
+    tokens[0] ||
+    INITIAL_TOKENS[0];
 
   const handleCopyCa = () => {
+    if (!token) return;
     navigator.clipboard.writeText(token.mint);
     setCopied(true);
     setTimeout(() => setCopied(false), 1500);
   };
+
+  if (!token) {
+    return (
+      <div className="flex min-h-screen flex-col bg-background">
+        <Header
+          onOpenSearch={() => setIsSearchOpen(true)}
+          onOpenLaunch={() => setIsLaunchOpen(true)}
+        />
+        <main className="mx-auto flex-1 w-full px-6 md:px-12 xl:px-[164px] py-16 flex items-center justify-center">
+          <div className="text-center">
+            <div className="h-8 w-8 border-2 border-brand-cyan border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+            <p className="text-sm text-muted font-mono">Loading token data...</p>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   const isPositive = token.priceChange24h >= 0;
 
@@ -205,10 +230,8 @@ export default function TokenDetailPage({ params }: PageProps) {
           {/* Left Column (8 cols) */}
           <div className="lg:col-span-8 flex flex-col gap-6">
             <TradingViewChart
-              tokenSymbol={token.symbol}
-              initialPrice={token.priceUsd}
+              token={token}
               floorPrice={0.0031}
-              isGraduated={token.bondingCurve.isGraduated}
             />
 
             {/* Graduation Progress vs Meteora DLMM Active Liquidity Band */}
@@ -369,7 +392,6 @@ export default function TokenDetailPage({ params }: PageProps) {
       <LaunchModal
         isOpen={isLaunchOpen}
         onClose={() => setIsLaunchOpen(false)}
-        onTokenCreated={(t) => setTokens((prev) => [t, ...prev])}
       />
     </div>
   );

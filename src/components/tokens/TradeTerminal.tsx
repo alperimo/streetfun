@@ -6,14 +6,16 @@ import { useWallet } from "@solana/wallet-adapter-react";
 import { Settings, AlertCircle, Check } from "lucide-react";
 import { TokenMetadata } from "@/lib/types";
 import { simulateBuyTokensOut, simulateSellQuoteOut } from "@/sdk/math";
+import { useMarket } from "@/context/MarketContext";
 
 interface TradeTerminalProps {
   token: TokenMetadata;
-  onTradeSuccess: () => void;
+  onTradeSuccess?: () => void;
 }
 
 export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
   const { connected } = useWallet();
+  const { executeTrade, executeRedeem } = useMarket();
   const [tradeMode, setTradeMode] = useState<"buy" | "sell" | "redeem">(
     token.bondingCurve.isGraduated ? "redeem" : "buy"
   );
@@ -22,6 +24,7 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
   const [showSettings, setShowSettings] = useState(false);
   const [isTrading, setIsTrading] = useState(false);
   const [tradeSuccessMsg, setTradeSuccessMsg] = useState<string | null>(null);
+  const [tradeErrorMsg, setTradeErrorMsg] = useState<string | null>(null);
   const [redeemActionType, setRedeemActionType] = useState<"stock" | "usdc">("stock");
 
   const virtualQuote = BigInt(token.bondingCurve.virtualQuoteReserves);
@@ -64,29 +67,49 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
     }
   }, [amount, tradeMode, virtualQuote, virtualTokens, realTokens, token.bondingCurve.realQuoteReservesUsd]);
 
-  const handleExecuteTrade = () => {
+  const handleExecuteTrade = async () => {
     if (!connected) return;
     setIsTrading(true);
+    setTradeErrorMsg(null);
 
-    setTimeout(() => {
-      setIsTrading(false);
+    try {
       if (tradeMode === "redeem") {
-        setTradeSuccessMsg(
-          redeemActionType === "stock"
-            ? `Burned ${numTokensToRedeem.toLocaleString()} $${token.symbol} for ${entitledStockShares.toFixed(4)} shares of ${token.targetEquity.symbol}!`
-            : `Burned ${numTokensToRedeem.toLocaleString()} $${token.symbol} for $${entitledUsdcValue.toFixed(2)} USDC!`
-        );
+        const res = await executeRedeem({
+          token,
+          memeAmount: numTokensToRedeem,
+          actionType: redeemActionType,
+        });
+
+        if (res.success) {
+          setTradeSuccessMsg(res.message);
+          setAmount("");
+          if (onTradeSuccess) onTradeSuccess();
+        } else {
+          setTradeErrorMsg(res.message || "Redemption failed");
+        }
       } else {
-        setTradeSuccessMsg(
-          tradeMode === "buy"
-            ? `Successfully purchased $${token.symbol} tokens!`
-            : `Successfully sold $${token.symbol} for USDC!`
-        );
+        const numAmount = parseFloat(amount);
+        const res = await executeTrade({
+          token,
+          tradeMode,
+          amount: numAmount,
+          slippagePct: slippage,
+        });
+
+        if (res.success) {
+          setTradeSuccessMsg(res.message);
+          setAmount("");
+          if (onTradeSuccess) onTradeSuccess();
+        } else {
+          setTradeErrorMsg(res.message || "Trade failed");
+        }
       }
-      setAmount("");
-      onTradeSuccess();
-      setTimeout(() => setTradeSuccessMsg(null), 4000);
-    }, 1200);
+    } catch (err: any) {
+      setTradeErrorMsg(err?.message || "Operation failed");
+    } finally {
+      setIsTrading(false);
+      setTimeout(() => setTradeSuccessMsg(null), 5000);
+    }
   };
 
   return (
@@ -280,6 +303,14 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
             </div>
           )}
 
+          {/* Error Notification */}
+          {tradeErrorMsg && (
+            <div className="flex items-center gap-2 rounded-lg border border-rose-500/30 bg-rose-500/10 p-2.5 text-xs text-rose-400">
+              <AlertCircle className="h-4 w-4 flex-shrink-0" />
+              <span>{tradeErrorMsg}</span>
+            </div>
+          )}
+
           {/* Action Button */}
           <button
             onClick={handleExecuteTrade}
@@ -450,6 +481,14 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
             <div className="mt-3 flex items-center gap-2 rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-2.5 text-xs text-emerald-400">
               <Check className="h-4 w-4 flex-shrink-0" />
               <span>{tradeSuccessMsg}</span>
+            </div>
+          )}
+
+          {/* Trade Error Notification */}
+          {tradeErrorMsg && (
+            <div className="mt-3 flex items-center gap-2 rounded-lg border border-rose-500/30 bg-rose-500/10 p-2.5 text-xs text-rose-400">
+              <AlertCircle className="h-4 w-4 flex-shrink-0" />
+              <span>{tradeErrorMsg}</span>
             </div>
           )}
 

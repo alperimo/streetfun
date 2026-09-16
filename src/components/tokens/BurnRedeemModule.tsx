@@ -5,6 +5,7 @@ import { useWallet } from "@solana/wallet-adapter-react";
 import { ArrowRight, Check, ShieldCheck, RefreshCw } from "lucide-react";
 import { TokenMetadata } from "@/lib/types";
 import { calculateEntitledStock } from "@/sdk/math";
+import { useMarket } from "@/context/MarketContext";
 
 interface BurnRedeemModuleProps {
   token: TokenMetadata;
@@ -12,10 +13,12 @@ interface BurnRedeemModuleProps {
 
 export function BurnRedeemModule({ token }: BurnRedeemModuleProps) {
   const { connected } = useWallet();
+  const { executeRedeem } = useMarket();
   const [memeAmount, setMemeAmount] = useState("");
   const [redeemMode, setRedeemMode] = useState<"stock" | "usdc">("stock");
   const [isProcessing, setIsProcessing] = useState(false);
   const [txSuccess, setTxSuccess] = useState<string | null>(null);
+  const [txError, setTxError] = useState<string | null>(null);
 
   const totalMemeSupply = 1_000_000_000n * 1_000_000n;
   const totalEquityLocked = BigInt(
@@ -33,20 +36,30 @@ export function BurnRedeemModule({ token }: BurnRedeemModuleProps) {
   const stockPrice = token.targetEquity.stockPriceUsd;
   const entitledUsdcValue = entitledStockShares * stockPrice;
 
-  const handleExecuteRedeem = () => {
+  const handleExecuteRedeem = async (mode: "stock" | "usdc" = redeemMode) => {
     if (!connected || numMeme <= 0) return;
     setIsProcessing(true);
+    setTxError(null);
 
-    setTimeout(() => {
+    try {
+      const res = await executeRedeem({
+        token,
+        memeAmount: numMeme,
+        actionType: mode,
+      });
+
+      if (res.success) {
+        setTxSuccess(res.message);
+        setMemeAmount("");
+      } else {
+        setTxError(res.message || "Redemption failed");
+      }
+    } catch (err: any) {
+      setTxError(err?.message || "Redemption failed");
+    } finally {
       setIsProcessing(false);
-      setTxSuccess(
-        redeemMode === "stock"
-          ? `Withdrew ${entitledStockShares.toFixed(4)} shares of ${token.targetEquity.symbol} to wallet.`
-          : `Swapped ${numMeme.toLocaleString()} $${token.symbol} for $${entitledUsdcValue.toFixed(2)} USDC.`
-      );
-      setMemeAmount("");
-      setTimeout(() => setTxSuccess(null), 4000);
-    }, 1200);
+      setTimeout(() => setTxSuccess(null), 5000);
+    }
   };
 
   return (
@@ -150,6 +163,13 @@ export function BurnRedeemModule({ token }: BurnRedeemModuleProps) {
         <div className="mt-3 flex items-center gap-2 rounded-lg border border-brand-emerald/30 bg-emerald-500/10 p-2.5 text-xs text-brand-emerald">
           <Check className="h-4 w-4 flex-shrink-0" />
           <span>{txSuccess}</span>
+        </div>
+      )}
+
+      {txError && (
+        <div className="mt-3 flex items-center gap-2 rounded-lg border border-rose-500/30 bg-rose-500/10 p-2.5 text-xs text-rose-400">
+          <Check className="h-4 w-4 flex-shrink-0" />
+          <span>{txError}</span>
         </div>
       )}
 

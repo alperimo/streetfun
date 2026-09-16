@@ -8,11 +8,11 @@ import { FilterBar, StatusFilter, SortOption } from "@/components/home/FilterBar
 import { TokenCard } from "@/components/tokens/TokenCard";
 import { SearchModal } from "@/components/modals/SearchModal";
 import { LaunchModal } from "@/components/modals/LaunchModal";
-import { INITIAL_TOKENS } from "@/lib/mockData";
 import { TokenMetadata } from "@/lib/types";
+import { useMarket } from "@/context/MarketContext";
 
 export default function MarketsPage() {
-  const [tokens, setTokens] = useState<TokenMetadata[]>(INITIAL_TOKENS);
+  const { tokens, loading } = useMarket();
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [selectedTag, setSelectedTag] = useState("all");
@@ -71,10 +71,6 @@ export default function MarketsPage() {
         return 0;
       });
   }, [tokens, statusFilter, selectedTag, searchQuery, sortBy]);
-
-  const handleTokenCreated = (newToken: TokenMetadata) => {
-    setTokens((prev) => [newToken, ...prev]);
-  };
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
@@ -136,7 +132,6 @@ export default function MarketsPage() {
       <LaunchModal
         isOpen={isLaunchOpen}
         onClose={() => setIsLaunchOpen(false)}
-        onTokenCreated={handleTokenCreated}
       />
     </div>
   );
