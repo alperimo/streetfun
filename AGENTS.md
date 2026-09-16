@@ -29,12 +29,10 @@ StreetFun uses a 4-tier surface elevation system to create depth without visual 
 
 ## 3. Visual Hierarchy & Action States
 
-1. **Primary CTAs (Launch Token, Key Actions)**:
-   - Filled with the primary brand accent.
-   - High-contrast dark text with a subtle hover brightness lift.
-2. **Secondary CTAs (Connect Wallet, Navigation Controls)**:
-   - Subdued, neutral translucent slate styling (`bg-white/[0.05] border border-white/[0.1] text-white`).
-   - Retains polish without competing with primary actions for visual weight.
+1. **Primary CTAs (Launch Token, Connect Wallet)**:
+   - Both `Launch Token` and `Connect Wallet` share the matching primary brand accent fill with high-contrast dark text and a subtle hover brightness lift.
+2. **Secondary Controls (Navigation Controls, Social Links)**:
+   - Subdued, neutral translucent slate styling retaining polish without competing with primary actions for visual weight.
 3. **Active Pills & Segmented Selectors**:
    - Inactive: Crisp low-contrast border, transparent background, calm muted slate text.
    - Active: Delicate accent tint background (e.g. `10%` opacity) paired with a soft accent border and highlighted text. Never use heavy, saturated blocks that overpower the feed.

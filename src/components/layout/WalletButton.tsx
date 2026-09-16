@@ -35,9 +35,9 @@ export function WalletButton() {
       <button
         onClick={() => setVisible(true)}
         disabled={connecting}
-        className="flex h-11 items-center gap-2 rounded-xl bg-white/[0.05] border border-white/[0.1] px-4 text-sm font-semibold text-white hover:bg-white/[0.08] transition-colors"
+        className="flex h-11 items-center gap-2 rounded-xl bg-[#06B6D4] hover:bg-[#22D3EE] px-4 text-sm font-semibold text-[#070A0E] transition-colors"
       >
-        <Wallet className="h-4 w-4 text-white" />
+        <Wallet className="h-4 w-4 text-[#070A0E]" />
         <span>{connecting ? "Connecting..." : "Connect wallet"}</span>
       </button>
     );
@@ -50,9 +50,9 @@ export function WalletButton() {
     <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => setDropdownOpen(!dropdownOpen)}
-        className="flex h-11 items-center gap-2 rounded-xl bg-white/[0.05] border border-white/[0.1] px-4 text-sm font-semibold text-white hover:bg-white/[0.08] transition-colors"
+        className="flex h-11 items-center gap-2 rounded-xl bg-[#06B6D4] hover:bg-[#22D3EE] px-4 text-sm font-semibold text-[#070A0E] transition-colors"
       >
-        <Wallet className="h-4 w-4 text-white" />
+        <Wallet className="h-4 w-4 text-[#070A0E]" />
         <span>{shortAddress}</span>
       </button>
 
