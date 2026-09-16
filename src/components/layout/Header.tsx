@@ -13,7 +13,7 @@ const WalletButton = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="flex h-11 items-center gap-2 rounded-xl bg-[#5eb0c5] px-4 text-sm font-bold text-slate-950 cursor-pointer select-none">
+      <div className="flex h-11 items-center gap-2 rounded-xl bg-brand-cyan px-4 text-sm font-bold text-slate-950 cursor-pointer select-none">
         <Wallet className="h-4 w-4 text-slate-950" />
         <span>Connect wallet</span>
       </div>
