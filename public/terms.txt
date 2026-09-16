@@ -1,0 +1,57 @@
+These Terms of Service constitute a legally binding agreement between you and the operators of StreetFun (“StreetFun,” “we,” “us”). They govern your access to and use of this website, connected smart contract interfaces, liquidity curves, and on-chain vault functions. If you do not agree with any part of these terms, do not access or use the platform.
+
+1. What StreetFun is
+StreetFun provides an open-source decentralized interface facilitating the launch and automated lifecycle management of tokens on the Solana blockchain. StreetFun coordinates two core phases:
+• Bonding Curve Phase: Initial token distribution via Meteora Dynamic Bonding Curves (DBC).
+• Graduation & Vault Phase: Upon hitting pre-defined funding thresholds, automated smart contracts migrate liquidity to decentralized exchanges (such as Meteora DLMM) and route designated reserve funds toward purchasing third-party tokenized equities deposited into non-custodial on-chain vaults.
+All interactions are self-custodial and execute directly between your wallet and autonomous blockchain protocols.
+
+2. We are not financial advisers or brokers
+Nothing on this platform—including charts, token listings, NAV floor calculations, vault reserves, or oracle data—constitutes investment, financial, legal, or tax advice. We are not a broker-dealer, financial intermediary, investment manager, or fiduciary. All trading, creation, and redemption decisions are executed at your sole discretion.
+
+3. Self-custodial operation & transaction finality
+You interact with StreetFun using your own self-custodial wallet. We never take possession of your private keys or personal assets. Transactions confirmed on Solana are permanent and irreversible. We cannot reverse transactions, recover funds sent to erroneous addresses, or assist with compromised private keys.
+
+4. Programmatic NAV Floor & Asset Mechanics
+StreetFun enables an automated graduation mechanism where a portion of bonding reserves is dedicated to acquiring third-party tokenized equities held in transparent on-chain vaults:
+• No Price Guarantees: The terms "NAV Floor," "Floor Price," or "Asset Backing" describe a strictly programmatic smart contract formula that determines redemption ratios against vault collateral. They do not represent a guaranteed market price, liquidity guarantee, or financial tontine. Market prices on secondary automated market makers (AMMs) float freely and may trade above or below the programmatic NAV floor.
+• Third-Party Issuance Risk: Underlying equity tokens (such as pre-IPO shares or tokenized stocks) are minted, custodied, and managed by independent third-party issuers (such as Tessera). StreetFun does not issue, custody, or guarantee these underlying assets. We bear no liability for third-party insolvencies, regulatory crackdowns, de-pegging events, or issuer-level redemption halts.
+
+5. Burn & Redeem Mechanism
+Graduated tokens carry permissionless access to smart contract functions allowing holders to burn tokens in exchange for their pro-rata share of vault-held assets:
+• Redemptions are final, non-reversible, and subject to on-chain network transaction fees and protocol redemption parameters.
+• Holding or redeeming tokens does not confer shareholder voting rights, dividend entitlements, equity ownership rights, or legal recourse against the underlying corporate entities whose assets back the vault.
+• Asset payouts depend entirely on verifiable on-chain vault balances and corresponding oracle valuation feeds.
+
+6. Oracles and External Protocol Dependencies
+StreetFun relies on decentralized price feeds (including Pyth Network) and external liquidity protocols (such as Meteora). We do not control, maintain, or warrant the uninterrupted operation of these external networks. StreetFun disclaims all liability for oracle latency, stale price reports, protocol halts, liquidity imbalances, or exploits originating in external smart contracts.
+
+7. Token Launches and Content
+Anyone can launch a token on StreetFun. We do not review, endorse, audit, or guarantee the legitimacy of any launched token or creator claims. By deploying a token, you warrant that your submitted name, ticker, and assets do not violate any applicable intellectual property or securities laws.
+
+8. Nominative Fair Use of Corporate Marks
+Corporate names, tickers, and recognizable company marks appearing on this interface are utilized strictly for descriptive and informational identification of third-party collateral held in programmatic vaults under the doctrine of nominative fair use. Their appearance implies no endorsement, sponsorship, partnership, or affiliation with the referenced companies.
+
+9. Protocol Curative Rights
+We reserve the right, without prior notice or liability, to curate, hide, geofence, or remove any token, pair, or listing from our web interface to comply with regulatory demands, sanctions, copyright claims, or identified fraud. Hiding a token from the front-end does not alter the underlying Solana blockchain state.
+
+10. Protocol Keepers & Operational Fees
+To safeguard the programmatic floor and clear arbitrage opportunities, automated keeper bots (operated by the protocol or independent actors) may execute pool-rebalancing trades. Accrued protocol fees and redemption charges serve to maintain protocol infrastructure and treasury sustainability; they do not represent investment returns, dividends, or yield distributions to users.
+
+11. Eligibility & Sanctions Compliance
+You warrant that you are of legal age to interact with decentralized finance platforms. You may not access StreetFun if you reside in, are a citizen of, or operate on behalf of any jurisdiction subject to comprehensive international trade sanctions or embargos. You are solely responsible for compliance with your local laws regarding tokenized assets.
+
+12. Prohibited Conduct
+You agree not to use StreetFun for illicit financing, sanctions evasion, wash trading, coordinated supply cornering, front-running manipulation, or smart contract attack vectors. Violations may result in immediate front-end access termination.
+
+13. Disclaimer of Warranties
+The platform, front-end interface, and underlying smart contracts are provided strictly on an "as is" and "as available" basis, without warranties of any kind, whether express, implied, statutory, or otherwise, including merchantability, fitness for a particular purpose, or non-infringement.
+
+14. Limitation of Liability
+To the maximum extent permitted by applicable law, neither StreetFun nor its operators, developers, or affiliates shall be liable for any direct, indirect, incidental, special, consequential, or punitive damages—including lost profits, loss of data, capital impairment, smart contract exploits, or network downtime—arising out of or related to your use of the platform.
+
+15. Indemnification
+You agree to indemnify, defend, and hold harmless StreetFun, its contributors, operators, and affiliates against any claims, losses, liabilities, fines, expenses, or legal costs arising from your violation of these terms, your token launches, or your breach of applicable laws.
+
+16. Modifications and Severability
+We reserve the right to amend these terms at any time by updating the revision date above. Continued use of the platform constitutes acceptance of modified terms. If any provision of these terms is deemed unlawful or unenforceable, the remaining provisions will continue in full force and effect.

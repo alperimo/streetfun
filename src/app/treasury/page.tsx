@@ -30,7 +30,7 @@ export default function TreasuryPage() {
             Treasury
           </h1>
           <p className="max-w-2xl text-sm text-muted">
-            Non-custodial Anchor Treasury PDA vaults holding Tessera Pre-IPO shares ($TSPACEX) and tokenized equities backed by Pyth / On-Chain Verification.
+            Transparent, on-chain vaults holding real equity backing for graduated tokens. Verified on Solana via Pyth price feeds.
           </p>
         </div>
 

@@ -1,28 +1,49 @@
-import React from "react";
+"use client";
+
+import React, { useState } from "react";
 import Link from "next/link";
+import { TermsModal } from "@/components/modals/TermsModal";
 
 export function Footer() {
+  const [isTermsOpen, setIsTermsOpen] = useState(false);
+
+  React.useEffect(() => {
+    if (typeof window !== "undefined" && new URLSearchParams(window.location.search).get("terms") === "true") {
+      setIsTermsOpen(true);
+    }
+  }, []);
+
   return (
-    <footer className="mt-20 border-t border-border bg-card py-8 text-xs text-muted">
-      <div className="mx-auto flex w-full flex-col items-center justify-between gap-4 px-6 md:px-12 xl:px-[164px] sm:flex-row">
-        <span>Streetfun · Equity-backed memecoin launchpad</span>
-        <div className="flex items-center gap-6">
-          <Link href="/" className="hover:text-foreground transition-colors">
+    <>
+      <footer className="mt-20 border-t border-border bg-card py-6 text-xs text-muted">
+        <div className="mx-auto flex w-full items-center justify-center gap-3 sm:gap-6 px-6 md:px-12 xl:px-[164px]">
+          <Link href="/" className="hover:text-foreground transition-colors font-medium">
             Explore
           </Link>
-          <Link href="/treasury" className="hover:text-foreground transition-colors">
+          <span className="text-muted/40">•</span>
+          <Link href="/treasury" className="hover:text-foreground transition-colors font-medium">
             Treasury
           </Link>
+          <span className="text-muted/40">•</span>
           <a
-            href="https://sunrise.trade"
+            href="https://x.com"
             target="_blank"
             rel="noreferrer"
-            className="hover:text-foreground transition-colors"
+            className="hover:text-foreground transition-colors font-medium"
           >
-            Sunrise
+            X (Twitter)
           </a>
+          <span className="text-muted/40">•</span>
+          <button
+            onClick={() => setIsTermsOpen(true)}
+            className="hover:text-foreground transition-colors font-medium"
+          >
+            Terms
+          </button>
         </div>
-      </div>
-    </footer>
+      </footer>
+
+      <TermsModal isOpen={isTermsOpen} onClose={() => setIsTermsOpen(false)} />
+    </>
   );
 }
