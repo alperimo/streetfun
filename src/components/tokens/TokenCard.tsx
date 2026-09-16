@@ -52,7 +52,7 @@ export function TokenCard({ token }: TokenCardProps) {
                   </span>
                 )}
               </div>
-              <div className="text-sm font-bold text-foreground group-hover:text-brand-cyan transition-colors">
+              <div className="text-sm font-bold text-foreground">
                 {token.name}
               </div>
             </div>
