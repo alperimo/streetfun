@@ -109,7 +109,7 @@ export function Header({ onOpenSearch, onOpenLaunch }: HeaderProps) {
           {/* Launch token CTA */}
           <button
             onClick={onOpenLaunch}
-            className="flex h-11 items-center gap-2 rounded-xl bg-[#5eb0c5] px-4 text-sm font-bold text-slate-950 hover:bg-[#52a1b5] transition-colors"
+            className="flex h-11 items-center gap-2 rounded-xl bg-brand-cyan px-4 text-sm font-bold text-slate-950 hover:opacity-90 transition-opacity"
           >
             <Plus className="h-4 w-4 stroke-[2.5]" />
             <span>Launch token</span>
