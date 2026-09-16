@@ -195,7 +195,7 @@ export function LaunchModal({
                         <span className="font-bold text-xs">{eq.symbol}</span>
                       </div>
                       {eq.isPreIpo ? (
-                        <span className="text-[8px] uppercase tracking-wider font-bold px-1.5 py-0.2 rounded bg-brand-cyan/20 text-brand-cyan border border-brand-cyan/30">
+                        <span className="text-[8px] uppercase tracking-wider font-bold px-1.5 py-0.5 rounded-md bg-slate-800/40 text-slate-400 border border-slate-700/50 font-mono">
                           Pre-IPO
                         </span>
                       ) : null}
