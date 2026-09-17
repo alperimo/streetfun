@@ -51,6 +51,22 @@ export class SolanaRedeemService implements IRedeemService {
         ? `Burned ${params.memeAmount.toLocaleString()} $${token.symbol} on Solana! Transferred ${entitledShares.toFixed(4)} shares of ${token.targetEquity.symbol} to ${walletPublicKey.toBase58().slice(0, 4)}..${walletPublicKey.toBase58().slice(-4)}`
         : `Burned ${params.memeAmount.toLocaleString()} $${token.symbol} and swapped for $${usdcValue.toFixed(2)} USDC via Jupiter CPI!`;
 
+    try {
+      const { TradeStoreService } = await import("../indexer/tradeStore");
+      await TradeStoreService.getInstance().recordTrade({
+        tx_signature: `redeem_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+        mint: token.mint,
+        trade_type: "REDEEM",
+        price_usd: Number((usdcValue / (params.memeAmount || 1)).toFixed(6)),
+        tokens_amount: params.memeAmount,
+        quote_amount_usd: usdcValue,
+        trader: walletPublicKey.toBase58(),
+        created_at: new Date().toISOString(),
+      });
+    } catch (e) {
+      console.warn("[Redeem] Could not record trade:", e);
+    }
+
     return {
       success: true,
       entitledShares,

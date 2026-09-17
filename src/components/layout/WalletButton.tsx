@@ -46,20 +46,28 @@ export function WalletButton() {
     setDropdownOpen(false);
   };
 
+  const isLocalnet = process.env.NEXT_PUBLIC_SOLANA_NETWORK === "localnet";
+
   if (!effectiveConnected) {
     return (
       <div className="relative" ref={connectRef}>
         <button
-          onClick={() => setConnectMenuOpen(!connectMenuOpen)}
+          onClick={() => {
+            if (isLocalnet) {
+              setConnectMenuOpen(!connectMenuOpen);
+            } else {
+              setVisible(true);
+            }
+          }}
           disabled={connecting}
           aria-label={connecting ? "Connecting wallet" : "Connect wallet"}
-          className="flex h-11 w-11 items-center justify-center gap-2 rounded-xl bg-brand-cyan text-brand-cyan-foreground font-semibold text-sm transition-all hover:bg-brand-cyan-hover active:scale-[0.98] sm:w-auto sm:px-4 shadow-sm"
+          className="flex h-11 w-11 items-center justify-center gap-2 rounded-xl border border-brand-cyan bg-gradient-to-r from-brand-cyan to-brand-cyan-hover text-sm font-bold text-background shadow-md shadow-brand-cyan/20 transition-all hover:brightness-110 hover:shadow-brand-cyan/30 active:scale-[0.98] sm:w-auto sm:px-4"
         >
-          <Wallet className="h-4 w-4" />
+          <Wallet className="h-4 w-4 stroke-[2.5]" />
           <span className="hidden sm:inline">{connecting ? "Connecting..." : "Connect wallet"}</span>
         </button>
 
-        {connectMenuOpen && (
+        {isLocalnet && connectMenuOpen && (
           <div className="absolute right-0 mt-1.5 w-60 rounded-xl border border-border bg-card p-1.5 shadow-xl z-50 text-xs">
             <button
               onClick={() => {
@@ -106,9 +114,9 @@ export function WalletButton() {
       <button
         onClick={() => setDropdownOpen(!dropdownOpen)}
         aria-label={`Wallet ${shortAddress}`}
-        className="flex h-11 w-11 items-center justify-center gap-2 rounded-xl bg-brand-cyan text-brand-cyan-foreground font-semibold text-sm transition-all hover:bg-brand-cyan-hover sm:w-auto sm:px-4 shadow-sm"
+        className="flex h-11 w-11 items-center justify-center gap-2 rounded-xl border border-brand-cyan bg-gradient-to-r from-brand-cyan to-brand-cyan-hover text-sm font-bold text-background shadow-md shadow-brand-cyan/20 transition-all hover:brightness-110 sm:w-auto sm:px-4"
       >
-        <Wallet className="h-4 w-4" />
+        <Wallet className="h-4 w-4 stroke-[2.5]" />
         <span className="hidden sm:inline font-mono">{shortAddress}</span>
       </button>
 

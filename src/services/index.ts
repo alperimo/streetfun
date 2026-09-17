@@ -35,6 +35,8 @@ export function getRedeemService(): IRedeemService {
   return isMockMode() ? mockRedeemService : solanaRedeemService;
 }
 
+import { realtimeChartService } from "./chartService";
+
 export function getChartService(): IChartService {
-  return mockChartService;
+  return isMockMode() ? mockChartService : realtimeChartService;
 }

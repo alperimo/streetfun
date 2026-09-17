@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, use } from "react";
+import React, { useState, use, useEffect, useCallback } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { ArrowLeft, Copy, Check, ExternalLink } from "lucide-react";
@@ -26,6 +26,8 @@ export default function TokenDetailPage({ params }: PageProps) {
   const [copied, setCopied] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isLaunchOpen, setIsLaunchOpen] = useState(false);
+  const [trades, setTrades] = useState<any[]>([]);
+  const [tradesLoading, setTradesLoading] = useState(true);
 
   const token =
     getToken(mint) ||
@@ -33,6 +35,27 @@ export default function TokenDetailPage({ params }: PageProps) {
     INITIAL_TOKENS.find((t) => t.mint.toLowerCase() === mint.toLowerCase()) ||
     tokens[0] ||
     INITIAL_TOKENS[0];
+
+  const fetchTrades = React.useCallback(async () => {
+    if (!token?.mint) return;
+    try {
+      const res = await fetch(`/api/trades/${token.mint}`);
+      if (res.ok) {
+        const data = await res.json();
+        setTrades(data.trades || []);
+      }
+    } catch (err) {
+      console.warn("Could not load trades:", err);
+    } finally {
+      setTradesLoading(false);
+    }
+  }, [token?.mint]);
+
+  useEffect(() => {
+    fetchTrades();
+    const interval = setInterval(fetchTrades, 3000);
+    return () => clearInterval(interval);
+  }, [fetchTrades]);
 
   const handleCopyCa = () => {
     if (!token) return;
@@ -295,37 +318,50 @@ export default function TokenDetailPage({ params }: PageProps) {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border">
-                    {[
-                      { type: "BUY", price: token.priceUsd, tokens: 28450, usdc: 28450 * token.priceUsd, time: "12s ago", isBuy: true },
-                      { type: "BUY", price: token.priceUsd * 0.995, tokens: 65120, usdc: 65120 * token.priceUsd * 0.995, time: "48s ago", isBuy: true },
-                      { type: "REDEEM", price: 0.0031, tokens: 100000, usdc: 310.00, time: "2m ago", isRedeem: true },
-                      { type: "SELL", price: token.priceUsd * 0.98, tokens: 14200, usdc: 14200 * token.priceUsd * 0.98, time: "4m ago", isBuy: false },
-                      { type: "BUY", price: token.priceUsd * 0.97, tokens: 82000, usdc: 82000 * token.priceUsd * 0.97, time: "7m ago", isBuy: true },
-                    ].map((trade, idx) => (
-                      <tr key={idx} className="hover:bg-card-hover transition-colors">
-                        <td className="py-2">
-                          <span
-                            className={`rounded px-1.5 py-0.5 text-[9px] font-bold ${
-                              trade.isRedeem
-                                ? "bg-amber-500/10 text-amber-500 border border-amber-500/30"
-                                : trade.isBuy
-                                ? "bg-emerald-500/10 text-brand-emerald border border-emerald-500/20"
-                                : "bg-rose-500/10 text-brand-rose border border-rose-500/20"
-                            }`}
-                          >
-                            {trade.type}
-                          </span>
+                    {trades.length === 0 ? (
+                      <tr>
+                        <td colSpan={5} className="py-8 text-center text-muted">
+                          <div className="flex flex-col items-center justify-center gap-1">
+                            <span className="text-xs font-semibold text-foreground">No Trades Recorded Yet</span>
+                            <span className="text-[11px] text-muted">
+                              Execute a trade on this curve to mint the first on-chain record.
+                            </span>
+                          </div>
                         </td>
-                        <td className="py-2 text-foreground">${trade.price.toFixed(4)}</td>
-                        <td className="py-2 text-foreground">
-                          {trade.tokens.toLocaleString()} {token.symbol}
-                        </td>
-                        <td className="py-2 font-bold text-foreground">
-                          ${trade.usdc.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                        </td>
-                        <td className="py-2 text-right text-muted">{trade.time}</td>
                       </tr>
-                    ))}
+                    ) : (
+                      trades.map((trade, idx) => {
+                        const isRedeem = trade.trade_type === "REDEEM";
+                        const isBuy = trade.trade_type === "BUY";
+                        const sec = Math.max(1, Math.floor((Date.now() - new Date(trade.created_at || Date.now()).getTime()) / 1000));
+                        const timeAgo = sec < 60 ? `${sec}s ago` : sec < 3600 ? `${Math.floor(sec / 60)}m ago` : `${Math.floor(sec / 3600)}h ago`;
+                        return (
+                          <tr key={trade.id || idx} className="hover:bg-card-hover transition-colors">
+                            <td className="py-2">
+                              <span
+                                className={`rounded px-1.5 py-0.5 text-[9px] font-bold ${
+                                  isRedeem
+                                    ? "bg-amber-500/10 text-amber-500 border border-amber-500/30"
+                                    : isBuy
+                                    ? "bg-emerald-500/10 text-brand-emerald border border-emerald-500/20"
+                                    : "bg-rose-500/10 text-brand-rose border border-rose-500/20"
+                                }`}
+                              >
+                                {trade.trade_type}
+                              </span>
+                            </td>
+                            <td className="py-2 text-foreground">${Number(trade.price_usd).toFixed(4)}</td>
+                            <td className="py-2 text-foreground">
+                              {Number(trade.tokens_amount).toLocaleString()} {token.symbol}
+                            </td>
+                            <td className="py-2 font-bold text-foreground">
+                              ${Number(trade.quote_amount_usd).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            </td>
+                            <td className="py-2 text-right text-muted">{timeAgo}</td>
+                          </tr>
+                        );
+                      })
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -336,7 +372,7 @@ export default function TokenDetailPage({ params }: PageProps) {
           <div className="lg:col-span-4 flex flex-col gap-6">
             <TradeTerminal
               token={token}
-              onTradeSuccess={() => {}}
+              onTradeSuccess={fetchTrades}
             />
 
             <div className="rounded-2xl border border-border bg-card p-4 text-xs space-y-2.5 shadow-sm">

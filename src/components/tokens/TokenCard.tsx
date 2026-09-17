@@ -154,9 +154,15 @@ export function TokenCard({ token }: TokenCardProps) {
                   ${(token.bondingCurve.realQuoteReservesUsd / 1_000).toFixed(1)}K{" "}
                   <span className="text-xs font-normal text-muted">/ $60K USDC</span>
                 </div>
-                <span className="font-mono text-xs font-medium text-emerald-400">
-                  {(1 + (token.bondingCurve.progressPct / 100) * 1.8).toFixed(1)}x from genesis
-                </span>
+                {token.bondingCurve.progressPct > 0 ? (
+                  <span className="font-mono text-xs font-semibold text-emerald-400">
+                    {token.bondingCurve.progressPct}% to AMM
+                  </span>
+                ) : (
+                  <span className="font-mono text-xs font-medium text-muted">
+                    New Listing
+                  </span>
+                )}
               </div>
             </div>
           )}

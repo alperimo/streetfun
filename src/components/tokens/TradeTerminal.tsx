@@ -17,9 +17,7 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
   const { connected: walletAdapterConnected } = useWallet();
   const { isWalletConnected, executeTrade, executeRedeem } = useMarket();
   const connected = walletAdapterConnected || isWalletConnected;
-  const [tradeMode, setTradeMode] = useState<"buy" | "sell" | "redeem">(
-    token.bondingCurve.isGraduated ? "redeem" : "buy"
-  );
+  const [tradeMode, setTradeMode] = useState<"buy" | "sell" | "redeem">("buy");
   const [amount, setAmount] = useState("");
   const [slippage, setSlippage] = useState<number>(1.0); // 1%
   const [showSettings, setShowSettings] = useState(false);

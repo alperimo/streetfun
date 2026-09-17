@@ -178,15 +178,41 @@ export function TradingViewChart({
 
   const timeframes: TimeframeOption[] = ["1m", "5m", "15m", "1h", "4h", "1D"];
 
+  const [chartMode, setChartMode] = useState<"internal" | "gecko">("internal");
+
   return (
     <div className="relative w-full rounded-xl border border-border bg-card p-4 shadow-sm">
       <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-border text-xs">
         <div className="flex items-center gap-2">
           <span className="font-bold text-foreground">${token.symbol} / USDC</span>
           {isGraduated ? (
-            <span className="rounded-md border border-slate-700/60 bg-slate-800/50 px-2 py-0.5 text-[10px] font-medium text-slate-300">
-              Meteora DLMM
-            </span>
+            <div className="flex items-center gap-1.5">
+              <span className="rounded-md border border-slate-700/60 bg-slate-800/50 px-2 py-0.5 text-[10px] font-medium text-slate-300">
+                Meteora DLMM
+              </span>
+              <div className="flex items-center rounded-lg border border-border bg-card-subtle p-0.5 text-[10px]">
+                <button
+                  onClick={() => setChartMode("internal")}
+                  className={`px-2 py-0.5 rounded ${
+                    chartMode === "internal"
+                      ? "bg-brand-cyan/20 text-brand-cyan font-bold border border-brand-cyan/30"
+                      : "text-muted hover:text-foreground"
+                  }`}
+                >
+                  Internal TV
+                </button>
+                <button
+                  onClick={() => setChartMode("gecko")}
+                  className={`px-2 py-0.5 rounded ${
+                    chartMode === "gecko"
+                      ? "bg-brand-cyan/20 text-brand-cyan font-bold border border-brand-cyan/30"
+                      : "text-muted hover:text-foreground"
+                  }`}
+                >
+                  GeckoTerminal
+                </button>
+              </div>
+            </div>
           ) : (
             <span className="rounded-md border border-slate-700/50 bg-slate-800/30 px-2 py-0.5 text-[10px] tracking-wide font-mono font-medium text-slate-400">
               Bonding Curve Discovery
@@ -196,24 +222,42 @@ export function TradingViewChart({
             <span className="text-[10px] text-muted animate-pulse">Loading...</span>
           )}
         </div>
-        <div className="flex items-center gap-1">
-          {timeframes.map((tf) => (
-            <button
-              key={tf}
-              onClick={() => setTimeframe(tf)}
-              className={`rounded px-2.5 py-1 text-[11px] font-mono transition-colors ${
-                timeframe === tf
-                  ? "bg-brand-cyan/15 text-brand-cyan border border-brand-cyan/35 font-semibold"
-                  : "text-muted hover:text-foreground hover:bg-card-hover"
-              }`}
-            >
-              {tf}
-            </button>
-          ))}
-        </div>
+
+        {chartMode === "internal" && (
+          <div className="flex items-center gap-1">
+            {timeframes.map((tf) => (
+              <button
+                key={tf}
+                onClick={() => setTimeframe(tf)}
+                className={`rounded px-2.5 py-1 text-[11px] font-mono transition-colors ${
+                  timeframe === tf
+                    ? "bg-brand-cyan/15 text-brand-cyan border border-brand-cyan/35 font-semibold"
+                    : "text-muted hover:text-foreground hover:bg-card-hover"
+                }`}
+              >
+                {tf}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
-      <div ref={chartContainerRef} className="mt-3 w-full" />
+      {isGraduated && chartMode === "gecko" ? (
+        <div className="mt-3 w-full h-[380px] rounded-lg overflow-hidden border border-border bg-black/40">
+          <iframe
+            height="100%"
+            width="100%"
+            id="geckoterminal-embed"
+            title="GeckoTerminal Embed"
+            src={`https://www.geckoterminal.com/solana/pools/${token.mint}?embed=1&info=0&swaps=0`}
+            frameBorder="0"
+            allow="clipboard-write"
+            allowFullScreen
+          />
+        </div>
+      ) : (
+        <div ref={chartContainerRef} className="mt-3 w-full" />
+      )}
     </div>
   );
 }

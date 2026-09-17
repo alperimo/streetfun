@@ -3,6 +3,7 @@ import { ITradeService, TradeParams, TradeResult } from "../types";
 import { getJupiterQuote } from "@/sdk/jupiter";
 import { USDC_MINT } from "@/sdk/constants";
 import { simulateBuyTokensOut, simulateSellQuoteOut } from "@/sdk/math";
+import { TradeStoreService } from "../indexer/tradeStore";
 
 export class SolanaTradeService implements ITradeService {
   private connection: Connection;
@@ -44,6 +45,17 @@ export class SolanaTradeService implements ITradeService {
         ? params.amount / outAmountNum
         : outAmountNum / params.amount;
 
+      await TradeStoreService.getInstance().recordTrade({
+        tx_signature: `jup_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+        mint: token.mint,
+        trade_type: isBuy ? "BUY" : "SELL",
+        price_usd: effectivePrice,
+        tokens_amount: isBuy ? outAmountNum : params.amount,
+        quote_amount_usd: isBuy ? params.amount : outAmountNum,
+        trader: walletPublicKey.toBase58(),
+        created_at: new Date().toISOString(),
+      });
+
       return {
         success: true,
         tokensAmount: isBuy ? outAmountNum : params.amount,
@@ -81,6 +93,17 @@ export class SolanaTradeService implements ITradeService {
         );
         token.bondingCurve = curve;
 
+        await TradeStoreService.getInstance().recordTrade({
+          tx_signature: `curve_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+          mint: token.mint,
+          trade_type: "BUY",
+          price_usd: sim.effectivePriceUsd,
+          tokens_amount: tokensOut,
+          quote_amount_usd: params.amount,
+          trader: walletPublicKey.toBase58(),
+          created_at: new Date().toISOString(),
+        });
+
         return {
           success: true,
           tokensAmount: tokensOut,
@@ -108,6 +131,17 @@ export class SolanaTradeService implements ITradeService {
           Math.round((curve.realQuoteReservesUsd / curve.graduationThresholdUsd) * 100)
         );
         token.bondingCurve = curve;
+
+        await TradeStoreService.getInstance().recordTrade({
+          tx_signature: `curve_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+          mint: token.mint,
+          trade_type: "SELL",
+          price_usd: sim.effectivePriceUsd,
+          tokens_amount: params.amount,
+          quote_amount_usd: quoteOut,
+          trader: walletPublicKey.toBase58(),
+          created_at: new Date().toISOString(),
+        });
 
         return {
           success: true,
