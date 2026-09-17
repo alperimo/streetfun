@@ -24,7 +24,7 @@ export default function TreasuryPage() {
         onOpenLaunch={() => setIsLaunchOpen(true)}
       />
 
-      <main className="mx-auto flex-1 w-full px-6 md:px-12 xl:px-[164px] py-8">
+      <main className="mx-auto flex-1 w-full max-w-[1350px] px-6 py-8 md:px-12 lg:px-0">
         <div className="flex flex-col gap-2 mb-8">
           <h1 className="text-3xl sm:text-4xl font-black text-foreground tracking-tight">
             Treasury

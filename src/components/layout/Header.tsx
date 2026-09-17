@@ -4,7 +4,7 @@ import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import dynamic from "next/dynamic";
-import { Search, Plus, TrendingUp, Send, Wallet } from "lucide-react";
+import { Search, Plus, Wallet } from "lucide-react";
 
 import { StreetFunLogo } from "@/components/common/StreetFunLogo";
 
@@ -13,9 +13,9 @@ const WalletButton = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="flex h-11 items-center gap-2 rounded-xl bg-[#06B6D4] px-4 text-sm font-semibold text-[#070A0E] cursor-pointer select-none">
-        <Wallet className="h-4 w-4 text-[#070A0E]" />
-        <span>Connect wallet</span>
+      <div className="flex h-11 w-11 cursor-pointer select-none items-center justify-center gap-2 rounded-xl border border-border bg-card text-sm font-semibold text-foreground sm:w-auto sm:px-4">
+        <Wallet className="h-4 w-4 text-muted" />
+        <span className="hidden sm:inline">Connect wallet</span>
       </div>
     ),
   }
@@ -30,89 +30,63 @@ export function Header({ onOpenSearch, onOpenLaunch }: HeaderProps) {
   const pathname = usePathname();
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-border bg-background/90 backdrop-blur-md">
-      <div className="mx-auto flex h-[70px] w-full items-center justify-between px-6 md:px-12 xl:px-[164px]">
-        {/* Left: Brand + Nav */}
-        <div className="flex items-center gap-8">
-          <Link href="/" className="flex items-center gap-2.5">
-            <StreetFunLogo size={28} className="h-7 w-7 flex-shrink-0" />
-            <span className="text-lg font-black tracking-tight text-foreground">
+    <header className="site-header sticky top-0 z-40 w-full backdrop-blur-md">
+      <div className="mx-auto flex h-[80px] w-full max-w-[1350px] items-center justify-between gap-5 px-5 sm:px-8 lg:px-0">
+        {/* Left: Brand */}
+        <div className="flex min-w-0 items-center gap-7">
+          <Link href="/" className="flex shrink-0 items-center gap-2.5" aria-label="StreetFun home">
+            <StreetFunLogo size={34} className="h-[34px] w-[34px] flex-shrink-0 text-brand-emerald" />
+            <span className="text-[21px] font-bold tracking-[-0.04em] text-foreground">
               StreetFun
             </span>
           </Link>
+        </div>
 
-          <nav className="hidden md:flex items-center gap-1 text-sm">
+        {/* Center: Primary navigation and search */}
+        <nav className="absolute left-1/2 hidden -translate-x-1/2 items-center gap-8 text-[15px] xl:flex">
             <Link
               href="/"
-              className={`px-3 py-1.5 rounded-md font-medium transition-colors ${
+              className={`relative py-2 font-medium transition-colors ${
                 pathname === "/"
-                  ? "bg-card text-foreground font-semibold border border-border"
+                  ? "font-semibold text-foreground"
                   : "text-muted hover:text-foreground"
               }`}
             >
-              Markets
+              MARKETS
             </Link>
 
             <Link
               href="/treasury"
-              className={`px-3 py-1.5 rounded-md font-medium transition-colors ${
+              className={`py-2 font-medium transition-colors ${
                 pathname === "/treasury"
-                  ? "bg-card text-foreground font-semibold border border-border"
+                  ? "font-semibold text-brand-emerald"
                   : "text-muted hover:text-foreground"
               }`}
             >
-              Treasury
+              TREASURY
             </Link>
-          </nav>
-        </div>
+            <button
+              onClick={onOpenSearch}
+              aria-label="Search"
+              title="Search"
+              className="flex h-11 w-11 items-center justify-center rounded-xl text-muted transition-colors hover:bg-card hover:text-foreground"
+            >
+              <Search className="h-5 w-5" />
+            </button>
+        </nav>
 
-        {/* Right: Search, Socials, Launch CTA, Wallet */}
-        <div className="flex items-center gap-2">
-          {/* Search textfield */}
-          <button
-            onClick={onOpenSearch}
-            className="flex h-11 w-44 items-center justify-between rounded-xl border border-[#1f3042] bg-[#0f1922] px-3 text-xs text-muted hover:border-border-active hover:text-foreground transition-all"
-          >
-            <div className="flex items-center gap-2">
-              <Search className="h-4 w-4 text-muted" />
-              <span className="text-xs">Search</span>
-            </div>
-            <kbd className="rounded-md border border-[#1f3042] bg-[#090e13] px-1.5 py-0.5 text-[10px] text-muted font-mono">
-              ⌘ K
-            </kbd>
-          </button>
-
-          {/* Telegram */}
-          <a
-            href="https://t.me"
-            target="_blank"
-            rel="noreferrer"
-            className="flex h-11 w-11 items-center justify-center rounded-xl border border-[#1f3042] bg-[#0f1922] text-slate-200 hover:border-border-active hover:text-white transition-all"
-            title="Telegram"
-          >
-            <Send className="h-4 w-4 -rotate-12 translate-y-[-0.5px]" />
-          </a>
-
-          {/* X */}
-          <a
-            href="https://x.com"
-            target="_blank"
-            rel="noreferrer"
-            className="flex h-11 w-11 items-center justify-center rounded-xl border border-[#1f3042] bg-[#0f1922] text-slate-200 hover:border-border-active hover:text-white transition-all"
-            title="X"
-          >
-            <svg className="h-4 w-4 fill-current" viewBox="0 0 24 24">
-              <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-            </svg>
-          </a>
-
-          {/* Launch token CTA */}
+        {/* Right: launch CTA and wallet */}
+        <div className="flex shrink-0 items-center gap-2">
           <button
             onClick={onOpenLaunch}
-            className="flex h-11 items-center gap-2 rounded-xl bg-[#06B6D4] hover:bg-[#22D3EE] px-4 text-sm font-semibold text-[#070A0E] transition-colors"
+            aria-label="Launch token"
+            title="Launch token"
+            className="flex h-11 w-11 items-center justify-center gap-2 rounded-xl border border-brand-cyan bg-gradient-to-r from-brand-cyan to-brand-cyan-hover text-sm font-bold text-background shadow-md shadow-brand-cyan/20 transition-all hover:brightness-110 hover:shadow-brand-cyan/30 sm:w-auto sm:px-4"
           >
-            <Plus className="h-4 w-4 stroke-[2.5]" />
-            <span>Launch token</span>
+            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-background text-brand-cyan">
+              <Plus className="h-3.5 w-3.5 stroke-[3]" />
+            </span>
+            <span className="hidden sm:inline">Launch token</span>
           </button>
 
           {/* Connect wallet */}

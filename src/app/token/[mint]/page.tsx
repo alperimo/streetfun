@@ -48,7 +48,7 @@ export default function TokenDetailPage({ params }: PageProps) {
           onOpenSearch={() => setIsSearchOpen(true)}
           onOpenLaunch={() => setIsLaunchOpen(true)}
         />
-        <main className="mx-auto flex-1 w-full px-6 md:px-12 xl:px-[164px] py-16 flex items-center justify-center">
+        <main className="mx-auto flex-1 w-full max-w-[1350px] px-6 py-16 flex items-center justify-center md:px-12 lg:px-0">
           <div className="text-center">
             <div className="h-8 w-8 border-2 border-brand-cyan border-t-transparent rounded-full animate-spin mx-auto mb-4" />
             <p className="text-sm text-muted font-mono">Loading token data...</p>
@@ -68,7 +68,7 @@ export default function TokenDetailPage({ params }: PageProps) {
         onOpenLaunch={() => setIsLaunchOpen(true)}
       />
 
-      <main className="mx-auto flex-1 w-full px-6 md:px-12 xl:px-[164px] py-6">
+      <main className="mx-auto flex-1 w-full max-w-[1350px] px-6 py-6 md:px-12 lg:px-0">
         <div className="mb-4">
           <Link
             href="/"
@@ -262,7 +262,7 @@ export default function TokenDetailPage({ params }: PageProps) {
 
                 <div className="h-1.5 w-full overflow-hidden rounded-full bg-card-hover/40 border border-border">
                   <div
-                    className="bg-gradient-to-r from-[#0891B2] to-[#06B6D4] h-1.5 rounded-full transition-all duration-300"
+                    className="bg-gradient-to-r from-brand-cyan/70 to-brand-cyan h-1.5 rounded-full transition-all duration-300"
                     style={{ width: `${Math.min(token.bondingCurve.progressPct, 100)}%` }}
                   />
                 </div>

@@ -1,65 +1,58 @@
 "use client";
 
 import React from "react";
-import { ArrowRight } from "lucide-react";
+import Image from "next/image";
+import { TrendingUp } from "lucide-react";
 
-interface HeroBannerProps {
-  onOpenLaunch: () => void;
-}
-
-export function HeroBanner({ onOpenLaunch }: HeroBannerProps) {
+export function HeroBanner() {
   return (
-    <div className="relative overflow-hidden rounded-2xl border border-border bg-card p-5 sm:p-6 shadow-sm mb-6">
-      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5">
-        {/* Left: Headline & Concise Description & Action */}
-        <div className="flex flex-col gap-2 max-w-xl">
-          <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-foreground leading-tight">
-            Memecoins With A Wall Street Floor
+    <section className="hero-section relative isolate min-h-[400px] overflow-hidden">
+      <Image
+        src="/generated/hero-bull.png"
+        alt="Black and white bull wearing neon green market glasses"
+        fill
+        priority
+        className="hero-bull-image -z-20 object-cover object-[78%_68%]"
+        sizes="(max-width: 1024px) 100vw, 1500px"
+      />
+      <div className="relative mx-auto flex min-h-[400px] w-full max-w-[1350px] flex-col justify-start px-6 py-9 sm:px-10 lg:px-0 lg:py-9">
+        <div className="max-w-[650px]">
+          <h1 className="max-w-[620px] text-4xl font-black leading-[0.98] tracking-[-0.055em] text-foreground sm:text-5xl lg:text-[64px]">
+            Wall Street Floor
+            <br />
+            For <span className="text-brand-emerald">Memecoins</span>
           </h1>
-
-          <p className="text-xs sm:text-sm text-muted">
+          <p className="mt-4 max-w-lg text-base text-muted sm:text-lg">
             Trade viral momentum. Graduate to real tokenized equities.
           </p>
-
-          <div className="pt-1">
-            <button
-              onClick={onOpenLaunch}
-              className="inline-flex items-center gap-2 rounded-xl bg-[#06B6D4] hover:bg-[#22D3EE] px-4 py-2.5 text-xs sm:text-sm font-semibold text-[#070A0E] transition-colors shadow-sm"
-            >
-              <span>Launch a token</span>
-              <ArrowRight className="h-3.5 w-3.5 stroke-[2.5]" />
-            </button>
-          </div>
-        </div>
-
-        {/* Right: Compact Metrics Grid (balances horizontal space without empty voids) */}
-        <div className="grid grid-cols-3 gap-3 w-full lg:w-auto shrink-0">
-          <div className="rounded-xl border border-border-active/50 bg-card-hover/40 px-4 py-3 min-w-[120px] shadow-xs">
-            <div className="text-[10px] text-muted uppercase font-semibold tracking-wider">
-              24h Volume
-            </div>
-            <div className="mt-0.5 font-mono text-base sm:text-lg font-bold text-foreground">
-              $4.82M
-            </div>
-          </div>
-          <div className="rounded-xl border border-border-active/50 bg-card-hover/40 px-4 py-3 min-w-[120px] shadow-xs">
-            <div className="text-[10px] text-muted uppercase font-semibold tracking-wider">
-              Equity TVL
-            </div>
-            <div className="mt-0.5 font-mono text-base sm:text-lg font-bold text-foreground">
-              $40.7M
-            </div>
-          </div>
-          <div className="rounded-xl border border-border-active/50 bg-card-hover/40 px-4 py-3 min-w-[120px] shadow-xs">
-            <div className="text-[10px] text-muted uppercase font-semibold tracking-wider">
-              Graduated
-            </div>
-            <div className="mt-0.5 font-mono text-base sm:text-lg font-bold text-foreground">
-              1,282
-            </div>
+          <div className="mt-6 grid w-full max-w-[640px] grid-cols-3 items-stretch rounded-2xl border border-border bg-background/75 p-3 backdrop-blur-md sm:p-4">
+            {[
+              { label: "24h Volume", value: "$4.82M", change: "+47.3%" },
+              { label: "Equity TVL", value: "$40.7M", change: "+28.1%" },
+              { label: "Graduated", value: "1,282", change: "+12.6%" },
+            ].map((stat, index) => (
+              <React.Fragment key={stat.label}>
+                <div
+                  className={`min-w-0 px-1 text-center sm:px-2 ${
+                    index > 0 ? "border-l border-border" : ""
+                  }`}
+                >
+                  <div className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted">
+                    {stat.label}
+                  </div>
+                  <div className="mt-1 text-xl font-black tracking-tight text-foreground sm:text-2xl">
+                    {stat.value}
+                  </div>
+                  <div className="mt-1 flex items-center justify-center gap-1 text-xs font-semibold text-brand-emerald">
+                    <TrendingUp className="h-3 w-3" />
+                    {stat.change}
+                  </div>
+                </div>
+              </React.Fragment>
+            ))}
           </div>
         </div>
       </div>
-    </div>
+    </section>
   );
 }

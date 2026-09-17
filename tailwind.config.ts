@@ -34,6 +34,7 @@ const config: Config = {
         },
         brand: {
           cyan: withOpacity("--brand-cyan"),
+          "cyan-hover": withOpacity("--brand-cyan-hover"),
           emerald: withOpacity("--brand-emerald"),
           purple: withOpacity("--brand-purple"),
           amber: withOpacity("--brand-amber"),

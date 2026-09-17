@@ -116,7 +116,7 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
     <div className="rounded-xl border border-border bg-card p-5 shadow-sm">
       {/* 3-Tab Switch: Buy / Sell / Redeem Stock */}
       <div className="flex items-center justify-between border-b border-border pb-3">
-        <div className="flex items-center gap-1 rounded-lg bg-[#0e1620] p-1 border border-border/80">
+        <div className="flex items-center gap-1 rounded-lg bg-card-subtle p-1 border border-border/80">
           <button
             onClick={() => {
               setTradeMode("buy");
@@ -173,7 +173,7 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
 
       {/* Slippage drawer */}
       {showSettings && tradeMode !== "redeem" && (
-        <div className="mt-3 rounded-lg bg-[#0e1620] p-3 border border-border/80 text-xs flex items-center justify-between">
+        <div className="mt-3 rounded-lg bg-card-subtle p-3 border border-border/80 text-xs flex items-center justify-between">
           <span className="text-muted">Max Slippage:</span>
           <div className="flex items-center gap-1">
             {[0.5, 1.0, 2.5].map((s) => (
@@ -183,7 +183,7 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
                 className={`px-2 py-0.5 rounded font-mono text-[11px] transition-colors ${
                   slippage === s
                     ? "bg-card-hover text-foreground font-semibold"
-                    : "bg-white/[0.04] text-muted hover:text-foreground"
+                    : "bg-card-hover/40 text-muted hover:text-foreground"
                 }`}
               >
                 {s}%
@@ -196,12 +196,12 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
       {tradeMode === "redeem" ? (
         <div className="mt-4 space-y-4">
           {/* Dual Action Toggle */}
-          <div className="flex items-center gap-1 rounded-lg bg-[#0e1620] p-1 border border-border/80">
+          <div className="flex items-center gap-1 rounded-lg bg-card-subtle p-1 border border-border/80">
             <button
               onClick={() => setRedeemActionType("stock")}
               className={`flex-1 py-1.5 rounded-md text-xs font-medium transition-colors ${
                 redeemActionType === "stock"
-                  ? "bg-slate-800 text-slate-100 font-semibold border border-slate-700/60"
+                  ? "bg-card-hover text-foreground font-semibold border border-border-active"
                   : "text-muted hover:text-foreground"
               }`}
             >
@@ -211,7 +211,7 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
               onClick={() => setRedeemActionType("usdc")}
               className={`flex-1 py-1.5 rounded-md text-xs font-medium transition-colors ${
                 redeemActionType === "usdc"
-                  ? "bg-slate-800 text-slate-100 font-semibold border border-slate-700/60"
+                  ? "bg-card-hover text-foreground font-semibold border border-border-active"
                   : "text-muted hover:text-foreground"
               }`}
             >
@@ -226,7 +226,7 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
               <span className="font-mono">Balance: 500,000 ${token.symbol}</span>
             </div>
 
-            <div className="relative flex items-center rounded-lg border border-border bg-[#0c141c] transition-colors focus-within:border-slate-500">
+            <div className="relative flex items-center rounded-lg border border-border bg-card-subtle transition-colors focus-within:border-border-active">
               <input
                 type="number"
                 step="any"
@@ -236,7 +236,7 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
                 onChange={(e) => setAmount(e.target.value)}
                 className="w-full bg-transparent pl-3.5 pr-28 py-2.5 text-lg sm:text-xl font-mono font-medium text-foreground placeholder:text-muted/40 focus:outline-none"
               />
-              <div className="absolute right-2 flex items-center gap-1.5 rounded-md bg-card border border-border px-2 py-1 text-xs font-semibold text-slate-200">
+              <div className="absolute right-2 flex items-center gap-1.5 rounded-md bg-card border border-border px-2 py-1 text-xs font-semibold text-foreground">
                 <div className="relative h-4 w-4 overflow-hidden rounded-full border border-border flex-shrink-0">
                   <Image
                     src={token.avatarUrl}
@@ -256,7 +256,7 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
                 <button
                   key={val}
                   onClick={() => setAmount(val)}
-                  className="rounded-md bg-white/[0.04] py-1.5 text-slate-400 hover:bg-white/[0.08] hover:text-white transition-colors"
+                  className="rounded-md bg-card-hover/40 py-1.5 text-muted hover:bg-card-hover hover:text-foreground transition-colors"
                 >
                   {parseInt(val) >= 1000 ? `${parseInt(val) / 1000}K` : val}
                 </button>
@@ -265,7 +265,7 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
           </div>
 
           {/* Interactive Calculation Card */}
-          <div className="rounded-lg border border-border/80 bg-[#0e1620] p-3.5 space-y-2.5 text-xs">
+          <div className="rounded-lg border border-border/80 bg-card-subtle p-3.5 space-y-2.5 text-xs">
             <div className="flex items-center justify-between">
               <span className="text-muted">Collateral Stock:</span>
               <span className="font-semibold text-foreground flex items-center gap-1">
@@ -317,7 +317,7 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
             disabled={!numTokensToRedeem || isTrading}
             className={`w-full rounded-lg py-3 text-sm font-semibold transition-colors shadow-xs disabled:opacity-50 ${
               !connected
-                ? "bg-white/[0.05] border border-white/[0.1] text-white hover:bg-white/[0.08]"
+                ? "bg-card-hover/50 border border-border text-foreground hover:bg-card-hover"
                 : "bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold"
             }`}
           >
@@ -333,7 +333,7 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
       ) : (
         <>
           {/* Bonding Curve Progress Indicator */}
-          <div className="mt-4 rounded-lg border border-border/80 bg-[#0e1620] p-3 text-xs">
+          <div className="mt-4 rounded-lg border border-border/80 bg-card-subtle p-3 text-xs">
             <div className="flex items-center justify-between gap-2 mb-1.5">
               <span className="font-semibold text-foreground flex items-center gap-1.5 whitespace-nowrap">
                 <span className="h-2 w-2 rounded-full bg-brand-cyan" />
@@ -346,7 +346,7 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
             {/* Progress bar */}
             <div className="h-1.5 w-full rounded-full bg-border overflow-hidden">
               <div
-                className="bg-gradient-to-r from-[#0891B2] to-[#06B6D4] h-1.5 rounded-full transition-all duration-500"
+                className="bg-gradient-to-r from-brand-cyan/70 to-brand-cyan h-1.5 rounded-full transition-all duration-500"
                 style={{ width: `${Math.min(token.bondingCurve.progressPct, 100)}%` }}
               />
             </div>
@@ -365,7 +365,7 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
               </span>
             </div>
 
-            <div className="relative flex items-center rounded-lg border border-border bg-[#0c141c] transition-colors focus-within:border-slate-500">
+            <div className="relative flex items-center rounded-lg border border-border bg-card-subtle transition-colors focus-within:border-border-active">
               <input
                 type="number"
                 step="any"
@@ -375,7 +375,7 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
                 onChange={(e) => setAmount(e.target.value)}
                 className="w-full bg-transparent pl-3.5 pr-28 py-2.5 text-lg sm:text-xl font-mono font-medium text-foreground placeholder:text-muted/40 focus:outline-none"
               />
-              <div className="absolute right-2 flex items-center gap-1.5 rounded-md bg-card border border-border px-2 py-1 text-xs font-semibold text-slate-200">
+              <div className="absolute right-2 flex items-center gap-1.5 rounded-md bg-card border border-border px-2 py-1 text-xs font-semibold text-foreground">
                 {tradeMode === "buy" ? (
                   <>
                     <div className="h-4 w-4 rounded-full bg-blue-500/20 text-blue-400 flex items-center justify-center text-[10px] font-bold">
@@ -407,7 +407,7 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
                     <button
                       key={val}
                       onClick={() => setAmount(val)}
-                      className="rounded-md bg-white/[0.04] py-1.5 text-slate-400 hover:bg-white/[0.08] hover:text-white transition-colors"
+                      className="rounded-md bg-card-hover/40 py-1.5 text-muted hover:bg-card-hover hover:text-foreground transition-colors"
                     >
                       ${val}
                     </button>
@@ -419,7 +419,7 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
                         const frac = parseInt(pct) / 100;
                         setAmount((500_000 * frac).toString());
                       }}
-                      className="rounded-md bg-white/[0.04] py-1.5 text-slate-400 hover:bg-white/[0.08] hover:text-white transition-colors"
+                      className="rounded-md bg-card-hover/40 py-1.5 text-muted hover:bg-card-hover hover:text-foreground transition-colors"
                     >
                       {pct}
                     </button>
@@ -429,7 +429,7 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
 
           {/* Trade Simulation Breakdown */}
           {simulation && !("error" in simulation) && (
-            <div className="mt-4 rounded-lg bg-[#0e1620] p-3 border border-border/80 space-y-2 text-xs">
+            <div className="mt-4 rounded-lg bg-card-subtle p-3 border border-border/80 space-y-2 text-xs">
               <div className="flex items-center justify-between text-muted">
                 <span>You Receive (Estimated):</span>
                 <span className="font-mono font-bold text-foreground">
@@ -498,7 +498,7 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
             disabled={!amount || isTrading || Boolean(simulation && "error" in simulation)}
             className={`mt-4 w-full rounded-lg py-3 text-sm font-bold transition-colors shadow-xs disabled:opacity-50 ${
               !connected
-                ? "bg-[#06B6D4] hover:bg-[#22D3EE] text-[#070A0E] font-semibold"
+                ? "bg-brand-cyan hover:bg-brand-cyan-hover text-background font-semibold"
                 : tradeMode === "buy"
                 ? "bg-emerald-500 hover:bg-emerald-600 text-white"
                 : "bg-rose-500 hover:bg-rose-600 text-white"

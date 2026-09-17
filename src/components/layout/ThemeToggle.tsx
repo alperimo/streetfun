@@ -30,12 +30,12 @@ export function ThemeToggle() {
     <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-1.5 rounded-lg border border-border bg-card px-2.5 py-1.5 text-xs text-foreground hover:border-border-active transition-colors shadow-xs"
+        className="flex h-11 w-11 items-center justify-center rounded-xl border border-transparent bg-transparent text-xs text-foreground hover:border-border hover:bg-card transition-colors"
         title="Change Theme"
       >
         <ThemeIcon id={theme} />
-        <span className="hidden sm:inline font-medium text-[11px]">{themeConfig.name}</span>
-        <ChevronDown className="h-3 w-3 text-muted" />
+        <span className="sr-only">{themeConfig.name}</span>
+        <ChevronDown className="hidden" />
       </button>
 
       {isOpen && (
