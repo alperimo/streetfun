@@ -33,7 +33,7 @@ export interface ThemeTokens {
 }
 
 export const THEME_STORAGE_KEY = "streetfun-theme";
-export const DEFAULT_THEME_ID: ThemeId = "street-dark";
+export const DEFAULT_THEME_ID: ThemeId = "dark";
 
 export const THEMES: Record<ThemeId, ThemeTokens> = {
   "street-dark": {
@@ -47,8 +47,8 @@ export const THEMES: Record<ThemeId, ThemeTokens> = {
       border: "#1f3042",
       foreground: "#f1f5f9",
       muted: "#94a3b8",
-      brandCyan: "#5eead4",
-      brandEmerald: "#10b981",
+      brandCyan: "#62F88B",
+      brandEmerald: "#62F88B",
       brandRose: "#f43f5e",
       amber: "#f59e0b",
     },
@@ -57,8 +57,8 @@ export const THEMES: Record<ThemeId, ThemeTokens> = {
       textColor: "#94a3b8",
       gridColor: "#1a2837",
       borderColor: "#1f3042",
-      lineColor: "#5eead4",
-      topColor: "rgba(94, 234, 212, 0.25)",
+      lineColor: "#62F88B",
+      topColor: "rgba(98, 248, 139, 0.25)",
       bottomColor: "rgba(0, 0, 0, 0.0)",
       floorLineColor: "#f59e0b",
     },
@@ -74,8 +74,8 @@ export const THEMES: Record<ThemeId, ThemeTokens> = {
       border: "#182531",
       foreground: "#e8eff5",
       muted: "#8295a5",
-      brandCyan: "#5eead4",
-      brandEmerald: "#10b981",
+      brandCyan: "#62F88B",
+      brandEmerald: "#62F88B",
       brandRose: "#f43f5e",
       amber: "#f59e0b",
     },
@@ -84,8 +84,8 @@ export const THEMES: Record<ThemeId, ThemeTokens> = {
       textColor: "#8295a5",
       gridColor: "#131f2b",
       borderColor: "#182531",
-      lineColor: "#5eead4",
-      topColor: "rgba(94, 234, 212, 0.22)",
+      lineColor: "#62F88B",
+      topColor: "rgba(98, 248, 139, 0.22)",
       bottomColor: "rgba(0, 0, 0, 0.0)",
       floorLineColor: "#f59e0b",
     },

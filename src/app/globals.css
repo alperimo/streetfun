@@ -3,8 +3,17 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    --chrome-background: #000000;
+    --chrome-card: #0b1218;
+    --chrome-card-hover: #131f2b;
+    --chrome-border: #182531;
+    --chrome-border-active: #2a3d4f;
+    --chrome-foreground: #e8eff5;
+    --chrome-muted: #8295a5;
+  }
+
   /* Default: Street Dark (Midnight Slate - 1 Notch Lighter, Degen Wall Street) */
-  :root,
   [data-theme="street-dark"] {
     --background: #0c1218;
     --foreground: #f1f5f9;
@@ -15,12 +24,12 @@
     --border-active: #2d455e;
     --muted: #94a3b8;
     --muted-foreground: #64748b;
-    --brand-cyan: #06B6D4;
-    --brand-cyan-hover: #22D3EE;
-    --brand-cyan-tint: rgba(6, 182, 212, 0.12);
-    --brand-cyan-border: rgba(6, 182, 212, 0.35);
-    --brand-cyan-text: #A5F3FC;
-    --brand-emerald: #10b981;
+    --brand-cyan: #62F88B;
+    --brand-cyan-hover: #7CFFA0;
+    --brand-cyan-tint: rgba(98, 248, 139, 0.12);
+    --brand-cyan-border: rgba(98, 248, 139, 0.35);
+    --brand-cyan-text: #D6FFE0;
+    --brand-emerald: #62F88B;
     --brand-purple: #a855f7;
     --brand-amber: #f59e0b;
     --brand-rose: #f43f5e;
@@ -30,6 +39,7 @@
   }
 
   /* Theme 2: Onyx Dark (Original Deep Pitch Black Terminal) */
+  :root,
   [data-theme="dark"] {
     --background: #060a0e;
     --foreground: #e6edf3;
@@ -40,12 +50,12 @@
     --border-active: #2a3d4f;
     --muted: #8295a5;
     --muted-foreground: #526373;
-    --brand-cyan: #06B6D4;
-    --brand-cyan-hover: #22D3EE;
-    --brand-cyan-tint: rgba(6, 182, 212, 0.12);
-    --brand-cyan-border: rgba(6, 182, 212, 0.35);
-    --brand-cyan-text: #A5F3FC;
-    --brand-emerald: #10b981;
+    --brand-cyan: #62F88B;
+    --brand-cyan-hover: #7CFFA0;
+    --brand-cyan-tint: rgba(98, 248, 139, 0.12);
+    --brand-cyan-border: rgba(98, 248, 139, 0.35);
+    --brand-cyan-text: #D6FFE0;
+    --brand-emerald: #62F88B;
     --brand-purple: #a855f7;
     --brand-amber: #f59e0b;
     --brand-rose: #f43f5e;
@@ -106,6 +116,24 @@
   background: var(--card);
   backdrop-filter: blur(12px);
   border: 1px solid var(--border);
+}
+
+.hero-bull-image {
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, transparent 36%, black 52%, black 78%, transparent 98%, transparent 100%);
+  mask-image: linear-gradient(to right, transparent 0%, transparent 36%, black 52%, black 78%, transparent 98%, transparent 100%);
+}
+
+.site-header,
+.hero-section,
+.site-footer {
+  --background: var(--chrome-background);
+  --card: var(--chrome-card);
+  --card-hover: var(--chrome-card-hover);
+  --border: var(--chrome-border);
+  --border-active: var(--chrome-border-active);
+  --foreground: var(--chrome-foreground);
+  --muted: var(--chrome-muted);
+  background-color: var(--chrome-background);
 }
 
 .terminal-card {
