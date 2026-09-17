@@ -1,0 +1,1422 @@
+{
+  "address": "6ZiovCkRxRJgUaCS9uftFk3eVnGDsbnDXgUV1XHybH52",
+  "metadata": {
+    "name": "streetfun",
+    "version": "0.1.0",
+    "spec": "0.1.0",
+    "description": "Streetfun - The World's First Equity-Backed Memecoin Engine on Solana"
+  },
+  "instructions": [
+    {
+      "name": "burn_and_redeem",
+      "discriminator": [
+        2,
+        82,
+        184,
+        230,
+        13,
+        208,
+        102,
+        164
+      ],
+      "accounts": [
+        {
+          "name": "redeemer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "meme_mint",
+          "writable": true
+        },
+        {
+          "name": "target_equity_mint",
+          "docs": [
+            "SPL Token mint of the target equity (e.g. $SPCX)"
+          ]
+        },
+        {
+          "name": "curve",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  117,
+                  114,
+                  118,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "meme_mint"
+              }
+            ]
+          }
+        },
+        {
+          "name": "treasury_vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  116,
+                  114,
+                  101,
+                  97,
+                  115,
+                  117,
+                  114,
+                  121,
+                  45,
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "curve"
+              }
+            ]
+          }
+        },
+        {
+          "name": "redeemer_token_account",
+          "writable": true
+        },
+        {
+          "name": "redeemer_equity_account",
+          "writable": true
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        }
+      ],
+      "args": [
+        {
+          "name": "params",
+          "type": {
+            "defined": {
+              "name": "BurnAndRedeemParams"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "buy_curve",
+      "discriminator": [
+        153,
+        226,
+        183,
+        113,
+        123,
+        76,
+        124,
+        44
+      ],
+      "accounts": [
+        {
+          "name": "buyer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "global_config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  108,
+                  111,
+                  98,
+                  97,
+                  108,
+                  45,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "meme_mint"
+        },
+        {
+          "name": "curve",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  117,
+                  114,
+                  118,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "meme_mint"
+              }
+            ]
+          }
+        },
+        {
+          "name": "token_vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  116,
+                  111,
+                  107,
+                  101,
+                  110,
+                  45,
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "curve"
+              }
+            ]
+          }
+        },
+        {
+          "name": "quote_vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  113,
+                  117,
+                  111,
+                  116,
+                  101,
+                  45,
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "curve"
+              }
+            ]
+          }
+        },
+        {
+          "name": "buyer_quote_account",
+          "writable": true
+        },
+        {
+          "name": "buyer_token_account",
+          "writable": true
+        },
+        {
+          "name": "protocol_fee_account",
+          "writable": true
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        }
+      ],
+      "args": [
+        {
+          "name": "params",
+          "type": {
+            "defined": {
+              "name": "BuyCurveParams"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "graduate_and_execute_stock",
+      "discriminator": [
+        73,
+        162,
+        194,
+        242,
+        235,
+        55,
+        14,
+        118
+      ],
+      "accounts": [
+        {
+          "name": "caller",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "global_config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  108,
+                  111,
+                  98,
+                  97,
+                  108,
+                  45,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "meme_mint"
+        },
+        {
+          "name": "target_equity_mint",
+          "docs": [
+            "SPL Token mint of the target equity (e.g., $SPCX, $NVDA)"
+          ]
+        },
+        {
+          "name": "curve",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  117,
+                  114,
+                  118,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "meme_mint"
+              }
+            ]
+          }
+        },
+        {
+          "name": "token_vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  116,
+                  111,
+                  107,
+                  101,
+                  110,
+                  45,
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "curve"
+              }
+            ]
+          }
+        },
+        {
+          "name": "quote_vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  113,
+                  117,
+                  111,
+                  116,
+                  101,
+                  45,
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "curve"
+              }
+            ]
+          }
+        },
+        {
+          "name": "treasury_vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  116,
+                  114,
+                  101,
+                  97,
+                  115,
+                  117,
+                  114,
+                  121,
+                  45,
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "curve"
+              }
+            ]
+          }
+        },
+        {
+          "name": "equity_purchase_account",
+          "docs": [
+            "Destination account receiving the 50% USDC equity purchase budget (e.g., Jupiter swap / broker vault)"
+          ],
+          "writable": true
+        },
+        {
+          "name": "equity_source_account",
+          "docs": [
+            "Source account providing the tokenized equity shares into the treasury vault"
+          ],
+          "writable": true
+        },
+        {
+          "name": "equity_source_authority",
+          "signer": true
+        },
+        {
+          "name": "amm_quote_destination",
+          "docs": [
+            "Destination account receiving the 50% USDC AMM liquidity budget"
+          ],
+          "writable": true
+        },
+        {
+          "name": "amm_token_destination",
+          "docs": [
+            "Destination account receiving remaining meme tokens for AMM pool creation"
+          ],
+          "writable": true
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        }
+      ],
+      "args": [
+        {
+          "name": "params",
+          "type": {
+            "defined": {
+              "name": "GraduateParams"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "initialize_global_config",
+      "discriminator": [
+        113,
+        216,
+        122,
+        131,
+        225,
+        209,
+        22,
+        55
+      ],
+      "accounts": [
+        {
+          "name": "admin",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "protocol_fee_recipient"
+        },
+        {
+          "name": "global_config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  108,
+                  111,
+                  98,
+                  97,
+                  108,
+                  45,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "params",
+          "type": {
+            "defined": {
+              "name": "InitializeConfigParams"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "launch_stonk",
+      "discriminator": [
+        200,
+        54,
+        80,
+        140,
+        156,
+        123,
+        165,
+        38
+      ],
+      "accounts": [
+        {
+          "name": "creator",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "global_config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  108,
+                  111,
+                  98,
+                  97,
+                  108,
+                  45,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "meme_mint",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "target_equity_mint"
+        },
+        {
+          "name": "curve",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  117,
+                  114,
+                  118,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "meme_mint"
+              }
+            ]
+          }
+        },
+        {
+          "name": "token_vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  116,
+                  111,
+                  107,
+                  101,
+                  110,
+                  45,
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "curve"
+              }
+            ]
+          }
+        },
+        {
+          "name": "quote_mint",
+          "docs": [
+            "Quote token mint (e.g. USDC)"
+          ]
+        },
+        {
+          "name": "quote_vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  113,
+                  117,
+                  111,
+                  116,
+                  101,
+                  45,
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "curve"
+              }
+            ]
+          }
+        },
+        {
+          "name": "treasury_vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  116,
+                  114,
+                  101,
+                  97,
+                  115,
+                  117,
+                  114,
+                  121,
+                  45,
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "curve"
+              }
+            ]
+          }
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "associated_token_program",
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "rent",
+          "address": "SysvarRent111111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "params",
+          "type": {
+            "defined": {
+              "name": "LaunchStonkParams"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "sell_curve",
+      "discriminator": [
+        235,
+        247,
+        134,
+        210,
+        202,
+        118,
+        163,
+        77
+      ],
+      "accounts": [
+        {
+          "name": "seller",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "global_config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  108,
+                  111,
+                  98,
+                  97,
+                  108,
+                  45,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "meme_mint"
+        },
+        {
+          "name": "curve",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  117,
+                  114,
+                  118,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "meme_mint"
+              }
+            ]
+          }
+        },
+        {
+          "name": "token_vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  116,
+                  111,
+                  107,
+                  101,
+                  110,
+                  45,
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "curve"
+              }
+            ]
+          }
+        },
+        {
+          "name": "quote_vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  113,
+                  117,
+                  111,
+                  116,
+                  101,
+                  45,
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "curve"
+              }
+            ]
+          }
+        },
+        {
+          "name": "seller_token_account",
+          "writable": true
+        },
+        {
+          "name": "seller_quote_account",
+          "writable": true
+        },
+        {
+          "name": "protocol_fee_account",
+          "writable": true
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        }
+      ],
+      "args": [
+        {
+          "name": "params",
+          "type": {
+            "defined": {
+              "name": "SellCurveParams"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "accounts": [
+    {
+      "name": "CurveAccount",
+      "discriminator": [
+        8,
+        91,
+        83,
+        28,
+        132,
+        216,
+        248,
+        22
+      ]
+    },
+    {
+      "name": "GlobalConfig",
+      "discriminator": [
+        149,
+        8,
+        156,
+        202,
+        160,
+        252,
+        176,
+        217
+      ]
+    }
+  ],
+  "events": [
+    {
+      "name": "GraduatedEvent",
+      "discriminator": [
+        143,
+        52,
+        20,
+        137,
+        64,
+        74,
+        238,
+        0
+      ]
+    },
+    {
+      "name": "RedeemedEvent",
+      "discriminator": [
+        193,
+        181,
+        13,
+        196,
+        143,
+        127,
+        180,
+        177
+      ]
+    },
+    {
+      "name": "StonkLaunchedEvent",
+      "discriminator": [
+        185,
+        101,
+        54,
+        37,
+        171,
+        131,
+        134,
+        180
+      ]
+    },
+    {
+      "name": "TradeEvent",
+      "discriminator": [
+        189,
+        219,
+        127,
+        211,
+        78,
+        230,
+        97,
+        238
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "ZeroAmount",
+      "msg": "Amount must be greater than zero."
+    },
+    {
+      "code": 6001,
+      "name": "CurveAlreadyGraduated",
+      "msg": "Bonding curve has already graduated. Bonding curve trades are closed."
+    },
+    {
+      "code": 6002,
+      "name": "CurveNotGraduated",
+      "msg": "Bonding curve has not graduated yet. Burn and redeem is not accessible."
+    },
+    {
+      "code": 6003,
+      "name": "GraduationThresholdReached",
+      "msg": "Graduation threshold reached. Curve must be graduated."
+    },
+    {
+      "code": 6004,
+      "name": "GraduationThresholdNotReached",
+      "msg": "Graduation threshold has not been reached yet."
+    },
+    {
+      "code": 6005,
+      "name": "SlippageExceeded",
+      "msg": "Slippage tolerance exceeded."
+    },
+    {
+      "code": 6006,
+      "name": "InsufficientLiquidity",
+      "msg": "Insufficient token liquidity available in curve vault."
+    },
+    {
+      "code": 6007,
+      "name": "InsufficientQuoteReserves",
+      "msg": "Insufficient quote reserves in curve vault."
+    },
+    {
+      "code": 6008,
+      "name": "InvalidEquityMint",
+      "msg": "Target equity mint does not match the curve target equity."
+    },
+    {
+      "code": 6009,
+      "name": "MathOverflow",
+      "msg": "Arithmetic overflow or underflow occurred."
+    },
+    {
+      "code": 6010,
+      "name": "CalculationError",
+      "msg": "Calculation error occurred in bonding curve engine."
+    },
+    {
+      "code": 6011,
+      "name": "Unauthorized",
+      "msg": "Signer is not authorized to execute this instruction."
+    },
+    {
+      "code": 6012,
+      "name": "CurveVaultMismatch",
+      "msg": "Curve vault account does not match expected PDA."
+    },
+    {
+      "code": 6013,
+      "name": "TreasuryVaultMismatch",
+      "msg": "Treasury vault account does not match expected PDA."
+    },
+    {
+      "code": 6014,
+      "name": "InvalidFeeBps",
+      "msg": "Fee basis points exceed maximum allowed limit."
+    }
+  ],
+  "types": [
+    {
+      "name": "BurnAndRedeemParams",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "meme_tokens_to_burn",
+            "type": "u64"
+          },
+          {
+            "name": "min_equity_tokens_out",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "BuyCurveParams",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "quote_amount_in",
+            "type": "u64"
+          },
+          {
+            "name": "min_tokens_out",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "CurveAccount",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "creator",
+            "type": "pubkey"
+          },
+          {
+            "name": "meme_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "target_equity_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "meteora_dbc_pool",
+            "type": "pubkey"
+          },
+          {
+            "name": "virtual_quote_reserves",
+            "type": "u64"
+          },
+          {
+            "name": "virtual_token_reserves",
+            "type": "u64"
+          },
+          {
+            "name": "real_quote_reserves",
+            "type": "u64"
+          },
+          {
+            "name": "real_token_reserves",
+            "type": "u64"
+          },
+          {
+            "name": "total_meme_supply",
+            "type": "u64"
+          },
+          {
+            "name": "total_equity_locked",
+            "type": "u64"
+          },
+          {
+            "name": "is_graduated",
+            "type": "bool"
+          },
+          {
+            "name": "graduated_at",
+            "type": "i64"
+          },
+          {
+            "name": "curve_bump",
+            "type": "u8"
+          },
+          {
+            "name": "token_vault_bump",
+            "type": "u8"
+          },
+          {
+            "name": "quote_vault_bump",
+            "type": "u8"
+          },
+          {
+            "name": "treasury_vault_bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "GlobalConfig",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "admin",
+            "type": "pubkey"
+          },
+          {
+            "name": "protocol_fee_recipient",
+            "type": "pubkey"
+          },
+          {
+            "name": "protocol_fee_bps",
+            "type": "u16"
+          },
+          {
+            "name": "graduation_fee_bps",
+            "type": "u16"
+          },
+          {
+            "name": "graduation_threshold",
+            "type": "u64"
+          },
+          {
+            "name": "initial_virtual_quote_reserves",
+            "type": "u64"
+          },
+          {
+            "name": "initial_virtual_token_reserves",
+            "type": "u64"
+          },
+          {
+            "name": "total_graduated_tokens",
+            "type": "u64"
+          },
+          {
+            "name": "total_equity_purchased",
+            "type": "u64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "GraduateParams",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "min_equity_tokens_expected",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "GraduatedEvent",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "meme_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "target_equity_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "quote_for_equity",
+            "type": "u64"
+          },
+          {
+            "name": "equity_locked",
+            "type": "u64"
+          },
+          {
+            "name": "quote_for_amm",
+            "type": "u64"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "InitializeConfigParams",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "protocol_fee_bps",
+            "type": "u16"
+          },
+          {
+            "name": "graduation_fee_bps",
+            "type": "u16"
+          },
+          {
+            "name": "graduation_threshold",
+            "type": "u64"
+          },
+          {
+            "name": "initial_virtual_quote_reserves",
+            "type": "u64"
+          },
+          {
+            "name": "initial_virtual_token_reserves",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "LaunchStonkParams",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "symbol",
+            "type": "string"
+          },
+          {
+            "name": "uri",
+            "type": "string"
+          },
+          {
+            "name": "meteora_dbc_pool",
+            "type": {
+              "option": "pubkey"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "RedeemedEvent",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "redeemer",
+            "type": "pubkey"
+          },
+          {
+            "name": "meme_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "target_equity_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "meme_burned",
+            "type": "u64"
+          },
+          {
+            "name": "equity_redeemed",
+            "type": "u64"
+          },
+          {
+            "name": "remaining_equity",
+            "type": "u64"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "SellCurveParams",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "tokens_amount_in",
+            "type": "u64"
+          },
+          {
+            "name": "min_quote_out",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "StonkLaunchedEvent",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "creator",
+            "type": "pubkey"
+          },
+          {
+            "name": "meme_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "target_equity_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "symbol",
+            "type": "string"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "TradeEvent",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "user",
+            "type": "pubkey"
+          },
+          {
+            "name": "meme_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "is_buy",
+            "type": "bool"
+          },
+          {
+            "name": "quote_amount",
+            "type": "u64"
+          },
+          {
+            "name": "token_amount",
+            "type": "u64"
+          },
+          {
+            "name": "fee_amount",
+            "type": "u64"
+          },
+          {
+            "name": "new_real_quote",
+            "type": "u64"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    }
+  ]
+}

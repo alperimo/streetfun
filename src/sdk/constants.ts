@@ -42,7 +42,7 @@ export const VERIFIED_TESSERA_PRE_IPO_ASSETS: TesseraPreIpoAsset[] = [
   {
     symbol: "$TSPACEX",
     ticker: "TSPACEX",
-    name: "SpaceX (Tessera Pre-IPO)",
+    name: "SpaceX",
     mintAddress: "TSPX111111111111111111111111111111111111111",
     issuer: "Tessera Private Equity",
     custodian: "Fireblocks Institutional Custody",
@@ -56,7 +56,7 @@ export const VERIFIED_TESSERA_PRE_IPO_ASSETS: TesseraPreIpoAsset[] = [
   {
     symbol: "$TOPAI",
     ticker: "TOPAI",
-    name: "OpenAI (Tessera Pre-IPO)",
+    name: "OpenAI",
     mintAddress: "TOPAI111111111111111111111111111111111111111",
     issuer: "Tessera Private Equity",
     custodian: "Fireblocks Institutional Custody",
@@ -70,7 +70,7 @@ export const VERIFIED_TESSERA_PRE_IPO_ASSETS: TesseraPreIpoAsset[] = [
   {
     symbol: "$TSTRIPE",
     ticker: "TSTRIPE",
-    name: "Stripe (Tessera Pre-IPO)",
+    name: "Stripe",
     mintAddress: "TSTRP111111111111111111111111111111111111111",
     issuer: "Tessera Private Equity",
     custodian: "Fireblocks Institutional Custody",
@@ -84,7 +84,7 @@ export const VERIFIED_TESSERA_PRE_IPO_ASSETS: TesseraPreIpoAsset[] = [
   {
     symbol: "$NVDA",
     ticker: "NVDA",
-    name: "Nvidia Corporation",
+    name: "NVIDIA",
     mintAddress: "NVDA111111111111111111111111111111111111111",
     issuer: "Backpack Securities",
     custodian: "Fireblocks Institutional Custody",
@@ -98,7 +98,7 @@ export const VERIFIED_TESSERA_PRE_IPO_ASSETS: TesseraPreIpoAsset[] = [
   {
     symbol: "$TSLA",
     ticker: "TSLA",
-    name: "Tesla Inc.",
+    name: "Tesla",
     mintAddress: "TSLA111111111111111111111111111111111111111",
     issuer: "Backpack Securities",
     custodian: "Fireblocks Institutional Custody",

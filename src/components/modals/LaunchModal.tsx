@@ -139,7 +139,7 @@ export function LaunchModal({
                 <ShieldCheck className="h-3 w-3 text-slate-400" /> Pyth / On-Chain Verified
               </span>
             </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
               {VERIFIED_TOKENIZED_EQUITIES.map((eq) => {
                 const isSelected = selectedEquitySymbol === eq.symbol;
                 return (
@@ -147,37 +147,37 @@ export function LaunchModal({
                     type="button"
                     key={eq.symbol}
                     onClick={() => setSelectedEquitySymbol(eq.symbol)}
-                    className={`flex flex-col items-start p-2.5 rounded-xl border text-left transition-all ${
+                    className={`flex flex-col justify-between p-3 rounded-xl border text-left transition-all ${
                       isSelected
-                        ? "border-brand-cyan bg-brand-cyan/10 text-foreground shadow-sm"
+                        ? "border-brand-cyan bg-brand-cyan/10 text-foreground shadow-xs"
                         : "border-border bg-card text-muted hover:border-brand-cyan/40 hover:text-foreground"
                     }`}
                   >
                     <div className="flex items-center justify-between w-full">
-                      <div className="flex items-center gap-1.5">
-                        <div className="relative h-4 w-4 rounded-full overflow-hidden flex-shrink-0">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <div className="relative h-5 w-5 rounded-full overflow-hidden flex-shrink-0 border border-border">
                           <Image
                             src={eq.logoUrl}
                             alt={eq.name}
                             fill
                             className="object-cover"
-                            sizes="16px"
+                            sizes="20px"
                           />
                         </div>
-                        <span className="font-bold text-xs">{eq.symbol}</span>
+                        <span className="font-bold text-xs text-foreground tracking-tight">{eq.symbol}</span>
                       </div>
-                      {eq.isPreIpo ? (
-                        <span className="text-[8px] uppercase tracking-wider font-bold px-1.5 py-0.5 rounded-md bg-slate-800/40 text-slate-400 border border-slate-700/50 font-mono">
-                          Pre-IPO
-                        </span>
-                      ) : null}
+                      <span className="text-[9px] uppercase tracking-wider font-bold px-2 py-0.5 rounded-md bg-slate-800/70 text-slate-300 border border-slate-700/60 font-mono whitespace-nowrap">
+                        {eq.isPreIpo ? "Pre-IPO" : "Public"}
+                      </span>
                     </div>
-                    <span className="text-[10px] text-muted truncate w-full mt-1">
-                      {eq.name}
-                    </span>
-                    <span className="text-[9px] font-mono text-slate-300 mt-0.5">
-                      ${eq.currentStockPriceUsd}/sh
-                    </span>
+                    <div className="flex items-center justify-between w-full mt-2 pt-1.5 border-t border-border/40">
+                      <span className="text-[11px] font-medium text-slate-300">
+                        {eq.name}
+                      </span>
+                      <span className="text-[11px] font-mono font-medium text-muted">
+                        ${eq.currentStockPriceUsd}/sh
+                      </span>
+                    </div>
                   </button>
                 );
               })}

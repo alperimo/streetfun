@@ -16,10 +16,18 @@ import {
 import { INITIAL_TOKENS } from "@/lib/mockData";
 import { useWallet } from "@solana/wallet-adapter-react";
 
+import { PublicKey } from "@solana/web3.js";
+
+const LOCAL_DEV_PUBKEY = new PublicKey("519jca26LioEQiPhwoHCkC8mNZiCF7cDmtaXdp98iCv2");
+
 interface MarketContextType {
   tokens: TokenMetadata[];
   loading: boolean;
   isMock: boolean;
+  isWalletConnected: boolean;
+  walletPublicKey: PublicKey | null;
+  connectDevWallet: () => void;
+  disconnectDevWallet: () => void;
   refreshTokens: () => Promise<void>;
   getToken: (mint: string) => TokenMetadata | undefined;
   launchToken: (params: TokenLaunchParams) => Promise<TokenMetadata>;
@@ -34,6 +42,18 @@ export function MarketProvider({ children }: { children: ReactNode }) {
   const [tokens, setTokens] = useState<TokenMetadata[]>(isMock ? INITIAL_TOKENS : []);
   const [loading, setLoading] = useState(true);
   const wallet = useWallet();
+  const [devWalletConnected, setDevWalletConnected] = useState(false);
+
+  const isWalletConnected = wallet.connected || devWalletConnected;
+  const activePublicKey = wallet.publicKey || (devWalletConnected ? LOCAL_DEV_PUBKEY : null);
+
+  const connectDevWallet = useCallback(() => {
+    setDevWalletConnected(true);
+  }, []);
+
+  const disconnectDevWallet = useCallback(() => {
+    setDevWalletConnected(false);
+  }, []);
 
   const refreshTokens = useCallback(async () => {
     try {
@@ -61,17 +81,17 @@ export function MarketProvider({ children }: { children: ReactNode }) {
   const launchToken = useCallback(
     async (params: TokenLaunchParams) => {
       const tokenService = getTokenService();
-      const newToken = await tokenService.launchToken(params, wallet.publicKey);
+      const newToken = await tokenService.launchToken(params, activePublicKey);
       setTokens((prev) => [newToken, ...prev.filter((t) => t.mint !== newToken.mint)]);
       return newToken;
     },
-    [wallet.publicKey]
+    [activePublicKey]
   );
 
   const executeTrade = useCallback(
     async (params: TradeParams) => {
       const tradeService = getTradeService();
-      const result = await tradeService.executeTrade(params, wallet.publicKey);
+      const result = await tradeService.executeTrade(params, activePublicKey);
       if (result.success && result.updatedToken) {
         setTokens((prev) =>
           prev.map((t) => (t.mint === result.updatedToken.mint ? result.updatedToken : t))
@@ -79,13 +99,13 @@ export function MarketProvider({ children }: { children: ReactNode }) {
       }
       return result;
     },
-    [wallet.publicKey]
+    [activePublicKey]
   );
 
   const executeRedeem = useCallback(
     async (params: RedeemParams) => {
       const redeemService = getRedeemService();
-      const result = await redeemService.executeRedeem(params, wallet.publicKey);
+      const result = await redeemService.executeRedeem(params, activePublicKey);
       if (result.success && result.updatedToken) {
         setTokens((prev) =>
           prev.map((t) => (t.mint === result.updatedToken.mint ? result.updatedToken : t))
@@ -93,7 +113,7 @@ export function MarketProvider({ children }: { children: ReactNode }) {
       }
       return result;
     },
-    [wallet.publicKey]
+    [activePublicKey]
   );
 
   return (
@@ -102,6 +122,10 @@ export function MarketProvider({ children }: { children: ReactNode }) {
         tokens,
         loading,
         isMock,
+        isWalletConnected,
+        walletPublicKey: activePublicKey,
+        connectDevWallet,
+        disconnectDevWallet,
         refreshTokens,
         getToken,
         launchToken,

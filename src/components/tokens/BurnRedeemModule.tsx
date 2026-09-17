@@ -12,8 +12,9 @@ interface BurnRedeemModuleProps {
 }
 
 export function BurnRedeemModule({ token }: BurnRedeemModuleProps) {
-  const { connected } = useWallet();
-  const { executeRedeem } = useMarket();
+  const { connected: walletAdapterConnected } = useWallet();
+  const { isWalletConnected, executeRedeem } = useMarket();
+  const connected = walletAdapterConnected || isWalletConnected;
   const [memeAmount, setMemeAmount] = useState("");
   const [redeemMode, setRedeemMode] = useState<"stock" | "usdc">("stock");
   const [isProcessing, setIsProcessing] = useState(false);

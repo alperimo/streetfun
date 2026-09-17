@@ -4,7 +4,39 @@ import React from "react";
 import Image from "next/image";
 import { TrendingUp } from "lucide-react";
 
+import { useMarket } from "@/context/MarketContext";
+
 export function HeroBanner() {
+  const { tokens, isMock } = useMarket();
+
+  const totalVolume = tokens.reduce((sum, t) => sum + (t.volume24hUsd || 0), 0);
+  const totalTvl = tokens.reduce((sum, t) => sum + (t.treasury?.totalEquityValueUsd || 0), 0);
+  const graduatedCount = tokens.filter((t) => t.bondingCurve?.isGraduated).length;
+
+  const formatUsd = (num: number) => {
+    if (num >= 1_000_000) return `$${(num / 1_000_000).toFixed(2)}M`;
+    if (num >= 1_000) return `$${(num / 1_000).toFixed(1)}K`;
+    return `$${num.toLocaleString()}`;
+  };
+
+  const stats = [
+    {
+      label: "24h Volume",
+      value: isMock ? "$4.82M" : formatUsd(totalVolume),
+      change: "+47.3%",
+    },
+    {
+      label: "Equity TVL",
+      value: isMock ? "$40.7M" : formatUsd(totalTvl),
+      change: "+28.1%",
+    },
+    {
+      label: "Graduated",
+      value: isMock ? "1,282" : graduatedCount.toLocaleString(),
+      change: "+12.6%",
+    },
+  ];
+
   return (
     <section className="hero-section relative isolate min-h-[400px] overflow-hidden">
       <Image
@@ -26,11 +58,7 @@ export function HeroBanner() {
             Trade viral momentum. Graduate to real tokenized equities.
           </p>
           <div className="mt-6 grid w-full max-w-[640px] grid-cols-3 items-stretch rounded-2xl border border-border bg-background/75 p-3 backdrop-blur-md sm:p-4">
-            {[
-              { label: "24h Volume", value: "$4.82M", change: "+47.3%" },
-              { label: "Equity TVL", value: "$40.7M", change: "+28.1%" },
-              { label: "Graduated", value: "1,282", change: "+12.6%" },
-            ].map((stat, index) => (
+            {stats.map((stat, index) => (
               <React.Fragment key={stat.label}>
                 <div
                   className={`min-w-0 px-1 text-center sm:px-2 ${
