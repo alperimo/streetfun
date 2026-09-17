@@ -35,10 +35,11 @@ export function WalletButton() {
       <button
         onClick={() => setVisible(true)}
         disabled={connecting}
-        className="flex h-11 items-center gap-2 rounded-xl bg-[#06B6D4] hover:bg-[#22D3EE] px-4 text-sm font-semibold text-[#070A0E] transition-colors"
+        aria-label={connecting ? "Connecting wallet" : "Connect wallet"}
+        className="flex h-11 w-11 items-center justify-center gap-2 rounded-xl border border-border bg-card text-sm font-semibold text-foreground transition-colors hover:border-border-active hover:bg-card-hover sm:w-auto sm:px-4"
       >
-        <Wallet className="h-4 w-4 text-[#070A0E]" />
-        <span>{connecting ? "Connecting..." : "Connect wallet"}</span>
+        <Wallet className="h-4 w-4 text-muted" />
+        <span className="hidden sm:inline">{connecting ? "Connecting..." : "Connect wallet"}</span>
       </button>
     );
   }
@@ -50,10 +51,11 @@ export function WalletButton() {
     <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => setDropdownOpen(!dropdownOpen)}
-        className="flex h-11 items-center gap-2 rounded-xl bg-[#06B6D4] hover:bg-[#22D3EE] px-4 text-sm font-semibold text-[#070A0E] transition-colors"
+        aria-label={`Wallet ${shortAddress}`}
+        className="flex h-11 w-11 items-center justify-center gap-2 rounded-xl border border-border bg-card text-sm font-semibold text-foreground transition-colors hover:border-border-active hover:bg-card-hover sm:w-auto sm:px-4"
       >
-        <Wallet className="h-4 w-4 text-[#070A0E]" />
-        <span>{shortAddress}</span>
+        <Wallet className="h-4 w-4 text-muted" />
+        <span className="hidden sm:inline">{shortAddress}</span>
       </button>
 
       {dropdownOpen && (
