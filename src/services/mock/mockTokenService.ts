@@ -14,7 +14,19 @@ export class MockTokenService implements ITokenService {
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
       if (stored) {
-        return JSON.parse(stored);
+        const storedTokens = JSON.parse(stored) as TokenMetadata[];
+        const storedMints = new Set(storedTokens.map((token) => token.mint));
+        const newSeedTokens = INITIAL_TOKENS.filter(
+          (token) => !storedMints.has(token.mint)
+        );
+
+        if (newSeedTokens.length > 0) {
+          const mergedTokens = [...storedTokens, ...newSeedTokens];
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(mergedTokens));
+          return mergedTokens;
+        }
+
+        return storedTokens;
       }
       localStorage.setItem(STORAGE_KEY, JSON.stringify(INITIAL_TOKENS));
       return INITIAL_TOKENS;
