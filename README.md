@@ -97,9 +97,15 @@ streetfun/
 │   └── lib/                        # Data models & mock state
 ├── tests/
 │   ├── tsconfig.json               # Test compiler configuration
-│   └── streetfun.ts                # Full lifecycle integration test suite
+│   ├── helpers.ts                  # Shared PDAs, mints, and provider fixtures
+│   ├── 01_initialize.test.ts       # Protocol init & parameter tests
+│   ├── 02_launch.test.ts           # Token launch & PDA derivation tests
+│   ├── 03_bonding_trade.test.ts    # Buy/sell curve & price discovery tests
+│   ├── 04_graduation.test.ts       # 60k threshold trigger & 50/50 fund split tests
+│   └── 05_burn_redeem.test.ts      # Pro-rata stock redemption & burn tests
 └── scripts/
-    └── init_protocol.ts            # Devnet deployment & initialization script
+    ├── init_protocol.ts            # Protocol initialization script
+    └── localnet_demo.ts            # End-to-end localnet live lifecycle runner
 ```
 
 ---
@@ -121,23 +127,45 @@ streetfun/
 
 ### Prerequisites
 - Node.js v20+ / v24+
-- Rust 1.80+ and Cargo
-- Anchor CLI 0.30+ / 0.32+
+- Rust 1.84+ and Cargo
+- Agave / Solana CLI 2.3+ (`solana`, `solana-test-validator`)
+- Anchor CLI 0.32+
 
-### Run Smart Contract Unit Tests
+### 1. Start Localnet Validator
+```bash
+solana-test-validator --reset --quiet
+```
+
+### 2. Build & Deploy Smart Contracts
+```bash
+anchor build
+solana program deploy target/deploy/streetfun.so --url http://127.0.0.1:8899
+```
+
+### 3. Run Smart Contract Unit Tests
 ```bash
 cargo test --package streetfun --lib math
 ```
 
-### Run Full Integration Test Suite
+### 4. Run Modular Integration Test Suite (13 Tests)
 ```bash
-anchor test
-# or directly with mocha:
+# Runs all 5 modular test suites against localnet:
+yarn test
+# or:
 npm run test:integration
 ```
 
-### Build & Run Next.js Frontend
+### 5. Run Live End-to-End Localnet Demo Script
 ```bash
+npx ts-node --transpile-only -P ./tests/tsconfig.json scripts/localnet_demo.ts
+```
+
+### 6. Build & Run Next.js Frontend
+```bash
+# Toggle simulation vs live on-chain in .env.local:
+# NEXT_PUBLIC_USE_MOCK_DATA=true  -> Instant interactive simulation demo
+# NEXT_PUBLIC_USE_MOCK_DATA=false -> Live on-chain Anchor smart contract calls
+
 # Start development server on localhost:3000
 npm run dev
 

@@ -14,3 +14,4 @@ keys/
 *.tsbuildinfo
 .env.local
 .env*.local
+test-ledger/

@@ -8,8 +8,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "test": "ts-mocha -p ./tests/tsconfig.json -t 1000000 tests/*.test.ts",
     "test:contract": "cargo test --package streetfun --lib math",
-    "test:integration": "ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"
+    "test:integration": "ts-mocha -p ./tests/tsconfig.json -t 1000000 tests/*.test.ts"
   },
   "dependencies": {
     "@coral-xyz/anchor": "^0.30.1",

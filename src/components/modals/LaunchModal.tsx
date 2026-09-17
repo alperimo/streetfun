@@ -71,7 +71,7 @@ export function LaunchModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-150">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/30 backdrop-blur-[1px] animate-in fade-in duration-150">
       <div
         className="w-full max-w-lg rounded-2xl border border-border bg-card p-6 shadow-2xl"
         onClick={(e) => e.stopPropagation()}
@@ -79,13 +79,13 @@ export function LaunchModal({
         {/* Header */}
         <div className="flex items-center justify-between border-b border-border pb-4">
           <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded-lg bg-brand-cyan/15 text-brand-cyan border border-brand-cyan/30">
+            <div className="p-2 rounded-lg bg-card-hover text-brand-cyan border border-border">
               <Rocket className="h-5 w-5" />
             </div>
             <div>
-              <h2 className="text-lg font-bold text-foreground">Launch on Meteora DBC</h2>
+              <h2 className="text-lg font-bold text-foreground">Launch Token</h2>
               <p className="text-xs text-muted">
-                Dynamic Bonding Curve with Tessera Pre-IPO Treasury Backing
+                Create an equity-backed token with an institutional treasury reserve
               </p>
             </div>
           </div>
@@ -133,7 +133,7 @@ export function LaunchModal({
           <div>
             <div className="flex items-center justify-between mb-1.5">
               <label className="text-muted font-medium">
-                Select Backing Asset (Tessera Pre-IPO / Tokenized Equity)
+                Select Backing Asset
               </label>
               <span className="text-[10px] text-slate-300 font-mono flex items-center gap-1">
                 <ShieldCheck className="h-3 w-3 text-slate-400" /> Pyth / On-Chain Verified
@@ -214,9 +214,8 @@ export function LaunchModal({
 
           {/* Initial Snipe / Creator Buy */}
           <div>
-            <label className="block text-muted font-medium mb-1 flex items-center justify-between">
-              <span>Initial Buy (Optional)</span>
-              <span className="text-[10px] text-muted">Protects against snipers</span>
+            <label className="block text-muted font-medium mb-1">
+              Initial Buy (Optional)
             </label>
             <div className="relative">
               <input
@@ -238,7 +237,7 @@ export function LaunchModal({
           <div className="rounded-xl border border-border bg-card-subtle p-3 text-[11px] text-muted flex items-start gap-2">
             <Info className="h-4 w-4 text-brand-cyan flex-shrink-0 mt-0.5" />
             <span className="leading-relaxed">
-              <strong>Meteora DBC Graduation:</strong> At 60,000 USDC, 50% ($30k) spot-buys {selectedEquity.symbol} shares via Jupiter/Meteora into the Anchor Treasury PDA, and 50% ($30k) + leftover meme supply migrates to a permanent Meteora DLMM pool.
+              <strong className="text-foreground">Graduation Mechanism:</strong> At 60,000 USDC, 50% ($30K) automatically acquires {selectedEquity.symbol} equity shares into the treasury vault, and 50% ($30K) funds permanent liquidity.
             </span>
           </div>
 
@@ -249,11 +248,11 @@ export function LaunchModal({
             className="w-full rounded-xl bg-brand-cyan py-3 text-sm font-bold text-slate-950 hover:opacity-90 transition-opacity disabled:opacity-50 shadow-md shadow-brand-cyan/20 flex items-center justify-center gap-2"
           >
             {isSubmitting ? (
-              <span>Deploying to Solana...</span>
+              <span>Creating Token...</span>
             ) : (
               <>
                 <Rocket className="h-4 w-4 stroke-[2.5]" />
-                <span>Launch Stonk on Solana</span>
+                <span>Launch Token</span>
               </>
             )}
           </button>
