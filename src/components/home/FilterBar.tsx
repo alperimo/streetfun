@@ -48,7 +48,7 @@ export function FilterBar({
       {/* Top Controls Row: Search Input + Status Filter + Sort */}
       <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4">
         {/* Search Input Box */}
-        <div className="relative w-full lg:max-w-md">
+        <div className="relative w-full lg:flex-1 lg:max-w-[660px]">
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted" />
           <input
             type="text"
@@ -60,7 +60,7 @@ export function FilterBar({
         </div>
 
         {/* Right Controls: Status Segments + Sort Segments */}
-        <div className="flex flex-wrap items-center gap-4 text-xs">
+        <div className="flex min-w-0 flex-wrap items-center gap-4 text-xs">
           {/* Status Segmented Control (All / In Curve / Graduated) */}
           <div className="flex items-center rounded-lg border border-border bg-card/60 p-1 shadow-xs gap-1">
             {(
@@ -75,8 +75,8 @@ export function FilterBar({
                 onClick={() => onStatusFilterChange(item.id)}
                 className={`rounded-md px-2.5 py-1 text-xs transition-colors duration-150 ${
                   statusFilter === item.id
-                    ? "bg-[#06B6D4]/10 border border-[#06B6D4]/40 text-[#A5F3FC] font-medium shadow-xs"
-                    : "border border-transparent text-slate-400 hover:text-slate-100 hover:bg-white/[0.03] font-medium"
+                    ? "bg-brand-cyan/10 border border-brand-cyan/40 text-brand-cyan font-medium shadow-xs"
+                    : "border border-transparent text-muted hover:text-foreground hover:bg-card-hover font-medium"
                 }`}
               >
                 {item.label}
@@ -85,17 +85,17 @@ export function FilterBar({
           </div>
 
           {/* Sort Segmented Control */}
-          <div className="flex items-center gap-2 text-xs">
-            <span className="text-muted font-medium">Sort:</span>
-            <div className="flex items-center gap-1.5">
+          <div className="flex w-full min-w-0 items-center gap-2 text-xs lg:w-auto">
+            <span className="shrink-0 text-muted font-medium">Sort:</span>
+            <div className="flex min-w-0 items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
               {SORT_OPTIONS.map((item) => (
                 <button
                   key={item.id}
                   onClick={() => onSortChange(item.id)}
                   className={`whitespace-nowrap rounded-lg px-2.5 py-1 text-xs transition-colors duration-150 ${
                     sortBy === item.id
-                      ? "bg-[#06B6D4]/10 border border-[#06B6D4]/40 text-[#A5F3FC] font-medium shadow-xs"
-                      : "border border-white/[0.07] bg-transparent text-slate-400 font-medium hover:text-slate-100 hover:bg-white/[0.03]"
+                      ? "bg-brand-cyan/10 border border-brand-cyan/40 text-brand-cyan font-medium shadow-xs"
+                      : "border border-border bg-transparent text-muted font-medium hover:text-foreground hover:bg-card-hover"
                   }`}
                 >
                   {item.label}
@@ -107,7 +107,7 @@ export function FilterBar({
       </div>
 
       {/* Target Equity Filter Tags: Uniform Pill-Box Wrapper for every single category */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs scrollbar-none">
+      <div className="flex w-full min-w-0 items-center gap-2 overflow-x-auto pb-1 text-xs scrollbar-none">
         <span className="text-muted whitespace-nowrap mr-0.5 font-medium">Backed with:</span>
         {EQUITY_TAGS.map((tag) => (
           <button
@@ -115,8 +115,8 @@ export function FilterBar({
             onClick={() => onTagChange(tag.id)}
             className={`whitespace-nowrap rounded-lg px-3 py-1 text-xs transition-colors duration-150 ${
               selectedTag === tag.id
-                ? "bg-[#06B6D4]/10 border border-[#06B6D4]/40 text-[#A5F3FC] font-medium shadow-xs"
-                : "border border-white/[0.07] bg-transparent text-slate-400 font-medium hover:text-slate-100 hover:bg-white/[0.03]"
+                ? "bg-brand-cyan/10 border border-brand-cyan/40 text-brand-cyan font-medium shadow-xs"
+                : "border border-border bg-transparent text-muted font-medium hover:text-foreground hover:bg-card-hover"
             }`}
           >
             {tag.label}
