@@ -98,12 +98,12 @@ export function TokenCard({ token }: TokenCardProps) {
             <span className="font-bold text-foreground whitespace-nowrap">
               {token.targetEquity.symbol.replace(/^\$/, "")}
             </span>
-            <span className="rounded-md border border-slate-700/50 bg-slate-800/30 px-2 py-0.5 text-[10px] tracking-wide font-mono font-medium text-slate-400 whitespace-nowrap">
+            <span className="rounded-md border border-border bg-card-hover px-2 py-0.5 text-[10px] tracking-wide font-mono font-medium text-muted whitespace-nowrap">
               {token.targetEquity.isPreIpo ? "Pre-IPO" : "xStocks"}
             </span>
           </div>
           {token.bondingCurve.isGraduated ? (
-            <span className="font-mono text-[11px] font-medium text-slate-400 whitespace-nowrap pl-2">
+            <span className="font-mono text-[11px] font-medium text-muted whitespace-nowrap pl-2">
               {token.targetEquity.symbol === "$TSPACEX"
                 ? "Backed: $20.3M"
                 : token.targetEquity.symbol === "$TOPAI"
@@ -123,7 +123,7 @@ export function TokenCard({ token }: TokenCardProps) {
         {!token.bondingCurve.isGraduated ? (
           <div className="mt-2.5 h-1.5 w-full overflow-hidden rounded-full bg-card-hover/40 border border-border">
             <div
-              className="bg-gradient-to-r from-[#0891B2] to-[#06B6D4] h-1.5 rounded-full transition-all duration-300"
+              className="bg-gradient-to-r from-brand-cyan/70 to-brand-cyan h-1.5 rounded-full transition-all duration-300"
               style={{ width: `${Math.min(token.bondingCurve.progressPct, 100)}%` }}
             />
           </div>
