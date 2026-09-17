@@ -79,47 +79,42 @@ export default function MarketsPage() {
         onOpenLaunch={() => setIsLaunchOpen(true)}
       />
 
-      <main className="mx-auto flex-1 w-full px-6 md:px-12 xl:px-[164px] py-6">
-        <HeroBanner onOpenLaunch={() => setIsLaunchOpen(true)} />
+      <main className="flex-1 w-full bg-card pb-12">
+        <HeroBanner />
 
-        <FilterBar
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
-          statusFilter={statusFilter}
-          onStatusFilterChange={setStatusFilter}
-          selectedTag={selectedTag}
-          onTagChange={setSelectedTag}
-          sortBy={sortBy}
-          onSortChange={setSortBy}
-        />
-
-        <div className="mt-5">
-          <h2 className="text-xl font-bold text-foreground tracking-tight">
-            All tokens
-          </h2>
-        </div>
-
-        {/* 3 Columns Grid matching StonkFun */}
-        <div className="mt-4 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
-          {filteredTokens.map((token) => (
-            <TokenCard key={token.mint} token={token} />
-          ))}
-        </div>
-
-        {filteredTokens.length === 0 && (
-          <div className="mt-12 rounded-xl border border-border bg-card p-12 text-center shadow-sm">
-            <p className="text-sm text-muted">No tokens found.</p>
-            <button
-              onClick={() => {
-                setSearchQuery("");
-                setSelectedTag("all");
-              }}
-              className="mt-2 text-xs font-bold text-brand-cyan hover:underline"
-            >
-              Reset filters
-            </button>
+        <div className="w-full bg-card">
+          <div className="mx-auto w-full max-w-[1350px] px-6 pt-8 sm:px-10 lg:px-0">
+            <FilterBar
+              searchQuery={searchQuery}
+              onSearchChange={setSearchQuery}
+              statusFilter={statusFilter}
+              onStatusFilterChange={setStatusFilter}
+              selectedTag={selectedTag}
+              onTagChange={setSelectedTag}
+              sortBy={sortBy}
+              onSortChange={setSortBy}
+            />
+            <div className="mt-5 grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
+              {filteredTokens.map((token) => (
+                <TokenCard key={token.mint} token={token} />
+              ))}
+            </div>
+            {filteredTokens.length === 0 && (
+              <div className="mt-12 rounded-xl border border-border bg-card p-12 text-center shadow-sm">
+                <p className="text-sm text-muted">No tokens found.</p>
+                <button
+                  onClick={() => {
+                    setSearchQuery("");
+                    setSelectedTag("all");
+                  }}
+                  className="mt-2 text-xs font-bold text-brand-cyan hover:underline"
+                >
+                  Reset filters
+                </button>
+              </div>
+            )}
           </div>
-        )}
+        </div>
       </main>
 
       <Footer />
