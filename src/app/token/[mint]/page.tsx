@@ -13,6 +13,7 @@ import { LaunchModal } from "@/components/modals/LaunchModal";
 import { INITIAL_TOKENS } from "@/lib/mockData";
 import { TokenMetadata } from "@/lib/types";
 import { useMarket } from "@/context/MarketContext";
+import { TokenDetailSkeleton } from "@/components/common/Skeletons";
 
 interface PageProps {
   params: Promise<{ mint: string }>;
@@ -71,12 +72,7 @@ export default function TokenDetailPage({ params }: PageProps) {
           onOpenSearch={() => setIsSearchOpen(true)}
           onOpenLaunch={() => setIsLaunchOpen(true)}
         />
-        <main className="mx-auto flex-1 w-full max-w-[1350px] px-6 py-16 flex items-center justify-center md:px-12 lg:px-0">
-          <div className="text-center">
-            <div className="h-8 w-8 border-2 border-brand-cyan border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-            <p className="text-sm text-muted font-mono">Loading token data...</p>
-          </div>
-        </main>
+        <TokenDetailSkeleton />
         <Footer />
       </div>
     );

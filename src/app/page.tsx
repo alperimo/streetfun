@@ -6,6 +6,7 @@ import { Footer } from "@/components/layout/Footer";
 import { HeroBanner } from "@/components/home/HeroBanner";
 import { FilterBar, StatusFilter, SortOption } from "@/components/home/FilterBar";
 import { TokenCard } from "@/components/tokens/TokenCard";
+import { TokenCardSkeleton } from "@/components/common/Skeletons";
 import { SearchModal } from "@/components/modals/SearchModal";
 import { LaunchModal } from "@/components/modals/LaunchModal";
 import { TokenMetadata } from "@/lib/types";
@@ -94,24 +95,34 @@ export default function MarketsPage() {
               sortBy={sortBy}
               onSortChange={setSortBy}
             />
-            <div className="mt-5 grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
-              {filteredTokens.map((token) => (
-                <TokenCard key={token.mint} token={token} />
-              ))}
-            </div>
-            {filteredTokens.length === 0 && (
-              <div className="mt-12 rounded-xl border border-border bg-card p-12 text-center shadow-sm">
-                <p className="text-sm text-muted">No tokens found.</p>
-                <button
-                  onClick={() => {
-                    setSearchQuery("");
-                    setSelectedTag("all");
-                  }}
-                  className="mt-2 text-xs font-bold text-brand-cyan hover:underline"
-                >
-                  Reset filters
-                </button>
+            {loading ? (
+              <div className="mt-5 grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
+                {[...Array(6)].map((_, i) => (
+                  <TokenCardSkeleton key={i} />
+                ))}
               </div>
+            ) : (
+              <>
+                <div className="mt-5 grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
+                  {filteredTokens.map((token) => (
+                    <TokenCard key={token.mint} token={token} />
+                  ))}
+                </div>
+                {filteredTokens.length === 0 && (
+                  <div className="mt-12 rounded-xl border border-border bg-card p-12 text-center shadow-sm">
+                    <p className="text-sm text-muted">No tokens found.</p>
+                    <button
+                      onClick={() => {
+                        setSearchQuery("");
+                        setSelectedTag("all");
+                      }}
+                      className="mt-2 text-xs font-bold text-brand-cyan hover:underline"
+                    >
+                      Reset filters
+                    </button>
+                  </div>
+                )}
+              </>
             )}
           </div>
         </div>

@@ -186,9 +186,9 @@ export function BurnRedeemModule({ token }: BurnRedeemModuleProps) {
         >
           <div className="flex items-center gap-1.5">
             {isProcessing && redeemMode === "stock" ? (
-              <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+              <span className="h-2 w-2 rounded-full bg-amber-400 animate-pulse" />
             ) : null}
-            <span className="text-sm">Withdraw {token.targetEquity.symbol} to Wallet</span>
+            <span className="text-sm">{isProcessing && redeemMode === "stock" ? "Processing..." : `Withdraw ${token.targetEquity.symbol} to Wallet`}</span>
           </div>
           <span className="text-[10px] text-amber-400/80 font-normal">
             Direct SPL token transfer to your address
@@ -205,9 +205,9 @@ export function BurnRedeemModule({ token }: BurnRedeemModuleProps) {
         >
           <div className="flex items-center gap-1.5">
             {isProcessing && redeemMode === "usdc" ? (
-              <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+              <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
             ) : null}
-            <span className="text-sm">1-Click Swap to USDC</span>
+            <span className="text-sm">{isProcessing && redeemMode === "usdc" ? "Swapping..." : "1-Click Swap to USDC"}</span>
           </div>
           <span className="text-[10px] text-emerald-400 font-normal">
             Instant Jupiter swap to USDC
