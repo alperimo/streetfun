@@ -88,21 +88,33 @@ export function BullArtwork() {
 
   return (
     <>
-      <div ref={viewport} className="hero-artwork-viewport hero-bull-image" aria-hidden="true">
-        <div className="hero-artwork-stage" style={stageStyle}>
-          <Image
-            src="/generated/hero-bull-brand-glasses.png"
-            alt=""
-            fill
-            priority
-            sizes="(max-width: 900px) 900px, 100vw"
-          />
+      <div ref={viewport} className="hero-artwork-viewport" aria-hidden="true">
+        <div className="hero-artwork-faded-layer hero-bull-image">
+          <div className="hero-artwork-stage" style={stageStyle}>
+            <Image
+              src="/generated/hero-bull-brand-glasses.png"
+              alt=""
+              fill
+              priority
+              sizes="(max-width: 900px) 900px, 100vw"
+            />
+          </div>
+        </div>
+        <div className="hero-bull-foreground-layer">
+          <div className="hero-artwork-stage" style={stageStyle}>
+            <Image
+              src="/generated/hero-bull-foreground.png"
+              alt=""
+              fill
+              priority
+              sizes="(max-width: 900px) 900px, 100vw"
+            />
           {/* City light sweep intentionally disabled.
           <div className="hero-city-light">
             <Image src="/generated/hero-bull-brand-glasses.png" alt="" fill priority sizes="(max-width: 900px) 900px, 100vw" />
           </div>
           */}
-          <svg ref={svg} className="hero-chart" viewBox={`0 0 ${art.width} ${art.height}`} focusable="false">
+            <svg ref={svg} className="hero-chart" viewBox={`0 0 ${art.width} ${art.height}`} focusable="false">
             <defs>
               <path ref={path} id={`${id}-trend`} d={art.trend} pathLength="1" />
               <g id={`${id}-candles`}>
@@ -160,7 +172,8 @@ export function BullArtwork() {
                 <rect {...lens.bounds} fill={`url(#${id}-shade)`} />
               </g>
             ))}
-          </svg>
+            </svg>
+          </div>
         </div>
       </div>
     </>

@@ -136,6 +136,28 @@
   mask-composite: intersect;
 }
 
+.hero-artwork-faded-layer,
+.hero-bull-foreground-layer {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+.hero-bull-foreground-layer {
+  -webkit-mask-image:
+    linear-gradient(to bottom, transparent 0%, black 8%, black 92%, transparent 100%),
+    linear-gradient(to right, transparent 0%, black 5%, black 78%, transparent 90%, transparent 100%);
+  -webkit-mask-composite: source-in;
+  mask-image:
+    linear-gradient(to bottom, transparent 0%, black 8%, black 92%, transparent 100%),
+    linear-gradient(to right, transparent 0%, black 5%, black 78%, transparent 90%, transparent 100%);
+  mask-composite: intersect;
+}
+
+.hero-artwork-stage > img {
+  opacity: 1;
+}
+
 /* Scale and crop the image + SVG together, exactly like the original cover image.
    The viewport owns the existing fades; the stage always has the source ratio. */
 .hero-artwork-viewport {
