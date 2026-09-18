@@ -4,6 +4,9 @@ import { WalletProvider } from "@/components/layout/WalletProvider";
 import { ThemeProvider } from "@/context/ThemeContext";
 import { MarketProvider } from "@/context/MarketContext";
 
+import { getLiveTokens } from "@/services/tokens/liveTokens";
+import { TokenMetadata } from "@/lib/types";
+
 export const metadata: Metadata = {
   title: "Streetfun · Memecoins With A Wall Street Floor",
   description: "Trade viral momentum. Graduate to real tokenized equities.",
@@ -12,11 +15,18 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  let initialTokens: TokenMetadata[] = [];
+  try {
+    initialTokens = await getLiveTokens();
+  } catch (err) {
+    console.warn("[RootLayout] Could not prefetch live tokens:", err);
+  }
+
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
@@ -29,7 +39,7 @@ export default function RootLayout({
       <body className="min-h-screen bg-background text-foreground antialiased selection:bg-brand-cyan/20 selection:text-brand-cyan">
         <ThemeProvider>
           <WalletProvider>
-            <MarketProvider>{children}</MarketProvider>
+            <MarketProvider initialTokens={initialTokens}>{children}</MarketProvider>
           </WalletProvider>
         </ThemeProvider>
       </body>

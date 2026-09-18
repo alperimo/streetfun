@@ -61,6 +61,8 @@ export class TradeStoreService {
   private lastTokensFetch = 0;
   private cachedPrices: Record<string, { priceUsd: number; marketCapUsd: number }> | null = null;
   private lastPricesFetch = 0;
+  private cachedReserves: Record<string, number> | null = null;
+  private lastReservesFetch = 0;
 
   public static getInstance(): TradeStoreService {
     if (!TradeStoreService.instance) {
@@ -133,6 +135,7 @@ export class TradeStoreService {
     // Always keep in local store for rapid UI response
     localTradesStore.unshift(tradeWithTime);
     this.cachedPrices = null;
+    this.cachedReserves = null;
   }
 
   async recordToken(token: TokenRecord): Promise<void> {
@@ -262,6 +265,11 @@ export class TradeStoreService {
    * BUY adds to reserves, SELL subtracts from reserves.
    */
   async getReservesPerMint(): Promise<Record<string, number>> {
+    const now = Date.now();
+    if (this.cachedReserves && now - this.lastReservesFetch < 3000) {
+      return this.cachedReserves;
+    }
+
     const reserves: Record<string, number> = {};
     const supabase = getSupabaseClient();
     if (supabase) {
@@ -302,6 +310,8 @@ export class TradeStoreService {
       if (reserves[mint] < 0) reserves[mint] = 0;
     }
 
+    this.cachedReserves = reserves;
+    this.lastReservesFetch = Date.now();
     return reserves;
   }
 

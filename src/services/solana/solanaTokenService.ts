@@ -65,70 +65,18 @@ export class SolanaTokenService implements ITokenService {
         }
       }
 
-      // 2. Server-side: fetch directly from Supabase (no mock data)
-      const tokenMap = new Map<string, TokenMetadata>();
-
-      try {
-        const { TradeStoreService } = await import("../indexer/tradeStore");
-        const supabaseTokens = await TradeStoreService.getInstance().getAllTokens();
-        for (const st of supabaseTokens) {
-          const mintLower = st.mint.toLowerCase();
-          metadataCache.set(st.mint, {
-            name: st.name,
-            symbol: st.symbol,
-            description: st.description || "",
-            avatarUrl: st.avatar_url || "",
-          });
-
-          if (!tokenMap.has(mintLower)) {
-            const matchedEquity =
-              VERIFIED_TESSERA_PRE_IPO_ASSETS.find(
-                (e) => e.symbol.toLowerCase() === (st.target_equity_symbol || "").toLowerCase()
-              ) || VERIFIED_TESSERA_PRE_IPO_ASSETS[0];
-
-            tokenMap.set(mintLower, {
-              mint: st.mint,
-              name: st.name,
-              symbol: st.symbol,
-              description: st.description || `Culture coin backed by ${matchedEquity.name} tokenized equity.`,
-              avatarUrl: st.avatar_url || matchedEquity.logoUrl,
-              creator: st.creator || "",
-              createdAt: st.is_graduated ? "Graduated" : "Active Curve",
-              marketCapUsd: 28_000,
-              priceUsd: 0.000028,
-              priceChange24h: 0.0,
-              volume24hUsd: 0,
-              targetEquity: {
-                ...matchedEquity,
-                stockPriceUsd: matchedEquity.currentStockPriceUsd,
-              },
-              bondingCurve: {
-                realQuoteReservesUsd: 0,
-                graduationThresholdUsd: 60_000,
-                progressPct: 0,
-                virtualQuoteReserves: "30000000000",
-                virtualTokenReserves: "1073000000000000",
-                realTokenReserves: "800000000000000",
-                isGraduated: Boolean(st.is_graduated),
-                meteoraPoolAddress: st.meteora_pool || "",
-                dynamicFeeBps: 20,
-                equityPurchaseBudgetUsd: 30_000,
-                ammLiquidityBudgetUsd: 30_000,
-              },
-              treasury: {
-                totalEquityLocked: 0,
-                totalEquityValueUsd: 0,
-                vaultPda: "",
-                proofOfReserveVerified: true,
-              },
-            });
-          }
-        }
-      } catch (err) {
-        console.warn("[SolanaTokenService] Failed to load tokens from Supabase:", err);
+      // 2. Server-side: fetch directly via getLiveTokens() (no mock data)
+      const { getLiveTokens } = await import("../tokens/liveTokens");
+      const liveTokens = await getLiveTokens();
+      for (const t of liveTokens) {
+        metadataCache.set(t.mint, {
+          name: t.name,
+          symbol: t.symbol,
+          description: t.description,
+          avatarUrl: t.avatarUrl,
+        });
       }
-
-      return Array.from(tokenMap.values());
+      return liveTokens;
     } catch (err) {
       console.warn("Could not load tokens:", err);
       return [];

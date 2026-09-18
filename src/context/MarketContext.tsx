@@ -37,10 +37,47 @@ interface MarketContextType {
 
 const MarketContext = createContext<MarketContextType | undefined>(undefined);
 
-export function MarketProvider({ children }: { children: ReactNode }) {
+const TOKENS_CACHE_KEY = "streetfun_tokens_v2";
+
+interface MarketProviderProps {
+  children: ReactNode;
+  initialTokens?: TokenMetadata[];
+}
+
+export function MarketProvider({ children, initialTokens = [] }: MarketProviderProps) {
   const isMock = isMockMode();
-  const [tokens, setTokens] = useState<TokenMetadata[]>(isMock ? INITIAL_TOKENS : []);
-  const [loading, setLoading] = useState(!isMock);
+
+  // Instant hydration: SSR tokens -> localStorage cache -> empty
+  const [tokens, setTokens] = useState<TokenMetadata[]>(() => {
+    if (isMock) return INITIAL_TOKENS;
+    if (initialTokens && initialTokens.length > 0) return initialTokens;
+    if (typeof window !== "undefined") {
+      try {
+        const cached = localStorage.getItem(TOKENS_CACHE_KEY);
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        }
+      } catch (_e) {}
+    }
+    return [];
+  });
+
+  const [loading, setLoading] = useState(() => {
+    if (isMock) return false;
+    if (initialTokens && initialTokens.length > 0) return false;
+    if (typeof window !== "undefined") {
+      try {
+        const cached = localStorage.getItem(TOKENS_CACHE_KEY);
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          if (Array.isArray(parsed) && parsed.length > 0) return false;
+        }
+      } catch (_e) {}
+    }
+    return true;
+  });
+
   const wallet = useWallet();
   const [devWalletConnected, setDevWalletConnected] = useState(false);
   const isFetchingRef = React.useRef(false);
@@ -64,6 +101,11 @@ export function MarketProvider({ children }: { children: ReactNode }) {
       const list = await tokenService.getTokens();
       if (list && list.length > 0) {
         setTokens(list);
+        if (typeof window !== "undefined") {
+          try {
+            localStorage.setItem(TOKENS_CACHE_KEY, JSON.stringify(list));
+          } catch (_e) {}
+        }
       }
     } catch (err) {
       console.error("Failed to fetch tokens:", err);
@@ -75,8 +117,29 @@ export function MarketProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     refreshTokens();
-    const interval = setInterval(refreshTokens, 5000);
-    return () => clearInterval(interval);
+
+    // Only poll when tab is active and visible to prevent wasted egress
+    const interval = setInterval(() => {
+      if (typeof document !== "undefined" && document.visibilityState === "visible") {
+        refreshTokens();
+      }
+    }, 4000);
+
+    // Immediately revalidate when user switches back to this tab
+    const handleVisibilityOrFocus = () => {
+      if (typeof document !== "undefined" && document.visibilityState === "visible") {
+        refreshTokens();
+      }
+    };
+
+    window.addEventListener("focus", handleVisibilityOrFocus);
+    document.addEventListener("visibilitychange", handleVisibilityOrFocus);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener("focus", handleVisibilityOrFocus);
+      document.removeEventListener("visibilitychange", handleVisibilityOrFocus);
+    };
   }, [refreshTokens]);
 
   const getToken = useCallback(
