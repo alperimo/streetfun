@@ -38,10 +38,10 @@ export const INITIAL_VIRTUAL_QUOTE = new BN(30_000 * 1_000_000); // 30,000 USDC
 export const INITIAL_VIRTUAL_TOKENS = new BN("1073000000000000"); // 1.073B tokens
 export const TOTAL_MEME_SUPPLY = new BN("1000000000000000"); // 1 Billion (6 decimals)
 
-export function loadProgram(provider: anchor.AnchorProvider): Program<any> {
+export function loadProgram(provider: anchor.AnchorProvider): any {
   const idlPath = path.resolve(process.cwd(), "target/idl/streetfun.json");
   const idl = JSON.parse(fs.readFileSync(idlPath, "utf8"));
-  return new anchor.Program(idl, provider);
+  return new anchor.Program(idl, provider) as any;
 }
 
 export function createProvider(walletKeypair?: Keypair): anchor.AnchorProvider {
