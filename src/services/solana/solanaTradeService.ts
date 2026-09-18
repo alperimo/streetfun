@@ -87,11 +87,34 @@ export class SolanaTradeService implements ITradeService {
         const tokensOut = Number(sim.tokensOut) / 1_000_000;
         const newReserves = curve.realQuoteReservesUsd + params.amount;
         curve.realQuoteReservesUsd = newReserves;
+        const willGraduate = newReserves >= curve.graduationThresholdUsd;
         curve.progressPct = Math.min(
           100,
           Math.round((newReserves / curve.graduationThresholdUsd) * 100)
         );
+
+        if (willGraduate) {
+          curve.isGraduated = true;
+          curve.progressPct = 100;
+          token.treasury.totalEquityLocked = 30_000 / (token.targetEquity.stockPriceUsd || 200);
+          token.treasury.totalEquityValueUsd = 30_000;
+        }
         token.bondingCurve = curve;
+
+        // Persist updated token to local storage if custom
+        if (typeof window !== "undefined") {
+          try {
+            const stored = localStorage.getItem("streetfun_custom_tokens");
+            if (stored) {
+              const list = JSON.parse(stored);
+              const idx = list.findIndex((t: any) => t.mint.toLowerCase() === token.mint.toLowerCase());
+              if (idx >= 0) {
+                list[idx] = token;
+                localStorage.setItem("streetfun_custom_tokens", JSON.stringify(list));
+              }
+            }
+          } catch (_e) {}
+        }
 
         await TradeStoreService.getInstance().recordTrade({
           tx_signature: `curve_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
@@ -110,8 +133,10 @@ export class SolanaTradeService implements ITradeService {
           quoteAmount: params.amount,
           effectivePrice: sim.effectivePriceUsd,
           priceImpactPct: sim.priceImpactPct,
-          isGraduated: curve.realQuoteReservesUsd >= curve.graduationThresholdUsd,
-          message: `On-Chain curve trade confirmed! Bought ${tokensOut.toFixed(2)} $${token.symbol}`,
+          isGraduated: willGraduate,
+          message: willGraduate
+            ? `🎓 Curve Graduated! 60K threshold hit: 30K Pre-IPO equity locked + 30K AMM liquidity seeded.`
+            : `On-Chain curve trade confirmed! Bought ${tokensOut.toFixed(2)} $${token.symbol}`,
           updatedToken: token,
         };
       } else {

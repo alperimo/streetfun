@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import Image from "next/image";
 import { X, Rocket, ShieldCheck, Info } from "lucide-react";
 import { VERIFIED_TOKENIZED_EQUITIES } from "@/sdk/constants";
+import { useRouter } from "next/navigation";
 import { TokenMetadata } from "@/lib/types";
 import { useMarket } from "@/context/MarketContext";
 
@@ -18,6 +19,7 @@ export function LaunchModal({
   onClose,
   onTokenCreated,
 }: LaunchModalProps) {
+  const router = useRouter();
   const { launchToken } = useMarket();
   const [name, setName] = useState("");
   const [symbol, setSymbol] = useState("");
@@ -63,6 +65,7 @@ export function LaunchModal({
         onTokenCreated(newToken);
       }
       onClose();
+      router.push(`/token/${newToken.mint}`);
     } catch (err) {
       console.error("Failed to launch token:", err);
     } finally {

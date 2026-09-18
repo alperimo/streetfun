@@ -66,6 +66,11 @@ export default function MarketsPage() {
       })
       .sort((a, b) => {
         if (sortBy === "mcap") return b.marketCapUsd - a.marketCapUsd;
+        if (sortBy === "newest") {
+          if (a.createdAt === "Just now") return -1;
+          if (b.createdAt === "Just now") return 1;
+          return 0;
+        }
         if (sortBy === "volume") return b.volume24hUsd - a.volume24hUsd;
         if (sortBy === "progress")
           return b.bondingCurve.progressPct - a.bondingCurve.progressPct;

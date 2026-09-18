@@ -46,6 +46,21 @@ export class SolanaRedeemService implements IRedeemService {
     treasury.totalEquityValueUsd = Math.max(0, treasury.totalEquityValueUsd - usdcValue);
     token.treasury = treasury;
 
+    // Persist updated token to local storage if custom
+    if (typeof window !== "undefined") {
+      try {
+        const stored = localStorage.getItem("streetfun_custom_tokens");
+        if (stored) {
+          const list = JSON.parse(stored);
+          const idx = list.findIndex((t: any) => t.mint.toLowerCase() === token.mint.toLowerCase());
+          if (idx >= 0) {
+            list[idx] = token;
+            localStorage.setItem("streetfun_custom_tokens", JSON.stringify(list));
+          }
+        }
+      } catch (_e) {}
+    }
+
     const message =
       params.actionType === "stock"
         ? `Burned ${params.memeAmount.toLocaleString()} $${token.symbol} on Solana! Transferred ${entitledShares.toFixed(4)} shares of ${token.targetEquity.symbol} to ${walletPublicKey.toBase58().slice(0, 4)}..${walletPublicKey.toBase58().slice(-4)}`
