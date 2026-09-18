@@ -43,122 +43,105 @@ export class SolanaTokenService implements ITokenService {
 
   async getTokens(): Promise<TokenMetadata[]> {
     try {
-      const program = this.getProgram();
-      const onChainCurves = await (program.account as any).curveAccount.all();
-
-      // Start with our curated initial tokens
-      const tokenMap = new Map<string, TokenMetadata>();
-      for (const t of INITIAL_TOKENS) {
-        tokenMap.set(t.mint.toLowerCase(), { ...t });
-      }
-
-      // Check browser localStorage for custom launched tokens if available
+      // 1. Client-side: fetch directly from /api/tokens for instant, unified cross-browser loading
       if (typeof window !== "undefined") {
         try {
-          const stored = localStorage.getItem("streetfun_custom_tokens");
-          if (stored) {
-            const parsed: TokenMetadata[] = JSON.parse(stored);
-            for (const pt of parsed) {
-              tokenMap.set(pt.mint.toLowerCase(), pt);
-              metadataCache.set(pt.mint, {
-                name: pt.name,
-                symbol: pt.symbol,
-                description: pt.description,
-                avatarUrl: pt.avatarUrl,
-              });
+          const res = await fetch("/api/tokens");
+          if (res.ok) {
+            const data = await res.json();
+            if (data.tokens && Array.isArray(data.tokens) && data.tokens.length > 0) {
+              for (const t of data.tokens) {
+                metadataCache.set(t.mint, {
+                  name: t.name,
+                  symbol: t.symbol,
+                  description: t.description,
+                  avatarUrl: t.avatarUrl,
+                });
+              }
+              return data.tokens;
             }
           }
-        } catch (_e) {}
-      }
-
-      // If we have on-chain curves, sync them with known or cached tokens
-      if (onChainCurves && onChainCurves.length > 0) {
-        for (const curve of onChainCurves) {
-          const acc = curve.account;
-          const memeMintStr = acc.memeMint.toBase58();
-          const mintLower = memeMintStr.toLowerCase();
-          const targetEquityMintStr = acc.targetEquityMint.toBase58();
-
-          const matchedEquity =
-            VERIFIED_TESSERA_PRE_IPO_ASSETS.find(
-              (e) => e.mintAddress.toLowerCase() === targetEquityMintStr.toLowerCase()
-            ) || VERIFIED_TESSERA_PRE_IPO_ASSETS[0];
-
-          const cached = metadataCache.get(memeMintStr);
-          const existing = tokenMap.get(mintLower);
-
-          // If this curve is neither a known token nor a cached/launched token, skip it
-          // so anonymous test accounts do not clutter the discovery feed with dummy tickers
-          if (!cached && !existing) {
-            continue;
-          }
-
-          const realQuoteUsd = acc.realQuoteReserves.toNumber() / 1_000_000;
-          const realTokensNum = Number(acc.realTokenReserves.toString()) / 1_000_000;
-          const totalEquityLockedNum = acc.totalEquityLocked.toNumber() / 1_000_000;
-          const isGraduated = acc.isGraduated;
-
-          // Dynamic bonding curve spot price
-          const vQuote = acc.virtualQuoteReserves.toNumber() / 1_000_000;
-          const vTokens = Number(acc.virtualTokenReserves.toString()) / 1_000_000;
-          const totalSold = Math.max(0, 800_000_000 - realTokensNum);
-          const currentTokenReserve = Math.max(1, vTokens - totalSold);
-          const spotPrice = isGraduated
-            ? (existing?.priceUsd || 0.000085)
-            : Math.max(0.00003, (vQuote + realQuoteUsd) / currentTokenReserve);
-          const marketCap = spotPrice * 1_000_000_000;
-
-          const equityValueUsd = totalEquityLockedNum * matchedEquity.currentStockPriceUsd;
-          const [treasuryVaultPda] = getTreasuryVaultPda(curve.publicKey, PROGRAM_ID);
-
-          const name = cached?.name || existing?.name || `${matchedEquity.name} Stonk`;
-          const symbol = cached?.symbol || existing?.symbol || "STONK";
-          const description = cached?.description || existing?.description || "";
-          const avatarUrl = cached?.avatarUrl || existing?.avatarUrl || matchedEquity.logoUrl;
-
-          tokenMap.set(mintLower, {
-            mint: memeMintStr,
-            name,
-            symbol,
-            description,
-            avatarUrl,
-            creator: acc.creator.toBase58(),
-            createdAt: isGraduated ? "Graduated" : (existing?.createdAt || "Active Curve"),
-            marketCapUsd: Math.round(marketCap),
-            priceUsd: Number(spotPrice.toFixed(6)),
-            priceChange24h: existing?.priceChange24h || (realQuoteUsd > 0 ? 12.5 : 0.0),
-            volume24hUsd: Math.round(realQuoteUsd * 1.5),
-            targetEquity: {
-              ...matchedEquity,
-              stockPriceUsd: matchedEquity.currentStockPriceUsd,
-            },
-            bondingCurve: {
-              realQuoteReservesUsd: realQuoteUsd,
-              graduationThresholdUsd: 60_000,
-              progressPct: Math.min(100, Math.round((realQuoteUsd / 60_000) * 100)),
-              virtualQuoteReserves: acc.virtualQuoteReserves.toString(),
-              virtualTokenReserves: acc.virtualTokenReserves.toString(),
-              realTokenReserves: acc.realTokenReserves.toString(),
-              isGraduated,
-              meteoraPoolAddress: `METdbc${symbol.slice(0, 4)}Pool`,
-              dynamicFeeBps: 20,
-              equityPurchaseBudgetUsd: 30_000,
-              ammLiquidityBudgetUsd: 30_000,
-            },
-            treasury: {
-              totalEquityLocked: totalEquityLockedNum,
-              totalEquityValueUsd: equityValueUsd,
-              vaultPda: treasuryVaultPda.toBase58(),
-              proofOfReserveVerified: true,
-            },
-          });
+        } catch (e) {
+          console.warn("[SolanaTokenService] Failed to fetch /api/tokens, falling back to local merge:", e);
         }
       }
 
-      const tokenList = Array.from(tokenMap.values());
-      return tokenList.sort((a, b) => b.bondingCurve.realQuoteReservesUsd - a.bondingCurve.realQuoteReservesUsd);
+      // 2. Server-side or direct fallback
+      const tokenMap = new Map<string, TokenMetadata>();
+
+      for (const t of INITIAL_TOKENS) {
+        tokenMap.set(t.mint.toLowerCase(), { ...t });
+        metadataCache.set(t.mint, {
+          name: t.name,
+          symbol: t.symbol,
+          description: t.description,
+          avatarUrl: t.avatarUrl,
+        });
+      }
+
+      try {
+        const { TradeStoreService } = await import("../indexer/tradeStore");
+        const supabaseTokens = await TradeStoreService.getInstance().getAllTokens();
+        for (const st of supabaseTokens) {
+          const mintLower = st.mint.toLowerCase();
+          metadataCache.set(st.mint, {
+            name: st.name,
+            symbol: st.symbol,
+            description: st.description || "",
+            avatarUrl: st.avatar_url || "",
+          });
+
+          if (!tokenMap.has(mintLower)) {
+            const matchedEquity =
+              VERIFIED_TESSERA_PRE_IPO_ASSETS.find(
+                (e) => e.symbol.toLowerCase() === (st.target_equity_symbol || "").toLowerCase()
+              ) || VERIFIED_TESSERA_PRE_IPO_ASSETS[0];
+
+            tokenMap.set(mintLower, {
+              mint: st.mint,
+              name: st.name,
+              symbol: st.symbol,
+              description: st.description || `Culture coin backed by ${matchedEquity.name} tokenized equity.`,
+              avatarUrl: st.avatar_url || matchedEquity.logoUrl,
+              creator: st.creator || "519jca26LioEQiPhwoHCkC8mNZiCF7cDmtaXdp98iCv2",
+              createdAt: st.is_graduated ? "Graduated" : "Active Curve",
+              marketCapUsd: 28_000,
+              priceUsd: 0.000028,
+              priceChange24h: 0.0,
+              volume24hUsd: 0,
+              targetEquity: {
+                ...matchedEquity,
+                stockPriceUsd: matchedEquity.currentStockPriceUsd,
+              },
+              bondingCurve: {
+                realQuoteReservesUsd: 0,
+                graduationThresholdUsd: 60_000,
+                progressPct: 0,
+                virtualQuoteReserves: "30000000000",
+                virtualTokenReserves: "1073000000000000",
+                realTokenReserves: "800000000000000",
+                isGraduated: Boolean(st.is_graduated),
+                meteoraPoolAddress: st.meteora_pool || `METdbc${st.symbol}Pool`,
+                dynamicFeeBps: 20,
+                equityPurchaseBudgetUsd: 30_000,
+                ammLiquidityBudgetUsd: 30_000,
+              },
+              treasury: {
+                totalEquityLocked: 0,
+                totalEquityValueUsd: 0,
+                vaultPda: "",
+                proofOfReserveVerified: true,
+              },
+            });
+          }
+        }
+      } catch (err) {
+        console.warn("[SolanaTokenService] Failed to load tokens from Supabase:", err);
+      }
+
+      return Array.from(tokenMap.values());
     } catch (err) {
-      console.warn("Could not query Solana on-chain curves, falling back to initial tokens:", err);
+      console.warn("Could not load tokens:", err);
       return INITIAL_TOKENS;
     }
   }

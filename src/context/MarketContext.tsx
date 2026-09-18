@@ -39,10 +39,11 @@ const MarketContext = createContext<MarketContextType | undefined>(undefined);
 
 export function MarketProvider({ children }: { children: ReactNode }) {
   const isMock = isMockMode();
-  const [tokens, setTokens] = useState<TokenMetadata[]>(isMock ? INITIAL_TOKENS : []);
-  const [loading, setLoading] = useState(true);
+  const [tokens, setTokens] = useState<TokenMetadata[]>(INITIAL_TOKENS);
+  const [loading, setLoading] = useState(false);
   const wallet = useWallet();
   const [devWalletConnected, setDevWalletConnected] = useState(false);
+  const isFetchingRef = React.useRef(false);
 
   const isWalletConnected = wallet.connected || devWalletConnected;
   const activePublicKey = wallet.publicKey || (devWalletConnected ? LOCAL_DEV_PUBKEY : null);
@@ -56,43 +57,25 @@ export function MarketProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const refreshTokens = useCallback(async () => {
+    if (isFetchingRef.current) return;
+    isFetchingRef.current = true;
     try {
       const tokenService = getTokenService();
       const list = await tokenService.getTokens();
-
-      // Fetch dynamic prices and market caps from real trades/indexer
-      try {
-        const res = await fetch("/api/trades/latest");
-        if (res.ok) {
-          const data = await res.json();
-          if (data.prices) {
-            for (const token of list) {
-              const latest =
-                data.prices[token.mint] ||
-                data.prices[token.mint.toLowerCase()] ||
-                data.prices[token.mint.toUpperCase()];
-              if (latest && latest.priceUsd) {
-                token.priceUsd = latest.priceUsd;
-                token.marketCapUsd = latest.marketCapUsd;
-              }
-            }
-          }
-        }
-      } catch (_e) {
-        // Fallback to token service list
+      if (list && list.length > 0) {
+        setTokens(list);
       }
-
-      setTokens([...list]);
     } catch (err) {
       console.error("Failed to fetch tokens:", err);
     } finally {
       setLoading(false);
+      isFetchingRef.current = false;
     }
   }, []);
 
   useEffect(() => {
     refreshTokens();
-    const interval = setInterval(refreshTokens, 4000);
+    const interval = setInterval(refreshTokens, 5000);
     return () => clearInterval(interval);
   }, [refreshTokens]);
 

@@ -32,7 +32,11 @@ export interface TokenRecord {
 const localTradesStore: TradeRecord[] = [];
 const localTokensStore: Map<string, TokenRecord> = new Map();
 
+let cachedSupabaseClient: any = null;
+
 function getSupabaseClient() {
+  if (cachedSupabaseClient) return cachedSupabaseClient;
+
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   // Modern Supabase: SUPABASE_SECRET_KEY (server) & NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY (client)
   // Backward compatibility: SUPABASE_SERVICE_ROLE_KEY & NEXT_PUBLIC_SUPABASE_ANON_KEY
@@ -43,13 +47,20 @@ function getSupabaseClient() {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
   if (url && key) {
-    return createClient(url, key);
+    cachedSupabaseClient = createClient(url, key, {
+      auth: { persistSession: false },
+    });
+    return cachedSupabaseClient;
   }
   return null;
 }
 
 export class TradeStoreService {
   private static instance: TradeStoreService;
+  private cachedTokens: TokenRecord[] | null = null;
+  private lastTokensFetch = 0;
+  private cachedPrices: Record<string, { priceUsd: number; marketCapUsd: number }> | null = null;
+  private lastPricesFetch = 0;
 
   public static getInstance(): TradeStoreService {
     if (!TradeStoreService.instance) {
@@ -121,6 +132,7 @@ export class TradeStoreService {
 
     // Always keep in local store for rapid UI response
     localTradesStore.unshift(tradeWithTime);
+    this.cachedPrices = null;
   }
 
   async recordToken(token: TokenRecord): Promise<void> {
@@ -143,9 +155,66 @@ export class TradeStoreService {
       await supabase.from("tokens").upsert(token);
     }
     localTokensStore.set(token.mint.toLowerCase(), token);
+    this.cachedTokens = null;
+  }
+
+  async getAllTokens(): Promise<TokenRecord[]> {
+    const now = Date.now();
+    if (this.cachedTokens && now - this.lastTokensFetch < 3000) {
+      return this.cachedTokens;
+    }
+
+    const tokensMap = new Map<string, TokenRecord>();
+
+    // 1. Query Supabase tokens table
+    const supabase = getSupabaseClient();
+    if (supabase) {
+      try {
+        const { data, error } = await supabase
+          .from("tokens")
+          .select("*")
+          .order("created_at", { ascending: false });
+
+        if (!error && data) {
+          for (const item of data) {
+            tokensMap.set(item.mint.toLowerCase(), {
+              mint: item.mint,
+              name: item.name,
+              symbol: item.symbol,
+              target_equity_symbol: item.target_equity_symbol || "$TSPACEX",
+              target_equity_mint: item.target_equity_mint || "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+              creator: item.creator || "",
+              description: item.description || "",
+              avatar_url: item.avatar_url || "",
+              is_graduated: Boolean(item.is_graduated),
+              meteora_pool: item.meteora_pool || "",
+            });
+          }
+        }
+      } catch (err) {
+        console.warn("[TradeStore] Failed to fetch tokens from supabase:", err);
+      }
+    }
+
+    // 2. Merge local tokens store
+    for (const [mintLower, token] of localTokensStore.entries()) {
+      if (!tokensMap.has(mintLower)) {
+        tokensMap.set(mintLower, token);
+      }
+    }
+
+    const result = Array.from(tokensMap.values());
+    this.cachedTokens = result;
+    this.lastTokensFetch = Date.now();
+    return result;
   }
 
   async getLatestPrices(): Promise<Record<string, { priceUsd: number; marketCapUsd: number }>> {
+    const now = Date.now();
+    if (this.cachedPrices && now - this.lastPricesFetch < 3000) {
+      return this.cachedPrices;
+    }
+
     const prices: Record<string, { priceUsd: number; marketCapUsd: number }> = {};
     const supabase = getSupabaseClient();
     if (supabase) {
@@ -183,6 +252,8 @@ export class TradeStoreService {
       }
     }
 
+    this.cachedPrices = prices;
+    this.lastPricesFetch = Date.now();
     return prices;
   }
 
