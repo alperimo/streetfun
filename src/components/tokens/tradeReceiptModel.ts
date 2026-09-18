@@ -11,11 +11,10 @@ export interface TradeReceiptData {
   signature?: string;
 }
 
-export const receiptLabel = (kind: TradeReceiptData["kind"]) =>
-  kind === "preview" ? "Design preview" : kind === "demo" ? "Demo receipt" : "Trade result";
+export const receiptLabel = (_kind: TradeReceiptData["kind"]) => "Receipt";
 export const receiptNote = (kind: TradeReceiptData["kind"]) =>
   kind === "preview" ? "Illustrative amounts. No transaction submitted." : kind === "demo"
-    ? "Simulation only. No on-chain transaction." : "Service-reported result. Confirmation not verified.";
+    ? "" : "Service-reported result. Confirmation not verified.";
 export const receiptAmount = (value: number) => value.toLocaleString("en-US", { maximumFractionDigits: 6 });
 const valid = (...values: number[]) => values.every(value => Number.isFinite(value) && value > 0);
 const identity = ({ name, symbol, mint, avatarUrl }: TokenMetadata) => ({ name, symbol, mint, avatarUrl });

@@ -33,7 +33,7 @@ export function TradeReceipt({ data, onDismiss }: { data: TradeReceiptData; onDi
           <span className="text-xs font-bold tracking-tight text-foreground">StreetFun<span className="text-brand-cyan"> /</span></span>
           <button type="button" onClick={onDismiss} aria-label="Dismiss receipt" className="rounded p-1 text-muted hover:text-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-cyan"><X aria-hidden="true" className="h-3.5 w-3.5" /></button>
         </div>
-        <p role="status" className="receipt-accent mt-4 text-[9px] font-semibold uppercase tracking-[0.22em]">{receiptLabel(data.kind)} · {data.operation}</p>
+        <p role="status" className="receipt-accent mt-4 text-[9px] font-semibold uppercase tracking-[0.22em]">{receiptLabel(data.kind)}</p>
         <div className="mt-2 flex items-center gap-3">
           <Image src={data.token.avatarUrl} alt="" width={36} height={36} className="h-9 w-9 rounded-full border border-border" />
           <div className="min-w-0"><h3 className="receipt-title text-2xl font-black tracking-tight text-foreground">${data.token.symbol}</h3><p className="truncate text-[11px] text-muted">{data.token.name}</p></div>
@@ -45,7 +45,7 @@ export function TradeReceipt({ data, onDismiss }: { data: TradeReceiptData; onDi
         </div>
         <p className="mt-3 font-mono text-[9px] text-muted">{new Date(data.timestamp).toISOString().replace("T", " ").slice(0, 19)} UTC</p>
         {data.signature && <p className="mt-1 break-all font-mono text-[9px] text-muted">Signature: {data.signature}</p>}
-        <p className="mt-2 text-[10px] leading-relaxed text-muted">{receiptNote(data.kind)}</p>
+        {receiptNote(data.kind) && <p className="mt-2 text-[10px] leading-relaxed text-muted">{receiptNote(data.kind)}</p>}
         <button type="button" onClick={download} className="mt-4 flex w-full items-center justify-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-[11px] font-medium text-foreground hover:border-border-active hover:bg-card-hover focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-cyan"><Download aria-hidden="true" className="h-3.5 w-3.5" />Save receipt</button>
         {downloadError && <p role="alert" className="mt-2 text-xs text-brand-rose">Could not save the receipt. Please try again.</p>}
       </div>

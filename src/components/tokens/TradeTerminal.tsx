@@ -1,9 +1,9 @@
 "use client";
 
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, useRef } from "react";
 import Image from "next/image";
 import { useWallet } from "@solana/wallet-adapter-react";
-import { Settings, AlertCircle, Check } from "lucide-react";
+import { Settings, AlertCircle, Check, TrendingUp } from "lucide-react";
 import { TokenMetadata } from "@/lib/types";
 import { simulateBuyTokensOut, simulateSellQuoteOut } from "@/sdk/math";
 import { useMarket } from "@/context/MarketContext";
@@ -29,6 +29,14 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
   const [tradeSuccessMsg, setTradeSuccessMsg] = useState<string | null>(null);
   const [tradeErrorMsg, setTradeErrorMsg] = useState<string | null>(null);
   const [redeemActionType, setRedeemActionType] = useState<"stock" | "usdc">("stock");
+  const [buyAnimation, setBuyAnimation] = useState<"idle" | "success">("idle");
+  const buyAnimationTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (buyAnimationTimer.current) clearTimeout(buyAnimationTimer.current);
+    };
+  }, []);
 
   const virtualQuote = BigInt(token.bondingCurve.virtualQuoteReserves);
   const virtualTokens = BigInt(token.bondingCurve.virtualTokenReserves);
@@ -72,7 +80,9 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
 
   const handleExecuteTrade = async () => {
     if (!connected) return;
+    const submittedMode = tradeMode;
     setIsTrading(true);
+    setBuyAnimation("idle");
     setTradeErrorMsg(null);
     setReceipt(null);
 
@@ -105,6 +115,11 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
           setReceipt(receiptFromTrade(token, tradeMode, res, isMock));
           setTradeSuccessMsg(res.message);
           setAmount("");
+          if (submittedMode === "buy") {
+            setBuyAnimation("success");
+            if (buyAnimationTimer.current) clearTimeout(buyAnimationTimer.current);
+            buyAnimationTimer.current = setTimeout(() => setBuyAnimation("idle"), 1800);
+          }
           if (onTradeSuccess) onTradeSuccess();
         } else {
           setTradeErrorMsg(res.message || "Trade failed");
@@ -119,7 +134,11 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
   };
 
   return (
-    <div className="rounded-xl border border-border bg-card p-5 shadow-sm">
+    <div
+      className={`trade-terminal rounded-xl border border-border bg-card p-5 shadow-sm ${
+        buyAnimation === "success" ? "trade-terminal-buy-success" : ""
+      }`}
+    >
       {/* 3-Tab Switch: Buy / Sell / Redeem Stock */}
       <div className="flex items-center justify-between border-b border-border pb-3">
         <div className="flex items-center gap-1 rounded-lg bg-card-subtle p-1 border border-border/80">
@@ -482,14 +501,6 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
             </div>
           )}
 
-          {/* Success Notification */}
-          {tradeSuccessMsg && (
-            <div className="mt-3 flex items-center gap-2 rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-2.5 text-xs text-emerald-400">
-              <Check className="h-4 w-4 flex-shrink-0" />
-              <span>{tradeSuccessMsg}</span>
-            </div>
-          )}
-
           {/* Trade Error Notification */}
           {tradeErrorMsg && (
             <div className="mt-3 flex items-center gap-2 rounded-lg border border-rose-500/30 bg-rose-500/10 p-2.5 text-xs text-rose-400">
@@ -501,22 +512,32 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
           {/* Action Button */}
           <button
             onClick={handleExecuteTrade}
-            disabled={!amount || isTrading || Boolean(simulation && "error" in simulation)}
-            className={`mt-4 w-full rounded-lg py-3 text-sm font-bold transition-colors shadow-xs disabled:opacity-50 ${
+            disabled={!amount || isTrading || buyAnimation === "success" || Boolean(simulation && "error" in simulation)}
+            data-buy-state={tradeMode === "buy" ? (isTrading ? "confirming" : buyAnimation) : undefined}
+            className={`trade-action-button relative mt-4 w-full overflow-visible rounded-lg py-3 text-sm font-bold transition-colors shadow-xs disabled:opacity-50 ${
               !connected
                 ? "bg-brand-cyan hover:bg-brand-cyan-hover text-background font-semibold"
                 : tradeMode === "buy"
-                ? "bg-emerald-500 hover:bg-emerald-600 text-white"
+                ? "buy-action bg-brand-cyan hover:bg-brand-cyan-hover text-background"
                 : "bg-rose-500 hover:bg-rose-600 text-white"
             }`}
           >
-            {isTrading
-              ? "Confirming on Solana..."
+            {tradeMode === "buy" && connected && (
+              <span className="buy-particles pointer-events-none absolute inset-0" aria-hidden="true">
+                {Array.from({ length: 7 }).map((_, index) => <span key={index} />)}
+              </span>
+            )}
+            <span className="relative z-10 inline-flex items-center justify-center gap-2">
+            {buyAnimation === "success" && tradeMode === "buy"
+              ? <><span className="buy-success-check inline-flex h-5 w-5 items-center justify-center rounded-full border border-background/30"><Check className="h-3.5 w-3.5" strokeWidth={3} /></span>Order filled</>
+              : isTrading
+              ? <><span className="buy-confirming-icon inline-flex h-4 w-4 items-center justify-center"><TrendingUp className="h-4 w-4" /></span>Confirming on Solana...</>
               : !connected
               ? "Connect Wallet to Trade"
               : tradeMode === "buy"
               ? `Buy $${token.symbol}`
               : `Sell $${token.symbol}`}
+            </span>
           </button>
         </>
       )}

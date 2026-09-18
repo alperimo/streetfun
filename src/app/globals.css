@@ -312,3 +312,132 @@ input[type="number"] {
   .receipt-leg > p:nth-child(2) { margin: 0; }
   .receipt-leg > p:nth-child(3) { grid-column: 2; text-align: right; }
 }
+
+/* Buy feedback: momentum while confirming, then a compact filled-order burst. */
+.trade-terminal {
+  transition: border-color 180ms ease, box-shadow 180ms ease;
+}
+
+.buy-action {
+  isolation: isolate;
+  box-shadow: 0 0 0 0 var(--brand-cyan-border);
+}
+
+.buy-action::before {
+  position: absolute;
+  inset: 1px;
+  z-index: 0;
+  border-radius: calc(0.5rem - 1px);
+  background: linear-gradient(105deg, transparent 25%, var(--brand-cyan-text) 50%, transparent 75%);
+  background-position: 120% 0;
+  background-size: 250% 100%;
+  content: "";
+  opacity: 0;
+  pointer-events: none;
+}
+
+.buy-action[data-buy-state="confirming"] {
+  opacity: 1;
+  animation: buy-confirming-pulse 900ms ease-in-out infinite;
+}
+
+.buy-action[data-buy-state="confirming"]::before {
+  animation: buy-confirming-sweep 1150ms ease-in-out infinite;
+  opacity: 0.22;
+}
+
+.buy-confirming-icon {
+  animation: buy-trend-lift 700ms ease-in-out infinite alternate;
+}
+
+.trade-terminal-buy-success {
+  border-color: var(--brand-cyan-border);
+  animation: buy-terminal-settle 900ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.buy-action[data-buy-state="success"] {
+  opacity: 1;
+  animation: buy-button-filled 520ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.buy-success-check {
+  animation: buy-check-pop 420ms 80ms cubic-bezier(0.2, 1.6, 0.4, 1) both;
+}
+
+.buy-particles > span {
+  position: absolute;
+  bottom: 50%;
+  left: 50%;
+  width: 5px;
+  height: 5px;
+  border-radius: 999px;
+  background: var(--brand-cyan);
+  opacity: 0;
+}
+
+.buy-action[data-buy-state="success"] .buy-particles > span {
+  animation: buy-particle-rise 720ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+.buy-particles > span:nth-child(1) { --buy-particle-x: -108px; --buy-particle-y: -34px; animation-delay: 20ms !important; }
+.buy-particles > span:nth-child(2) { --buy-particle-x: -72px; --buy-particle-y: -48px; animation-delay: 80ms !important; }
+.buy-particles > span:nth-child(3) { --buy-particle-x: -34px; --buy-particle-y: -38px; animation-delay: 35ms !important; }
+.buy-particles > span:nth-child(4) { --buy-particle-x: 8px; --buy-particle-y: -52px; animation-delay: 110ms !important; }
+.buy-particles > span:nth-child(5) { --buy-particle-x: 46px; --buy-particle-y: -36px; animation-delay: 55ms !important; }
+.buy-particles > span:nth-child(6) { --buy-particle-x: 82px; --buy-particle-y: -46px; animation-delay: 130ms !important; }
+.buy-particles > span:nth-child(7) { --buy-particle-x: 112px; --buy-particle-y: -30px; animation-delay: 10ms !important; }
+
+@keyframes buy-confirming-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 var(--brand-cyan-border); }
+  50% { box-shadow: 0 0 0 5px transparent; }
+}
+
+@keyframes buy-confirming-sweep {
+  from { background-position: 120% 0; }
+  to { background-position: -20% 0; }
+}
+
+@keyframes buy-trend-lift {
+  from { transform: translate(-1px, 1px); }
+  to { transform: translate(1px, -1px); }
+}
+
+@keyframes buy-terminal-settle {
+  0% { box-shadow: 0 0 0 0 var(--brand-cyan-border); }
+  35% { box-shadow: 0 0 0 4px var(--brand-cyan-tint); }
+  100% { box-shadow: 0 0 0 0 transparent; }
+}
+
+@keyframes buy-button-filled {
+  0% { transform: scale(0.985); }
+  55% { transform: scale(1.015); }
+  100% { transform: scale(1); }
+}
+
+@keyframes buy-check-pop {
+  from { opacity: 0; transform: scale(0.4) rotate(-20deg); }
+  to { opacity: 1; transform: scale(1) rotate(0); }
+}
+
+@keyframes buy-particle-rise {
+  0% { opacity: 0; transform: translate(-50%, 50%) scale(0.4); }
+  20% { opacity: 0.9; }
+  100% { opacity: 0; transform: translate(calc(-50% + var(--buy-particle-x)), var(--buy-particle-y)) scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .buy-action[data-buy-state="confirming"],
+  .buy-action[data-buy-state="confirming"]::before,
+  .buy-confirming-icon,
+  .trade-terminal-buy-success,
+  .buy-action[data-buy-state="success"],
+  .buy-success-check,
+  .buy-action[data-buy-state="success"] .buy-particles > span {
+    animation: none;
+  }
+
+  .buy-action[data-buy-state="confirming"]::before,
+  .buy-particles {
+    display: none;
+  }
+}
