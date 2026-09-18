@@ -32,7 +32,17 @@ async function main() {
     await page.screenshot({ path: path.join(ARTIFACTS_DIR, "live_tokens_homepage.png") });
     console.log("Captured live_tokens_homepage.png");
 
-    // 2. BIG DASSAK Token detail page
+    // 2. Treasury page
+    console.log("Navigating to treasury page...");
+    await page.goto("http://localhost:3000/treasury", {
+      waitUntil: "domcontentloaded",
+      timeout: 25000,
+    });
+    await new Promise((r) => setTimeout(r, 2000));
+    await page.screenshot({ path: path.join(ARTIFACTS_DIR, "live_treasury_page.png") });
+    console.log("Captured live_treasury_page.png");
+
+    // 3. BIG DASSAK Token detail page
     console.log("Navigating to BIG DASSAK page...");
     await page.goto("http://localhost:3000/token/SaSbgssBAK6unw3idBiMZVjDtafdRBsm4ZBexRDgipB", {
       waitUntil: "domcontentloaded",
