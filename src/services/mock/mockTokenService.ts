@@ -4,7 +4,7 @@ import { VERIFIED_TESSERA_PRE_IPO_ASSETS } from "@/sdk/constants";
 import { ITokenService, TokenLaunchParams } from "../types";
 import { PublicKey } from "@solana/web3.js";
 
-const STORAGE_KEY = "streetfun_tokens_v2";
+const STORAGE_KEY = "streetfun_tokens_v3";
 
 export class MockTokenService implements ITokenService {
   private getStoredTokens(): TokenMetadata[] {

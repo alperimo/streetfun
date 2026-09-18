@@ -59,7 +59,30 @@ export function MarketProvider({ children }: { children: ReactNode }) {
     try {
       const tokenService = getTokenService();
       const list = await tokenService.getTokens();
-      setTokens(list);
+
+      // Fetch dynamic prices and market caps from real trades/indexer
+      try {
+        const res = await fetch("/api/trades/latest");
+        if (res.ok) {
+          const data = await res.json();
+          if (data.prices) {
+            for (const token of list) {
+              const latest =
+                data.prices[token.mint] ||
+                data.prices[token.mint.toLowerCase()] ||
+                data.prices[token.mint.toUpperCase()];
+              if (latest && latest.priceUsd) {
+                token.priceUsd = latest.priceUsd;
+                token.marketCapUsd = latest.marketCapUsd;
+              }
+            }
+          }
+        }
+      } catch (_e) {
+        // Fallback to token service list
+      }
+
+      setTokens([...list]);
     } catch (err) {
       console.error("Failed to fetch tokens:", err);
     } finally {
@@ -69,6 +92,8 @@ export function MarketProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     refreshTokens();
+    const interval = setInterval(refreshTokens, 4000);
+    return () => clearInterval(interval);
   }, [refreshTokens]);
 
   const getToken = useCallback(
