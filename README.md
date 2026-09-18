@@ -84,17 +84,29 @@ streetfun/
 │               ├── graduate.rs     # graduate_and_execute_stock
 │               └── redeem.rs       # burn_and_redeem
 ├── src/
-│   ├── app/                        # Next.js 15 App Router pages
+│   ├── app/                        # Next.js 15 App Router pages & API routes
 │   │   ├── page.tsx                # Explore & live curves
 │   │   ├── treasury/page.tsx       # Treasury & Proof of Assets (TVL)
-│   │   └── token/[mint]/page.tsx   # Token detail, chart, swap & Burn-Redeem
+│   │   ├── token/[mint]/page.tsx   # Token detail, chart, swap & Burn-Redeem
+│   │   └── api/
+│   │       ├── webhooks/helius/    # Helius Webhook transaction listener
+│   │       ├── trades/record/      # Authenticated trade & token indexing endpoint
+│   │       ├── trades/[mint]/      # Live trades query route
+│   │       └── charts/[mint]/      # Real-time OHLCV aggregation route
 │   ├── components/
+│   │   ├── common/                 # Skeletons (TokenCardSkeleton, TokenDetailSkeleton)
 │   │   ├── layout/                 # Header, Footer, WalletProvider
 │   │   ├── home/                   # HeroBanner, FilterBar
 │   │   ├── tokens/                 # TokenCard, TradingViewChart, TradeTerminal, BurnRedeemModule
 │   │   └── modals/                 # SearchModal (Cmd+K), LaunchModal
 │   ├── sdk/                        # TypeScript SDK (PDAs, Math, Constants)
-│   └── lib/                        # Data models & mock state
+│   ├── services/                   # Service layer
+│   │   ├── indexer/tradeStore.ts   # Supabase trade store & local fallback cache
+│   │   ├── solana/                 # On-chain Solana RPC services
+│   │   └── mock/                   # In-memory simulation services
+│   └── lib/                        # Data models, types & mock state
+├── supabase/
+│   └── schema.sql                  # PostgreSQL schema, get_ohlcv RPC function & RLS
 ├── tests/
 │   ├── tsconfig.json               # Test compiler configuration
 │   ├── helpers.ts                  # Shared PDAs, mints, and provider fixtures
@@ -105,7 +117,9 @@ streetfun/
 │   └── 05_burn_redeem.test.ts      # Pro-rata stock redemption & burn tests
 └── scripts/
     ├── init_protocol.ts            # Protocol initialization script
-    └── localnet_demo.ts            # End-to-end localnet live lifecycle runner
+    ├── localnet_demo.ts            # End-to-end localnet live lifecycle runner
+    ├── test_webhook.ts             # Dynamic multi-token Helius Webhook simulator
+    └── local_helius_indexer.ts     # Localnet Solana log listener daemon
 ```
 
 ---
@@ -173,6 +187,62 @@ npm run dev
 npm run build
 npm run start
 ```
+
+### 7. Real-Time Indexing & Helius Webhook Architecture
+
+StreetFun utilizes a high-throughput hybrid architecture combining on-chain Solana state with an off-chain real-time indexing pipeline powered by **Helius Webhooks** and **Supabase (PostgreSQL)**:
+
+1. **Transaction Capture**:
+   - **Production (Mainnet / Devnet)**: Helius Webhooks monitor the StreetFun Program ID (`6ZiovCkRxRJgUaCS9uftFk3eVnGDsbnDXgUV1XHybH52`). When a `Buy`, `Sell`, or `BurnAndRedeem` transaction confirms, Helius dispatches an authenticated HTTP POST payload to `/api/webhooks/helius`.
+   - **Local Development**: The web application automatically routes trade executions, token launches, and equity redemptions through `/api/trades/record`, ensuring every action updates Supabase with zero configuration.
+2. **Parsing & Storage**:
+   - The webhook processor parses instruction logs (`"Bought ... tokens for ... quote"`), extracts price and volume, verifies the token entity in `tokens`, and records the swap event into `trades`.
+3. **TradingView OHLCV Aggregation**:
+   - The PostgreSQL stored procedure `get_ohlcv(p_mint, p_interval_minutes, p_limit)` executes bucketed time-series aggregation directly in the database, feeding lightweight-charts candlesticks and volume histograms at sub-50ms latency.
+
+### 8. Testing & Simulating Helius Webhooks Locally
+
+You can simulate real-time Helius webhook payloads locally without requiring external tunnels:
+
+```bash
+# 1. Simulate a trade for a specific token symbol or mint address:
+npm run test:webhook NVDU
+npm run test:webhook MARS
+npm run test:webhook <ANY_MINT_ADDRESS>
+
+# 2. Specify custom trade types and amounts:
+npm run test:webhook NVDU -- --type SELL --amount 500
+npm run test:webhook MARS -- --type REDEEM --amount 1200
+
+# 3. Simulate activity across all catalog tokens:
+npm run test:webhook -- --all
+
+# 4. Continuous live market simulation (ticks every 3 seconds):
+npm run test:webhook -- --loop
+```
+
+### 9. Localnet Solana Log Listener Daemon
+
+When running a local Solana validator (`solana-test-validator`), start the background indexer daemon to automatically intercept and forward local on-chain contract transactions to your webhook endpoint:
+
+```bash
+npm run dev:indexer
+```
+
+This service establishes a WebSocket connection to `127.0.0.1:8899`, listens for program logs from `6ZiovCkRxRJgUaCS9uftFk3eVnGDsbnDXgUV1XHybH52`, formats them into the standard Helius webhook schema, and posts them directly to `http://localhost:3000/api/webhooks/helius`.
+
+### 10. Supabase Database Configuration
+
+StreetFun uses modern Supabase Publishable and Secret API keys. Add the following to your `.env.local`:
+
+```bash
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_...
+SUPABASE_SECRET_KEY=sb_secret_...
+HELIUS_WEBHOOK_SECRET=your_secure_webhook_secret
+```
+
+Apply the database schema located at `supabase/schema.sql` using the Supabase SQL Editor.
 
 ---
 

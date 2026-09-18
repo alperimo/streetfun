@@ -11,7 +11,8 @@
     "test": "ts-mocha -p ./tests/tsconfig.json -t 1000000 tests/*.test.ts",
     "test:contract": "cargo test --package streetfun --lib math",
     "test:integration": "ts-mocha -p ./tests/tsconfig.json -t 1000000 tests/*.test.ts",
-    "test:webhook": "npx ts-node -P ./tests/tsconfig.json scripts/test_webhook.ts"
+    "test:webhook": "npx ts-node -P ./tests/tsconfig.json scripts/test_webhook.ts",
+    "dev:indexer": "npx ts-node -P ./tests/tsconfig.json scripts/local_helius_indexer.ts"
   },
   "dependencies": {
     "@coral-xyz/anchor": "^0.30.1",

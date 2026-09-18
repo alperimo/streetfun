@@ -143,6 +143,37 @@ export class MockTokenService implements ITokenService {
     const updatedTokens = [newToken, ...currentTokens];
     this.saveTokens(updatedTokens);
 
+    try {
+      const { TradeStoreService } = await import("../indexer/tradeStore");
+      await TradeStoreService.getInstance().recordToken({
+        mint: newToken.mint,
+        name: newToken.name,
+        symbol: newToken.symbol,
+        target_equity_symbol: newToken.targetEquity.symbol,
+        target_equity_mint: newToken.targetEquity.mintAddress,
+        creator: newToken.creator,
+        description: newToken.description,
+        avatar_url: newToken.avatarUrl,
+        is_graduated: false,
+        meteora_pool: newToken.bondingCurve.meteoraPoolAddress,
+      });
+
+      if (initialBuyUsdc > 0) {
+        await TradeStoreService.getInstance().recordTrade({
+          tx_signature: `launch_buy_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+          mint: newToken.mint,
+          trade_type: "BUY",
+          price_usd: initialPrice,
+          tokens_amount: initialBuyUsdc / initialPrice,
+          quote_amount_usd: initialBuyUsdc,
+          trader: creatorAddress,
+          created_at: new Date().toISOString(),
+        });
+      }
+    } catch (e) {
+      console.warn("[MockTokenService] Failed to record launched token to indexer:", e);
+    }
+
     return newToken;
   }
 }

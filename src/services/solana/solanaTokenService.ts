@@ -175,7 +175,7 @@ export class SolanaTokenService implements ITokenService {
       avatarUrl: params.avatarUrl,
     });
 
-    return {
+    const newToken: TokenMetadata = {
       mint: memeMint.toBase58(),
       name: params.name,
       symbol: cleanSymbol,
@@ -216,6 +216,39 @@ export class SolanaTokenService implements ITokenService {
         proofOfReserveVerified: true,
       },
     };
+
+    try {
+      const { TradeStoreService } = await import("../indexer/tradeStore");
+      await TradeStoreService.getInstance().recordToken({
+        mint: newToken.mint,
+        name: newToken.name,
+        symbol: newToken.symbol,
+        target_equity_symbol: newToken.targetEquity.symbol,
+        target_equity_mint: newToken.targetEquity.mintAddress,
+        creator: newToken.creator,
+        description: newToken.description,
+        avatar_url: newToken.avatarUrl,
+        is_graduated: false,
+        meteora_pool: newToken.bondingCurve.meteoraPoolAddress,
+      });
+
+      if (params.initialBuyUsdc && params.initialBuyUsdc > 0) {
+        await TradeStoreService.getInstance().recordTrade({
+          tx_signature: `sol_launch_buy_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+          mint: newToken.mint,
+          trade_type: "BUY",
+          price_usd: 0.00003,
+          tokens_amount: params.initialBuyUsdc / 0.00003,
+          quote_amount_usd: params.initialBuyUsdc,
+          trader: creatorPubkey.toBase58(),
+          created_at: new Date().toISOString(),
+        });
+      }
+    } catch (e) {
+      console.warn("[SolanaTokenService] Failed to record token to indexer:", e);
+    }
+
+    return newToken;
   }
 }
 

@@ -40,6 +40,23 @@ export class MockRedeemService implements IRedeemService {
 
     mockTokenService.updateToken(token);
 
+    const traderPubkey = _walletPublicKey ? _walletPublicKey.toBase58() : "519jca26LioEQiPhwoHCkC8mNZiCF7cDmtaXdp98iCv2";
+    try {
+      const { TradeStoreService } = await import("../indexer/tradeStore");
+      await TradeStoreService.getInstance().recordTrade({
+        tx_signature: `mock_redeem_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+        mint: token.mint,
+        trade_type: "REDEEM",
+        price_usd: Number((usdcValue / (params.memeAmount || 1)).toFixed(6)),
+        tokens_amount: params.memeAmount,
+        quote_amount_usd: usdcValue,
+        trader: traderPubkey,
+        created_at: new Date().toISOString(),
+      });
+    } catch (e) {
+      console.warn("[MockRedeemService] Error recording redeem trade:", e);
+    }
+
     const message =
       params.actionType === "stock"
         ? `Burned ${params.memeAmount.toLocaleString()} $${token.symbol} for ${entitledShares.toFixed(4)} shares of ${token.targetEquity.symbol} directly to wallet!`

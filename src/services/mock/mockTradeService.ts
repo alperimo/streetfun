@@ -69,6 +69,23 @@ export class MockTradeService implements ITradeService {
 
       mockTokenService.updateToken(token);
 
+      const traderPubkey = _walletPublicKey ? _walletPublicKey.toBase58() : "519jca26LioEQiPhwoHCkC8mNZiCF7cDmtaXdp98iCv2";
+      try {
+        const { TradeStoreService } = await import("../indexer/tradeStore");
+        await TradeStoreService.getInstance().recordTrade({
+          tx_signature: `mock_buy_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+          mint: token.mint,
+          trade_type: "BUY",
+          price_usd: sim.effectivePriceUsd,
+          tokens_amount: tokensOutNumber,
+          quote_amount_usd: params.amount,
+          trader: traderPubkey,
+          created_at: new Date().toISOString(),
+        });
+      } catch (e) {
+        console.warn("[MockTradeService] Error recording trade:", e);
+      }
+
       return {
         success: true,
         tokensAmount: tokensOutNumber,
@@ -114,6 +131,23 @@ export class MockTradeService implements ITradeService {
       token.treasury = treasury;
 
       mockTokenService.updateToken(token);
+
+      const traderPubkey = _walletPublicKey ? _walletPublicKey.toBase58() : "519jca26LioEQiPhwoHCkC8mNZiCF7cDmtaXdp98iCv2";
+      try {
+        const { TradeStoreService } = await import("../indexer/tradeStore");
+        await TradeStoreService.getInstance().recordTrade({
+          tx_signature: `mock_sell_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+          mint: token.mint,
+          trade_type: "SELL",
+          price_usd: sim.effectivePriceUsd,
+          tokens_amount: params.amount,
+          quote_amount_usd: quoteOutUsd,
+          trader: traderPubkey,
+          created_at: new Date().toISOString(),
+        });
+      } catch (e) {
+        console.warn("[MockTradeService] Error recording sell trade:", e);
+      }
 
       return {
         success: true,

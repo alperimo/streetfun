@@ -59,12 +59,27 @@ export class TradeStoreService {
   }
 
   async recordTrade(trade: TradeRecord): Promise<void> {
-    const supabase = getSupabaseClient();
     const tradeWithTime: TradeRecord = {
       ...trade,
       created_at: trade.created_at || new Date().toISOString(),
     };
 
+    // If executed in browser, delegate persistence to server API route with secret key
+    if (typeof window !== "undefined") {
+      try {
+        fetch("/api/trades/record", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ trade: tradeWithTime }),
+        }).catch((e) => console.warn("[TradeStore] Failed to sync trade to server:", e));
+      } catch (err) {
+        console.warn("[TradeStore] Network error posting trade:", err);
+      }
+      localTradesStore.unshift(tradeWithTime);
+      return;
+    }
+
+    const supabase = getSupabaseClient();
     if (supabase) {
       try {
         // Ensure token exists in tokens table to avoid foreign key constraint error
@@ -109,6 +124,20 @@ export class TradeStoreService {
   }
 
   async recordToken(token: TokenRecord): Promise<void> {
+    if (typeof window !== "undefined") {
+      try {
+        fetch("/api/trades/record", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ token }),
+        }).catch((e) => console.warn("[TradeStore] Failed to sync token to server:", e));
+      } catch (err) {
+        console.warn("[TradeStore] Network error posting token:", err);
+      }
+      localTokensStore.set(token.mint.toLowerCase(), token);
+      return;
+    }
+
     const supabase = getSupabaseClient();
     if (supabase) {
       await supabase.from("tokens").upsert(token);
