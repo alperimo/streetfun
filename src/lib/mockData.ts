@@ -10,8 +10,8 @@ export const INITIAL_TOKENS: TokenMetadata[] = [
     avatarUrl: "https://images.unsplash.com/photo-1614728894747-a83421e2b9c9?w=160&q=80",
     creator: "7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU",
     createdAt: "10 mins ago",
-    marketCapUsd: 105_440_000,
-    priceUsd: 0.1054,
+    marketCapUsd: 33_010_000,
+    priceUsd: 0.03301,
     priceChange24h: 47.7,
     volume24hUsd: 1_410_000,
     targetEquity: {

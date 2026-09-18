@@ -81,6 +81,21 @@ export default function TokenDetailPage({ params }: PageProps) {
 
   const isPositive = token.priceChange24h >= 0;
 
+  const currentPrice =
+    trades.length > 0 && trades[0]?.price_usd ? Number(trades[0].price_usd) : token.priceUsd;
+  const currentMarketCap =
+    trades.length > 0 && trades[0]?.price_usd
+      ? currentPrice * 1_000_000_000
+      : token.marketCapUsd;
+
+  const formattedMarketCap =
+    currentMarketCap >= 1_000_000
+      ? `$${(currentMarketCap / 1_000_000).toFixed(2)}M`
+      : `$${(currentMarketCap / 1_000).toFixed(1)}K`;
+
+  const formattedPrice =
+    currentPrice < 0.001 ? `$${currentPrice.toFixed(6)}` : `$${currentPrice.toFixed(4)}`;
+
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <Header
@@ -129,44 +144,32 @@ export default function TokenDetailPage({ params }: PageProps) {
 
                 <div className="mt-1 flex items-center gap-2 text-xs flex-wrap">
                   <span className="text-muted">Backed with</span>
-                  <div className="relative h-4 w-4 overflow-hidden rounded-full border border-border flex-shrink-0">
-                    <Image
-                      src={token.targetEquity.logoUrl}
-                      alt={token.targetEquity.name}
-                      fill
-                      className="object-cover"
-                      sizes="16px"
-                    />
-                  </div>
-                  <span className="font-bold text-foreground">
-                    {token.targetEquity.name.replace(/\s*\(.*?\)/g, "").trim()}
+                  <span className="font-semibold text-foreground">
+                    {token.targetEquity.name} ({token.targetEquity.symbol})
                   </span>
-                  <span className="font-mono text-muted text-xs">
-                    ({token.targetEquity.symbol.startsWith("$") ? token.targetEquity.symbol : `$${token.targetEquity.symbol}`})
-                  </span>
-                  <span className="rounded-md border border-slate-700/50 bg-slate-800/30 px-2 py-0.5 text-[10px] tracking-wide font-mono font-medium text-slate-400">
-                    {token.targetEquity.isPreIpo ? "Pre-IPO" : "xStocks"}
-                  </span>
-
+                  {token.targetEquity.isPreIpo && (
+                    <span className="rounded border border-amber-500/30 bg-amber-500/10 px-1.5 py-0.2 text-[9px] font-bold text-amber-400">
+                      Pre-IPO
+                    </span>
+                  )}
                   <button
                     onClick={handleCopyCa}
-                    className="flex items-center gap-1 rounded border border-border-active/40 bg-card-hover/40 px-2 py-0.5 text-muted hover:text-foreground transition-colors font-mono text-[10px]"
+                    className="flex items-center gap-1 font-mono text-[11px] text-muted hover:text-foreground transition-colors"
                   >
-                    {copied ? (
-                      <Check className="h-3 w-3 text-brand-emerald" />
-                    ) : (
-                      <Copy className="h-3 w-3" />
-                    )}
+                    <Copy className="h-3 w-3" />
                     <span>
-                      {copied ? "Copied" : `${token.mint.slice(0, 4)}...${token.mint.slice(-4)}`}
+                      {token.mint.slice(0, 4)}...{token.mint.slice(-4)}
                     </span>
                   </button>
+                  {copied && (
+                    <span className="text-[11px] text-brand-emerald font-medium">Copied!</span>
+                  )}
                 </div>
               </div>
             </div>
 
             {/* External Links */}
-            <div className="flex items-center gap-2 self-start md:self-auto">
+            <div className="flex items-center gap-2">
               <a
                 href={token.bondingCurve.isGraduated ? "https://meteora.ag" : "#"}
                 target="_blank"
@@ -193,14 +196,14 @@ export default function TokenDetailPage({ params }: PageProps) {
             <div>
               <div className="text-[11px] text-muted font-medium">Market cap</div>
               <div className="mt-1 font-mono text-xl font-bold text-foreground">
-                ${(token.marketCapUsd / 1_000_000).toFixed(2)}M
+                {formattedMarketCap}
               </div>
             </div>
 
             <div>
               <div className="text-[11px] text-muted font-medium">Token price</div>
               <div className="mt-1 flex items-baseline gap-2 font-mono text-xl font-bold text-foreground">
-                <span>${token.priceUsd.toFixed(4)}</span>
+                <span>{formattedPrice}</span>
                 <span
                   className={`text-xs font-semibold ${
                     isPositive ? "text-brand-emerald" : "text-brand-rose"

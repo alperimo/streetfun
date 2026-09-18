@@ -145,6 +145,47 @@ export class TradeStoreService {
     localTokensStore.set(token.mint.toLowerCase(), token);
   }
 
+  async getLatestPrices(): Promise<Record<string, { priceUsd: number; marketCapUsd: number }>> {
+    const prices: Record<string, { priceUsd: number; marketCapUsd: number }> = {};
+    const supabase = getSupabaseClient();
+    if (supabase) {
+      try {
+        const { data, error } = await supabase
+          .from("trades")
+          .select("mint, price_usd, created_at")
+          .order("created_at", { ascending: false })
+          .limit(100);
+
+        if (!error && data) {
+          for (const trade of data) {
+            if (!prices[trade.mint] && trade.price_usd) {
+              const price = Number(trade.price_usd);
+              prices[trade.mint] = {
+                priceUsd: price,
+                marketCapUsd: price * 1_000_000_000,
+              };
+            }
+          }
+        }
+      } catch (err) {
+        console.warn("[TradeStore] Failed to fetch latest prices from supabase:", err);
+      }
+    }
+
+    // Also check local store
+    for (const trade of localTradesStore) {
+      if (!prices[trade.mint] && trade.price_usd) {
+        const price = Number(trade.price_usd);
+        prices[trade.mint] = {
+          priceUsd: price,
+          marketCapUsd: price * 1_000_000_000,
+        };
+      }
+    }
+
+    return prices;
+  }
+
   async getTrades(mint: string, limit = 20): Promise<TradeRecord[]> {
     const supabase = getSupabaseClient();
     if (supabase) {
