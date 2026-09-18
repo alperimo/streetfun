@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Copy, Check } from "lucide-react";
@@ -22,22 +22,30 @@ function formatVolume(vol: number): string {
 
 export function TokenCard({ token }: TokenCardProps) {
   const [copied, setCopied] = useState(false);
+  const copyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => () => { if (copyTimer.current) clearTimeout(copyTimer.current); }, []);
 
   const handleCopyCa = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     navigator.clipboard.writeText(token.mint);
     setCopied(true);
-    setTimeout(() => setCopied(false), 1500);
+    if (copyTimer.current) clearTimeout(copyTimer.current);
+    copyTimer.current = setTimeout(() => setCopied(false), 1500);
   };
 
   const isPositive = token.priceChange24h >= 0;
 
   return (
-    <Link
-      href={`/token/${token.mint}`}
-      className="group relative flex flex-col justify-between rounded-2xl border border-border bg-card p-4 sm:p-5 transition-all hover:border-border-active hover:bg-card-hover shadow-sm"
+    <article
+      data-token={token.mint}
+      className="token-discovery-card group relative flex flex-col justify-between rounded-2xl border border-border bg-card p-4 sm:p-5 transition-colors hover:border-border-active hover:bg-card-hover shadow-sm"
     >
+      <Link
+        href={`/token/${token.mint}`}
+        aria-label={`Open ${token.name} ($${token.symbol})`}
+        className="absolute inset-0 z-10 rounded-2xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-emerald"
+      />
       <div>
         {/* Top: Avatar, Name, CA button */}
         <div className="flex items-start justify-between gap-3">
@@ -57,7 +65,7 @@ export function TokenCard({ token }: TokenCardProps) {
                   ${token.symbol}
                 </span>
                 {token.bondingCurve.isGraduated && (
-                  <span className="rounded-md border border-slate-700/60 bg-slate-800/50 px-2 py-0.5 text-[10px] font-medium text-slate-300">
+                  <span className="rounded-md border border-border-active bg-card-hover px-2 py-0.5 text-[10px] font-medium text-muted">
                     Graduated
                   </span>
                 )}
@@ -71,7 +79,7 @@ export function TokenCard({ token }: TokenCardProps) {
           <button
             onClick={handleCopyCa}
             title="Copy Contract Address"
-            className="flex items-center gap-1 rounded-lg border border-border-active/40 bg-card-hover/40 px-2 py-1 text-[11px] text-muted hover:border-border-active hover:text-foreground hover:bg-card-hover transition-colors"
+            className="relative z-20 flex items-center gap-1 rounded-lg border border-border-active/40 bg-card-hover/40 px-2 py-1 text-[11px] text-muted hover:border-border-active hover:text-foreground hover:bg-card-hover transition-colors"
           >
             {copied ? (
               <Check className="h-3 w-3 text-brand-emerald" />
@@ -83,7 +91,7 @@ export function TokenCard({ token }: TokenCardProps) {
         </div>
 
         {/* Backed by badge: Stock Logo + Plain Ticker + subtle tag */}
-        <div className="mt-3 flex items-center justify-between gap-1 text-[11px]">
+        <div className="mt-3 flex flex-wrap items-center justify-between gap-x-3 gap-y-2 text-[11px]">
           <div className="flex items-center gap-1.5">
             <span className="text-muted whitespace-nowrap">Backed with</span>
             <div className="relative h-3.5 w-3.5 overflow-hidden rounded-full border border-border flex-shrink-0">
@@ -103,7 +111,7 @@ export function TokenCard({ token }: TokenCardProps) {
             </span>
           </div>
           {token.bondingCurve.isGraduated ? (
-            <span className="font-mono text-[11px] font-medium text-muted whitespace-nowrap pl-2">
+            <span className="ml-auto font-mono text-[11px] font-medium text-muted whitespace-nowrap">
               {token.targetEquity.symbol === "$TSPACEX"
                 ? "Backed: $20.3M"
                 : token.targetEquity.symbol === "$TOPAI"
@@ -128,7 +136,7 @@ export function TokenCard({ token }: TokenCardProps) {
             />
           </div>
         ) : (
-          <div className="mt-3 mb-1 border-b border-border/80" />
+          <div className="mt-3 mb-1 border-b border-border/80" aria-hidden="true" />
         )}
 
         {/* Primary Metric */}
@@ -185,6 +193,6 @@ export function TokenCard({ token }: TokenCardProps) {
           {token.priceChange24h.toFixed(1)}%
         </span>
       </div>
-    </Link>
+    </article>
   );
 }

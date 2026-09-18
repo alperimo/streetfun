@@ -1,12 +1,14 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import Image from "next/image";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { Settings, AlertCircle, Check } from "lucide-react";
 import { TokenMetadata } from "@/lib/types";
 import { simulateBuyTokensOut, simulateSellQuoteOut } from "@/sdk/math";
 import { useMarket } from "@/context/MarketContext";
+import { TradeReceipt } from "./TradeReceipt";
+import { receiptFromTrade, receiptFromRedemption, receiptPreview, type TradeReceiptData } from "./tradeReceiptModel";
 
 interface TradeTerminalProps {
   token: TokenMetadata;
@@ -15,8 +17,10 @@ interface TradeTerminalProps {
 
 export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
   const { connected: walletAdapterConnected } = useWallet();
-  const { isWalletConnected, executeTrade, executeRedeem } = useMarket();
+  const { isWalletConnected, executeTrade, executeRedeem, isMock } = useMarket();
   const connected = walletAdapterConnected || isWalletConnected;
+  const [receipt, setReceipt] = useState<TradeReceiptData | null>(null);
+  useEffect(() => setReceipt(null), [token.mint]);
   const [tradeMode, setTradeMode] = useState<"buy" | "sell" | "redeem">("buy");
   const [amount, setAmount] = useState("");
   const [slippage, setSlippage] = useState<number>(1.0); // 1%
@@ -70,6 +74,7 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
     if (!connected) return;
     setIsTrading(true);
     setTradeErrorMsg(null);
+    setReceipt(null);
 
     try {
       if (tradeMode === "redeem") {
@@ -80,6 +85,7 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
         });
 
         if (res.success) {
+          setReceipt(receiptFromRedemption(token, redeemActionType, numTokensToRedeem, res, isMock));
           setTradeSuccessMsg(res.message);
           setAmount("");
           if (onTradeSuccess) onTradeSuccess();
@@ -96,6 +102,7 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
         });
 
         if (res.success) {
+          setReceipt(receiptFromTrade(token, tradeMode, res, isMock));
           setTradeSuccessMsg(res.message);
           setAmount("");
           if (onTradeSuccess) onTradeSuccess();
@@ -513,6 +520,8 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
           </button>
         </>
       )}
+      {receipt && receipt.token.mint === token.mint && <TradeReceipt key={receipt.timestamp} data={receipt} onDismiss={() => setReceipt(null)} />}
+      {!receipt && <button type="button" disabled={isTrading} onClick={() => setReceipt(receiptPreview(token))} className="mt-4 w-full text-center text-[10px] text-muted underline decoration-border underline-offset-4 hover:text-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-cyan">Preview receipt</button>}
     </div>
   );
 }

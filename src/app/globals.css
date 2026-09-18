@@ -166,9 +166,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .hero-chart-travel {
-    display: none;
-  }
+  .hero-chart-travel { display: none; }
 }
 
 .site-header,
@@ -270,4 +268,47 @@ input[type="number"] {
 .wallet-adapter-modal-list .wallet-adapter-button:hover {
   background-color: var(--card-hover) !important;
   border-color: var(--brand-cyan) !important;
+}
+
+/* The extra image shares the original optimized URL and artwork coordinates.
+   A narrow moving mask relights real window detail; the bull is outside the clip. */
+.hero-city-light {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+  clip-path: polygon(36% 0, 56% 0, 54% 44%, 57% 55%, 54% 87%, 43% 95%, 36% 100%);
+  mask-image: linear-gradient(108deg, transparent calc(var(--city-light-x, -20%) - 8%), black var(--city-light-x, -20%), transparent calc(var(--city-light-x, -20%) + 8%));
+  filter: brightness(2.1) saturate(0.65);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-city-light { display: none; }
+}
+
+.trade-receipt { container-type: inline-size; --receipt-accent: var(--brand-cyan); animation: receipt-arrive 420ms cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+.trade-receipt[data-operation="redeem"] { --receipt-accent: var(--brand-amber); }
+.receipt-accent { color: var(--receipt-accent); }
+.receipt-title { text-shadow: 0 1px 0 var(--border-active), 0 -1px 0 var(--card-subtle); }
+.receipt-edge { overflow: hidden; background: linear-gradient(90deg, transparent, var(--receipt-accent), transparent); }
+.receipt-edge::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent 20%, var(--foreground) 50%, transparent 80%);
+  animation: receipt-light 1100ms 150ms ease-in-out both;
+}
+@keyframes receipt-arrive { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes receipt-light { from { transform: translateX(-100%); } to { transform: translateX(100%); } }
+@media (prefers-reduced-motion: reduce) {
+  .trade-receipt, .receipt-edge::after { animation: none; }
+  .receipt-edge::after { display: none; }
+}
+
+@container (max-width: 320px) {
+  .receipt-amounts { grid-template-columns: 1fr; gap: 16px; }
+  .receipt-flow { display: none; }
+  .receipt-leg { display: grid; grid-template-columns: 1fr auto; column-gap: 12px; align-items: baseline; }
+  .receipt-leg > p:nth-child(2) { margin: 0; }
+  .receipt-leg > p:nth-child(3) { grid-column: 2; text-align: right; }
 }

@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useId, useRef, useState, type CSSProperties } from "react";
+import { useEffect, useId, useRef, type CSSProperties } from "react";
 import Image from "next/image";
-import { Pause, Play } from "lucide-react";
 import { BULL_ARTWORK as art } from "./bullArtworkConfig";
+import { useCityLighting } from "./useCityLighting";
 
 export function BullArtwork() {
   const id = useId().replace(/:/g, "");
@@ -11,8 +11,7 @@ export function BullArtwork() {
   const svg = useRef<SVGSVGElement>(null);
   const path = useRef<SVGPathElement>(null);
   const progress = useRef(art.initialProgress as number);
-  const [paused, setPaused] = useState(false);
-  const [reducedMotion, setReducedMotion] = useState(false);
+  useCityLighting(viewport);
 
   useEffect(() => {
     const container = viewport.current;
@@ -58,9 +57,7 @@ export function BullArtwork() {
       cancelAnimationFrame(frame);
       previousTime = null;
       const reduce = preference.matches;
-      setReducedMotion(reduce);
-      // Preserve a user's pause across visibility and preference changes.
-      if (visible && !document.hidden && !reduce && !paused) {
+      if (visible && !document.hidden && !reduce) {
         frame = requestAnimationFrame(tick);
       }
     };
@@ -81,7 +78,7 @@ export function BullArtwork() {
       preference.removeEventListener("change", sync);
       document.removeEventListener("visibilitychange", sync);
     };
-  }, [paused]);
+  }, []);
 
   const stageStyle = {
     "--artwork-ratio": art.width / art.height,
@@ -100,6 +97,9 @@ export function BullArtwork() {
             priority
             sizes="(max-width: 900px) 900px, 100vw"
           />
+          <div className="hero-city-light">
+            <Image src="/generated/hero-bull-clean-lenses.png" alt="" fill priority sizes="(max-width: 900px) 900px, 100vw" />
+          </div>
           <svg ref={svg} className="hero-chart" viewBox={`0 0 ${art.width} ${art.height}`} focusable="false">
             <defs>
               <path ref={path} id={`${id}-trend`} d={art.trend} pathLength="1" />
@@ -161,17 +161,6 @@ export function BullArtwork() {
           </svg>
         </div>
       </div>
-      <button
-        type="button"
-        className="hero-motion-control absolute bottom-5 right-6 z-10 flex h-8 items-center gap-1.5 rounded-lg border border-border bg-background/75 px-2.5 text-[11px] text-muted hover:bg-card-hover hover:text-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-emerald sm:right-10"
-        onClick={() => setPaused((value) => !value)}
-        aria-label={reducedMotion ? "Chart motion off: reduced motion enabled" : paused ? "Resume chart animation" : "Pause chart animation"}
-        aria-pressed={paused || reducedMotion}
-        disabled={reducedMotion}
-      >
-        {paused || reducedMotion ? <Play aria-hidden="true" className="h-3 w-3" /> : <Pause aria-hidden="true" className="h-3 w-3" />}
-        <span>{reducedMotion ? "Motion off" : paused ? "Resume motion" : "Pause motion"}</span>
-      </button>
     </>
   );
 }
