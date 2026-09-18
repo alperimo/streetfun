@@ -78,7 +78,7 @@ export class SolanaTokenService implements ITokenService {
         const vTokens = Number(acc.virtualTokenReserves.toString()) / 1_000_000;
         const totalSold = Math.max(0, 800_000_000 - realTokensNum);
         const currentTokenReserve = Math.max(1, vTokens - totalSold);
-        const spotPrice = isGraduated ? 0.1054 : Math.max(0.00003, (vQuote + realQuoteUsd) / currentTokenReserve);
+        const spotPrice = isGraduated ? (known?.priceUsd || 0.000085) : Math.max(0.00003, (vQuote + realQuoteUsd) / currentTokenReserve);
         const marketCap = spotPrice * 1_000_000_000;
 
         const equityValueUsd = totalEquityLockedNum * matchedEquity.currentStockPriceUsd;

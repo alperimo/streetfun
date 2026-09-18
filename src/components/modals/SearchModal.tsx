@@ -146,7 +146,9 @@ export function SearchModal({ isOpen, onClose, tokens }: SearchModalProps) {
 
                   <div className="text-right flex-shrink-0 pl-2">
                     <div className="font-mono text-sm font-bold text-foreground">
-                      ${(token.marketCapUsd / 1_000_000).toFixed(2)}M
+                      {token.marketCapUsd >= 1_000_000
+                        ? `$${(token.marketCapUsd / 1_000_000).toFixed(2)}M`
+                        : `$${(token.marketCapUsd / 1_000).toFixed(1)}K`}
                     </div>
                     <div
                       className={`font-mono text-xs font-semibold ${
