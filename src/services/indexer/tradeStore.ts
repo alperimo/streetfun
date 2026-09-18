@@ -207,6 +207,28 @@ export class TradeStoreService {
       .slice(0, limit);
   }
 
+  async getRedemptions(limit = 20): Promise<TradeRecord[]> {
+    const supabase = getSupabaseClient();
+    if (supabase) {
+      try {
+        const { data, error } = await supabase
+          .from("trades")
+          .select("*")
+          .eq("trade_type", "REDEEM")
+          .order("created_at", { ascending: false })
+          .limit(limit);
+
+        if (!error && data && data.length > 0) {
+          return data as TradeRecord[];
+        }
+      } catch (_e) {}
+    }
+
+    return localTradesStore
+      .filter((t) => t.trade_type === "REDEEM")
+      .slice(0, limit);
+  }
+
   async getOHLCV(
     mint: string,
     intervalMinutes = 15,
@@ -266,6 +288,8 @@ export class TradeStoreService {
 
     const sortedBuckets = Array.from(buckets.keys()).sort((a, b) => a - b);
     const bars: OHLCVBar[] = [];
+    const initialCurvePrice = 30_000 / 1_073_000_000;
+    let prevClose = initialCurvePrice;
 
     for (const time of sortedBuckets) {
       const bTrades = buckets.get(time)!;
@@ -276,17 +300,24 @@ export class TradeStoreService {
           new Date(b.created_at || 0).getTime()
       );
 
-      const prices = bTrades.map((t) => t.price_usd);
-      const volume = bTrades.reduce((acc, t) => acc + t.quote_amount_usd, 0);
+      const prices = bTrades.map((t) => Number(t.price_usd));
+      const volume = bTrades.reduce((acc, t) => acc + (Number(t.quote_amount_usd) || 0), 0);
+
+      const open = prevClose;
+      const close = prices[prices.length - 1];
+      const high = Math.max(...prices, open, close);
+      const low = Math.min(...prices, open, close);
 
       bars.push({
         time,
-        open: prices[0],
-        high: Math.max(...prices),
-        low: Math.min(...prices),
-        close: prices[prices.length - 1],
+        open,
+        high,
+        low,
+        close,
         volume: Math.round(volume),
       });
+
+      prevClose = close;
     }
 
     return bars;

@@ -103,7 +103,8 @@ export function SearchModal({ isOpen, onClose, tokens }: SearchModalProps) {
             </div>
           ) : (
             filteredTokens.map((token, idx) => {
-              const isPositive = token.priceChange24h >= 0;
+              const isNeutral = Math.abs(token.priceChange24h) < 0.01;
+              const isPositive = token.priceChange24h > 0;
               const isSelected = idx === selectedIndex;
               return (
                 <div
@@ -113,7 +114,7 @@ export function SearchModal({ isOpen, onClose, tokens }: SearchModalProps) {
                   className={`flex items-center justify-between p-2.5 rounded-xl cursor-pointer transition-colors ${
                     isSelected
                       ? "bg-card-hover border border-border-active/60 shadow-xs"
-                      : "hover:bg-card-hover/50 border border-transparent"
+                      : "hover:bg-card-hover border border-transparent"
                   }`}
                 >
                   <div className="flex items-center gap-3 min-w-0">
@@ -152,10 +153,14 @@ export function SearchModal({ isOpen, onClose, tokens }: SearchModalProps) {
                     </div>
                     <div
                       className={`font-mono text-xs font-semibold ${
-                        isPositive ? "text-brand-emerald" : "text-brand-rose"
+                        isNeutral
+                          ? "text-muted"
+                          : isPositive
+                          ? "text-emerald-400"
+                          : "text-rose-400"
                       }`}
                     >
-                      {isPositive ? "+" : ""}
+                      {isPositive && !isNeutral ? "+" : ""}
                       {token.priceChange24h.toFixed(1)}%
                     </div>
                   </div>

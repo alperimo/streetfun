@@ -36,20 +36,21 @@ export class MockChartService implements IChartService {
       const volatility = currentPrice * 0.04;
       const change = (Math.random() - 0.46) * volatility;
 
+      const minFloor = Math.max(0.000001, finalPrice * 0.2);
       const open = i === count ? currentPrice : bars[bars.length - 1].close;
-      const close = i === 0 ? finalPrice : Math.max(0.0001, open + change + (trendLift / count));
-      const high = Math.max(open, close) + Math.random() * volatility * 0.8;
-      const low = Math.max(0.00005, Math.min(open, close) - Math.random() * volatility * 0.8);
+      const close = i === 0 ? finalPrice : Math.max(minFloor, open + change + (trendLift / count));
+      const high = Math.max(open, close) + Math.random() * volatility * 0.5;
+      const low = Math.max(minFloor, Math.min(open, close) - Math.random() * volatility * 0.5);
       const volume = Math.floor((10_000 + Math.random() * 40_000) * (1 + progress));
 
       currentPrice = close;
 
       bars.push({
         time,
-        open: parseFloat(open.toFixed(6)),
-        high: parseFloat(high.toFixed(6)),
-        low: parseFloat(low.toFixed(6)),
-        close: parseFloat(close.toFixed(6)),
+        open: parseFloat(open.toFixed(8)),
+        high: parseFloat(high.toFixed(8)),
+        low: parseFloat(low.toFixed(8)),
+        close: parseFloat(close.toFixed(8)),
         volume,
       });
     }
