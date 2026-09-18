@@ -7,7 +7,7 @@ import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { SearchModal } from "@/components/modals/SearchModal";
 import { LaunchModal } from "@/components/modals/LaunchModal";
-import { INITIAL_TOKENS, INITIAL_TREASURY_STATS } from "@/lib/mockData";
+import { INITIAL_TREASURY_STATS } from "@/lib/mockData";
 import { TokenMetadata } from "@/lib/types";
 import { useMarket } from "@/context/MarketContext";
 import { VERIFIED_TESSERA_PRE_IPO_ASSETS } from "@/sdk/constants";

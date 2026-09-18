@@ -15,7 +15,6 @@ import {
   getQuoteVaultPda,
   getTreasuryVaultPda,
 } from "@/sdk/pda";
-import { INITIAL_TOKENS } from "@/lib/mockData";
 
 // Local cache for metadata attached to custom launched mints
 const metadataCache = new Map<string, { name: string; symbol: string; description: string; avatarUrl?: string }>();
@@ -66,18 +65,8 @@ export class SolanaTokenService implements ITokenService {
         }
       }
 
-      // 2. Server-side or direct fallback
+      // 2. Server-side: fetch directly from Supabase (no mock data)
       const tokenMap = new Map<string, TokenMetadata>();
-
-      for (const t of INITIAL_TOKENS) {
-        tokenMap.set(t.mint.toLowerCase(), { ...t });
-        metadataCache.set(t.mint, {
-          name: t.name,
-          symbol: t.symbol,
-          description: t.description,
-          avatarUrl: t.avatarUrl,
-        });
-      }
 
       try {
         const { TradeStoreService } = await import("../indexer/tradeStore");
@@ -103,7 +92,7 @@ export class SolanaTokenService implements ITokenService {
               symbol: st.symbol,
               description: st.description || `Culture coin backed by ${matchedEquity.name} tokenized equity.`,
               avatarUrl: st.avatar_url || matchedEquity.logoUrl,
-              creator: st.creator || "519jca26LioEQiPhwoHCkC8mNZiCF7cDmtaXdp98iCv2",
+              creator: st.creator || "",
               createdAt: st.is_graduated ? "Graduated" : "Active Curve",
               marketCapUsd: 28_000,
               priceUsd: 0.000028,
@@ -121,7 +110,7 @@ export class SolanaTokenService implements ITokenService {
                 virtualTokenReserves: "1073000000000000",
                 realTokenReserves: "800000000000000",
                 isGraduated: Boolean(st.is_graduated),
-                meteoraPoolAddress: st.meteora_pool || `METdbc${st.symbol}Pool`,
+                meteoraPoolAddress: st.meteora_pool || "",
                 dynamicFeeBps: 20,
                 equityPurchaseBudgetUsd: 30_000,
                 ammLiquidityBudgetUsd: 30_000,
@@ -142,7 +131,7 @@ export class SolanaTokenService implements ITokenService {
       return Array.from(tokenMap.values());
     } catch (err) {
       console.warn("Could not load tokens:", err);
-      return INITIAL_TOKENS;
+      return [];
     }
   }
 

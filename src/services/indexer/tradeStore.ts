@@ -257,6 +257,54 @@ export class TradeStoreService {
     return prices;
   }
 
+  /**
+   * Compute net USDC reserves deposited per token mint from all BUY/SELL trades.
+   * BUY adds to reserves, SELL subtracts from reserves.
+   */
+  async getReservesPerMint(): Promise<Record<string, number>> {
+    const reserves: Record<string, number> = {};
+    const supabase = getSupabaseClient();
+    if (supabase) {
+      try {
+        const { data, error } = await supabase
+          .from("trades")
+          .select("mint, trade_type, quote_amount_usd");
+
+        if (!error && data) {
+          for (const trade of data) {
+            if (!reserves[trade.mint]) reserves[trade.mint] = 0;
+            const amount = Number(trade.quote_amount_usd) || 0;
+            if (trade.trade_type === "BUY") {
+              reserves[trade.mint] += amount;
+            } else if (trade.trade_type === "SELL" || trade.trade_type === "REDEEM") {
+              reserves[trade.mint] -= amount;
+            }
+          }
+        }
+      } catch (err) {
+        console.warn("[TradeStore] Failed to fetch reserves from supabase:", err);
+      }
+    }
+
+    // Also check local store
+    for (const trade of localTradesStore) {
+      if (!reserves[trade.mint]) reserves[trade.mint] = 0;
+      const amount = Number(trade.quote_amount_usd) || 0;
+      if (trade.trade_type === "BUY") {
+        reserves[trade.mint] += amount;
+      } else if (trade.trade_type === "SELL" || trade.trade_type === "REDEEM") {
+        reserves[trade.mint] -= amount;
+      }
+    }
+
+    // Ensure no negative reserves
+    for (const mint of Object.keys(reserves)) {
+      if (reserves[mint] < 0) reserves[mint] = 0;
+    }
+
+    return reserves;
+  }
+
   async getTrades(mint: string, limit = 20): Promise<TradeRecord[]> {
     const supabase = getSupabaseClient();
     if (supabase) {

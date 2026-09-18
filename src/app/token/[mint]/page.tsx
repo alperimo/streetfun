@@ -10,7 +10,6 @@ import { TradingViewChart } from "@/components/tokens/TradingViewChart";
 import { TradeTerminal } from "@/components/tokens/TradeTerminal";
 import { SearchModal } from "@/components/modals/SearchModal";
 import { LaunchModal } from "@/components/modals/LaunchModal";
-import { INITIAL_TOKENS } from "@/lib/mockData";
 import { TokenMetadata } from "@/lib/types";
 import { useMarket } from "@/context/MarketContext";
 import { TokenDetailSkeleton } from "@/components/common/Skeletons";
@@ -33,9 +32,7 @@ export default function TokenDetailPage({ params }: PageProps) {
   const token =
     getToken(mint) ||
     tokens.find((t) => t.mint.toLowerCase() === mint.toLowerCase()) ||
-    INITIAL_TOKENS.find((t) => t.mint.toLowerCase() === mint.toLowerCase()) ||
-    tokens[0] ||
-    INITIAL_TOKENS[0];
+    null;
 
   const fetchTrades = React.useCallback(async () => {
     const targetMint = mint || token?.mint;

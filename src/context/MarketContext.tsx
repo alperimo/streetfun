@@ -39,8 +39,8 @@ const MarketContext = createContext<MarketContextType | undefined>(undefined);
 
 export function MarketProvider({ children }: { children: ReactNode }) {
   const isMock = isMockMode();
-  const [tokens, setTokens] = useState<TokenMetadata[]>(INITIAL_TOKENS);
-  const [loading, setLoading] = useState(false);
+  const [tokens, setTokens] = useState<TokenMetadata[]>(isMock ? INITIAL_TOKENS : []);
+  const [loading, setLoading] = useState(!isMock);
   const wallet = useWallet();
   const [devWalletConnected, setDevWalletConnected] = useState(false);
   const isFetchingRef = React.useRef(false);
