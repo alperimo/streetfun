@@ -26,7 +26,6 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
   const [slippage, setSlippage] = useState<number>(1.0); // 1%
   const [showSettings, setShowSettings] = useState(false);
   const [isTrading, setIsTrading] = useState(false);
-  const [tradeSuccessMsg, setTradeSuccessMsg] = useState<string | null>(null);
   const [tradeErrorMsg, setTradeErrorMsg] = useState<string | null>(null);
   const [redeemActionType, setRedeemActionType] = useState<"stock" | "usdc">("stock");
   const [buyAnimation, setBuyAnimation] = useState<"idle" | "success">("idle");
@@ -96,7 +95,6 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
 
         if (res.success) {
           setReceipt(receiptFromRedemption(token, redeemActionType, numTokensToRedeem, res, isMock));
-          setTradeSuccessMsg(res.message);
           setAmount("");
           if (onTradeSuccess) onTradeSuccess();
         } else {
@@ -113,7 +111,6 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
 
         if (res.success) {
           setReceipt(receiptFromTrade(token, tradeMode, res, isMock));
-          setTradeSuccessMsg(res.message);
           setAmount("");
           if (submittedMode === "buy") {
             setBuyAnimation("success");
@@ -129,7 +126,6 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
       setTradeErrorMsg(err?.message || "Operation failed");
     } finally {
       setIsTrading(false);
-      setTimeout(() => setTradeSuccessMsg(null), 5000);
     }
   };
 
@@ -319,14 +315,6 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
               </span>
             </div>
           </div>
-
-          {/* Success Notification */}
-          {tradeSuccessMsg && (
-            <div className="flex items-center gap-2 rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-2.5 text-xs text-emerald-400">
-              <Check className="h-4 w-4 flex-shrink-0" />
-              <span>{tradeSuccessMsg}</span>
-            </div>
-          )}
 
           {/* Error Notification */}
           {tradeErrorMsg && (
