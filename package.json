@@ -10,7 +10,8 @@
     "lint": "next lint",
     "test": "ts-mocha -p ./tests/tsconfig.json -t 1000000 tests/*.test.ts",
     "test:contract": "cargo test --package streetfun --lib math",
-    "test:integration": "ts-mocha -p ./tests/tsconfig.json -t 1000000 tests/*.test.ts"
+    "test:integration": "ts-mocha -p ./tests/tsconfig.json -t 1000000 tests/*.test.ts",
+    "test:webhook": "npx ts-node -P ./tests/tsconfig.json scripts/test_webhook.ts"
   },
   "dependencies": {
     "@coral-xyz/anchor": "^0.30.1",

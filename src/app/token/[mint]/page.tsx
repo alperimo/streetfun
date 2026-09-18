@@ -38,9 +38,10 @@ export default function TokenDetailPage({ params }: PageProps) {
     INITIAL_TOKENS[0];
 
   const fetchTrades = React.useCallback(async () => {
-    if (!token?.mint) return;
+    const targetMint = mint || token?.mint;
+    if (!targetMint) return;
     try {
-      const res = await fetch(`/api/trades/${token.mint}`);
+      const res = await fetch(`/api/trades/${targetMint}`);
       if (res.ok) {
         const data = await res.json();
         setTrades(data.trades || []);
@@ -50,7 +51,7 @@ export default function TokenDetailPage({ params }: PageProps) {
     } finally {
       setTradesLoading(false);
     }
-  }, [token?.mint]);
+  }, [mint, token?.mint]);
 
   useEffect(() => {
     fetchTrades();

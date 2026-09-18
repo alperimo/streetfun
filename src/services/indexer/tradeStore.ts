@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { OHLCVBar } from "../types";
+import { INITIAL_TOKENS } from "@/lib/mockData";
 
 export interface TradeRecord {
   id?: number | string;
@@ -65,9 +66,41 @@ export class TradeStoreService {
     };
 
     if (supabase) {
-      const { error } = await supabase.from("trades").upsert(tradeWithTime);
-      if (error) {
-        console.error("[TradeStore] Supabase insert error:", error);
+      try {
+        // Ensure token exists in tokens table to avoid foreign key constraint error
+        const { data: existingToken } = await supabase
+          .from("tokens")
+          .select("mint")
+          .eq("mint", trade.mint)
+          .maybeSingle();
+
+        if (!existingToken) {
+          // Check if it's one of the initial tokens
+          const initialToken = INITIAL_TOKENS.find(
+            (t) => t.mint.toLowerCase() === trade.mint.toLowerCase()
+          );
+
+          await supabase.from("tokens").upsert({
+            mint: trade.mint,
+            name: initialToken?.name || "StreetFun Protocol Token",
+            symbol: initialToken?.symbol || "TOKEN",
+            target_equity_symbol: initialToken?.targetEquity?.symbol || "$TSPACEX",
+            target_equity_mint:
+              initialToken?.targetEquity?.mintAddress ||
+              "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+            creator: trade.trader || initialToken?.creator || "11111111111111111111111111111111",
+            avatar_url: initialToken?.avatarUrl,
+            is_graduated: initialToken?.bondingCurve?.isGraduated || false,
+            meteora_pool: initialToken?.bondingCurve?.meteoraPoolAddress,
+          });
+        }
+
+        const { error } = await supabase.from("trades").upsert(tradeWithTime);
+        if (error) {
+          console.error("[TradeStore] Supabase insert error:", error);
+        }
+      } catch (e) {
+        console.error("[TradeStore] Error ensuring token and trade:", e);
       }
     }
 

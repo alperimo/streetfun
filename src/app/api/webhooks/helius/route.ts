@@ -45,13 +45,26 @@ export async function POST(req: NextRequest) {
           // Mint address is typically the meme mint in the account keys
           const mint = ix.accounts?.[2] || ix.accounts?.[1] || "UNKNOWN_MINT";
 
+          let tokensAmount = 10000;
+          let quoteAmountUsd = 10;
+          let priceUsd = 0.00003;
+
+          const match = logString.match(/(?:Bought|Sold)\s+([0-9]+)\s+tokens\s+for\s+([0-9]+)/i);
+          if (match) {
+            tokensAmount = Number(match[1]) / 1e6;
+            quoteAmountUsd = Number(match[2]) / 1e6;
+            if (tokensAmount > 0) {
+              priceUsd = quoteAmountUsd / tokensAmount;
+            }
+          }
+
           await tradeStore.recordTrade({
             tx_signature: signature,
             mint,
             trade_type: tradeType,
-            price_usd: 0.00003, // Will be parsed from logs/events
-            tokens_amount: 10000,
-            quote_amount_usd: 10,
+            price_usd: priceUsd,
+            tokens_amount: tokensAmount,
+            quote_amount_usd: quoteAmountUsd,
             trader: feePayer,
             slot,
             created_at: timestamp,
