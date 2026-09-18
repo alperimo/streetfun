@@ -1,8 +1,8 @@
 "use client";
 
 import React from "react";
-import Image from "next/image";
 import { TrendingUp } from "lucide-react";
+import { BullArtwork } from "./BullArtwork";
 
 import { useMarket } from "@/context/MarketContext";
 
@@ -39,14 +39,7 @@ export function HeroBanner() {
 
   return (
     <section className="hero-section relative isolate min-h-[400px] overflow-hidden">
-      <Image
-        src="/generated/hero-bull.png"
-        alt="Black and white bull wearing neon green market glasses"
-        fill
-        priority
-        className="hero-bull-image -z-20 object-cover object-[78%_68%]"
-        sizes="(max-width: 1024px) 100vw, 1500px"
-      />
+      <BullArtwork />
       <div className="relative mx-auto flex min-h-[400px] w-full max-w-[1350px] flex-col justify-start px-6 py-9 sm:px-10 lg:px-0 lg:py-9">
         <div className="max-w-[650px]">
           <h1 className="max-w-[620px] text-4xl font-black leading-[0.98] tracking-[-0.055em] text-foreground sm:text-5xl lg:text-[64px]">

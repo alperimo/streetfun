@@ -45,6 +45,11 @@ const config: Config = {
           DEFAULT: withOpacity("--muted"),
           foreground: withOpacity("--muted-foreground"),
         },
+        hero: {
+          chart: withOpacity("--hero-chart"),
+          "chart-core": withOpacity("--hero-chart-core"),
+          "glass-shadow": withOpacity("--hero-glass-shadow"),
+        },
       },
       fontFamily: {
         sans: ["var(--font-sans)", "system-ui", "sans-serif"],

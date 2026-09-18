@@ -11,6 +11,10 @@
     --chrome-border-active: #2a3d4f;
     --chrome-foreground: #e8eff5;
     --chrome-muted: #8295a5;
+    /* Artwork stays lime glass in every UI theme. */
+    --hero-chart: #b8f75b;
+    --hero-chart-core: #efffd0;
+    --hero-glass-shadow: #010b05;
   }
 
   /* Default: Street Dark (Midnight Slate - 1 Notch Lighter, Degen Wall Street) */
@@ -130,6 +134,41 @@
     linear-gradient(to bottom, transparent 10%, black 60%, black 78%),
     linear-gradient(to right, transparent 0%, transparent 0%, black 60%, black 78%, transparent 90%, transparent 100%);
   mask-composite: intersect;
+}
+
+/* Scale and crop the image + SVG together, exactly like the original cover image.
+   The viewport owns the existing fades; the stage always has the source ratio. */
+.hero-artwork-viewport {
+  position: absolute;
+  inset: 0;
+  z-index: -20;
+  overflow: hidden;
+  pointer-events: none;
+  container-type: size;
+}
+
+.hero-artwork-stage {
+  position: absolute;
+  width: max(100cqw, calc(100cqh * var(--artwork-ratio)));
+  aspect-ratio: var(--artwork-ratio);
+  left: var(--artwork-x);
+  top: var(--artwork-y);
+  transform: translate(calc(-1 * var(--artwork-x)), calc(-1 * var(--artwork-y)));
+}
+
+.hero-chart {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  color: var(--hero-chart);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-chart-travel {
+    display: none;
+  }
 }
 
 .site-header,
