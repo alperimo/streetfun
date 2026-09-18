@@ -2,35 +2,42 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import { useWallet } from "@solana/wallet-adapter-react";
-import { useWalletModal } from "@solana/wallet-adapter-react-ui";
-import { Wallet, Copy, Check, LogOut, Terminal } from "lucide-react";
+import { WalletReadyState } from "@solana/wallet-adapter-base";
+import { Wallet, Copy, Check, LogOut, Terminal, ExternalLink } from "lucide-react";
 import { useMarket } from "@/context/MarketContext";
 
 export function WalletButton() {
-  const { connected, publicKey, disconnect, connecting } = useWallet();
-  const { setVisible } = useWalletModal();
+  const { connected, publicKey, disconnect, connecting, wallets, select } = useWallet();
   const { isWalletConnected, walletPublicKey, connectDevWallet, disconnectDevWallet } = useMarket();
   const [copied, setCopied] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [connectMenuOpen, setConnectMenuOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const connectRef = useRef<HTMLDivElement>(null);
 
   const effectiveConnected = connected || isWalletConnected;
   const effectivePublicKey = publicKey || walletPublicKey;
+  const detectedWallets = wallets.filter(({ readyState }) => readyState !== WalletReadyState.NotDetected);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
         setDropdownOpen(false);
       }
-      if (connectRef.current && !connectRef.current.contains(e.target as Node)) {
-        setConnectMenuOpen(false);
-      }
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  useEffect(() => {
+    if (!connectMenuOpen) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setConnectMenuOpen(false);
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [connectMenuOpen]);
 
   const handleCopy = () => {
     if (effectivePublicKey) {
@@ -50,14 +57,10 @@ export function WalletButton() {
 
   if (!effectiveConnected) {
     return (
-      <div className="relative" ref={connectRef}>
+      <div className="relative">
         <button
           onClick={() => {
-            if (isLocalnet) {
-              setConnectMenuOpen(!connectMenuOpen);
-            } else {
-              setVisible(true);
-            }
+            setConnectMenuOpen(!connectMenuOpen);
           }}
           disabled={connecting}
           aria-label={connecting ? "Connecting wallet" : "Connect wallet"}
@@ -67,39 +70,96 @@ export function WalletButton() {
           <span className="hidden sm:inline">{connecting ? "Connecting..." : "Connect wallet"}</span>
         </button>
 
-        {isLocalnet && connectMenuOpen && (
-          <div className="absolute right-0 mt-1.5 w-60 rounded-xl border border-border bg-card p-1.5 shadow-xl z-50 text-xs">
-            <button
-              onClick={() => {
-                setConnectMenuOpen(false);
-                setVisible(true);
-              }}
-              className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-left text-foreground hover:bg-card-hover transition-colors"
-            >
-              <Wallet className="h-4 w-4 text-brand-cyan" />
-              <div>
-                <div className="font-semibold">Browser Extension</div>
-                <div className="text-[10px] text-muted">Backpack, Phantom, Solflare</div>
-              </div>
-            </button>
-            <button
-              onClick={() => {
-                setConnectMenuOpen(false);
-                connectDevWallet();
-              }}
-              className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-left text-foreground hover:bg-card-hover transition-colors border-t border-border/50 mt-1 pt-2"
-            >
-              <Terminal className="h-4 w-4 text-emerald-400" />
-              <div>
-                <div className="font-semibold flex items-center gap-1.5">
-                  Localnet Dev Wallet
-                  <span className="text-[9px] px-1 py-0.2 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-mono">
-                    Funded
-                  </span>
+        {connectMenuOpen && (
+          <div
+            className="fixed inset-0 z-[100] flex h-dvh min-h-screen items-center justify-center overflow-y-auto bg-black/30 p-4 backdrop-blur-[1px]"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="connect-wallet-title"
+            onMouseDown={(e) => {
+              if (e.target === e.currentTarget) setConnectMenuOpen(false);
+            }}
+          >
+            <div className="my-auto w-full max-w-md rounded-2xl border border-border bg-card p-5 shadow-2xl sm:p-6">
+              <div className="mb-5 flex items-start justify-between gap-4">
+                <div>
+                  <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-xl border border-brand-cyan/30 bg-brand-cyan/10">
+                    <Wallet className="h-5 w-5 text-brand-cyan" />
+                  </div>
+                  <h2 id="connect-wallet-title" className="text-lg font-bold text-foreground">
+                    Connect a Solana wallet
+                  </h2>
+                  <p className="mt-1 text-sm leading-relaxed text-muted">
+                    A wallet is needed to trade and launch tokens on StreetFun.
+                  </p>
                 </div>
-                <div className="text-[10px] text-muted font-mono">519j..Cv2 (500M SOL)</div>
+                <button
+                  onClick={() => setConnectMenuOpen(false)}
+                  aria-label="Close wallet dialog"
+                  className="rounded-lg p-1.5 text-muted transition-colors hover:bg-card-hover hover:text-foreground"
+                >
+                  <span aria-hidden="true" className="text-xl leading-none">×</span>
+                </button>
               </div>
-            </button>
+
+              {detectedWallets.length > 0 ? (
+                <div className="space-y-2">
+                  {detectedWallets.map(({ adapter }) => (
+                    <button
+                      key={adapter.name}
+                      onClick={() => {
+                        select(adapter.name);
+                        setConnectMenuOpen(false);
+                      }}
+                      className="flex w-full items-center gap-3 rounded-xl border border-border bg-card-subtle p-3.5 text-left text-foreground transition-colors hover:border-brand-cyan/50 hover:bg-card-hover"
+                    >
+                      <img src={adapter.icon} alt="" className="h-10 w-10 rounded-xl" />
+                      <div className="min-w-0 flex-1">
+                        <div className="font-semibold">{adapter.name}</div>
+                        <div className="mt-0.5 text-xs text-brand-cyan">Detected</div>
+                      </div>
+                      <span className="text-sm text-muted">Connect</span>
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <a
+                  href="https://phantom.com/download"
+                  target="_blank"
+                  rel="noreferrer"
+                  onClick={() => setConnectMenuOpen(false)}
+                  className="flex w-full items-center gap-3 rounded-xl border border-brand-cyan/30 bg-brand-cyan/10 p-3.5 text-left text-foreground transition-colors hover:bg-brand-cyan/15"
+                >
+                  <Wallet className="h-5 w-5 shrink-0 text-brand-cyan" />
+                  <div className="min-w-0 flex-1">
+                    <div className="font-semibold">Get Phantom</div>
+                    <div className="mt-0.5 text-xs text-muted">Recommended for new users</div>
+                  </div>
+                  <ExternalLink className="h-4 w-4 shrink-0 text-muted" />
+                </a>
+              )}
+
+              {isLocalnet && (
+              <button
+                onClick={() => {
+                  setConnectMenuOpen(false);
+                  connectDevWallet();
+                }}
+                className="mt-4 flex w-full items-center gap-2.5 border-t border-border/50 px-1 pt-4 text-left text-foreground transition-colors hover:text-emerald-300"
+              >
+                <Terminal className="h-4 w-4 text-emerald-400" />
+                <div>
+                  <div className="flex items-center gap-1.5 font-semibold">
+                    Localnet Dev Wallet
+                    <span className="rounded border border-emerald-500/20 bg-emerald-500/10 px-1 py-0.2 font-mono text-[9px] text-emerald-400">
+                      Funded
+                    </span>
+                  </div>
+                  <div className="font-mono text-[10px] text-muted">519j..Cv2 (500M SOL)</div>
+                </div>
+              </button>
+            )}
+            </div>
           </div>
         )}
       </div>
