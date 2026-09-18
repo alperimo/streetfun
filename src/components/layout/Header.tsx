@@ -41,10 +41,10 @@ export function Header({ onOpenSearch, onOpenLaunch }: HeaderProps) {
   }, [onOpenSearch]);
 
   return (
-    <header className="site-header sticky top-0 z-40 w-full backdrop-blur-md">
+    <header className="site-header sticky top-0 z-40 w-full bg-background backdrop-blur-md">
       <div className="mx-auto flex h-[80px] w-full max-w-[1350px] items-center justify-between gap-4 px-6 sm:px-10 lg:px-0">
         {/* Left: Brand & Treasury */}
-        <div className="flex min-w-0 items-center gap-8">
+        <div className="flex h-full min-w-0 items-center gap-8">
           <Link href="/" className="flex shrink-0 items-center gap-2.5" aria-label="StreetFun home">
             <StreetFunLogo size={34} className="h-[34px] w-[34px] flex-shrink-0 text-brand-cyan" />
             <span className="text-[21px] font-bold tracking-[-0.04em] text-foreground">
@@ -52,16 +52,22 @@ export function Header({ onOpenSearch, onOpenLaunch }: HeaderProps) {
             </span>
           </Link>
 
-          <nav className="flex items-center text-[15px]">
+          <nav className="flex h-full items-center text-[15px]">
             <Link
               href="/treasury"
-              className={`py-2 font-medium transition-colors ${
+              className={`relative flex h-full items-center px-1 transition-colors ${
                 pathname === "/treasury"
-                  ? "font-semibold text-brand-cyan"
-                  : "text-muted hover:text-foreground"
+                  ? "font-semibold text-foreground"
+                  : "font-medium text-muted hover:text-foreground"
               }`}
             >
-              Treasury
+              <span>Treasury</span>
+              {pathname === "/treasury" && (
+                <span
+                  className="absolute -bottom-[1px] left-0 right-0 h-[2px] rounded-full bg-brand-cyan shadow-[0_0_8px_rgba(199,242,132,0.4)]"
+                  aria-hidden="true"
+                />
+              )}
             </Link>
           </nav>
         </div>

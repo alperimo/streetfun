@@ -41,8 +41,13 @@ export function TokenCard({ token }: TokenCardProps) {
   return (
     <article
       data-token={token.mint}
-      className="token-discovery-card group relative flex flex-col justify-between rounded-2xl border border-border bg-card p-4 sm:p-5 transition-colors hover:border-border-active hover:bg-card-hover shadow-sm"
+      className="token-discovery-card group relative flex flex-col justify-between rounded-2xl border border-border bg-card p-4 sm:p-5 transition-colors hover:border-border-active hover:bg-card-hover shadow-sm overflow-hidden"
     >
+      {/* Top highlight bevel for tactile luxury depth */}
+      <div
+        className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/[0.06] to-transparent"
+        aria-hidden="true"
+      />
       <Link
         href={`/token/${token.mint}`}
         aria-label={`Open ${token.name} ($${token.symbol})`}
@@ -131,9 +136,9 @@ export function TokenCard({ token }: TokenCardProps) {
 
         {/* Progress Bar (bonding tokens) vs Clean Matching Divider (graduated tokens) */}
         {!token.bondingCurve.isGraduated ? (
-          <div className="mt-2.5 h-1.5 w-full overflow-hidden rounded-full bg-card-hover/40 border border-border">
+          <div className="mt-2.5 h-1.5 w-full overflow-hidden rounded-full bg-card-subtle border border-border">
             <div
-              className="bg-gradient-to-r from-brand-cyan/70 to-brand-cyan h-1.5 rounded-full transition-all duration-300"
+              className="bg-gradient-to-r from-brand-cyan/70 via-brand-cyan to-[#d7f6a0] shadow-[0_0_8px_rgba(199,242,132,0.35)] h-1.5 rounded-full transition-all duration-300"
               style={{ width: `${Math.min(token.bondingCurve.progressPct, 100)}%` }}
             />
           </div>
