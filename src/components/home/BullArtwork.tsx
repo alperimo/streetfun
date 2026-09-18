@@ -91,15 +91,17 @@ export function BullArtwork() {
       <div ref={viewport} className="hero-artwork-viewport hero-bull-image" aria-hidden="true">
         <div className="hero-artwork-stage" style={stageStyle}>
           <Image
-            src="/generated/hero-bull-clean-lenses.png"
+            src="/generated/hero-bull-brand-glasses.png"
             alt=""
             fill
             priority
             sizes="(max-width: 900px) 900px, 100vw"
           />
+          {/* City light sweep intentionally disabled.
           <div className="hero-city-light">
-            <Image src="/generated/hero-bull-clean-lenses.png" alt="" fill priority sizes="(max-width: 900px) 900px, 100vw" />
+            <Image src="/generated/hero-bull-brand-glasses.png" alt="" fill priority sizes="(max-width: 900px) 900px, 100vw" />
           </div>
+          */}
           <svg ref={svg} className="hero-chart" viewBox={`0 0 ${art.width} ${art.height}`} focusable="false">
             <defs>
               <path ref={path} id={`${id}-trend`} d={art.trend} pathLength="1" />

@@ -11,9 +11,9 @@
     --chrome-border-active: #2a3d4f;
     --chrome-foreground: #e8eff5;
     --chrome-muted: #8295a5;
-    /* Artwork stays lime glass in every UI theme. */
-    --hero-chart: #b8f75b;
-    --hero-chart-core: #efffd0;
+    /* Keep the lens chart and its glow aligned with the green accent text. */
+    --hero-chart: var(--brand-emerald);
+    --hero-chart-core: var(--brand-emerald);
     --hero-glass-shadow: #010b05;
   }
 
