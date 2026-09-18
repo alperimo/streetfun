@@ -57,7 +57,7 @@ export function HeroBanner() {
           <p className="mt-4 max-w-lg text-base text-muted sm:text-lg">
             Trade viral momentum. Graduate to real tokenized equities.
           </p>
-          <div className="mt-6 grid w-full max-w-[640px] grid-cols-3 items-stretch rounded-2xl border border-border bg-background/75 p-3 backdrop-blur-md sm:p-4">
+          <div className="mt-6 grid w-full max-w-[480px] grid-cols-3 items-stretch rounded-2xl border border-border bg-background/75 p-3 backdrop-blur-md sm:p-4">
             {stats.map((stat, index) => (
               <React.Fragment key={stat.label}>
                 <div

@@ -44,7 +44,7 @@ export function FilterBar({
   onSortChange,
 }: FilterBarProps) {
   return (
-    <div className="mt-8 flex flex-col gap-3.5">
+    <div className="mt-4 flex flex-col gap-3.5">
       {/* Top Controls Row: Search Input + Status Filter + Sort */}
       <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4">
         {/* Search Input Box */}
