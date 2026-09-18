@@ -116,7 +116,7 @@ export function FilterBar({
             className={`whitespace-nowrap rounded-lg px-3 py-1 text-xs transition-colors duration-150 ${
               selectedTag === tag.id
                 ? "bg-brand-cyan/10 border border-brand-cyan/40 text-brand-cyan font-medium shadow-xs"
-                : "border border-border bg-transparent text-muted font-medium hover:text-foreground hover:bg-card-hover"
+                : "border border-border bg-filter text-muted font-medium hover:text-foreground hover:bg-card-hover"
             }`}
           >
             {tag.label}

@@ -80,10 +80,10 @@ export default function MarketsPage() {
         onOpenLaunch={() => setIsLaunchOpen(true)}
       />
 
-      <main className="flex-1 w-full bg-card pb-12">
+      <main className="flex-1 w-full bg-background pb-12">
         <HeroBanner />
 
-        <div className="w-full bg-card">
+        <div className="w-full bg-background">
           <div className="mx-auto w-full max-w-[1350px] px-6 pt-8 sm:px-10 lg:px-0">
             <FilterBar
               searchQuery={searchQuery}

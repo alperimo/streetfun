@@ -4,10 +4,10 @@
 
 @layer base {
   :root {
-    --chrome-background: #000000;
-    --chrome-card: #0b1218;
+    --chrome-background: #090d10;
+    --chrome-card: #0a0f14;
     --chrome-card-hover: #131f2b;
-    --chrome-border: #182531;
+    --chrome-border: #19242e;
     --chrome-border-active: #2a3d4f;
     --chrome-foreground: #e8eff5;
     --chrome-muted: #8295a5;
@@ -15,52 +15,54 @@
 
   /* Default: Street Dark (Midnight Slate - 1 Notch Lighter, Degen Wall Street) */
   [data-theme="street-dark"] {
-    --background: #0c1218;
+    --background: #090d10;
     --foreground: #f1f5f9;
-    --card: #131d27;
+    --card: #0a0f14;
     --card-hover: #192734;
     --card-subtle: #090e13;
-    --border: #1f3042;
+    --filter-surface: #0f1214;
+    --border: #19242e;
     --border-active: #2d455e;
     --muted: #94a3b8;
     --muted-foreground: #64748b;
-    --brand-cyan: #62F88B;
-    --brand-cyan-hover: #7CFFA0;
-    --brand-cyan-tint: rgba(98, 248, 139, 0.12);
-    --brand-cyan-border: rgba(98, 248, 139, 0.35);
-    --brand-cyan-text: #D6FFE0;
-    --brand-emerald: #62F88B;
+    --brand-cyan: #c7f284;
+    --brand-cyan-hover: #d7f6a0;
+    --brand-cyan-tint: rgba(199, 242, 132, 0.12);
+    --brand-cyan-border: rgba(199, 242, 132, 0.35);
+    --brand-cyan-text: #efffd0;
+    --brand-emerald: #c7f284;
     --brand-purple: #a855f7;
     --brand-amber: #f59e0b;
     --brand-rose: #f43f5e;
-    --scrollbar-track: #0c1218;
-    --scrollbar-thumb: #1f3042;
+    --scrollbar-track: #090d10;
+    --scrollbar-thumb: #19242e;
     --scrollbar-thumb-hover: #2d455e;
   }
 
   /* Theme 2: Onyx Dark (Original Deep Pitch Black Terminal) */
   :root,
   [data-theme="dark"] {
-    --background: #060a0e;
+    --background: #090d10;
     --foreground: #e6edf3;
-    --card: #0b1218;
+    --card: #0a0f14;
     --card-hover: #0f1922;
     --card-subtle: #070c10;
-    --border: #182531;
+    --filter-surface: #0f1214;
+    --border: #19242e;
     --border-active: #2a3d4f;
     --muted: #8295a5;
     --muted-foreground: #526373;
-    --brand-cyan: #62F88B;
-    --brand-cyan-hover: #7CFFA0;
-    --brand-cyan-tint: rgba(98, 248, 139, 0.12);
-    --brand-cyan-border: rgba(98, 248, 139, 0.35);
-    --brand-cyan-text: #D6FFE0;
-    --brand-emerald: #62F88B;
+    --brand-cyan: #c7f284;
+    --brand-cyan-hover: #d7f6a0;
+    --brand-cyan-tint: rgba(199, 242, 132, 0.12);
+    --brand-cyan-border: rgba(199, 242, 132, 0.35);
+    --brand-cyan-text: #efffd0;
+    --brand-emerald: #c7f284;
     --brand-purple: #a855f7;
     --brand-amber: #f59e0b;
     --brand-rose: #f43f5e;
-    --scrollbar-track: #060a0e;
-    --scrollbar-thumb: #182531;
+    --scrollbar-track: #090d10;
+    --scrollbar-thumb: #19242e;
     --scrollbar-thumb-hover: #2a3d4f;
   }
 
@@ -71,6 +73,7 @@
     --card: #ffffff;
     --card-hover: #f1f5f9;
     --card-subtle: #f8fafc;
+    --filter-surface: #f1f5f9;
     --border: #e2e8f0;
     --border-active: #cbd5e1;
     --muted: #64748b;
@@ -119,12 +122,17 @@
 }
 
 .hero-bull-image {
-  -webkit-mask-image: linear-gradient(to right, transparent 0%, transparent 36%, black 52%, black 78%, transparent 98%, transparent 100%);
-  mask-image: linear-gradient(to right, transparent 0%, transparent 36%, black 52%, black 78%, transparent 98%, transparent 100%);
+  -webkit-mask-image:
+    linear-gradient(to bottom, transparent 10%, black 60%, black 78%),
+    linear-gradient(to right, transparent 0%, transparent 36%, black 60%, black 78%, transparent 90%, transparent 100%);
+  -webkit-mask-composite: source-in;
+  mask-image:
+    linear-gradient(to bottom, transparent 10%, black 60%, black 78%),
+    linear-gradient(to right, transparent 0%, transparent 0%, black 60%, black 78%, transparent 90%, transparent 100%);
+  mask-composite: intersect;
 }
 
 .site-header,
-.hero-section,
 .site-footer {
   --background: var(--chrome-background);
   --card: var(--chrome-card);
@@ -134,6 +142,31 @@
   --foreground: var(--chrome-foreground);
   --muted: var(--chrome-muted);
   background-color: var(--chrome-background);
+}
+
+.site-header {
+  border-bottom: 1px solid var(--chrome-border);
+}
+
+.site-footer {
+  border-top: 1px solid var(--chrome-border);
+}
+
+.hero-section {
+  position: relative;
+  background-color: var(--background);
+}
+
+.hero-section::after {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: -10;
+  height: 72px;
+  background: linear-gradient(to bottom, transparent, var(--background));
+  content: "";
+  pointer-events: none;
 }
 
 .terminal-card {

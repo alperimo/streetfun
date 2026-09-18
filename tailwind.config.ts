@@ -28,6 +28,7 @@ const config: Config = {
           hover: withOpacity("--card-hover"),
           subtle: withOpacity("--card-subtle"),
         },
+        filter: withOpacity("--filter-surface"),
         border: {
           DEFAULT: withOpacity("--border"),
           active: withOpacity("--border-active"),
