@@ -11,13 +11,14 @@ interface TokenCardProps {
 }
 
 function formatVolume(vol: number): string {
+  if (!vol || vol === 0) return "$0";
   if (vol >= 1_000_000) {
     return `$${(vol / 1_000_000).toFixed(2)}M`;
   }
   if (vol >= 1_000) {
-    return `$${(vol / 1_000).toFixed(0)}K`;
+    return `$${(vol / 1_000).toFixed(1)}K`;
   }
-  return `$${vol}`;
+  return `$${vol.toFixed(2)}`;
 }
 
 export function TokenCard({ token }: TokenCardProps) {
@@ -34,7 +35,8 @@ export function TokenCard({ token }: TokenCardProps) {
     copyTimer.current = setTimeout(() => setCopied(false), 1500);
   };
 
-  const isPositive = token.priceChange24h >= 0;
+  const isNeutral = Math.abs(token.priceChange24h) < 0.01;
+  const isPositive = token.priceChange24h > 0;
 
   return (
     <article
@@ -44,7 +46,7 @@ export function TokenCard({ token }: TokenCardProps) {
       <Link
         href={`/token/${token.mint}`}
         aria-label={`Open ${token.name} ($${token.symbol})`}
-        className="absolute inset-0 z-10 rounded-2xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-emerald"
+        className="absolute inset-0 z-10 rounded-2xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-cyan"
       />
       <div>
         {/* Top: Avatar, Name, CA button */}
@@ -82,7 +84,7 @@ export function TokenCard({ token }: TokenCardProps) {
             className="relative z-20 flex items-center gap-1 rounded-lg border border-border-active/40 bg-card-hover/40 px-2 py-1 text-[11px] text-muted hover:border-border-active hover:text-foreground hover:bg-card-hover transition-colors"
           >
             {copied ? (
-              <Check className="h-3 w-3 text-brand-emerald" />
+              <Check className="h-3 w-3 text-emerald-400" />
             ) : (
               <Copy className="h-3 w-3" />
             )}
@@ -186,10 +188,14 @@ export function TokenCard({ token }: TokenCardProps) {
         </span>
         <span
           className={`font-semibold ${
-            isPositive ? "text-brand-emerald" : "text-brand-rose"
+            isNeutral
+              ? "text-muted"
+              : isPositive
+              ? "text-emerald-400"
+              : "text-rose-400"
           }`}
         >
-          {isPositive ? "+" : ""}
+          {isPositive && !isNeutral ? "+" : ""}
           {token.priceChange24h.toFixed(1)}%
         </span>
       </div>

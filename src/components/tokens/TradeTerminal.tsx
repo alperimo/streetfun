@@ -357,7 +357,7 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
               />
             </div>
             <div className="flex items-center justify-between text-[10px] text-muted mt-1.5 font-mono">
-              <span>${token.bondingCurve.realQuoteReservesUsd.toLocaleString()} / $60,000 USDC</span>
+              <span>${token.bondingCurve.realQuoteReservesUsd.toLocaleString("en-US")} / $60,000 USDC</span>
               <span>50% Stock Purchase · 50% Liquidity</span>
             </div>
           </div>
@@ -440,7 +440,7 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
                 <span>You Receive (Estimated):</span>
                 <span className="font-mono font-bold text-foreground">
                   {simulation.type === "buy"
-                    ? `${(Number(simulation.tokensOut) / 1_000_000).toLocaleString(undefined, { maximumFractionDigits: 2 })} ${token.symbol}`
+                    ? `${(Number(simulation.tokensOut) / 1_000_000).toLocaleString("en-US", { maximumFractionDigits: 2 })} ${token.symbol}`
                     : `${(Number(simulation.netQuoteOut) / 1_000_000).toFixed(2)} USDC`}
                 </span>
               </div>

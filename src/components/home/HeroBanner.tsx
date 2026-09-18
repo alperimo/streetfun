@@ -45,7 +45,7 @@ export function HeroBanner() {
           <h1 className="max-w-[620px] text-4xl font-black leading-[0.98] tracking-[-0.055em] text-foreground sm:text-5xl lg:text-[64px]">
             Wall Street Floor
             <br />
-            For <span className="text-brand-emerald">Memecoins</span>
+            For <span className="text-brand-cyan">Memecoins</span>
           </h1>
           <p className="mt-4 max-w-lg text-base text-muted sm:text-lg">
             Trade viral momentum. Graduate to real tokenized equities.
@@ -64,7 +64,7 @@ export function HeroBanner() {
                   <div className="mt-1 text-xl font-black tracking-tight text-foreground sm:text-2xl">
                     {stat.value}
                   </div>
-                  <div className="mt-1 flex items-center justify-center gap-1 text-xs font-semibold text-brand-emerald">
+                  <div className="mt-1 flex items-center justify-center gap-1 text-xs font-semibold text-emerald-400">
                     <TrendingUp className="h-3 w-3" />
                     {stat.change}
                   </div>

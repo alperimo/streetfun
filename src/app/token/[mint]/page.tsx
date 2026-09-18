@@ -79,8 +79,7 @@ export default function TokenDetailPage({ params }: PageProps) {
     );
   }
 
-  const isPositive = token.priceChange24h >= 0;
-
+  // 1. Current Price & Market Cap
   const currentPrice =
     trades.length > 0 && trades[0]?.price_usd ? Number(trades[0].price_usd) : token.priceUsd;
   const currentMarketCap =
@@ -95,6 +94,59 @@ export default function TokenDetailPage({ params }: PageProps) {
 
   const formattedPrice =
     currentPrice < 0.001 ? `$${currentPrice.toFixed(6)}` : `$${currentPrice.toFixed(4)}`;
+
+  // 2. Dynamic Price Change %
+  const initialCurvePrice = 30_000 / 1_073_000_000;
+  const oldestPrice =
+    trades.length > 0 && trades[trades.length - 1]?.price_usd
+      ? Number(trades[trades.length - 1].price_usd)
+      : initialCurvePrice;
+
+  const computedChangePct =
+    trades.length > 1
+      ? ((currentPrice - oldestPrice) / oldestPrice) * 100
+      : token.priceChange24h;
+
+  const isNeutralChange = Math.abs(computedChangePct) < 0.01;
+  const isPositiveChange = computedChangePct > 0;
+
+  // 3. Dynamic Volume (from real indexed trades or token metadata)
+  const tradesVolume = trades.reduce((acc, t) => acc + (Number(t.quote_amount_usd) || 0), 0);
+  const totalVolume = Math.max(tradesVolume, token.volume24hUsd || 0);
+
+  const formattedVolume =
+    totalVolume >= 1_000_000
+      ? `$${(totalVolume / 1_000_000).toFixed(2)}M`
+      : totalVolume >= 1_000
+      ? `$${(totalVolume / 1_000).toFixed(1)}K`
+      : `$${totalVolume.toFixed(2)}`;
+
+  // 4. Dynamic Bonding Reserves & Progress
+  const totalBuys = trades
+    .filter((t) => t.trade_type === "BUY")
+    .reduce((acc, t) => acc + (Number(t.quote_amount_usd) || 0), 0);
+  const totalSells = trades
+    .filter((t) => t.trade_type === "SELL")
+    .reduce((acc, t) => acc + (Number(t.quote_amount_usd) || 0), 0);
+
+  const currentReserves = Math.max(
+    token.bondingCurve.realQuoteReservesUsd,
+    totalBuys - totalSells
+  );
+
+  const currentProgressPct = Math.min(100, (currentReserves / 60_000) * 100);
+
+  const formattedProgress =
+    currentProgressPct >= 1
+      ? `${Math.round(currentProgressPct)}%`
+      : currentProgressPct > 0
+      ? `${currentProgressPct.toFixed(2)}%`
+      : `0%`;
+
+  const formattedReservesDetail =
+    currentReserves >= 1_000
+      ? `(${(currentReserves / 1_000).toFixed(1)}K / $60K)`
+      : `($${currentReserves.toFixed(0)} / $60,000 USDC)`;
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
@@ -162,7 +214,7 @@ export default function TokenDetailPage({ params }: PageProps) {
                     </span>
                   </button>
                   {copied && (
-                    <span className="text-[11px] text-brand-emerald font-medium">Copied!</span>
+                    <span className="text-[11px] text-emerald-400 font-medium">Copied!</span>
                   )}
                 </div>
               </div>
@@ -206,11 +258,15 @@ export default function TokenDetailPage({ params }: PageProps) {
                 <span>{formattedPrice}</span>
                 <span
                   className={`text-xs font-semibold ${
-                    isPositive ? "text-brand-emerald" : "text-brand-rose"
+                    isNeutralChange
+                      ? "text-muted"
+                      : isPositiveChange
+                      ? "text-emerald-400"
+                      : "text-rose-400"
                   }`}
                 >
-                  {isPositive ? "+" : ""}
-                  {token.priceChange24h.toFixed(1)}%
+                  {isPositiveChange && !isNeutralChange ? "+" : ""}
+                  {computedChangePct.toFixed(1)}%
                 </span>
               </div>
             </div>
@@ -218,7 +274,7 @@ export default function TokenDetailPage({ params }: PageProps) {
             <div>
               <div className="text-[11px] text-muted font-medium">24h volume</div>
               <div className="mt-1 font-mono text-xl font-bold text-foreground">
-                ${token.volume24hUsd >= 1_000_000 ? `${(token.volume24hUsd / 1_000_000).toFixed(2)}M` : `${(token.volume24hUsd / 1_000).toFixed(0)}K`}
+                {formattedVolume}
               </div>
             </div>
 
@@ -237,9 +293,9 @@ export default function TokenDetailPage({ params }: PageProps) {
                 <>
                   <div className="text-[11px] text-muted font-medium">Bonding curve</div>
                   <div className="mt-1 font-mono text-xl font-bold text-foreground">
-                    {token.bondingCurve.progressPct}%{" "}
+                    {formattedProgress}{" "}
                     <span className="text-xs font-normal text-muted">
-                      (${(token.bondingCurve.realQuoteReservesUsd / 1_000).toFixed(1)}K / $60K)
+                      {formattedReservesDetail}
                     </span>
                   </div>
                 </>
@@ -279,14 +335,14 @@ export default function TokenDetailPage({ params }: PageProps) {
                 <div className="flex items-center justify-between text-xs mb-2">
                   <span className="text-muted font-medium">Graduation Progress</span>
                   <span className="font-mono font-bold text-foreground">
-                    {token.bondingCurve.progressPct}% (${(token.bondingCurve.realQuoteReservesUsd / 1_000).toFixed(1)}K / $60K USDC)
+                    {formattedProgress} {formattedReservesDetail}
                   </span>
                 </div>
 
                 <div className="h-1.5 w-full overflow-hidden rounded-full bg-card-hover/40 border border-border">
                   <div
                     className="bg-gradient-to-r from-brand-cyan/70 to-brand-cyan h-1.5 rounded-full transition-all duration-300"
-                    style={{ width: `${Math.min(token.bondingCurve.progressPct, 100)}%` }}
+                    style={{ width: `${Math.min(currentProgressPct, 100)}%` }}
                   />
                 </div>
               </div>
@@ -300,8 +356,8 @@ export default function TokenDetailPage({ params }: PageProps) {
                     Live Trades
                   </h3>
                   <span className="flex h-1.5 w-1.5 relative">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-emerald opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-brand-emerald"></span>
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-400"></span>
                   </span>
                 </div>
               </div>
@@ -335,6 +391,10 @@ export default function TokenDetailPage({ params }: PageProps) {
                         const isBuy = trade.trade_type === "BUY";
                         const sec = Math.max(1, Math.floor((Date.now() - new Date(trade.created_at || Date.now()).getTime()) / 1000));
                         const timeAgo = sec < 60 ? `${sec}s ago` : sec < 3600 ? `${Math.floor(sec / 60)}m ago` : `${Math.floor(sec / 3600)}h ago`;
+                        const formattedTradePrice =
+                          Number(trade.price_usd) < 0.001
+                            ? `$${Number(trade.price_usd).toFixed(6)}`
+                            : `$${Number(trade.price_usd).toFixed(4)}`;
                         return (
                           <tr key={trade.id || idx} className="hover:bg-card-hover transition-colors">
                             <td className="py-2">
@@ -343,19 +403,19 @@ export default function TokenDetailPage({ params }: PageProps) {
                                   isRedeem
                                     ? "bg-amber-500/10 text-amber-500 border border-amber-500/30"
                                     : isBuy
-                                    ? "bg-emerald-500/10 text-brand-emerald border border-emerald-500/20"
-                                    : "bg-rose-500/10 text-brand-rose border border-rose-500/20"
+                                    ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
+                                    : "bg-rose-500/10 text-rose-400 border border-rose-500/20"
                                 }`}
                               >
                                 {trade.trade_type}
                               </span>
                             </td>
-                            <td className="py-2 text-foreground">${Number(trade.price_usd).toFixed(4)}</td>
+                            <td className="py-2 text-foreground">{formattedTradePrice}</td>
                             <td className="py-2 text-foreground">
-                              {Number(trade.tokens_amount).toLocaleString()} {token.symbol}
+                              {Number(trade.tokens_amount).toLocaleString("en-US", { maximumFractionDigits: 2 })} {token.symbol}
                             </td>
                             <td className="py-2 font-bold text-foreground">
-                              ${Number(trade.quote_amount_usd).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                              ${Number(trade.quote_amount_usd).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                             </td>
                             <td className="py-2 text-right text-muted">{timeAgo}</td>
                           </tr>

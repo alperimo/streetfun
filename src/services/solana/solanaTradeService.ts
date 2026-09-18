@@ -93,6 +93,20 @@ export class SolanaTradeService implements ITradeService {
           Math.round((newReserves / curve.graduationThresholdUsd) * 100)
         );
 
+        // Update constant product reserves
+        const newVirtualQuote = virtualQuote + sim.netQuote;
+        const newVirtualTokens = (virtualQuote * virtualTokens) / newVirtualQuote;
+        curve.virtualQuoteReserves = newVirtualQuote.toString();
+        curve.virtualTokenReserves = newVirtualTokens.toString();
+        curve.realTokenReserves = (realTokens - sim.tokensOut).toString();
+
+        const newSpotPrice = Number(newVirtualQuote) / Number(newVirtualTokens);
+        token.priceUsd = Number(newSpotPrice.toFixed(8));
+        token.marketCapUsd = Math.round(token.priceUsd * 1_000_000_000);
+        token.volume24hUsd = (token.volume24hUsd || 0) + params.amount;
+        const initialCurvePrice = 30_000 / 1_073_000_000;
+        token.priceChange24h = ((token.priceUsd - initialCurvePrice) / initialCurvePrice) * 100;
+
         if (willGraduate) {
           curve.isGraduated = true;
           curve.progressPct = 100;
@@ -120,7 +134,7 @@ export class SolanaTradeService implements ITradeService {
           tx_signature: `curve_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
           mint: token.mint,
           trade_type: "BUY",
-          price_usd: sim.effectivePriceUsd,
+          price_usd: token.priceUsd,
           tokens_amount: tokensOut,
           quote_amount_usd: params.amount,
           trader: walletPublicKey.toBase58(),
@@ -131,7 +145,7 @@ export class SolanaTradeService implements ITradeService {
           success: true,
           tokensAmount: tokensOut,
           quoteAmount: params.amount,
-          effectivePrice: sim.effectivePriceUsd,
+          effectivePrice: token.priceUsd,
           priceImpactPct: sim.priceImpactPct,
           isGraduated: willGraduate,
           message: willGraduate
@@ -155,13 +169,26 @@ export class SolanaTradeService implements ITradeService {
           100,
           Math.round((curve.realQuoteReservesUsd / curve.graduationThresholdUsd) * 100)
         );
+
+        const newVirtualTokens = virtualTokens + tokensInLamports;
+        const newVirtualQuote = (virtualQuote * virtualTokens) / newVirtualTokens;
+        curve.virtualQuoteReserves = newVirtualQuote.toString();
+        curve.virtualTokenReserves = newVirtualTokens.toString();
+        curve.realTokenReserves = (realTokens + tokensInLamports).toString();
+
+        const newSpotPrice = Number(newVirtualQuote) / Number(newVirtualTokens);
+        token.priceUsd = Number(newSpotPrice.toFixed(8));
+        token.marketCapUsd = Math.round(token.priceUsd * 1_000_000_000);
+        token.volume24hUsd = (token.volume24hUsd || 0) + quoteOut;
+        const initialCurvePrice = 30_000 / 1_073_000_000;
+        token.priceChange24h = ((token.priceUsd - initialCurvePrice) / initialCurvePrice) * 100;
         token.bondingCurve = curve;
 
         await TradeStoreService.getInstance().recordTrade({
           tx_signature: `curve_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
           mint: token.mint,
           trade_type: "SELL",
-          price_usd: sim.effectivePriceUsd,
+          price_usd: token.priceUsd,
           tokens_amount: params.amount,
           quote_amount_usd: quoteOut,
           trader: walletPublicKey.toBase58(),
@@ -172,7 +199,7 @@ export class SolanaTradeService implements ITradeService {
           success: true,
           tokensAmount: params.amount,
           quoteAmount: quoteOut,
-          effectivePrice: sim.effectivePriceUsd,
+          effectivePrice: token.priceUsd,
           priceImpactPct: sim.priceImpactPct,
           isGraduated: false,
           message: `On-Chain curve trade confirmed! Received $${quoteOut.toFixed(2)} USDC`,

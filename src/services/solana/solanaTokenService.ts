@@ -256,12 +256,14 @@ export class SolanaTokenService implements ITokenService {
       });
 
       if (params.initialBuyUsdc && params.initialBuyUsdc > 0) {
+        const initialCurvePrice = 30_000 / 1_073_000_000;
+        const tokensEstimated = Math.round(params.initialBuyUsdc / initialCurvePrice);
         await TradeStoreService.getInstance().recordTrade({
           tx_signature: `sol_launch_buy_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
           mint: newToken.mint,
           trade_type: "BUY",
-          price_usd: 0.00003,
-          tokens_amount: params.initialBuyUsdc / 0.00003,
+          price_usd: initialCurvePrice,
+          tokens_amount: tokensEstimated,
           quote_amount_usd: params.initialBuyUsdc,
           trader: creatorPubkey.toBase58(),
           created_at: new Date().toISOString(),

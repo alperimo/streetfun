@@ -94,7 +94,7 @@ export function BurnRedeemModule({ token }: BurnRedeemModuleProps) {
             onClick={() => setRedeemMode("usdc")}
             className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all ${
               redeemMode === "usdc"
-                ? "bg-brand-emerald text-white shadow-sm"
+                ? "bg-emerald-500 hover:bg-emerald-600 text-white shadow-sm"
                 : "text-muted hover:text-foreground"
             }`}
           >
@@ -140,7 +140,7 @@ export function BurnRedeemModule({ token }: BurnRedeemModuleProps) {
           <div className="font-mono text-base font-bold text-foreground flex items-center gap-2">
             <span>{numMeme.toLocaleString()} ${token.symbol}</span>
             <span className="text-brand-cyan">=</span>
-            <span className="text-brand-emerald">
+            <span className="text-emerald-400">
               {entitledStockShares.toFixed(4)} Shares ({token.targetEquity.symbol})
             </span>
           </div>
@@ -161,7 +161,7 @@ export function BurnRedeemModule({ token }: BurnRedeemModuleProps) {
       </div>
 
       {txSuccess && (
-        <div className="mt-3 flex items-center gap-2 rounded-lg border border-brand-emerald/30 bg-emerald-500/10 p-2.5 text-xs text-brand-emerald">
+        <div className="mt-3 flex items-center gap-2 rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-2.5 text-xs text-emerald-400">
           <Check className="h-4 w-4 flex-shrink-0" />
           <span>{txSuccess}</span>
         </div>
@@ -201,7 +201,7 @@ export function BurnRedeemModule({ token }: BurnRedeemModuleProps) {
             handleExecuteRedeem();
           }}
           disabled={!numMeme || isProcessing}
-          className="flex flex-col items-center justify-center gap-1 rounded-xl border border-brand-emerald/40 bg-emerald-500/10 py-3 px-4 text-xs font-bold text-brand-emerald hover:bg-emerald-500/20 transition-colors disabled:opacity-50 shadow-sm"
+          className="flex flex-col items-center justify-center gap-1 rounded-xl border border-emerald-500/40 bg-emerald-500/10 py-3 px-4 text-xs font-bold text-emerald-400 hover:bg-emerald-500/20 transition-colors disabled:opacity-50 shadow-sm"
         >
           <div className="flex items-center gap-1.5">
             {isProcessing && redeemMode === "usdc" ? (

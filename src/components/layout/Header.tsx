@@ -35,7 +35,7 @@ export function Header({ onOpenSearch, onOpenLaunch }: HeaderProps) {
         {/* Left: Brand */}
         <div className="flex min-w-0 items-center gap-7">
           <Link href="/" className="flex shrink-0 items-center gap-2.5" aria-label="StreetFun home">
-            <StreetFunLogo size={34} className="h-[34px] w-[34px] flex-shrink-0 text-brand-emerald" />
+            <StreetFunLogo size={34} className="h-[34px] w-[34px] flex-shrink-0 text-brand-cyan" />
             <span className="text-[21px] font-bold tracking-[-0.04em] text-foreground">
               StreetFun
             </span>
@@ -44,35 +44,35 @@ export function Header({ onOpenSearch, onOpenLaunch }: HeaderProps) {
 
         {/* Center: Primary navigation and search */}
         <nav className="absolute left-1/2 hidden -translate-x-1/2 items-center gap-8 text-[15px] xl:flex">
-            <Link
-              href="/"
-              className={`relative py-2 font-medium transition-colors ${
-                pathname === "/"
-                  ? "font-semibold text-foreground"
-                  : "text-muted hover:text-foreground"
-              }`}
-            >
-              MARKETS
-            </Link>
+          <Link
+            href="/"
+            className={`relative py-2 font-medium transition-colors ${
+              pathname === "/"
+                ? "font-semibold text-foreground"
+                : "text-muted hover:text-foreground"
+            }`}
+          >
+            MARKETS
+          </Link>
 
-            <Link
-              href="/treasury"
-              className={`py-2 font-medium transition-colors ${
-                pathname === "/treasury"
-                  ? "font-semibold text-brand-emerald"
-                  : "text-muted hover:text-foreground"
-              }`}
-            >
-              TREASURY
-            </Link>
-            <button
-              onClick={onOpenSearch}
-              aria-label="Search"
-              title="Search"
-              className="flex h-11 w-11 items-center justify-center rounded-xl text-muted transition-colors hover:bg-card hover:text-foreground"
-            >
-              <Search className="h-5 w-5" />
-            </button>
+          <Link
+            href="/treasury"
+            className={`py-2 font-medium transition-colors ${
+              pathname === "/treasury"
+                ? "font-semibold text-brand-cyan"
+                : "text-muted hover:text-foreground"
+            }`}
+          >
+            TREASURY
+          </Link>
+          <button
+            onClick={onOpenSearch}
+            aria-label="Search"
+            title="Search"
+            className="flex h-11 w-11 items-center justify-center rounded-xl text-muted transition-colors hover:bg-card hover:text-foreground"
+          >
+            <Search className="h-5 w-5" />
+          </button>
         </nav>
 
         {/* Right: launch CTA and wallet */}
