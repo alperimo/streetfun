@@ -38,7 +38,7 @@ export function HeroBanner() {
   ];
 
   return (
-    <section className="hero-section relative isolate min-h-[400px] overflow-hidden">
+    <section className="hero-section relative isolate min-h-[460px] overflow-hidden">
       <Image
         src="/generated/hero-bull.png"
         alt="Black and white bull wearing neon green market glasses"
@@ -47,37 +47,106 @@ export function HeroBanner() {
         className="hero-bull-image -z-20 object-cover object-[78%_68%]"
         sizes="(max-width: 1024px) 100vw, 1500px"
       />
-      <div className="relative mx-auto flex min-h-[400px] w-full max-w-[1350px] flex-col justify-start px-6 py-9 sm:px-10 lg:px-0 lg:py-9">
+      <div className="relative mx-auto flex min-h-[460px] w-full max-w-[1350px] flex-col justify-between px-6 py-10 sm:px-10 lg:px-0">
         <div className="max-w-[650px]">
-          <h1 className="max-w-[620px] text-4xl font-black leading-[0.98] tracking-[-0.055em] text-foreground sm:text-5xl lg:text-[64px]">
-            Wall Street Floor
+          <div className="text-[11px] font-bold uppercase tracking-[0.2em] text-brand-emerald">
+            Memecoins For A Brighter Tomorrow
+          </div>
+          <h1 className="mt-2.5 max-w-[620px] text-4xl font-black leading-[0.98] tracking-[-0.055em] text-foreground sm:text-5xl lg:text-[62px]">
+            Memecoins
             <br />
-            For <span className="text-brand-emerald">Memecoins</span>
+            With A <span className="text-brand-emerald">Wall Street Floor</span>
           </h1>
           <p className="mt-4 max-w-lg text-base text-muted sm:text-lg">
             Trade viral momentum. Graduate to real tokenized equities.
           </p>
-          <div className="mt-6 grid w-full max-w-[640px] grid-cols-3 items-stretch rounded-2xl border border-border bg-background/75 p-3 backdrop-blur-md sm:p-4">
+
+          {/* Action CTAs */}
+          <div className="mt-6 flex flex-wrap items-center gap-3">
+            <a
+              href="#explore"
+              className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-brand-emerald px-5 text-sm font-bold text-background transition-all hover:brightness-110 shadow-sm"
+            >
+              <span>Launch a token</span>
+              <span>&rarr;</span>
+            </a>
+            <a
+              href="#explore"
+              className="inline-flex h-11 items-center justify-center rounded-xl border border-border bg-card/80 px-5 text-sm font-semibold text-foreground backdrop-blur-sm transition-all hover:bg-card-hover hover:border-border-active"
+            >
+              Explore markets
+            </a>
+          </div>
+
+          {/* Value Props Row */}
+          <div className="mt-7 flex flex-wrap items-center gap-6 text-xs">
+            <div className="flex items-center gap-2">
+              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-brand-emerald/15 text-brand-emerald">
+                ⚡
+              </span>
+              <div>
+                <div className="font-bold text-foreground">Fast trading</div>
+                <div className="text-[11px] text-muted">Low fees, high speed</div>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-brand-emerald/15 text-brand-emerald">
+                📊
+              </span>
+              <div>
+                <div className="font-bold text-foreground">REAL DATA</div>
+                <div className="text-[11px] text-muted">Transparent markets</div>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-brand-emerald/15 text-brand-emerald">
+                👥
+              </span>
+              <div>
+                <div className="font-bold text-foreground">BUILT FOR CREATORS</div>
+                <div className="text-[11px] text-muted">From memes to milestones</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* 4-Column Stats Box (Bottom Right / Embedded) */}
+        <div className="mt-8 flex justify-start lg:justify-end">
+          <div className="grid w-full max-w-[620px] grid-cols-4 items-stretch rounded-2xl border border-border bg-card/90 p-3 backdrop-blur-md sm:p-4 shadow-md">
             {stats.map((stat, index) => (
-              <React.Fragment key={stat.label}>
-                <div
-                  className={`min-w-0 px-1 text-center sm:px-2 ${
-                    index > 0 ? "border-l border-border" : ""
-                  }`}
-                >
-                  <div className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted">
-                    {stat.label}
-                  </div>
-                  <div className="mt-1 text-xl font-black tracking-tight text-foreground sm:text-2xl">
-                    {stat.value}
-                  </div>
-                  <div className="mt-1 flex items-center justify-center gap-1 text-xs font-semibold text-brand-emerald">
-                    <TrendingUp className="h-3 w-3" />
-                    {stat.change}
-                  </div>
+              <div
+                key={stat.label}
+                className={`min-w-0 px-2 text-center ${
+                  index > 0 ? "border-l border-border" : ""
+                }`}
+              >
+                <div className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted truncate">
+                  {stat.label}
                 </div>
-              </React.Fragment>
+                <div className="mt-1 text-lg font-black tracking-tight text-foreground sm:text-2xl">
+                  {stat.value}
+                </div>
+                <div className="mt-1 flex items-center justify-center gap-1 text-xs font-semibold text-brand-emerald">
+                  <span className="text-[10px]">▲</span>
+                  {stat.change}
+                </div>
+              </div>
             ))}
+
+            {/* 4th Column: Animated Green Bars + Label */}
+            <div className="flex min-w-0 items-center justify-center gap-2.5 border-l border-border px-2">
+              <div className="flex items-end gap-1 h-8">
+                <div className="w-1.5 h-3 rounded-t bg-brand-emerald/60" />
+                <div className="w-1.5 h-4.5 rounded-t bg-brand-emerald/75" />
+                <div className="w-1.5 h-6 rounded-t bg-brand-emerald/90" />
+                <div className="w-1.5 h-7.5 rounded-t bg-brand-emerald shadow-[0_0_8px_rgba(112,225,111,0.5)]" />
+              </div>
+              <div className="text-left font-mono text-[9px] font-bold uppercase leading-tight tracking-wider text-muted">
+                Memes<br />Meet<br />Markets
+              </div>
+            </div>
           </div>
         </div>
       </div>

@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Copy, Check } from "lucide-react";
+import { Star } from "lucide-react";
 import { TokenMetadata } from "@/lib/types";
 
 interface TokenCardProps {
@@ -20,29 +20,69 @@ function formatVolume(vol: number): string {
   return `$${vol}`;
 }
 
-export function TokenCard({ token }: TokenCardProps) {
-  const [copied, setCopied] = useState(false);
+function formatMarketCap(mcap: number): string {
+  if (mcap >= 1_000_000) {
+    return `$${(mcap / 1_000_000).toFixed(2)}M`;
+  }
+  if (mcap >= 1_000) {
+    return `$${(mcap / 1_000).toFixed(1)}K`;
+  }
+  return `$${mcap.toLocaleString()}`;
+}
 
-  const handleCopyCa = (e: React.MouseEvent) => {
+function getCardTagline(token: TokenMetadata): string {
+  if (token.symbol === "MARS") return "Not just a meme. A multi-planet future.";
+  if (token.symbol === "NVDU") return "Same chips. More memes.";
+  if (token.symbol === "AIX") return "Decentralized AI for everyone.";
+  if (token.symbol === "STRIP") return "Payments make memes real.";
+  if (token.symbol === "CYBER") return "Robots, memes, real world value.";
+  if (token.symbol === "DOGEFI") return "Much yield. Very utility.";
+  if (token.symbol === "ORBIT") return "Autonomous freight network.";
+  if (token.description) {
+    const firstSentence = token.description.split(".")[0];
+    return firstSentence ? `${firstSentence}.` : token.description;
+  }
+  return "Trade viral momentum backed by real assets.";
+}
+
+// Generates an upward trending sparkline path with subtle variation based on symbol
+function getSparklinePoints(symbol: string): string {
+  if (symbol === "MARS") return "M 2 18 Q 12 22, 22 14 T 42 16 T 60 12 T 76 4 T 88 7";
+  if (symbol === "NVDU") return "M 2 19 Q 14 16, 28 15 T 50 11 T 70 8 T 88 3";
+  if (symbol === "AIX") return "M 2 18 Q 15 20, 30 14 T 55 12 T 72 4 T 88 6";
+  if (symbol === "STRIP") return "M 2 17 Q 16 19, 32 13 T 58 10 T 74 5 T 88 4";
+  if (symbol === "CYBER") return "M 2 8 Q 18 10, 34 16 T 58 14 T 74 18 T 88 15";
+  return "M 2 18 Q 15 21, 30 15 T 55 12 T 72 5 T 88 4";
+}
+
+export function TokenCard({ token }: TokenCardProps) {
+  const [isFavorite, setIsFavorite] = useState(false);
+
+  const handleToggleFavorite = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    navigator.clipboard.writeText(token.mint);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1500);
+    setIsFavorite((prev) => !prev);
   };
 
   const isPositive = token.priceChange24h >= 0;
+  const tagline = getCardTagline(token);
+  const sparklinePath = getSparklinePoints(token.symbol);
+
+  // Approximate genesis multiple for in-curve tokens (e.g., 2.4x)
+  const genesisMultiple = token.bondingCurve.isGraduated
+    ? null
+    : ((token.bondingCurve.progressPct / 35) + 1.2).toFixed(1);
 
   return (
     <Link
       href={`/token/${token.mint}`}
-      className="group relative flex flex-col justify-between rounded-2xl border border-border bg-card p-4 sm:p-5 transition-all hover:border-border-active hover:bg-card-hover shadow-sm"
+      className="group relative flex flex-col justify-between rounded-2xl border border-border bg-card p-4 sm:p-5 transition-all duration-200 hover:border-border-active hover:bg-card-hover shadow-sm"
     >
       <div>
-        {/* Top: Avatar, Name, CA button */}
+        {/* Top: Avatar, Name, Tagline & Favorite Star */}
         <div className="flex items-start justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <div className="relative h-12 w-12 overflow-hidden rounded-full border border-border bg-card-subtle">
+          <div className="flex items-start gap-3 min-w-0">
+            <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-full border border-border bg-card-subtle">
               <Image
                 src={token.avatarUrl}
                 alt={token.name}
@@ -51,42 +91,44 @@ export function TokenCard({ token }: TokenCardProps) {
                 sizes="48px"
               />
             </div>
-            <div>
-              <div className="flex items-center gap-1.5">
+            <div className="min-w-0">
+              <div className="flex items-center gap-2">
                 <span className="text-xs font-semibold text-muted uppercase">
                   ${token.symbol}
                 </span>
-                {token.bondingCurve.isGraduated && (
-                  <span className="rounded-md border border-slate-700/60 bg-slate-800/50 px-2 py-0.5 text-[10px] font-medium text-slate-300">
-                    Graduated
-                  </span>
-                )}
+                <span className="rounded-md border border-border/80 bg-card-subtle/80 px-2 py-0.5 text-[10px] font-medium text-slate-300">
+                  {token.bondingCurve.isGraduated ? "Graduated" : "In Curve"}
+                </span>
               </div>
-              <div className="text-sm font-bold text-foreground">
+              <div className="mt-0.5 truncate text-sm font-bold text-foreground">
                 {token.name}
+              </div>
+              <div className="mt-0.5 truncate text-xs text-muted">
+                {tagline}
               </div>
             </div>
           </div>
 
           <button
-            onClick={handleCopyCa}
-            title="Copy Contract Address"
-            className="flex items-center gap-1 rounded-lg border border-border-active/40 bg-card-hover/40 px-2 py-1 text-[11px] text-muted hover:border-border-active hover:text-foreground hover:bg-card-hover transition-colors"
+            onClick={handleToggleFavorite}
+            title={isFavorite ? "Remove from Watchlist" : "Add to Watchlist"}
+            className="shrink-0 p-1 text-muted hover:text-foreground transition-colors"
           >
-            {copied ? (
-              <Check className="h-3 w-3 text-brand-emerald" />
-            ) : (
-              <Copy className="h-3 w-3" />
-            )}
-            <span className="font-mono">CA</span>
+            <Star
+              className={`h-4 w-4 transition-colors ${
+                isFavorite
+                  ? "fill-brand-emerald text-brand-emerald"
+                  : "text-muted hover:text-foreground"
+              }`}
+            />
           </button>
         </div>
 
-        {/* Backed by badge: Stock Logo + Plain Ticker + subtle tag */}
-        <div className="mt-3 flex items-center justify-between gap-1 text-[11px]">
-          <div className="flex items-center gap-1.5">
+        {/* Backed with badge & Sparkline chart row */}
+        <div className="mt-3.5 flex items-center justify-between gap-2">
+          <div className="flex items-center gap-1.5 text-[11px] min-w-0">
             <span className="text-muted whitespace-nowrap">Backed with</span>
-            <div className="relative h-3.5 w-3.5 overflow-hidden rounded-full border border-border flex-shrink-0">
+            <div className="relative h-3.5 w-3.5 shrink-0 overflow-hidden rounded-full border border-border">
               <Image
                 src={token.targetEquity.logoUrl}
                 alt={token.targetEquity.name}
@@ -98,93 +140,107 @@ export function TokenCard({ token }: TokenCardProps) {
             <span className="font-bold text-foreground whitespace-nowrap">
               {token.targetEquity.symbol.replace(/^\$/, "")}
             </span>
-            <span className="rounded-md border border-border bg-card-hover px-2 py-0.5 text-[10px] tracking-wide font-mono font-medium text-muted whitespace-nowrap">
+            <span className="rounded-md border border-border bg-card-subtle/90 px-1.5 py-0.5 text-[10px] font-mono font-medium text-muted whitespace-nowrap">
               {token.targetEquity.isPreIpo ? "Pre-IPO" : "xStocks"}
             </span>
           </div>
-          {token.bondingCurve.isGraduated ? (
-            <span className="font-mono text-[11px] font-medium text-muted whitespace-nowrap pl-2">
-              {token.targetEquity.symbol === "$TSPACEX"
-                ? "Backed: $20.3M"
-                : token.targetEquity.symbol === "$TOPAI"
-                ? "Backed: $10.6M"
-                : token.targetEquity.symbol === "$TSTRIPE"
-                ? "Backed: $5.3M"
-                : "Backed: $4.5M"}
-            </span>
-          ) : (
-            <span className="font-mono text-[11px] font-medium text-muted whitespace-nowrap pl-2">
-              {token.bondingCurve.progressPct}%
-            </span>
-          )}
-        </div>
 
-        {/* Progress Bar (bonding tokens) vs Clean Matching Divider (graduated tokens) */}
-        {!token.bondingCurve.isGraduated ? (
-          <div className="mt-2.5 h-1.5 w-full overflow-hidden rounded-full bg-card-hover/40 border border-border">
-            <div
-              className="bg-gradient-to-r from-brand-cyan/70 to-brand-cyan h-1.5 rounded-full transition-all duration-300"
-              style={{ width: `${Math.min(token.bondingCurve.progressPct, 100)}%` }}
-            />
+          {/* Mini Sparkline Chart */}
+          <div className="shrink-0 pr-1">
+            <svg
+              width="90"
+              height="22"
+              viewBox="0 0 90 22"
+              className="overflow-visible"
+              aria-hidden="true"
+            >
+              <path
+                d={sparklinePath}
+                fill="none"
+                stroke={isPositive ? "#70e16f" : "#f43f5e"}
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className={isPositive ? "drop-shadow-[0_0_6px_rgba(112,225,111,0.45)]" : "drop-shadow-[0_0_6px_rgba(244,63,94,0.35)]"}
+              />
+            </svg>
           </div>
-        ) : (
-          <div className="mt-3 mb-1 border-b border-border/80" />
-        )}
-
-        {/* Primary Metric */}
-        <div className="mt-4">
-          {token.bondingCurve.isGraduated ? (
-            <div>
-              <div className="text-[10px] text-muted uppercase font-semibold tracking-wider">
-                Market Cap
-              </div>
-              <div className="mt-0.5 flex items-baseline justify-between gap-2">
-                <div className="font-mono text-2xl font-extrabold text-foreground tracking-tight">
-                  {token.marketCapUsd >= 1_000_000
-                    ? `$${(token.marketCapUsd / 1_000_000).toFixed(2)}M`
-                    : `$${(token.marketCapUsd / 1_000).toFixed(1)}K`}
-                </div>
-              </div>
-            </div>
-          ) : (
-            <div>
-              <div className="text-[10px] text-muted uppercase font-semibold tracking-wider">
-                Bonding Reserves
-              </div>
-              <div className="mt-0.5 flex items-baseline justify-between gap-2">
-                <div className="font-mono text-2xl font-extrabold text-foreground tracking-tight">
-                  ${(token.bondingCurve.realQuoteReservesUsd / 1_000).toFixed(1)}K{" "}
-                  <span className="text-xs font-normal text-muted">/ $60K USDC</span>
-                </div>
-                {token.bondingCurve.progressPct > 0 ? (
-                  <span className="font-mono text-xs font-semibold text-emerald-400">
-                    {token.bondingCurve.progressPct}% to AMM
-                  </span>
-                ) : (
-                  <span className="font-mono text-xs font-medium text-muted">
-                    New Listing
-                  </span>
-                )}
-              </div>
-            </div>
-          )}
         </div>
       </div>
 
-      {/* Bottom: 24h Volume & Price Change */}
-      <div className="mt-4 pt-3 border-t border-border flex items-center justify-between text-xs font-mono">
-        <span className="text-muted">
-          Vol {formatVolume(token.volume24hUsd)}
-        </span>
-        <span
-          className={`font-semibold ${
-            isPositive ? "text-brand-emerald" : "text-brand-rose"
-          }`}
-        >
-          {isPositive ? "+" : ""}
-          {token.priceChange24h.toFixed(1)}%
-        </span>
-      </div>
+      {/* Crisp Horizontal Divider */}
+      <div className="mt-4 mb-3.5 border-t border-border" />
+
+      {/* Bottom 3-Column Metrics Section */}
+      {token.bondingCurve.isGraduated ? (
+        <div className="grid grid-cols-3 items-end gap-2 text-left">
+          <div>
+            <div className="text-[10px] uppercase font-semibold text-muted tracking-wider">
+              Market Cap
+            </div>
+            <div className="mt-1 font-mono text-base sm:text-lg font-black text-foreground tracking-tight">
+              {formatMarketCap(token.marketCapUsd)}
+            </div>
+          </div>
+
+          <div>
+            <div className="text-[10px] uppercase font-semibold text-muted tracking-wider">
+              24h Volume
+            </div>
+            <div className="mt-1 font-mono text-base sm:text-lg font-black text-foreground tracking-tight">
+              {formatVolume(token.volume24hUsd)}
+            </div>
+          </div>
+
+          <div className="text-right">
+            <div
+              className={`flex items-center justify-end gap-1 font-mono text-sm sm:text-base font-bold ${
+                isPositive ? "text-brand-emerald" : "text-brand-rose"
+              }`}
+            >
+              <span className="text-xs">{isPositive ? "▲" : "▼"}</span>
+              {isPositive ? "+" : ""}
+              {token.priceChange24h.toFixed(1)}%
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="grid grid-cols-3 items-end gap-2 text-left">
+          <div>
+            <div className="text-[10px] uppercase font-semibold text-muted tracking-wider">
+              Bonding Reserves
+            </div>
+            <div className="mt-1 font-mono text-sm sm:text-base font-black text-foreground tracking-tight">
+              ${(token.bondingCurve.realQuoteReservesUsd / 1_000).toFixed(1)}K
+              <span className="text-[11px] font-normal text-muted"> / $60K</span>
+            </div>
+          </div>
+
+          <div>
+            <div className="text-[10px] uppercase font-semibold text-muted tracking-wider">
+              24h Volume
+            </div>
+            <div className="mt-1 font-mono text-base sm:text-lg font-black text-foreground tracking-tight">
+              {formatVolume(token.volume24hUsd)}
+            </div>
+          </div>
+
+          <div className="text-right">
+            <div className="text-[10px] font-semibold text-brand-emerald leading-none">
+              {genesisMultiple}x from genesis
+            </div>
+            <div
+              className={`mt-1 flex items-center justify-end gap-1 font-mono text-xs sm:text-sm font-bold ${
+                isPositive ? "text-brand-emerald" : "text-brand-rose"
+              }`}
+            >
+              <span className="text-[10px]">{isPositive ? "▲" : "▼"}</span>
+              {isPositive ? "+" : ""}
+              {token.priceChange24h.toFixed(1)}%
+            </div>
+          </div>
+        </div>
+      )}
     </Link>
   );
 }

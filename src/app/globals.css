@@ -3,65 +3,40 @@
 @tailwind utilities;
 
 @layer base {
-  :root {
-    --chrome-background: #000000;
-    --chrome-card: #0b1218;
-    --chrome-card-hover: #131f2b;
-    --chrome-border: #182531;
-    --chrome-border-active: #2a3d4f;
-    --chrome-foreground: #e8eff5;
-    --chrome-muted: #8295a5;
-  }
-
-  /* Default: Street Dark (Midnight Slate - 1 Notch Lighter, Degen Wall Street) */
-  [data-theme="street-dark"] {
-    --background: #0c1218;
-    --foreground: #f1f5f9;
-    --card: #131d27;
-    --card-hover: #192734;
-    --card-subtle: #090e13;
-    --border: #1f3042;
-    --border-active: #2d455e;
-    --muted: #94a3b8;
-    --muted-foreground: #64748b;
-    --brand-cyan: #62F88B;
-    --brand-cyan-hover: #7CFFA0;
-    --brand-cyan-tint: rgba(98, 248, 139, 0.12);
-    --brand-cyan-border: rgba(98, 248, 139, 0.35);
-    --brand-cyan-text: #D6FFE0;
-    --brand-emerald: #62F88B;
-    --brand-purple: #a855f7;
-    --brand-amber: #f59e0b;
-    --brand-rose: #f43f5e;
-    --scrollbar-track: #0c1218;
-    --scrollbar-thumb: #1f3042;
-    --scrollbar-thumb-hover: #2d455e;
-  }
-
-  /* Theme 2: Onyx Dark (Original Deep Pitch Black Terminal) */
   :root,
-  [data-theme="dark"] {
-    --background: #060a0e;
-    --foreground: #e6edf3;
-    --card: #0b1218;
-    --card-hover: #0f1922;
-    --card-subtle: #070c10;
-    --border: #182531;
-    --border-active: #2a3d4f;
-    --muted: #8295a5;
-    --muted-foreground: #526373;
-    --brand-cyan: #62F88B;
-    --brand-cyan-hover: #7CFFA0;
-    --brand-cyan-tint: rgba(98, 248, 139, 0.12);
-    --brand-cyan-border: rgba(98, 248, 139, 0.35);
-    --brand-cyan-text: #D6FFE0;
-    --brand-emerald: #62F88B;
+  [data-theme="dark"],
+  [data-theme="street-dark"] {
+    --chrome-background: #0a0b0c;
+    --chrome-card: #121518;
+    --chrome-card-hover: #181c20;
+    --chrome-border: #1d2226;
+    --chrome-border-active: #2a3138;
+    --chrome-foreground: #ededed;
+    --chrome-muted: #848e97;
+
+    --background: #0a0b0c;
+    --foreground: #ededed;
+    --card: #121518;
+    --card-hover: #181c20;
+    --card-subtle: #0d0f11;
+    --border: #1d2226;
+    --border-active: #2a3138;
+    --muted: #848e97;
+    --muted-foreground: #525b64;
+
+    --brand-cyan: #70e16f;
+    --brand-cyan-hover: #82e881;
+    --brand-cyan-tint: rgba(112, 225, 111, 0.12);
+    --brand-cyan-border: rgba(112, 225, 111, 0.35);
+    --brand-cyan-text: #70e16f;
+    --brand-emerald: #70e16f;
     --brand-purple: #a855f7;
     --brand-amber: #f59e0b;
     --brand-rose: #f43f5e;
-    --scrollbar-track: #060a0e;
-    --scrollbar-thumb: #182531;
-    --scrollbar-thumb-hover: #2a3d4f;
+
+    --scrollbar-track: #0a0b0c;
+    --scrollbar-thumb: #1d2226;
+    --scrollbar-thumb-hover: #2a3138;
   }
 
   /* Theme 3: Clean Light (Paper / Institutional Light) */

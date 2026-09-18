@@ -62,7 +62,7 @@ export function FilterBar({
         {/* Right Controls: Status Segments + Sort Segments */}
         <div className="flex min-w-0 flex-wrap items-center gap-4 text-xs">
           {/* Status Segmented Control (All / In Curve / Graduated) */}
-          <div className="flex items-center rounded-lg border border-border bg-card/60 p-1 shadow-xs gap-1">
+          <div className="flex items-center rounded-lg border border-border bg-card/80 p-1 shadow-xs gap-1">
             {(
               [
                 { id: "all", label: "All status" },
@@ -73,9 +73,9 @@ export function FilterBar({
               <button
                 key={item.id}
                 onClick={() => onStatusFilterChange(item.id)}
-                className={`rounded-md px-2.5 py-1 text-xs transition-colors duration-150 ${
+                className={`rounded-md px-3 py-1.5 text-xs transition-colors duration-150 ${
                   statusFilter === item.id
-                    ? "bg-brand-cyan/10 border border-brand-cyan/40 text-brand-cyan font-medium shadow-xs"
+                    ? "bg-brand-cyan text-background font-bold shadow-xs"
                     : "border border-transparent text-muted hover:text-foreground hover:bg-card-hover font-medium"
                 }`}
               >
@@ -94,8 +94,8 @@ export function FilterBar({
                   onClick={() => onSortChange(item.id)}
                   className={`whitespace-nowrap rounded-lg px-2.5 py-1 text-xs transition-colors duration-150 ${
                     sortBy === item.id
-                      ? "bg-brand-cyan/10 border border-brand-cyan/40 text-brand-cyan font-medium shadow-xs"
-                      : "border border-border bg-transparent text-muted font-medium hover:text-foreground hover:bg-card-hover"
+                      ? "bg-brand-cyan/15 border border-brand-cyan/40 text-brand-cyan font-bold shadow-xs"
+                      : "border border-border bg-card/60 text-muted font-medium hover:text-foreground hover:bg-card-hover"
                   }`}
                 >
                   {item.label}
@@ -115,8 +115,8 @@ export function FilterBar({
             onClick={() => onTagChange(tag.id)}
             className={`whitespace-nowrap rounded-lg px-3 py-1 text-xs transition-colors duration-150 ${
               selectedTag === tag.id
-                ? "bg-brand-cyan/10 border border-brand-cyan/40 text-brand-cyan font-medium shadow-xs"
-                : "border border-border bg-transparent text-muted font-medium hover:text-foreground hover:bg-card-hover"
+                ? "bg-brand-cyan text-background font-bold shadow-xs"
+                : "border border-border bg-card/60 text-muted font-medium hover:text-foreground hover:bg-card-hover"
             }`}
           >
             {tag.label}

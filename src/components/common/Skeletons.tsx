@@ -2,42 +2,47 @@ import React from "react";
 
 export function TokenCardSkeleton() {
   return (
-    <div className="flex flex-col justify-between rounded-2xl border border-border bg-card p-5 shadow-sm">
+    <div className="flex flex-col justify-between rounded-2xl border border-border bg-card p-4 sm:p-5 shadow-sm">
       <div>
-        {/* Top: Avatar & Title & Ticker & Status Badge */}
+        {/* Top: Avatar, Name, Tagline & Star */}
         <div className="flex items-start justify-between gap-3">
-          <div className="flex items-center gap-3 min-w-0">
+          <div className="flex items-start gap-3 min-w-0 flex-1">
             <div className="h-12 w-12 rounded-full bg-card-hover/80 animate-pulse shrink-0 border border-border" />
-            <div className="flex flex-col gap-1.5 min-w-0">
-              <div className="h-4 w-28 rounded bg-card-hover/80 animate-pulse" />
-              <div className="h-3 w-16 rounded bg-card-hover/60 animate-pulse" />
+            <div className="flex flex-col gap-1.5 min-w-0 flex-1">
+              <div className="flex items-center gap-2">
+                <div className="h-3 w-12 rounded bg-card-hover/60 animate-pulse" />
+                <div className="h-4 w-14 rounded-md bg-card-hover/80 animate-pulse" />
+              </div>
+              <div className="h-4 w-32 rounded bg-card-hover/80 animate-pulse" />
+              <div className="h-3 w-40 rounded bg-card-hover/50 animate-pulse" />
             </div>
           </div>
-          <div className="h-5 w-16 rounded-md bg-card-hover/80 animate-pulse shrink-0" />
+          <div className="h-4 w-4 rounded bg-card-hover/60 animate-pulse shrink-0" />
         </div>
 
-        {/* Backing Badge Row */}
-        <div className="mt-3.5 flex items-center justify-between border-t border-border/40 pt-3">
-          <div className="h-4 w-32 rounded bg-card-hover/60 animate-pulse" />
-          <div className="h-3 w-16 rounded bg-card-hover/60 animate-pulse" />
-        </div>
-
-        {/* Progress Bar Skeleton */}
-        <div className="mt-3.5">
-          <div className="h-1.5 w-full rounded-full bg-card-hover/60 animate-pulse" />
-        </div>
-
-        {/* Metrics Grid */}
-        <div className="mt-3.5 flex items-baseline justify-between gap-2">
-          <div className="h-6 w-28 rounded bg-card-hover/80 animate-pulse" />
-          <div className="h-4 w-16 rounded bg-card-hover/60 animate-pulse" />
+        {/* Backing Badge & Sparkline placeholder */}
+        <div className="mt-3.5 flex items-center justify-between gap-2">
+          <div className="h-4 w-28 rounded bg-card-hover/60 animate-pulse" />
+          <div className="h-5 w-20 rounded bg-card-hover/40 animate-pulse" />
         </div>
       </div>
 
-      {/* Bottom Bar */}
-      <div className="mt-4 flex items-center justify-between border-t border-border pt-3">
-        <div className="h-3 w-20 rounded bg-card-hover/60 animate-pulse" />
-        <div className="h-3 w-12 rounded bg-card-hover/60 animate-pulse" />
+      {/* Divider */}
+      <div className="mt-4 mb-3.5 border-t border-border" />
+
+      {/* Bottom 3-Column Metrics */}
+      <div className="grid grid-cols-3 items-end gap-2">
+        <div>
+          <div className="h-2.5 w-16 rounded bg-card-hover/50 animate-pulse" />
+          <div className="mt-1.5 h-5 w-20 rounded bg-card-hover/80 animate-pulse" />
+        </div>
+        <div>
+          <div className="h-2.5 w-16 rounded bg-card-hover/50 animate-pulse" />
+          <div className="mt-1.5 h-5 w-16 rounded bg-card-hover/80 animate-pulse" />
+        </div>
+        <div className="flex justify-end">
+          <div className="h-5 w-14 rounded bg-card-hover/80 animate-pulse" />
+        </div>
       </div>
     </div>
   );
