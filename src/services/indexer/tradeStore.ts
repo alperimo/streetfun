@@ -136,6 +136,10 @@ export class TradeStoreService {
     localTradesStore.unshift(tradeWithTime);
     this.cachedPrices = null;
     this.cachedReserves = null;
+    try {
+      const { invalidateLiveTokensCache } = require("@/services/tokens/liveTokens");
+      invalidateLiveTokensCache();
+    } catch (_e) {}
   }
 
   async recordToken(token: TokenRecord): Promise<void> {
@@ -159,6 +163,10 @@ export class TradeStoreService {
     }
     localTokensStore.set(token.mint.toLowerCase(), token);
     this.cachedTokens = null;
+    try {
+      const { invalidateLiveTokensCache } = require("@/services/tokens/liveTokens");
+      invalidateLiveTokensCache();
+    } catch (_e) {}
   }
 
   async getAllTokens(): Promise<TokenRecord[]> {

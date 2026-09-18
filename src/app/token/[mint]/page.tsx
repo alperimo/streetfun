@@ -13,6 +13,7 @@ import { LaunchModal } from "@/components/modals/LaunchModal";
 import { TokenMetadata } from "@/lib/types";
 import { useMarket } from "@/context/MarketContext";
 import { TokenDetailSkeleton } from "@/components/common/Skeletons";
+import { createBrowserSupabaseClient } from "@/lib/supabase";
 
 interface PageProps {
   params: Promise<{ mint: string }>;
@@ -52,9 +53,50 @@ export default function TokenDetailPage({ params }: PageProps) {
 
   useEffect(() => {
     fetchTrades();
-    const interval = setInterval(fetchTrades, 3000);
-    return () => clearInterval(interval);
-  }, [fetchTrades]);
+
+    const targetMint = mint || token?.mint;
+    if (!targetMint) return;
+
+    // Connect Supabase Realtime for this token's live trades
+    const supabase = createBrowserSupabaseClient();
+    let channel: any = null;
+    if (supabase) {
+      channel = supabase
+        .channel(`token-trades-${targetMint}`)
+        .on(
+          "postgres_changes",
+          {
+            event: "INSERT",
+            schema: "public",
+            table: "trades",
+            filter: `mint=eq.${targetMint}`,
+          },
+          (payload: any) => {
+            if (payload.new) {
+              setTrades((prev) => [
+                payload.new as any,
+                ...prev.filter((t) => t.tx_signature !== (payload.new as any).tx_signature),
+              ]);
+            }
+          }
+        )
+        .subscribe();
+    }
+
+    // Relaxed fallback polling (15s, only active when visible)
+    const interval = setInterval(() => {
+      if (typeof document !== "undefined" && document.visibilityState === "visible") {
+        fetchTrades();
+      }
+    }, 15000);
+
+    return () => {
+      clearInterval(interval);
+      if (supabase && channel) {
+        supabase.removeChannel(channel);
+      }
+    };
+  }, [fetchTrades, mint, token?.mint]);
 
   const handleCopyCa = () => {
     if (!token) return;

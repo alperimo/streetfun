@@ -17,6 +17,7 @@ import { INITIAL_TOKENS } from "@/lib/mockData";
 import { useWallet } from "@solana/wallet-adapter-react";
 
 import { PublicKey } from "@solana/web3.js";
+import { createBrowserSupabaseClient } from "@/lib/supabase";
 
 const LOCAL_DEV_PUBKEY = new PublicKey("519jca26LioEQiPhwoHCkC8mNZiCF7cDmtaXdp98iCv2");
 
@@ -115,17 +116,53 @@ export function MarketProvider({ children, initialTokens = [] }: MarketProviderP
     }
   }, []);
 
+  // 1. Live Realtime WebSocket subscription: instant push updates on any trade or token launch
+  useEffect(() => {
+    const supabase = createBrowserSupabaseClient();
+    if (!supabase) return;
+
+    let debounceTimer: NodeJS.Timeout | null = null;
+    const triggerDebouncedRefresh = () => {
+      if (debounceTimer) clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => {
+        refreshTokens();
+      }, 150);
+    };
+
+    const channel = supabase
+      .channel("market-feed-realtime")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "trades" },
+        () => {
+          triggerDebouncedRefresh();
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "tokens" },
+        () => {
+          triggerDebouncedRefresh();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      if (debounceTimer) clearTimeout(debounceTimer);
+      supabase.removeChannel(channel);
+    };
+  }, [refreshTokens]);
+
+  // 2. Initial load + relaxed 25s fallback heartbeat (only when tab is active)
   useEffect(() => {
     refreshTokens();
 
-    // Only poll when tab is active and visible to prevent wasted egress
     const interval = setInterval(() => {
       if (typeof document !== "undefined" && document.visibilityState === "visible") {
         refreshTokens();
       }
-    }, 4000);
+    }, 25000);
 
-    // Immediately revalidate when user switches back to this tab
     const handleVisibilityOrFocus = () => {
       if (typeof document !== "undefined" && document.visibilityState === "visible") {
         refreshTokens();
