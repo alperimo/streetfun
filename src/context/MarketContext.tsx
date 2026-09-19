@@ -13,6 +13,7 @@ import {
   getRedeemService,
   isMockMode,
 } from "@/services";
+import { usePathname } from "next/navigation";
 import { INITIAL_TOKENS } from "@/lib/mockData";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { createBrowserSupabaseClient } from "@/lib/supabase";
@@ -66,6 +67,9 @@ export function MarketProvider({ children, initialTokens = [] }: MarketProviderP
   const isWalletConnected = wallet.connected || (isMock && devWalletConnected);
   const activePublicKey = wallet.publicKey || (isMock && devWalletConnected ? LOCAL_DEV_PUBKEY : null);
 
+  const pathname = usePathname();
+  const isAlphaRoute = pathname?.startsWith("/alpha");
+
   const connectDevWallet = useCallback(() => {
     setDevWalletConnected(true);
   }, []);
@@ -75,7 +79,7 @@ export function MarketProvider({ children, initialTokens = [] }: MarketProviderP
   }, []);
 
   const refreshTokens = useCallback(async () => {
-    if (isFetchingRef.current || isMutating.current) return;
+    if (isAlphaRoute || isFetchingRef.current || isMutating.current) return;
     const version = mutationVersion.current;
     isFetchingRef.current = true;
     try {
@@ -86,7 +90,7 @@ export function MarketProvider({ children, initialTokens = [] }: MarketProviderP
       setError(null);
     } catch (err) {
       if (version !== mutationVersion.current) return;
-      console.error("Failed to fetch tokens:", err);
+      console.warn("Failed to fetch tokens:", err);
       setError(
         err instanceof Error
           ? err.message
@@ -96,9 +100,10 @@ export function MarketProvider({ children, initialTokens = [] }: MarketProviderP
       setLoading(false);
       isFetchingRef.current = false;
     }
-  }, []);
+  }, [isAlphaRoute]);
 
   useEffect(() => {
+    if (isAlphaRoute) return;
     refreshTokens();
     const refreshWhenVisible = () => {
       if (document.visibilityState === "visible") refreshTokens();
@@ -111,10 +116,10 @@ export function MarketProvider({ children, initialTokens = [] }: MarketProviderP
       window.removeEventListener("focus", refreshWhenVisible);
       document.removeEventListener("visibilitychange", refreshWhenVisible);
     };
-  }, [isMock, refreshTokens]);
+  }, [isMock, isAlphaRoute, refreshTokens]);
 
   useEffect(() => {
-    if (isMock) return;
+    if (isMock || isAlphaRoute) return;
 
     let programSubscriptionId: number | null = null;
     let refreshTimer: ReturnType<typeof setTimeout> | null = null;
