@@ -18,33 +18,11 @@ export class RealtimeChartService implements IChartService {
       );
       if (!res.ok) throw new Error("Failed to fetch chart bars");
       const data = await res.json();
-      if (data.bars && data.bars.length > 0) {
-        return data.bars;
-      }
+      return Array.isArray(data.bars) ? data.bars : [];
     } catch (e) {
-      console.warn("[ChartService] Could not fetch real OHLCV, using current price baseline:", e);
+      console.warn("[ChartService] Verified OHLCV is unavailable:", e);
+      throw e;
     }
-
-    // Default baseline candle at exact current spot price
-    const now = Math.floor(Date.now() / 1000);
-    return [
-      {
-        time: now - 900,
-        open: token.priceUsd,
-        high: token.priceUsd,
-        low: token.priceUsd,
-        close: token.priceUsd,
-        volume: 0,
-      },
-      {
-        time: now,
-        open: token.priceUsd,
-        high: token.priceUsd,
-        low: token.priceUsd,
-        close: token.priceUsd,
-        volume: 0,
-      },
-    ];
   }
 }
 

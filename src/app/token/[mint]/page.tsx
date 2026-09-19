@@ -17,6 +17,7 @@ import {
   formatTokenPrice,
   formatUsd,
 } from "@/lib/marketFormat";
+import { createBrowserSupabaseClient } from "@/lib/supabase";
 
 interface PageProps {
   params: Promise<{ mint: string }>;
@@ -32,6 +33,7 @@ export default function TokenDetailPage({ params }: PageProps) {
   const [isLaunchOpen, setIsLaunchOpen] = useState(false);
   const [trades, setTrades] = useState<any[]>([]);
   const [tradesLoading, setTradesLoading] = useState(true);
+  const [tradesError, setTradesError] = useState(false);
 
   const token =
     getToken(mint) ||
@@ -45,9 +47,13 @@ export default function TokenDetailPage({ params }: PageProps) {
       if (res.ok) {
         const data = await res.json();
         setTrades(data.trades || []);
+        setTradesError(false);
+      } else {
+        setTradesError(true);
       }
     } catch (err) {
       console.warn("Could not load trades:", err);
+      setTradesError(true);
     } finally {
       setTradesLoading(false);
     }
@@ -55,9 +61,43 @@ export default function TokenDetailPage({ params }: PageProps) {
 
   useEffect(() => {
     fetchTrades();
-    const interval = setInterval(fetchTrades, 3000);
-    return () => clearInterval(interval);
-  }, [fetchTrades]);
+
+    const targetMint = mint || token?.mint;
+    if (!targetMint) return;
+
+    // Connect Supabase Realtime for this token's live trades
+    const supabase = createBrowserSupabaseClient();
+    let channel: any = null;
+    if (supabase) {
+      channel = supabase
+        .channel(`token-trades-${targetMint}`)
+        .on(
+          "postgres_changes",
+          {
+            event: "INSERT",
+            schema: "public",
+            table: "trades",
+            filter: `mint=eq.${targetMint}`,
+          },
+          () => fetchTrades()
+        )
+        .subscribe();
+    }
+
+    // Relaxed fallback polling (15s, only active when visible)
+    const interval = setInterval(() => {
+      if (typeof document !== "undefined" && document.visibilityState === "visible") {
+        fetchTrades();
+      }
+    }, 15000);
+
+    return () => {
+      clearInterval(interval);
+      if (supabase && channel) {
+        supabase.removeChannel(channel);
+      }
+    };
+  }, [fetchTrades, mint, token?.mint]);
 
   const handleCopyCa = () => {
     if (!token) return;
@@ -105,14 +145,15 @@ export default function TokenDetailPage({ params }: PageProps) {
   // Spot price, market cap, reserves and progress share one on-chain snapshot.
   const currentPrice = token.priceUsd;
   const currentMarketCap = token.marketCapUsd;
-  const formattedMarketCap = formatUsd(currentMarketCap);
+  const formattedMarketCap = currentPrice > 0 ? formatUsd(currentMarketCap) : "—";
   const formattedPrice = formatTokenPrice(currentPrice);
   const computedChangePct = token.priceChange24h;
 
   const isNeutralChange = Math.abs(computedChangePct) < 0.01;
   const isPositiveChange = computedChangePct > 0;
 
-  const formattedVolume = formatUsd(token.volume24hUsd || 0);
+  const formattedVolume =
+    token.volume24hAvailable === false ? "—" : formatUsd(token.volume24hUsd || 0);
   const currentReserves = token.bondingCurve.realQuoteReservesUsd;
   const currentProgressPct = token.bondingCurve.progressPct;
   const formattedProgress = formatBondingProgress(currentProgressPct);
@@ -132,6 +173,11 @@ export default function TokenDetailPage({ params }: PageProps) {
       />
 
       <main className="mx-auto flex-1 w-full max-w-[1350px] px-6 py-6 md:px-12 lg:px-0">
+        {error && (
+          <div role="alert" className="mb-4 rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-300">
+            Live refresh failed. The figures below are from the last verified snapshot and may be stale: {error}
+          </div>
+        )}
         <div className="mb-4">
           <Link
             href="/"
@@ -171,7 +217,7 @@ export default function TokenDetailPage({ params }: PageProps) {
                 </div>
 
                 <div className="mt-1 flex items-center gap-2 text-xs flex-wrap">
-                  <span className="text-muted">Backed with</span>
+                  <span className="text-muted">Target equity</span>
                   <span className="font-semibold text-foreground">
                     {token.targetEquity.name} ({token.targetEquity.symbol})
                   </span>
@@ -198,15 +244,6 @@ export default function TokenDetailPage({ params }: PageProps) {
 
             {/* External Links */}
             <div className="flex items-center gap-2">
-              <a
-                href={token.bondingCurve.isGraduated ? "https://meteora.ag" : "#"}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-1.5 rounded-lg border border-border bg-card-hover/40 px-3 py-1.5 text-xs text-muted hover:text-foreground hover:border-border-active transition-colors font-medium"
-              >
-                <span>{token.bondingCurve.isGraduated ? "Meteora" : "Bonding Curve"}</span>
-                <ExternalLink className="h-3 w-3" />
-              </a>
               <a
                 href={`https://solscan.io/token/${token.mint}`}
                 target="_blank"
@@ -241,8 +278,9 @@ export default function TokenDetailPage({ params }: PageProps) {
                       : "text-rose-400"
                   }`}
                 >
-                  {isPositiveChange && !isNeutralChange ? "+" : ""}
-                  {computedChangePct.toFixed(1)}%
+                  {token.priceChange24hAvailable === false ? "—" : (
+                    <>{isPositiveChange && !isNeutralChange ? "+" : ""}{computedChangePct.toFixed(1)}%</>
+                  )}
                 </span>
               </div>
             </div>
@@ -289,7 +327,7 @@ export default function TokenDetailPage({ params }: PageProps) {
               floorPrice={navFloor}
             />
 
-            {/* Graduation Progress vs Meteora DLMM Active Liquidity Band */}
+            {/* Graduation status or bonding progress */}
             {token.bondingCurve.isGraduated ? (
               <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
@@ -297,12 +335,11 @@ export default function TokenDetailPage({ params }: PageProps) {
                     <span className="flex h-2 w-2 relative">
                       <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400"></span>
                     </span>
-                    <span className="font-bold text-foreground">Meteora DLMM Pool Active</span>
-                    <span className="text-muted">· Dynamic Fee Tier 0.25%</span>
+                    <span className="font-bold text-foreground">Curve graduated</span>
                   </div>
                   <div className="flex flex-wrap items-center gap-4 text-muted font-mono text-[11px]">
-                    <span>Pool: <strong className="text-foreground">{token.bondingCurve.meteoraPoolAddress ? `${token.bondingCurve.meteoraPoolAddress.slice(0, 4)}…${token.bondingCurve.meteoraPoolAddress.slice(-4)}` : "Not indexed"}</strong></span>
-                    <span>State: <strong className="text-emerald-400">On-chain graduated</strong></span>
+                    <span>Pool: <strong className="text-foreground">{token.bondingCurve.meteoraPoolAddress ? `${token.bondingCurve.meteoraPoolAddress.slice(0, 4)}…${token.bondingCurve.meteoraPoolAddress.slice(-4)}` : "Not verified"}</strong></span>
+                    <span>Current AMM price: <strong className="text-foreground">Unavailable</strong></span>
                   </div>
                 </div>
               </div>
@@ -354,9 +391,9 @@ export default function TokenDetailPage({ params }: PageProps) {
                       <tr>
                         <td colSpan={5} className="py-8 text-center text-muted">
                           <div className="flex flex-col items-center justify-center gap-1">
-                            <span className="text-xs font-semibold text-foreground">No Trades Recorded Yet</span>
+                            <span className="text-xs font-semibold text-foreground">{tradesError ? "Verified trades unavailable" : "No Trades Recorded Yet"}</span>
                             <span className="text-[11px] text-muted">
-                              Execute a trade on this curve to mint the first on-chain record.
+                              {tradesError ? "The trade index could not be refreshed." : "Execute a trade on this curve to mint the first on-chain record."}
                             </span>
                           </div>
                         </td>
@@ -429,7 +466,7 @@ export default function TokenDetailPage({ params }: PageProps) {
               </div>
               <div className="flex justify-between text-muted">
                 <span>Custodian Vault:</span>
-                <span className="font-mono text-foreground">Tessera Protocol Custody</span>
+                <span className="font-mono text-foreground">{token.treasury.vaultPda ? `${token.treasury.vaultPda.slice(0, 4)}…${token.treasury.vaultPda.slice(-4)}` : "Unavailable"}</span>
               </div>
               <div className="flex justify-between text-muted">
                 <span>Proof of Reserve:</span>
@@ -445,11 +482,11 @@ export default function TokenDetailPage({ params }: PageProps) {
               </div>
               <div className="flex justify-between text-muted">
                 <span>Total Supply:</span>
-                <span className="font-mono text-foreground">1,000,000,000</span>
+                <span className="font-mono text-foreground">{token.totalSupply?.toLocaleString("en-US") || "—"}</span>
               </div>
               <div className="flex justify-between text-muted">
                 <span>Graduation Split:</span>
-                <span className="font-mono text-foreground">50% Stock Collateral · 50% DLMM Reserve</span>
+                <span className="font-mono text-foreground">{token.bondingCurve.equityPurchaseBudgetUsd && token.bondingCurve.ammLiquidityBudgetUsd ? `${formatUsd(token.bondingCurve.equityPurchaseBudgetUsd)} equity · ${formatUsd(token.bondingCurve.ammLiquidityBudgetUsd)} liquidity target` : "Unavailable"}</span>
               </div>
             </div>
           </div>

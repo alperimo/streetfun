@@ -14,7 +14,7 @@ export function Footer() {
 
   return (
     <>
-      <footer className="site-footer mt-0 py-6 text-xs text-muted">
+      <footer className="site-footer mt-auto w-full border-t border-border bg-background py-6 text-xs text-muted">
         <div className="mx-auto flex w-full max-w-[1350px] items-center justify-center gap-6 px-6 sm:gap-8 md:px-12 lg:px-0">
           <a
             href="https://x.com"

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useMemo } from "react";
 import Image from "next/image";
-import { ArrowUpRight, Flame } from "lucide-react";
+import { Flame } from "lucide-react";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { SearchModal } from "@/components/modals/SearchModal";
@@ -83,7 +83,7 @@ export default function TreasuryPage() {
         mintAddress: asset.mintAddress,
         logoUrl: asset.logoUrl,
       };
-    }).sort((a, b) => b.valueUsd - a.valueUsd);
+    }).filter((asset) => asset.sharesLocked > 0).sort((a, b) => b.valueUsd - a.valueUsd);
 
     // Recent Redemptions mapped to UI format
     const recentRedemptions = redemptions.map((rdm, idx) => {
@@ -139,13 +139,13 @@ export default function TreasuryPage() {
         onOpenLaunch={() => setIsLaunchOpen(true)}
       />
 
-      <main className="mx-auto flex-1 w-full max-w-[1350px] px-6 py-8 md:px-12 lg:px-0">
+      <main className="mx-auto flex-1 w-full max-w-[1350px] px-6 py-8 sm:px-10 lg:px-0">
         <div className="flex flex-col gap-2 mb-8">
           <h1 className="text-3xl sm:text-4xl font-black text-foreground tracking-tight">
             Treasury
           </h1>
           <p className="max-w-2xl text-sm text-muted">
-            Transparent, on-chain vaults holding real equity backing for graduated tokens. Verified on Solana via Pyth price feeds.
+            On-chain treasury balances for graduated tokens. USD valuation is unavailable until a verified oracle is connected.
           </p>
         </div>
 
@@ -154,7 +154,7 @@ export default function TreasuryPage() {
           <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
             <div className="text-xs text-muted font-medium">Total Equity Locked</div>
             <div className="mt-1 font-mono text-2xl sm:text-3xl font-bold text-foreground tracking-tight">
-              ${stats.totalEquityValueLockedUsd.toLocaleString("en-US")}
+              {isMock ? `$${stats.totalEquityValueLockedUsd.toLocaleString("en-US")}` : "—"}
             </div>
             <div className="mt-1 text-[11px] text-muted">
               Value in vaults now
@@ -164,7 +164,7 @@ export default function TreasuryPage() {
           <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
             <div className="text-xs text-muted font-medium">Total Distributed</div>
             <div className="mt-1 font-mono text-2xl sm:text-3xl font-bold text-foreground tracking-tight">
-              ${stats.totalRedemptionsUsd.toLocaleString("en-US")}
+              {isMock ? `$${stats.totalRedemptionsUsd.toLocaleString("en-US")}` : "—"}
             </div>
             <div className="mt-1 text-[11px] text-muted">
               Paid to holders
@@ -184,7 +184,7 @@ export default function TreasuryPage() {
           <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
             <div className="text-xs text-muted font-medium">Holder Payouts</div>
             <div className="mt-1 font-mono text-2xl sm:text-3xl font-bold text-foreground tracking-tight">
-              {stats.walletsRedeemed.toLocaleString("en-US")}
+              {isMock ? stats.walletsRedeemed.toLocaleString("en-US") : "—"}
             </div>
             <div className="mt-1 text-[11px] text-muted">
               Redemptions executed
@@ -250,15 +250,7 @@ export default function TreasuryPage() {
                           ? `$${(asset.valueUsd / 1_000).toFixed(1)}K`
                           : `$${asset.valueUsd.toFixed(2)}`}
                       </div>
-                      <a
-                        href="https://pyth.network"
-                        target="_blank"
-                        rel="noreferrer"
-                        className="inline-flex items-center gap-1 text-[11px] text-muted hover:text-foreground transition-colors mt-0.5"
-                      >
-                        <span>Pyth PoR</span>
-                        <ArrowUpRight className="h-3 w-3" />
-                      </a>
+                      {!isMock && <span className="mt-0.5 text-[11px] text-muted">Oracle value unavailable</span>}
                     </div>
                   </div>
                 ))}

@@ -19,7 +19,7 @@ interface TradingViewChartProps {
 
 export function TradingViewChart({
   token,
-  floorPrice = 0.0031,
+  floorPrice = 0,
 }: TradingViewChartProps) {
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
@@ -28,6 +28,8 @@ export function TradingViewChart({
 
   const [timeframe, setTimeframe] = useState<TimeframeOption>("15m");
   const [loadingChart, setLoadingChart] = useState<boolean>(false);
+  const [hasBars, setHasBars] = useState<boolean>(false);
+  const [chartError, setChartError] = useState(false);
   const { themeConfig } = useTheme();
 
   const isGraduated = token.bondingCurve.isGraduated;
@@ -67,12 +69,12 @@ export function TradingViewChart({
 
     // Candlestick series
     const candlestickSeries = chart.addCandlestickSeries({
-      upColor: "#10B981",
-      downColor: "#F87171",
-      borderUpColor: "#10B981",
-      borderDownColor: "#F87171",
-      wickUpColor: "#10B981",
-      wickDownColor: "#F87171",
+      upColor: themeConfig.colors.brandEmerald,
+      downColor: themeConfig.colors.brandRose,
+      borderUpColor: themeConfig.colors.brandEmerald,
+      borderDownColor: themeConfig.colors.brandRose,
+      wickUpColor: themeConfig.colors.brandEmerald,
+      wickDownColor: themeConfig.colors.brandRose,
     });
     candlestickSeriesRef.current = candlestickSeries;
 
@@ -96,7 +98,7 @@ export function TradingViewChart({
     if (isGraduated && floorPrice > 0) {
       candlestickSeries.createPriceLine({
         price: floorPrice,
-        color: "#d97706",
+        color: chartTheme.floorLineColor,
         lineWidth: 1,
         lineStyle: LineStyle.Dashed,
         axisLabelVisible: false,
@@ -135,6 +137,8 @@ export function TradingViewChart({
         const bars: OHLCVBar[] = await chartService.getOHLCV(token, timeframe);
 
         if (isCancelled) return;
+        setHasBars(bars.length > 0);
+        setChartError(false);
 
         // Set Candlestick data
         candlestickSeriesRef.current.setData(
@@ -152,10 +156,9 @@ export function TradingViewChart({
           bars.map((b) => ({
             time: b.time as any,
             value: b.volume,
-            color:
-              b.close >= b.open
-                ? "rgba(16, 185, 129, 0.35)"
-                : "rgba(248, 113, 113, 0.35)",
+            color: b.close >= b.open
+              ? themeConfig.colors.brandEmerald
+              : themeConfig.colors.brandRose,
           }))
         );
 
@@ -164,6 +167,10 @@ export function TradingViewChart({
         }
       } catch (err) {
         console.error("Failed to load chart bars:", err);
+        if (!isCancelled) {
+          setHasBars(false);
+          setChartError(true);
+        }
       } finally {
         if (!isCancelled) setLoadingChart(false);
       }
@@ -174,45 +181,19 @@ export function TradingViewChart({
     return () => {
       isCancelled = true;
     };
-  }, [token.mint, token.priceUsd, timeframe]);
+  }, [token.mint, token.priceUsd, timeframe, themeConfig.colors.brandEmerald, themeConfig.colors.brandRose]);
 
   const timeframes: TimeframeOption[] = ["1m", "5m", "15m", "1h", "4h", "1D"];
-
-  const [chartMode, setChartMode] = useState<"internal" | "gecko">("internal");
 
   return (
     <div className="relative w-full rounded-xl border border-border bg-card p-4 shadow-sm">
       <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-border text-xs">
         <div className="flex items-center gap-2">
-          <span className="font-bold text-foreground">${token.symbol} / USDC</span>
+          <span className="font-bold text-foreground">${token.symbol} / USDC · trade execution history</span>
           {isGraduated ? (
-            <div className="flex items-center gap-1.5">
-              <span className="rounded-md border border-slate-700/60 bg-slate-800/50 px-2 py-0.5 text-[10px] font-medium text-slate-300">
-                Meteora DLMM
-              </span>
-              <div className="flex items-center rounded-lg border border-border bg-card-subtle p-0.5 text-[10px]">
-                <button
-                  onClick={() => setChartMode("internal")}
-                  className={`px-2 py-0.5 rounded ${
-                    chartMode === "internal"
-                      ? "bg-brand-cyan/20 text-brand-cyan font-bold border border-brand-cyan/30"
-                      : "text-muted hover:text-foreground"
-                  }`}
-                >
-                  Internal TV
-                </button>
-                <button
-                  onClick={() => setChartMode("gecko")}
-                  className={`px-2 py-0.5 rounded ${
-                    chartMode === "gecko"
-                      ? "bg-brand-cyan/20 text-brand-cyan font-bold border border-brand-cyan/30"
-                      : "text-muted hover:text-foreground"
-                  }`}
-                >
-                  GeckoTerminal
-                </button>
-              </div>
-            </div>
+            <span className="rounded-md border border-border px-2 py-0.5 text-[10px] text-muted">
+              Graduated curve
+            </span>
           ) : (
             <span className="rounded-md border border-slate-700/50 bg-slate-800/30 px-2 py-0.5 text-[10px] tracking-wide font-mono font-medium text-slate-400">
               Bonding Curve Discovery
@@ -226,8 +207,7 @@ export function TradingViewChart({
           )}
         </div>
 
-        {chartMode === "internal" && (
-          <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1">
             {timeframes.map((tf) => (
               <button
                 key={tf}
@@ -241,26 +221,17 @@ export function TradingViewChart({
                 {tf}
               </button>
             ))}
+        </div>
+      </div>
+
+      <div className="relative mt-3">
+        <div ref={chartContainerRef} className="w-full" />
+        {!loadingChart && !hasBars && (
+          <div className="pointer-events-none absolute inset-0 flex items-center justify-center text-xs text-muted">
+            {chartError ? "Verified chart data unavailable" : "No verified trades for this chart yet"}
           </div>
         )}
       </div>
-
-      {isGraduated && chartMode === "gecko" ? (
-        <div className="mt-3 w-full h-[380px] rounded-lg overflow-hidden border border-border bg-black/40">
-          <iframe
-            height="100%"
-            width="100%"
-            id="geckoterminal-embed"
-            title="GeckoTerminal Embed"
-            src={`https://www.geckoterminal.com/solana/pools/${token.mint}?embed=1&info=0&swaps=0`}
-            frameBorder="0"
-            allow="clipboard-write"
-            allowFullScreen
-          />
-        </div>
-      ) : (
-        <div ref={chartContainerRef} className="mt-3 w-full" />
-      )}
     </div>
   );
 }

@@ -3,8 +3,9 @@
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { Search, X, ShieldCheck, ArrowUpRight } from "lucide-react";
+import { Search, X } from "lucide-react";
 import { TokenMetadata } from "@/lib/types";
+import { formatUsd } from "@/lib/marketFormat";
 
 interface SearchModalProps {
   isOpen: boolean;
@@ -136,20 +137,22 @@ export function SearchModal({ isOpen, onClose, tokens }: SearchModalProps) {
                           {token.targetEquity.symbol.replace(/^\$/, "")}
                         </span>
                         <span className="rounded-md border border-slate-700/40 bg-slate-800/20 px-1.5 py-0.5 text-[10px] font-mono text-slate-400">
-                          {token.targetEquity.isPreIpo ? "Pre-IPO" : "xStocks"}
+                          {token.targetEquity.symbol === "UNKNOWN"
+                            ? "Unverified"
+                            : token.targetEquity.isPreIpo ? "Pre-IPO" : "xStocks"}
                         </span>
                       </div>
                       <div className="text-[11px] text-muted truncate">
-                        {token.name} · backed with {token.targetEquity.name}
+                        {token.name} · target equity {token.targetEquity.name}
                       </div>
                     </div>
                   </div>
 
                   <div className="text-right flex-shrink-0 pl-2">
                     <div className="font-mono text-sm font-bold text-foreground">
-                      {token.marketCapUsd >= 1_000_000
-                        ? `$${(token.marketCapUsd / 1_000_000).toFixed(2)}M`
-                        : `$${(token.marketCapUsd / 1_000).toFixed(1)}K`}
+                      {token.bondingCurve.isGraduated && token.priceUsd <= 0
+                        ? "—"
+                        : formatUsd(token.marketCapUsd)}
                     </div>
                     <div
                       className={`font-mono text-xs font-semibold ${
@@ -160,8 +163,9 @@ export function SearchModal({ isOpen, onClose, tokens }: SearchModalProps) {
                           : "text-rose-400"
                       }`}
                     >
-                      {isPositive && !isNeutral ? "+" : ""}
-                      {token.priceChange24h.toFixed(1)}%
+                      {token.priceChange24hAvailable === false ? "—" : (
+                        <>{isPositive && !isNeutral ? "+" : ""}{token.priceChange24h.toFixed(1)}%</>
+                      )}
                     </div>
                   </div>
                 </div>

@@ -69,6 +69,9 @@ export class SolanaTradeService implements ITradeService {
     if (!Number.isFinite(params.amount) || params.amount <= 0) {
       throw new Error("Enter a valid trade amount.");
     }
+    if (params.amount < 0.000001) {
+      throw new Error("The minimum on-chain trade amount is 0.000001.");
+    }
     if (params.token.bondingCurve.isGraduated) {
       throw new Error(
         "This token is graduated, but a verified Meteora/Jupiter swap route is not configured. No transaction was submitted."
@@ -224,13 +227,30 @@ export class SolanaTradeService implements ITradeService {
       throw new Error(`Solana rejected the transaction: ${JSON.stringify(confirmation.value.err)}`);
     }
 
-    await fetch("/api/trades/confirm", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ signature, mint: params.token.mint }),
-    }).catch(() => null);
+    let verifiedTrade: { tokens_amount: number; quote_amount_usd: number } | null = null;
+    let indexed = false;
+    try {
+      const response = await fetch("/api/trades/confirm", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ signature, mint: params.token.mint }),
+      });
+      if (response.ok) {
+        const confirmation = await response.json();
+        verifiedTrade = confirmation.trade || null;
+        indexed = confirmation.indexed === true;
+      }
+    } catch (indexError) {
+      console.warn("Confirmed trade could not be read from the RPC index:", indexError);
+    }
 
-    const updatedToken = (await solanaTokenService.getToken(params.token.mint)) || params.token;
+    // Never present a simulated quote as the actual execution receipt.
+    tokensAmount = verifiedTrade?.tokens_amount || 0;
+    quoteAmount = verifiedTrade?.quote_amount_usd || 0;
+    effectivePrice = tokensAmount > 0 ? quoteAmount / tokensAmount : 0;
+
+    const updatedToken =
+      (await solanaTokenService.getToken(params.token.mint).catch(() => null)) || params.token;
     return {
       success: true,
       txSignature: signature,
@@ -239,8 +259,11 @@ export class SolanaTradeService implements ITradeService {
       effectivePrice,
       priceImpactPct,
       isGraduated: updatedToken.bondingCurve.isGraduated,
-      message:
-        params.tradeMode === "buy"
+      message: !verifiedTrade
+        ? `Transaction ${signature} confirmed on Solana, but exact amounts could not be verified yet. Do not resubmit; check the transaction before retrying.`
+        : !indexed
+          ? `Transaction ${signature} confirmed; the trade index is temporarily unavailable.`
+        : params.tradeMode === "buy"
           ? `Confirmed purchase of ${tokensAmount.toLocaleString("en-US", { maximumFractionDigits: 2 })} $${params.token.symbol}.`
           : `Confirmed sale for ${quoteAmount.toFixed(2)} USDC.`,
       updatedToken,

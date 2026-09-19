@@ -4,10 +4,11 @@ import { getAccount } from "@solana/spl-token";
 import idl from "@/idl/streetfun.json";
 import { TokenMetadata } from "@/lib/types";
 import { calculateBondingProgress } from "@/lib/marketFormat";
-import { createBrowserSupabaseClient } from "@/lib/supabase";
+import { createServerSupabaseClient } from "@/lib/supabase";
 import { ITokenService, TokenLaunchParams } from "../types";
-import { PROGRAM_ID, VERIFIED_TESSERA_PRE_IPO_ASSETS } from "@/sdk/constants";
+import { PROGRAM_ID, USDC_MINT, VERIFIED_TESSERA_PRE_IPO_ASSETS } from "@/sdk/constants";
 import { getGlobalConfigPda, getQuoteVaultPda, getTreasuryVaultPda } from "@/sdk/pda";
+import { TradeStoreService } from "../indexer/tradeStore";
 
 interface IndexedTokenMetadata {
   mint: string;
@@ -27,7 +28,6 @@ interface IndexedMarketStat {
   latestTradePriceUsd: number | null;
 }
 
-const DEFAULT_THRESHOLD_USD = 60_000;
 const TOKEN_DECIMALS = 1_000_000;
 
 export class SolanaTokenService implements ITokenService {
@@ -52,16 +52,18 @@ export class SolanaTokenService implements ITokenService {
 
   private async getIndexedMetadata(): Promise<Map<string, IndexedTokenMetadata>> {
     const metadata = new Map<string, IndexedTokenMetadata>();
-    const supabase = createBrowserSupabaseClient();
+    const supabase = createServerSupabaseClient();
     if (!supabase) return metadata;
-
     const { data, error } = await supabase
       .from("tokens")
       .select(
         "mint, name, symbol, target_equity_symbol, target_equity_mint, creator, description, avatar_url, created_at"
       );
 
-    if (error) throw new Error(`Token metadata index unavailable: ${error.message}`);
+    if (error) {
+      console.warn(`[SolanaTokenService] Token metadata index unavailable: ${error.message}`);
+      return metadata;
+    }
     for (const row of (data || []) as IndexedTokenMetadata[]) {
       metadata.set(row.mint.toLowerCase(), row);
     }
@@ -70,15 +72,18 @@ export class SolanaTokenService implements ITokenService {
 
   private async getIndexedStats(mints: string[]): Promise<Record<string, IndexedMarketStat>> {
     if (mints.length === 0) return {};
-    const response = await fetch(`/api/trades/stats?mints=${encodeURIComponent(mints.join(","))}`, {
-      cache: "no-store",
-    });
-    if (!response.ok) return {};
-    const payload = await response.json();
-    return payload.stats || {};
+    return TradeStoreService.getInstance().getMarketStats(mints);
   }
 
   async getTokens(): Promise<TokenMetadata[]> {
+    if (typeof window !== "undefined") {
+      const response = await fetch("/api/tokens", { cache: "no-store" });
+      if (!response.ok) throw new Error("Live Solana market data is unavailable.");
+      const payload = await response.json();
+      if (!Array.isArray(payload.tokens)) throw new Error("Invalid live market response.");
+      return payload.tokens as TokenMetadata[];
+    }
+
     const program = this.getProgram();
     const [onChainCurves, metadata, slot] = await Promise.all([
       (program.account as any).curveAccount.all(),
@@ -89,18 +94,19 @@ export class SolanaTokenService implements ITokenService {
     if (!onChainCurves || onChainCurves.length === 0) return [];
 
     const [globalConfigPda] = getGlobalConfigPda(PROGRAM_ID);
-    let graduationThresholdUsd = DEFAULT_THRESHOLD_USD;
-    let protocolFeeBps = 0;
-    try {
-      const config = await (program.account as any).globalConfig.fetch(globalConfigPda);
-      graduationThresholdUsd = Number(config.graduationThreshold.toString()) / TOKEN_DECIMALS;
-      protocolFeeBps = Number(config.protocolFeeBps);
-    } catch {
-      // Curve accounts remain authoritative even while the config fetch is temporarily unavailable.
-    }
+    const config = await (program.account as any).globalConfig.fetch(globalConfigPda);
+    const graduationThresholdUsd = Number(config.graduationThreshold.toString()) / TOKEN_DECIMALS;
+    const protocolFeeBps = Number(config.protocolFeeBps);
 
     const mints = onChainCurves.map((curve: any) => curve.account.memeMint.toBase58());
-    const indexedStats = await this.getIndexedStats(mints);
+    let indexedStats: Record<string, IndexedMarketStat> = {};
+    let tradeIndexAvailable = false;
+    try {
+      indexedStats = await this.getIndexedStats(mints);
+      tradeIndexAvailable = true;
+    } catch (error) {
+      console.warn("[SolanaTokenService] Verified trade index unavailable:", error);
+    }
     const asOf = new Date().toISOString();
 
     const tokens = await Promise.all(
@@ -110,13 +116,9 @@ export class SolanaTokenService implements ITokenService {
         const indexed = metadata.get(mint.toLowerCase());
         const targetEquityMint = account.targetEquityMint.toBase58();
         const indexedStat = indexedStats[mint] || indexedStats[mint.toLowerCase()];
-        const knownAsset =
-          VERIFIED_TESSERA_PRE_IPO_ASSETS.find(
-            (asset) => asset.mintAddress.toLowerCase() === targetEquityMint.toLowerCase()
-          ) ||
-          VERIFIED_TESSERA_PRE_IPO_ASSETS.find(
-            (asset) => asset.symbol.toLowerCase() === indexed?.target_equity_symbol?.toLowerCase()
-          );
+        const knownAsset = VERIFIED_TESSERA_PRE_IPO_ASSETS.find(
+          (asset) => asset.mintAddress.toLowerCase() === targetEquityMint.toLowerCase()
+        );
 
         const virtualQuoteRaw = Number(account.virtualQuoteReserves.toString());
         const virtualTokensRaw = Number(account.virtualTokenReserves.toString());
@@ -128,14 +130,16 @@ export class SolanaTokenService implements ITokenService {
         // A migrated token needs a live AMM quote. Curve state is no longer a current price source.
         const currentPrice = isGraduated ? 0 : spotPrice;
         const marketCapUsd = currentPrice * totalSupply;
-        const referencePrice = indexedStat?.referencePriceUsd;
-        const priceChange24h =
-          currentPrice > 0 && referencePrice && referencePrice > 0
-            ? ((currentPrice - referencePrice) / referencePrice) * 100
-            : 0;
+        // Execution-average trade prices are not a 24-hour spot-price baseline.
+        const priceChange24h = 0;
         const [quoteVaultPda] = getQuoteVaultPda(curveEntry.publicKey, PROGRAM_ID);
         const [treasuryVaultPda] = getTreasuryVaultPda(curveEntry.publicKey, PROGRAM_ID);
         const quoteVault = await getAccount(this.connection, quoteVaultPda, "confirmed");
+        if (!quoteVault.mint.equals(USDC_MINT)) {
+          throw new Error(
+            `Curve ${mint} uses quote mint ${quoteVault.mint.toBase58()}, not the configured USDC mint.`
+          );
+        }
         const meteoraPool = account.meteoraDbcPool as PublicKey;
         const hasMeteoraPool = !meteoraPool.equals(PublicKey.default);
         const totalEquityLocked =
@@ -153,10 +157,12 @@ export class SolanaTokenService implements ITokenService {
           marketCapUsd,
           priceUsd: currentPrice,
           priceChange24h,
+          priceChange24hAvailable: false,
           volume24hUsd: indexedStat?.volume24hUsd || 0,
+          volume24hAvailable: tradeIndexAvailable,
           targetEquity: {
-            symbol: indexed?.target_equity_symbol || knownAsset?.symbol || "UNKNOWN",
-            name: knownAsset?.name || indexed?.target_equity_symbol || "Unverified backing asset",
+            symbol: knownAsset?.symbol || "UNKNOWN",
+            name: knownAsset?.name || "Unverified target asset",
             mintAddress: targetEquityMint,
             issuer: knownAsset?.issuer,
             custodian: knownAsset?.custodian || "Not indexed",

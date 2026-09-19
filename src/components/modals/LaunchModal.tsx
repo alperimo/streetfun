@@ -20,7 +20,7 @@ export function LaunchModal({
   onTokenCreated,
 }: LaunchModalProps) {
   const router = useRouter();
-  const { launchToken } = useMarket();
+  const { launchToken, isMock } = useMarket();
   const [name, setName] = useState("");
   const [symbol, setSymbol] = useState("");
   const [description, setDescription] = useState("");
@@ -30,6 +30,7 @@ export function LaunchModal({
   const [selectedEquitySymbol, setSelectedEquitySymbol] = useState("$TSPACEX");
   const [initialBuyUsdc, setInitialBuyUsdc] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [launchError, setLaunchError] = useState<string | null>(null);
 
   if (!isOpen) return null;
 
@@ -43,6 +44,7 @@ export function LaunchModal({
     if (!name || !symbol) return;
 
     setIsSubmitting(true);
+    setLaunchError(null);
 
     try {
       const initialBuyAmount = parseFloat(initialBuyUsdc) || 0;
@@ -68,6 +70,7 @@ export function LaunchModal({
       router.push(`/token/${newToken.mint}`);
     } catch (err) {
       console.error("Failed to launch token:", err);
+      setLaunchError(err instanceof Error ? err.message : "Token launch failed.");
     } finally {
       setIsSubmitting(false);
     }
@@ -88,7 +91,9 @@ export function LaunchModal({
             <div>
               <h2 className="text-lg font-bold text-foreground">Launch Token</h2>
               <p className="text-xs text-muted">
-                Create an equity-backed token with an institutional treasury reserve
+                {isMock
+                  ? "Create an equity-backed token in demo mode"
+                  : "Live launch requires a wallet-signed on-chain transaction"}
               </p>
             </div>
           </div>
@@ -102,6 +107,12 @@ export function LaunchModal({
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="mt-5 space-y-4 text-xs">
+          {!isMock && (
+            <p className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-amber-300">
+              Live token launch is not configured yet. This form will not create a mock token.
+            </p>
+          )}
+          {launchError && <p role="alert" className="text-rose-400">{launchError}</p>}
           {/* Token Name & Ticker */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
@@ -139,7 +150,8 @@ export function LaunchModal({
                 Select Backing Asset
               </label>
               <span className="text-[10px] text-slate-300 font-mono flex items-center gap-1">
-                <ShieldCheck className="h-3 w-3 text-slate-400" /> Pyth / On-Chain Verified
+                <ShieldCheck className="h-3 w-3 text-slate-400" />
+                {isMock ? "Demo asset catalog" : "Target asset catalog"}
               </span>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
@@ -247,10 +259,12 @@ export function LaunchModal({
           {/* Submit Button */}
           <button
             type="submit"
-            disabled={isSubmitting}
+            disabled={isSubmitting || !isMock}
             className="w-full rounded-xl bg-brand-cyan py-3 text-sm font-bold text-slate-950 hover:opacity-90 transition-opacity disabled:opacity-50 shadow-md shadow-brand-cyan/20 flex items-center justify-center gap-2"
           >
-            {isSubmitting ? (
+            {!isMock ? (
+              <span>Live launch unavailable</span>
+            ) : isSubmitting ? (
               <span>Creating Token...</span>
             ) : (
               <>

@@ -4,31 +4,31 @@
 
 @layer base {
   :root {
-    --chrome-background: #090d10;
-    --chrome-card: #0a0f14;
-    --chrome-card-hover: #131f2b;
-    --chrome-border: #19242e;
-    --chrome-border-active: #2a3d4f;
-    --chrome-foreground: #e8eff5;
-    --chrome-muted: #8295a5;
+    --chrome-background: #06090e;
+    --chrome-card: #0e131b;
+    --chrome-card-hover: #141c26;
+    --chrome-border: #182230;
+    --chrome-border-active: #26384f;
+    --chrome-foreground: #f3f6fa;
+    --chrome-muted: #8496a9;
     /* Keep the lens chart and its glow aligned with the green accent text. */
     --hero-chart: var(--brand-emerald);
     --hero-chart-core: var(--brand-emerald);
     --hero-glass-shadow: #010b05;
   }
 
-  /* Default: Street Dark (Midnight Slate - 1 Notch Lighter, Degen Wall Street) */
+  /* Default: Street Dark (Obsidian Glass Terminal - 24/7 High-Frequency Trading) */
   [data-theme="street-dark"] {
-    --background: #090d10;
-    --foreground: #f1f5f9;
-    --card: #0a0f14;
-    --card-hover: #192734;
-    --card-subtle: #090e13;
-    --filter-surface: #0f1214;
-    --border: #19242e;
-    --border-active: #2d455e;
-    --muted: #94a3b8;
-    --muted-foreground: #64748b;
+    --background: #06090e;
+    --foreground: #f3f6fa;
+    --card: #0e131b;
+    --card-hover: #141c26;
+    --card-subtle: #090d13;
+    --filter-surface: #0e131b;
+    --border: #182230;
+    --border-active: #26384f;
+    --muted: #8496a9;
+    --muted-foreground: #536577;
     --brand-cyan: #c7f284;
     --brand-cyan-hover: #d7f6a0;
     --brand-cyan-tint: rgba(199, 242, 132, 0.12);
@@ -38,24 +38,24 @@
     --brand-purple: #a855f7;
     --brand-amber: #f59e0b;
     --brand-rose: #f43f5e;
-    --scrollbar-track: #090d10;
-    --scrollbar-thumb: #19242e;
-    --scrollbar-thumb-hover: #2d455e;
+    --scrollbar-track: #06090e;
+    --scrollbar-thumb: #182230;
+    --scrollbar-thumb-hover: #26384f;
   }
 
-  /* Theme 2: Onyx Dark (Original Deep Pitch Black Terminal) */
+  /* Theme 2: Onyx Dark */
   :root,
   [data-theme="dark"] {
-    --background: #090d10;
-    --foreground: #e6edf3;
-    --card: #0a0f14;
-    --card-hover: #0f1922;
-    --card-subtle: #070c10;
-    --filter-surface: #0f1214;
-    --border: #19242e;
-    --border-active: #2a3d4f;
-    --muted: #8295a5;
-    --muted-foreground: #526373;
+    --background: #06090e;
+    --foreground: #f3f6fa;
+    --card: #0e131b;
+    --card-hover: #141c26;
+    --card-subtle: #090d13;
+    --filter-surface: #0e131b;
+    --border: #182230;
+    --border-active: #26384f;
+    --muted: #8496a9;
+    --muted-foreground: #536577;
     --brand-cyan: #c7f284;
     --brand-cyan-hover: #d7f6a0;
     --brand-cyan-tint: rgba(199, 242, 132, 0.12);
@@ -65,9 +65,9 @@
     --brand-purple: #a855f7;
     --brand-amber: #f59e0b;
     --brand-rose: #f43f5e;
-    --scrollbar-track: #090d10;
-    --scrollbar-thumb: #19242e;
-    --scrollbar-thumb-hover: #2a3d4f;
+    --scrollbar-track: #06090e;
+    --scrollbar-thumb: #182230;
+    --scrollbar-thumb-hover: #26384f;
   }
 
   /* Theme 3: Clean Light (Paper / Institutional Light) */
@@ -90,6 +90,11 @@
     --scrollbar-track: #f1f5f9;
     --scrollbar-thumb: #cbd5e1;
     --scrollbar-thumb-hover: #94a3b8;
+  }
+
+  html {
+    overflow-y: scroll;
+    scrollbar-gutter: stable;
   }
 
   body {
@@ -193,22 +198,15 @@
 
 .site-header,
 .site-footer {
-  --background: var(--chrome-background);
-  --card: var(--chrome-card);
-  --card-hover: var(--chrome-card-hover);
-  --border: var(--chrome-border);
-  --border-active: var(--chrome-border-active);
-  --foreground: var(--chrome-foreground);
-  --muted: var(--chrome-muted);
-  background-color: var(--chrome-background);
+  background-color: var(--background);
 }
 
 .site-header {
-  border-bottom: 1px solid var(--chrome-border);
+  border-bottom: 1px solid var(--border);
 }
 
 .site-footer {
-  border-top: 1px solid var(--chrome-border);
+  border-top: 1px solid var(--border);
 }
 
 .hero-section {

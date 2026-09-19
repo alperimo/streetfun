@@ -1,10 +1,12 @@
 import puppeteer from "puppeteer-core";
 import * as path from "path";
+import * as fs from "fs";
 
 const CHROME_PATH = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
-const ARTIFACTS_DIR = "/Users/alperenf/.gemini/antigravity/brain/eee7d099-16e6-4871-acc0-9f8aff898880";
+const ARTIFACTS_DIR = "/tmp/streetfun-visual-verification";
 
 async function main() {
+  fs.mkdirSync(ARTIFACTS_DIR, { recursive: true });
   console.log("Launching headless Chrome via puppeteer-core...");
   const browser = await puppeteer.launch({
     executablePath: CHROME_PATH,
@@ -32,7 +34,17 @@ async function main() {
     await page.screenshot({ path: path.join(ARTIFACTS_DIR, "live_tokens_homepage.png") });
     console.log("Captured live_tokens_homepage.png");
 
-    // 2. BIG DASSAK Token detail page
+    // 2. Treasury page
+    console.log("Navigating to treasury page...");
+    await page.goto("http://localhost:3000/treasury", {
+      waitUntil: "domcontentloaded",
+      timeout: 25000,
+    });
+    await new Promise((r) => setTimeout(r, 2000));
+    await page.screenshot({ path: path.join(ARTIFACTS_DIR, "live_treasury_page.png") });
+    console.log("Captured live_treasury_page.png");
+
+    // 3. BIG DASSAK Token detail page
     console.log("Navigating to BIG DASSAK page...");
     await page.goto("http://localhost:3000/token/SaSbgssBAK6unw3idBiMZVjDtafdRBsm4ZBexRDgipB", {
       waitUntil: "domcontentloaded",

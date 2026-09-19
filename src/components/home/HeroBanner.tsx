@@ -7,10 +7,10 @@ import { BullArtwork } from "./BullArtwork";
 import { useMarket } from "@/context/MarketContext";
 
 export function HeroBanner() {
-  const { tokens, isMock } = useMarket();
+  const { tokens, isMock, error, loading } = useMarket();
 
   const totalVolume = tokens.reduce((sum, t) => sum + (t.volume24hUsd || 0), 0);
-  const totalTvl = tokens.reduce((sum, t) => sum + (t.treasury?.totalEquityValueUsd || 0), 0);
+  const volumeAvailable = tokens.every((token) => token.volume24hAvailable !== false);
   const graduatedCount = tokens.filter((t) => t.bondingCurve?.isGraduated).length;
 
   const formatUsd = (num: number) => {
@@ -22,18 +22,18 @@ export function HeroBanner() {
   const stats = [
     {
       label: "24h Volume",
-      value: isMock ? "$4.82M" : formatUsd(totalVolume),
-      change: isMock ? "+47.3%" : "Live",
+      value: isMock ? "$4.82M" : !error && !loading && volumeAvailable ? formatUsd(totalVolume) : "—",
+      change: isMock ? "+47.3%" : error ? "Unavailable" : "Live",
     },
     {
       label: "Equity TVL",
-      value: isMock ? "$40.7M" : formatUsd(totalTvl),
-      change: isMock ? "+28.1%" : "Live",
+      value: isMock ? "$40.7M" : "—",
+      change: isMock ? "+28.1%" : "Oracle unavailable",
     },
     {
       label: "Graduated",
-      value: isMock ? "1,282" : graduatedCount.toLocaleString(),
-      change: isMock ? "+12.6%" : "Live",
+      value: isMock ? "1,282" : error && tokens.length === 0 ? "—" : graduatedCount.toLocaleString(),
+      change: isMock ? "+12.6%" : error ? "Unavailable" : "Live",
     },
   ];
 

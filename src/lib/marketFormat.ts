@@ -12,8 +12,16 @@ const USD_PRECISE = new Intl.NumberFormat("en-US", {
   maximumFractionDigits: 2,
 });
 
+const USD_TINY = new Intl.NumberFormat("en-US", {
+  style: "currency",
+  currency: "USD",
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 6,
+});
+
 export function formatUsd(value: number): string {
   if (!Number.isFinite(value)) return "—";
+  if (value !== 0 && Math.abs(value) < 0.01) return USD_TINY.format(value);
   return Math.abs(value) < 1_000 ? USD_PRECISE.format(value) : USD_COMPACT.format(value);
 }
 

@@ -9,7 +9,6 @@ export async function GET(
     const { mint } = await params;
     const url = new URL(req.url);
     const intervalStr = url.searchParams.get("timeframe") || "15m";
-    const currentPrice = parseFloat(url.searchParams.get("price") || "0.00003");
 
     let intervalMinutes = 15;
     if (intervalStr === "1m") intervalMinutes = 1;
@@ -20,7 +19,7 @@ export async function GET(
     else if (intervalStr === "1D") intervalMinutes = 1440;
 
     const tradeStore = TradeStoreService.getInstance();
-    const bars = await tradeStore.getOHLCV(mint, intervalMinutes, 100, currentPrice);
+    const bars = await tradeStore.getOHLCV(mint, intervalMinutes, 100);
 
     return NextResponse.json({
       success: true,

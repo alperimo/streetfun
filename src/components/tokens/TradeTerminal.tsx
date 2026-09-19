@@ -84,7 +84,10 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
   const numTokensToRedeem = parseFloat(amount) || 0;
   const targetStockPrice = token.targetEquity.stockPriceUsd || 0;
   const totalStockSharesInVault = token.treasury.totalEquityLocked;
-  const entitledStockShares = numTokensToRedeem > 0 ? (numTokensToRedeem / totalMemeSupply) * totalStockSharesInVault : 0;
+  const entitledStockShares =
+    numTokensToRedeem > 0 && totalMemeSupply > 0
+      ? (numTokensToRedeem / totalMemeSupply) * totalStockSharesInVault
+      : 0;
   const entitledUsdcValue = entitledStockShares * targetStockPrice;
   const floorPricePerToken =
     totalMemeSupply > 0 ? token.treasury.totalEquityValueUsd / totalMemeSupply : 0;
@@ -100,20 +103,32 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
         const quoteIn = BigInt(Math.floor(numAmount * 1_000_000));
         return {
           type: "buy" as const,
-          ...simulateBuyTokensOut(quoteIn, virtualQuote, virtualTokens, realTokens, 100),
+          ...simulateBuyTokensOut(
+            quoteIn,
+            virtualQuote,
+            virtualTokens,
+            realTokens,
+            token.bondingCurve.dynamicFeeBps ?? 100
+          ),
         };
       } else {
         const tokensIn = BigInt(Math.floor(numAmount * 1_000_000));
         const realQuote = BigInt(Math.floor(token.bondingCurve.realQuoteReservesUsd * 1_000_000));
         return {
           type: "sell" as const,
-          ...simulateSellQuoteOut(tokensIn, virtualQuote, virtualTokens, realQuote, 100),
+          ...simulateSellQuoteOut(
+            tokensIn,
+            virtualQuote,
+            virtualTokens,
+            realQuote,
+            token.bondingCurve.dynamicFeeBps ?? 100
+          ),
         };
       }
     } catch (err: any) {
       return { error: err.message };
     }
-  }, [amount, tradeMode, virtualQuote, virtualTokens, realTokens, token.bondingCurve.realQuoteReservesUsd]);
+  }, [amount, tradeMode, virtualQuote, virtualTokens, realTokens, token.bondingCurve.realQuoteReservesUsd, token.bondingCurve.dynamicFeeBps]);
 
   const handleExecuteTrade = async () => {
     if (!connected) return;
@@ -149,6 +164,9 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
 
         if (res.success) {
           setReceipt(receiptFromTrade(token, tradeMode, res, isMock));
+          if (!isMock && (!res.tokensAmount || res.message.includes("index"))) {
+            setTradeErrorMsg(res.message);
+          }
           setAmount("");
           await loadBalances();
           if (submittedMode === "buy") {
@@ -167,6 +185,23 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
       setIsTrading(false);
     }
   };
+
+  if (!isMock && token.bondingCurve.isGraduated) {
+    return (
+      <div className="rounded-xl border border-border bg-card p-5 shadow-sm">
+        <h2 className="text-sm font-bold text-foreground">Trading route unavailable</h2>
+        <p className="mt-2 text-xs leading-relaxed text-muted">
+          This curve is graduated. A verified AMM trading and equity redemption route is not configured,
+          so StreetFun will not submit or simulate an order here.
+        </p>
+        {token.bondingCurve.meteoraPoolAddress && (
+          <span className="mt-3 block break-all font-mono text-[10px] text-muted">
+            Pool: {token.bondingCurve.meteoraPoolAddress}
+          </span>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div
@@ -498,7 +533,7 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
               <div className="flex items-center justify-between text-muted text-[11px]">
                 <span>Effective Price:</span>
                 <span className="font-mono text-foreground">
-                  ${simulation.effectivePriceUsd.toFixed(6)}
+                  {formatTokenPrice(simulation.effectivePriceUsd)}
                 </span>
               </div>
 

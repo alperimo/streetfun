@@ -40,10 +40,18 @@ interface MarketContextType {
 
 const MarketContext = createContext<MarketContextType | undefined>(undefined);
 
-export function MarketProvider({ children }: { children: ReactNode }) {
+interface MarketProviderProps {
+  children: ReactNode;
+  initialTokens?: TokenMetadata[];
+}
+
+export function MarketProvider({ children, initialTokens = [] }: MarketProviderProps) {
   const isMock = isMockMode();
-  const [tokens, setTokens] = useState<TokenMetadata[]>(isMock ? INITIAL_TOKENS : []);
-  const [loading, setLoading] = useState(true);
+  const [tokens, setTokens] = useState<TokenMetadata[]>(() => {
+    if (isMock) return INITIAL_TOKENS;
+    return initialTokens.filter((token) => token.dataSource === "onchain");
+  });
+  const [loading, setLoading] = useState(!isMock && initialTokens.length === 0);
   const [error, setError] = useState<string | null>(null);
   const wallet = useWallet();
   const { connection } = useConnection();
@@ -84,12 +92,21 @@ export function MarketProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     refreshTokens();
-    const interval = setInterval(refreshTokens, isMock ? 4_000 : 15_000);
-    return () => clearInterval(interval);
+    const refreshWhenVisible = () => {
+      if (document.visibilityState === "visible") refreshTokens();
+    };
+    const interval = setInterval(refreshWhenVisible, isMock ? 4_000 : 10_000);
+    window.addEventListener("focus", refreshWhenVisible);
+    document.addEventListener("visibilitychange", refreshWhenVisible);
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener("focus", refreshWhenVisible);
+      document.removeEventListener("visibilitychange", refreshWhenVisible);
+    };
   }, [isMock, refreshTokens]);
 
   useEffect(() => {
-    if (isMock) return;
+    if (isMock || error || tokens.length === 0) return;
 
     let programSubscriptionId: number | null = null;
     let refreshTimer: ReturnType<typeof setTimeout> | null = null;
@@ -130,7 +147,7 @@ export function MarketProvider({ children }: { children: ReactNode }) {
       }
       if (supabase && channel) supabase.removeChannel(channel);
     };
-  }, [connection, isMock, refreshTokens]);
+  }, [connection, error, isMock, refreshTokens, tokens.length]);
 
   const getToken = useCallback(
     (mint: string) => {

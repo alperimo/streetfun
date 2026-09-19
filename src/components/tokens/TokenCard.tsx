@@ -31,8 +31,13 @@ export function TokenCard({ token }: TokenCardProps) {
   return (
     <article
       data-token={token.mint}
-      className="token-discovery-card group relative flex flex-col justify-between rounded-2xl border border-border bg-card p-4 sm:p-5 transition-colors hover:border-border-active hover:bg-card-hover shadow-sm"
+      className="token-discovery-card group relative flex flex-col justify-between rounded-2xl border border-border bg-card p-4 sm:p-5 transition-colors hover:border-border-active hover:bg-card-hover shadow-sm overflow-hidden"
     >
+      {/* Top highlight bevel for tactile luxury depth */}
+      <div
+        className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/[0.06] to-transparent"
+        aria-hidden="true"
+      />
       <Link
         href={`/token/${token.mint}`}
         aria-label={`Open ${token.name} ($${token.symbol})`}
@@ -85,7 +90,7 @@ export function TokenCard({ token }: TokenCardProps) {
         {/* Backed by badge: Stock Logo + Plain Ticker + subtle tag */}
         <div className="mt-3 flex flex-wrap items-center justify-between gap-x-3 gap-y-2 text-[11px]">
           <div className="flex items-center gap-1.5">
-            <span className="text-muted whitespace-nowrap">Backed with</span>
+            <span className="text-muted whitespace-nowrap">Target equity</span>
             <div className="relative h-3.5 w-3.5 overflow-hidden rounded-full border border-border flex-shrink-0">
               <Image
                 src={token.targetEquity.logoUrl}
@@ -99,7 +104,9 @@ export function TokenCard({ token }: TokenCardProps) {
               {token.targetEquity.symbol.replace(/^\$/, "")}
             </span>
             <span className="rounded-md border border-border bg-card-hover px-2 py-0.5 text-[10px] tracking-wide font-mono font-medium text-muted whitespace-nowrap">
-              {token.targetEquity.isPreIpo ? "Pre-IPO" : "xStocks"}
+              {token.targetEquity.symbol === "UNKNOWN"
+                ? "Unverified"
+                : token.targetEquity.isPreIpo ? "Pre-IPO" : "xStocks"}
             </span>
           </div>
           {token.bondingCurve.isGraduated ? (
@@ -115,7 +122,7 @@ export function TokenCard({ token }: TokenCardProps) {
 
         {/* Progress Bar (bonding tokens) vs Clean Matching Divider (graduated tokens) */}
         {!token.bondingCurve.isGraduated ? (
-          <div className="mt-2.5 h-1.5 w-full overflow-hidden rounded-full bg-card-hover/40 border border-border">
+          <div className="mt-2.5 h-1.5 w-full overflow-hidden rounded-full bg-card-subtle border border-border">
             <div
               className="bg-gradient-to-r from-brand-cyan/70 to-brand-cyan h-1.5 rounded-full transition-all duration-300"
               style={{ width: `${Math.min(token.bondingCurve.progressPct, 100)}%` }}
@@ -134,7 +141,7 @@ export function TokenCard({ token }: TokenCardProps) {
               </div>
               <div className="mt-0.5 flex items-baseline justify-between gap-2">
                 <div className="font-mono text-2xl font-extrabold text-foreground tracking-tight">
-                  {formatUsd(token.marketCapUsd)}
+                  {token.priceUsd > 0 ? formatUsd(token.marketCapUsd) : "—"}
                 </div>
               </div>
             </div>
@@ -166,7 +173,7 @@ export function TokenCard({ token }: TokenCardProps) {
       {/* Bottom: 24h Volume & Price Change */}
       <div className="mt-4 pt-3 border-t border-border flex items-center justify-between text-xs font-mono">
         <span className="text-muted">
-          Vol {formatUsd(token.volume24hUsd)}
+          Vol {token.volume24hAvailable === false ? "—" : formatUsd(token.volume24hUsd)}
         </span>
         <span
           className={`font-semibold ${
@@ -177,8 +184,9 @@ export function TokenCard({ token }: TokenCardProps) {
               : "text-rose-400"
           }`}
         >
-          {isPositive && !isNeutral ? "+" : ""}
-          {token.priceChange24h.toFixed(1)}%
+          {token.priceChange24hAvailable === false ? "—" : (
+            <>{isPositive && !isNeutral ? "+" : ""}{token.priceChange24h.toFixed(1)}%</>
+          )}
         </span>
       </div>
     </article>

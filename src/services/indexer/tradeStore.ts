@@ -70,6 +70,8 @@ export class TradeStoreService {
   private lastTokensFetch = 0;
   private cachedPrices: Record<string, { priceUsd: number; marketCapUsd: number }> | null = null;
   private lastPricesFetch = 0;
+  private cachedReserves: Record<string, number> | null = null;
+  private lastReservesFetch = 0;
 
   public static getInstance(): TradeStoreService {
     if (!TradeStoreService.instance) {
@@ -104,6 +106,9 @@ export class TradeStoreService {
     }
 
     const supabase = getSupabaseClient();
+    if (!supabase && !isMockDataEnabled()) {
+      throw new Error("Live trade index is not configured.");
+    }
     if (supabase) {
       try {
         // Ensure token exists in tokens table to avoid foreign key constraint error
@@ -116,7 +121,7 @@ export class TradeStoreService {
         if (!existingToken) {
           const indexedToken = localTokensStore.get(trade.mint.toLowerCase());
 
-          await supabase.from("tokens").upsert({
+          const { error: tokenError } = await supabase.from("tokens").upsert({
             mint: trade.mint,
             name: indexedToken?.name || "Unindexed StreetFun Token",
             symbol: indexedToken?.symbol || "TOKEN",
@@ -128,20 +133,25 @@ export class TradeStoreService {
             is_graduated: indexedToken?.is_graduated || false,
             meteora_pool: indexedToken?.meteora_pool,
           });
+          if (tokenError) throw new Error(`Could not index curve metadata: ${tokenError.message}`);
         }
 
-        const { error } = await supabase.from("trades").upsert(tradeWithTime);
+        const { error } = await supabase.from("trades").upsert(tradeWithTime, {
+          onConflict: "tx_signature",
+        });
         if (error) {
-          console.error("[TradeStore] Supabase insert error:", error);
+          throw new Error(`Could not persist confirmed trade: ${error.message}`);
         }
       } catch (e) {
         console.error("[TradeStore] Error ensuring token and trade:", e);
+        throw e;
       }
     }
 
     // Always keep in local store for rapid UI response
     localTradesStore.unshift(tradeWithTime);
     this.cachedPrices = null;
+    this.cachedReserves = null;
   }
 
   async recordToken(token: TokenRecord): Promise<void> {
@@ -161,7 +171,8 @@ export class TradeStoreService {
 
     const supabase = getSupabaseClient();
     if (supabase) {
-      await supabase.from("tokens").upsert(token);
+      const { error } = await supabase.from("tokens").upsert(token);
+      if (error) throw new Error(`Could not persist token metadata: ${error.message}`);
     }
     localTokensStore.set(token.mint.toLowerCase(), token);
     this.cachedTokens = null;
@@ -279,6 +290,11 @@ export class TradeStoreService {
    * BUY adds to reserves, SELL subtracts from reserves.
    */
   async getReservesPerMint(): Promise<Record<string, number>> {
+    const now = Date.now();
+    if (this.cachedReserves && now - this.lastReservesFetch < 3000) {
+      return this.cachedReserves;
+    }
+
     const reserves: Record<string, number> = {};
     const supabase = getSupabaseClient();
     if (supabase) {
@@ -319,24 +335,35 @@ export class TradeStoreService {
       if (reserves[mint] < 0) reserves[mint] = 0;
     }
 
+    this.cachedReserves = reserves;
+    this.lastReservesFetch = Date.now();
     return reserves;
   }
 
   async getTrades(mint: string, limit = 20, verifiedOnly = !isMockDataEnabled()): Promise<TradeRecord[]> {
     const supabase = getSupabaseClient();
     if (supabase) {
-      const { data, error } = await supabase
-        .from("trades")
-        .select("*")
-        .eq("mint", mint)
-        .order("created_at", { ascending: false })
-        .limit(verifiedOnly ? Math.max(limit * 10, 1_000) : limit);
-
-      if (!error && data && data.length > 0) {
-        const trades = data as TradeRecord[];
-        return (verifiedOnly ? trades.filter(isVerifiedChainTrade) : trades).slice(0, limit);
+      const matches: TradeRecord[] = [];
+      const pageSize = verifiedOnly ? 1_000 : limit;
+      for (let offset = 0; matches.length < limit; offset += pageSize) {
+        const { data, error } = await supabase
+          .from("trades")
+          .select("*")
+          .eq("mint", mint)
+          .order("created_at", { ascending: false })
+          .range(offset, offset + pageSize - 1);
+        if (error) {
+          if (!isMockDataEnabled()) throw new Error(`Verified trade index unavailable: ${error.message}`);
+          break;
+        }
+        const page = (data || []) as TradeRecord[];
+        matches.push(...(verifiedOnly ? page.filter(isVerifiedChainTrade) : page));
+        if (page.length < pageSize) break;
       }
+      return matches.slice(0, limit);
     }
+
+    if (!isMockDataEnabled()) throw new Error("Verified trade index is not configured.");
 
     // Fallback to local store
     return localTradesStore
@@ -397,16 +424,25 @@ export class TradeStoreService {
     let trades: TradeRecord[] = [];
     const supabase = getSupabaseClient();
 
-    if (supabase) {
-      const { data, error } = await supabase
-        .from("trades")
-        .select("mint, trade_type, price_usd, quote_amount_usd, tx_signature, slot, created_at")
-        .in("mint", mints)
-        .gte("created_at", cutoffIso)
-        .order("created_at", { ascending: true })
-        .limit(10_000);
+    if (!supabase && !isMockDataEnabled()) {
+      throw new Error("Verified trade index is not configured.");
+    }
 
-      if (!error && data) trades = data as TradeRecord[];
+    if (supabase) {
+      const pageSize = 1_000;
+      for (let offset = 0; ; offset += pageSize) {
+        const { data, error } = await supabase
+          .from("trades")
+          .select("mint, trade_type, price_usd, quote_amount_usd, tx_signature, slot, created_at")
+          .in("mint", mints)
+          .gte("created_at", cutoffIso)
+          .order("created_at", { ascending: true })
+          .range(offset, offset + pageSize - 1);
+
+        if (error) throw new Error(`Verified trade index unavailable: ${error.message}`);
+        trades.push(...((data || []) as TradeRecord[]));
+        if (!data || data.length < pageSize) break;
+      }
     }
 
     const localTrades = localTradesStore.filter(
@@ -441,9 +477,12 @@ export class TradeStoreService {
   async getOHLCV(
     mint: string,
     intervalMinutes = 15,
-    limit = 100,
-    currentPrice = 0.00003
+    limit = 100
   ): Promise<OHLCVBar[]> {
+    if (!isMockDataEnabled()) {
+      const verifiedTrades = await this.getTrades(mint, 10_000, true);
+      return this.aggregateOHLCV(verifiedTrades, intervalMinutes).slice(-limit);
+    }
     const supabase = getSupabaseClient();
     if (supabase) {
       const { data, error } = await supabase.rpc("get_ohlcv", {
@@ -453,10 +492,6 @@ export class TradeStoreService {
       });
 
       if (!error && data && data.length > 0) {
-        if (!isMockDataEnabled()) {
-          const verifiedTrades = await this.getTrades(mint, 10_000, true);
-          return this.aggregateOHLCV(verifiedTrades, intervalMinutes, currentPrice);
-        }
         return data.map((b: any) => ({
           time: Number(b.time),
           open: Number(b.open),
@@ -475,30 +510,14 @@ export class TradeStoreService {
         (isMockDataEnabled() || isVerifiedChainTrade(t))
     );
 
-    return this.aggregateOHLCV(trades, intervalMinutes, currentPrice);
+    return this.aggregateOHLCV(trades, intervalMinutes).slice(-limit);
   }
 
   private aggregateOHLCV(
     trades: TradeRecord[],
-    intervalMinutes: number,
-    currentPrice: number
+    intervalMinutes: number
   ): OHLCVBar[] {
-
-    if (trades.length === 0) {
-      // If zero trades yet on a fresh curve, return a single candle at current spot price
-      const now = Math.floor(Date.now() / 1000);
-      const bucketTime = Math.floor(now / (intervalMinutes * 60)) * (intervalMinutes * 60);
-      return [
-        {
-          time: bucketTime,
-          open: currentPrice,
-          high: currentPrice,
-          low: currentPrice,
-          close: currentPrice,
-          volume: 0,
-        },
-      ];
-    }
+    if (trades.length === 0) return [];
 
     // Bucket trades by interval
     const buckets = new Map<number, TradeRecord[]>();
@@ -512,9 +531,6 @@ export class TradeStoreService {
 
     const sortedBuckets = Array.from(buckets.keys()).sort((a, b) => a - b);
     const bars: OHLCVBar[] = [];
-    const initialCurvePrice = 30_000 / 1_073_000_000;
-    let prevClose = initialCurvePrice;
-
     for (const time of sortedBuckets) {
       const bTrades = buckets.get(time)!;
       // Sort asc for open/close
@@ -527,10 +543,10 @@ export class TradeStoreService {
       const prices = bTrades.map((t) => Number(t.price_usd));
       const volume = bTrades.reduce((acc, t) => acc + (Number(t.quote_amount_usd) || 0), 0);
 
-      const open = prevClose;
+      const open = prices[0];
       const close = prices[prices.length - 1];
-      const high = Math.max(...prices, open, close);
-      const low = Math.min(...prices, open, close);
+      const high = Math.max(...prices);
+      const low = Math.min(...prices);
 
       bars.push({
         time,
@@ -538,10 +554,8 @@ export class TradeStoreService {
         high,
         low,
         close,
-        volume: Math.round(volume),
+        volume,
       });
-
-      prevClose = close;
     }
 
     return bars;

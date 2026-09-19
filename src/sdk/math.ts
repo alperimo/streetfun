@@ -40,6 +40,10 @@ export function simulateBuyTokensOut(
 
   const tokensOut = virtualTokens - newVirtualTokens;
 
+  if (tokensOut <= 0n) {
+    throw new Error("Trade amount is too small to receive tokens");
+  }
+
   if (tokensOut > realTokens) {
     throw new Error("Insufficient real token reserves remaining in bonding curve");
   }
@@ -83,6 +87,10 @@ export function simulateSellQuoteOut(
 
   const grossQuoteOut = virtualQuote - newVirtualQuote;
 
+  if (grossQuoteOut <= 0n) {
+    throw new Error("Trade amount is too small to receive quote tokens");
+  }
+
   if (grossQuoteOut > realQuote) {
     throw new Error("Insufficient real quote reserves remaining in bonding curve");
   }
@@ -116,4 +124,3 @@ export function calculateEntitledStock(
 }
 
 export const calculateProRataEquity = calculateEntitledStock;
-

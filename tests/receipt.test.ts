@@ -23,7 +23,7 @@ describe("Trade receipt presentation", () => {
     expect(receiptFromTrade(receiptToken, "buy", receiptResult, true).kind).to.equal("demo");
     const live = receiptFromTrade(receiptToken, "buy", { ...receiptResult, txSignature: "some-signature" }, false);
     expect(live.kind).to.equal("result");
-    expect(receiptLabel(live.kind)).to.equal("Trade result");
+    expect(receiptLabel(live.kind)).to.equal("Receipt");
   });
   it("uses the selected redemption asset and service amount", () => {
     const result = { success: true, entitledShares: 0.25, usdcValue: 50 };

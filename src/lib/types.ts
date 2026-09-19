@@ -10,7 +10,9 @@ export interface TokenMetadata {
   marketCapUsd: number;
   priceUsd: number;
   priceChange24h: number;
+  priceChange24hAvailable?: boolean;
   volume24hUsd: number;
+  volume24hAvailable?: boolean;
   targetEquity: {
     symbol: string;
     name: string;

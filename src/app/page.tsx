@@ -87,6 +87,11 @@ export default function MarketsPage() {
 
       <main className="flex-1 w-full bg-background pb-12">
         <HeroBanner />
+        {error && tokens.length > 0 && (
+          <div role="alert" className="mx-auto mt-4 w-full max-w-[1350px] rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-xs text-amber-300">
+            Live refresh failed. Showing the last verified snapshot; values may be stale: {error}
+          </div>
+        )}
 
         <div className="w-full bg-background">
           <div className="mx-auto w-full max-w-[1350px] px-6 pt-4 sm:px-10 lg:px-0">
