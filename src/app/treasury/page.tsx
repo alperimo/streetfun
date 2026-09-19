@@ -88,7 +88,7 @@ export default function TreasuryPage() {
     // Recent Redemptions mapped to UI format
     const recentRedemptions = redemptions.map((rdm, idx) => {
       const matchedToken = tokens.find(
-        (t) => t.mint.toLowerCase() === rdm.mint?.toLowerCase()
+        (t) => t.mint === rdm.mint
       );
       const sec = Math.max(
         1,

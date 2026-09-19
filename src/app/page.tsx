@@ -9,6 +9,7 @@ import { TokenCard } from "@/components/tokens/TokenCard";
 import { TokenCardSkeleton } from "@/components/common/Skeletons";
 import { SearchModal } from "@/components/modals/SearchModal";
 import { LaunchModal } from "@/components/modals/LaunchModal";
+import { tokenCreatedAt } from "@/lib/marketFormat";
 import { TokenMetadata } from "@/lib/types";
 import { useMarket } from "@/context/MarketContext";
 
@@ -35,6 +36,7 @@ export default function MarketsPage() {
   }, []);
 
   const filteredTokens = useMemo(() => {
+    const now = Date.now();
     return tokens
       .filter((token) => {
         if (statusFilter === "graduated" && !token.bondingCurve.isGraduated) {
@@ -52,7 +54,7 @@ export default function MarketsPage() {
         }
 
         if (searchQuery.trim()) {
-          const q = searchQuery.toLowerCase();
+          const q = searchQuery.trim().toLowerCase();
           return (
             token.name.toLowerCase().includes(q) ||
             token.symbol.toLowerCase().includes(q) ||
@@ -67,9 +69,7 @@ export default function MarketsPage() {
       .sort((a, b) => {
         if (sortBy === "mcap") return b.marketCapUsd - a.marketCapUsd;
         if (sortBy === "newest") {
-          if (a.createdAt === "Just now") return -1;
-          if (b.createdAt === "Just now") return 1;
-          return 0;
+          return tokenCreatedAt(b.createdAt, now) - tokenCreatedAt(a.createdAt, now);
         }
         if (sortBy === "volume") return b.volume24hUsd - a.volume24hUsd;
         if (sortBy === "progress")
@@ -121,16 +121,17 @@ export default function MarketsPage() {
                 {filteredTokens.length === 0 && (
                   <div className="mt-12 rounded-xl border border-border bg-card p-12 text-center shadow-sm">
                     <p className="text-sm font-semibold text-foreground">
-                      {error ? "Live market data unavailable" : "No verified tokens found"}
+                      {error ? "Live market data unavailable" : tokens.length > 0 ? "No tokens match your filters" : "No verified tokens found"}
                     </p>
                     <p className="mx-auto mt-2 max-w-xl text-xs leading-relaxed text-muted">
-                      {error || "The configured Solana network has no verified StreetFun curve accounts."}
+                      {error || (tokens.length > 0 ? "Try a different search or reset your filters." : "The configured Solana network has no verified StreetFun curve accounts.")}
                     </p>
-                    {!error && (searchQuery || selectedTag !== "all") && (
+                    {!error && (searchQuery || selectedTag !== "all" || statusFilter !== "all") && (
                       <button
                         onClick={() => {
                           setSearchQuery("");
                           setSelectedTag("all");
+                          setStatusFilter("all");
                         }}
                         className="mt-3 text-xs font-bold text-brand-cyan hover:underline"
                       >

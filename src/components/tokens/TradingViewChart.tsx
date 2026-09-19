@@ -26,6 +26,8 @@ export function TradingViewChart({
   const candlestickSeriesRef = useRef<ISeriesApi<"Candlestick"> | null>(null);
   const volumeSeriesRef = useRef<ISeriesApi<"Histogram"> | null>(null);
 
+  const fittedScope = useRef("");
+
   const [timeframe, setTimeframe] = useState<TimeframeOption>("15m");
   const [loadingChart, setLoadingChart] = useState<boolean>(false);
   const [hasBars, setHasBars] = useState<boolean>(false);
@@ -135,9 +137,12 @@ export function TradingViewChart({
     let isCancelled = false;
     const candlestickSeries = candlestickSeriesRef.current;
     const volumeSeries = volumeSeriesRef.current;
+    let inFlight = false;
+    const scope = `${token.mint}:${timeframe}:${themeConfig.id}`;
 
     async function loadData() {
-      if (!candlestickSeries || !volumeSeries) return;
+      if (!candlestickSeries || !volumeSeries || inFlight) return;
+      inFlight = true;
       setLoadingChart(true);
       try {
         const chartService = getChartService();
@@ -169,7 +174,8 @@ export function TradingViewChart({
           }))
         );
 
-        if (chartRef.current) {
+        if (chartRef.current && fittedScope.current !== scope && bars.length > 0) {
+          fittedScope.current = scope;
           chartRef.current.timeScale().fitContent();
         }
       } catch (err) {
@@ -181,13 +187,18 @@ export function TradingViewChart({
           setChartError(true);
         }
       } finally {
+        inFlight = false;
         if (!isCancelled) setLoadingChart(false);
       }
     }
 
     loadData();
+    const interval = setInterval(() => {
+      if (document.visibilityState === "visible") loadData();
+    }, 15_000);
 
     return () => {
+      clearInterval(interval);
       isCancelled = true;
     };
   }, [token.mint, token.priceUsd, timeframe, themeConfig]);
