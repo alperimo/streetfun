@@ -1,3 +1,4 @@
+import { toTokenUnits } from "../../sdk/amounts";
 import { IRedeemService, RedeemParams, RedeemResult, WalletIdentity } from "../types";
 import { calculateEntitledStock } from "@/sdk/math";
 import { mockTokenService } from "./mockTokenService";
@@ -9,14 +10,15 @@ export class MockRedeemService implements IRedeemService {
   ): Promise<RedeemResult> {
     await new Promise((r) => setTimeout(r, 600));
 
-    const token = { ...params.token };
+    const token = { ...((await mockTokenService.getToken(params.token.mint)) || params.token) };
+    if (!token.bondingCurve.isGraduated) throw new Error("Redemption is available after graduation.");
     const treasury = { ...token.treasury };
 
-    const totalMemeSupply = 1_000_000_000n * 1_000_000n;
+    const totalMemeSupply = toTokenUnits(token.totalSupply ?? 1_000_000_000);
     const totalEquityLockedLamports = BigInt(
-      Math.floor((treasury.totalEquityLocked || 139.27) * 1_000_000)
+      Math.floor(treasury.totalEquityLocked * 1_000_000)
     );
-    const memeInLamports = BigInt(Math.floor(params.memeAmount * 1_000_000));
+    const memeInLamports = toTokenUnits(params.memeAmount);
 
     const entitledShares =
       params.memeAmount > 0
@@ -29,7 +31,11 @@ export class MockRedeemService implements IRedeemService {
           ) / 1_000_000
         : 0;
 
-    const stockPrice = token.targetEquity.stockPriceUsd || 215.4;
+    if (entitledShares <= 0) throw new Error("The burn amount is too small or the treasury is empty.");
+    const stockPrice = token.targetEquity.stockPriceUsd;
+    if (!(stockPrice > 0)) throw new Error("An equity price is required to simulate redemption.");
+    token.totalSupply = Number(totalMemeSupply - memeInLamports) / 1_000_000;
+    token.marketCapUsd = token.priceUsd * token.totalSupply;
     const usdcValue = entitledShares * stockPrice;
 
     // Deduct redeemed equity from treasury

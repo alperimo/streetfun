@@ -1,15 +1,21 @@
+import { toTokenUnits } from "../../sdk/amounts";
+import { simulateBuyTokensOut } from "../../sdk/math";
 import { TokenMetadata } from "@/lib/types";
 import { INITIAL_TOKENS } from "@/lib/mockData";
 import { VERIFIED_TESSERA_PRE_IPO_ASSETS } from "@/sdk/constants";
 import { ITokenService, TokenLaunchParams } from "../types";
 import { PublicKey } from "@solana/web3.js";
 
+function normalizeTokens(tokens: TokenMetadata[]): TokenMetadata[] {
+  return structuredClone(tokens).map(token => ({ ...token, totalSupply: token.totalSupply ?? 1_000_000_000, dataSource: "mock" }));
+}
+
 const STORAGE_KEY = "streetfun_tokens_v3";
 
 export class MockTokenService implements ITokenService {
   private getStoredTokens(): TokenMetadata[] {
     if (typeof window === "undefined") {
-      return INITIAL_TOKENS;
+      return normalizeTokens(INITIAL_TOKENS);
     }
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
@@ -23,15 +29,15 @@ export class MockTokenService implements ITokenService {
         if (newSeedTokens.length > 0) {
           const mergedTokens = [...storedTokens, ...newSeedTokens];
           localStorage.setItem(STORAGE_KEY, JSON.stringify(mergedTokens));
-          return mergedTokens;
+          return normalizeTokens(mergedTokens);
         }
 
-        return storedTokens;
+        return normalizeTokens(storedTokens);
       }
       localStorage.setItem(STORAGE_KEY, JSON.stringify(INITIAL_TOKENS));
-      return INITIAL_TOKENS;
+      return normalizeTokens(INITIAL_TOKENS);
     } catch (_e) {
-      return INITIAL_TOKENS;
+      return normalizeTokens(INITIAL_TOKENS);
     }
   }
 
@@ -82,10 +88,13 @@ export class MockTokenService implements ITokenService {
     const cleanSymbol = params.symbol.replace(/^\$/, "").toUpperCase();
     const mint = `${cleanSymbol}${randomSuffix}1111111111111111111111111111111`;
 
-    const initialBuyUsdc = params.initialBuyUsdc || 0;
-    const progress = Math.min(Math.round((initialBuyUsdc / 60_000) * 100), 100);
-    const initialMcap = 30_000 + initialBuyUsdc * 2;
-    const initialPrice = initialMcap / 1_000_000_000;
+    const initialBuyUsdc = params.initialBuyUsdc ?? 0;
+    if (!Number.isFinite(initialBuyUsdc) || initialBuyUsdc < 0) throw new Error("Invalid initial buy amount.");
+    if (initialBuyUsdc > 0) {
+      simulateBuyTokensOut(toTokenUnits(initialBuyUsdc), 30_000_000_000n, 1_073_000_000_000_000n, 800_000_000_000_000n, 20);
+    }
+    const initialPrice = 30_000_000_000 / 1_073_000_000_000_000;
+    const initialMcap = initialPrice * 1_000_000_000;
 
     const creatorAddress = walletPublicKey
       ? walletPublicKey.toBase58()
@@ -100,11 +109,13 @@ export class MockTokenService implements ITokenService {
         params.avatarUrl ||
         "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=160&q=80",
       creator: creatorAddress,
-      createdAt: "Just now",
+      createdAt: new Date().toISOString(),
+      totalSupply: 1_000_000_000,
+      dataSource: "mock",
       marketCapUsd: initialMcap,
       priceUsd: initialPrice,
-      priceChange24h: initialBuyUsdc > 0 ? 12.5 : 0.0,
-      volume24hUsd: initialBuyUsdc,
+      priceChange24h: 0,
+      volume24hUsd: 0,
       targetEquity: {
         symbol: selectedEquity.symbol,
         name: selectedEquity.name,
@@ -119,9 +130,9 @@ export class MockTokenService implements ITokenService {
         isPreIpo: selectedEquity.isPreIpo,
       },
       bondingCurve: {
-        realQuoteReservesUsd: initialBuyUsdc,
+        realQuoteReservesUsd: 0,
         graduationThresholdUsd: 60_000,
-        progressPct: progress,
+        progressPct: 0,
         virtualQuoteReserves: "30000000000",
         virtualTokenReserves: "1073000000000000",
         realTokenReserves: "800000000000000",
@@ -158,22 +169,16 @@ export class MockTokenService implements ITokenService {
         meteora_pool: newToken.bondingCurve.meteoraPoolAddress,
       });
 
-      if (initialBuyUsdc > 0) {
-        await TradeStoreService.getInstance().recordTrade({
-          tx_signature: `launch_buy_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
-          mint: newToken.mint,
-          trade_type: "BUY",
-          price_usd: initialPrice,
-          tokens_amount: initialBuyUsdc / initialPrice,
-          quote_amount_usd: initialBuyUsdc,
-          trader: creatorAddress,
-          created_at: new Date().toISOString(),
-        });
-      }
+
     } catch (e) {
       console.warn("[MockTokenService] Failed to record launched token to indexer:", e);
     }
 
+    if (initialBuyUsdc > 0) {
+      const { mockTradeService } = await import("./mockTradeService");
+      const result = await mockTradeService.executeTrade({ token: newToken, tradeMode: "buy", amount: initialBuyUsdc, slippagePct: 1 }, walletPublicKey);
+      return result.updatedToken;
+    }
     return newToken;
   }
 }

@@ -50,3 +50,15 @@ export function formatBondingProgress(progressPct: number): string {
   if (progressPct < 10) return `${progressPct.toFixed(2).replace(/0+$/, "").replace(/\.$/, "")}%`;
   return `${progressPct.toFixed(1).replace(/\.0$/, "")}%`;
 }
+
+/** Legacy demo ages and indexed ISO dates share one ordering rule. */
+export function tokenCreatedAt(value: string, now: number): number {
+  if (value === "Just now") return now;
+  const relative = value.match(/^(\d+)\s+(min(?:ute)?s?|hours?|days?) ago$/i);
+  if (relative) {
+    const unit = relative[2].toLowerCase();
+    return now - Number(relative[1]) * (unit.startsWith("day") ? 86400000 : unit.startsWith("hour") ? 3600000 : 60000);
+  }
+  const timestamp = Date.parse(value);
+  return Number.isFinite(timestamp) ? timestamp : 0;
+}

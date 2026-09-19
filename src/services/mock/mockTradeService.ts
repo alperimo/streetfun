@@ -1,3 +1,4 @@
+import { toTokenUnits } from "../../sdk/amounts";
 import { ITradeService, TradeParams, TradeResult, WalletIdentity } from "../types";
 import { simulateBuyTokensOut, simulateSellQuoteOut } from "@/sdk/math";
 import { mockTokenService } from "./mockTokenService";
@@ -10,7 +11,10 @@ export class MockTradeService implements ITradeService {
   ): Promise<TradeResult> {
     await new Promise((r) => setTimeout(r, 600));
 
-    const token = { ...params.token };
+    const amountIn = toTokenUnits(params.amount);
+    if (!["buy", "sell"].includes(params.tradeMode)) throw new Error("Invalid trade direction.");
+    const token = { ...((await mockTokenService.getToken(params.token.mint)) || params.token) };
+    if (token.bondingCurve.isGraduated) throw new Error("This curve has graduated. Curve trading is closed.");
     const curve = { ...token.bondingCurve };
     const treasury = { ...token.treasury };
 
@@ -20,17 +24,17 @@ export class MockTradeService implements ITradeService {
     const realQuote = BigInt(Math.floor(curve.realQuoteReservesUsd * 1_000_000));
 
     if (params.tradeMode === "buy") {
-      const quoteInLamports = BigInt(Math.floor(params.amount * 1_000_000));
+      const quoteInLamports = amountIn;
       const sim = simulateBuyTokensOut(
         quoteInLamports,
         virtualQuote,
         virtualTokens,
         realTokens,
-        curve.dynamicFeeBps || 100
+        curve.dynamicFeeBps ?? 100
       );
 
       const tokensOutNumber = Number(sim.tokensOut) / 1_000_000;
-      const newRealQuoteUsd = curve.realQuoteReservesUsd + params.amount;
+      const newRealQuoteUsd = Number(realQuote + sim.netQuote) / 1_000_000;
       const isNowGraduated = newRealQuoteUsd >= curve.graduationThresholdUsd;
 
       curve.realQuoteReservesUsd = newRealQuoteUsd;
@@ -41,7 +45,7 @@ export class MockTradeService implements ITradeService {
 
       // Constant product reserves shift
       const newVirtualQuote = virtualQuote + sim.netQuote;
-      const newVirtualTokens = (virtualQuote * virtualTokens) / newVirtualQuote;
+      const newVirtualTokens = virtualTokens - sim.tokensOut;
       curve.virtualQuoteReserves = newVirtualQuote.toString();
       curve.virtualTokenReserves = newVirtualTokens.toString();
       curve.realTokenReserves = (realTokens - sim.tokensOut).toString();
@@ -53,16 +57,18 @@ export class MockTradeService implements ITradeService {
         curve.progressPct = 100;
 
         // 50% ($30k) buys target equity stock into treasury PDA
-        const stockPrice = token.targetEquity.stockPriceUsd || 215.4;
-        const equitySharesAcquired = 30_000 / stockPrice;
+        const stockPrice = token.targetEquity.stockPriceUsd;
+        if (!(stockPrice > 0)) throw new Error("An equity price is required to simulate graduation.");
+        const equitySharesAcquired = (newRealQuoteUsd / 2) / stockPrice;
         treasury.totalEquityLocked = parseFloat(equitySharesAcquired.toFixed(4));
-        treasury.totalEquityValueUsd = 30_000;
+        treasury.totalEquityValueUsd = newRealQuoteUsd / 2;
         treasury.proofOfReserveVerified = true;
       }
 
-      token.marketCapUsd += params.amount * 2.2;
+
       token.volume24hUsd += params.amount;
-      token.priceUsd = sim.effectivePriceUsd;
+      token.priceUsd = Number(newVirtualQuote) / Number(newVirtualTokens);
+      token.marketCapUsd = token.priceUsd * (token.totalSupply ?? 1_000_000_000);
       token.priceChange24h += sim.priceImpactPct * 0.4;
       token.bondingCurve = curve;
       token.treasury = treasury;
@@ -95,23 +101,23 @@ export class MockTradeService implements ITradeService {
         priceImpactPct: sim.priceImpactPct,
         isGraduated: curve.isGraduated,
         message: isNowGraduated
-          ? `🎉 Graduation threshold reached! 30,000 USDC spot-bought ${token.targetEquity.symbol} stock into Treasury, and 30,000 USDC seeded Meteora DLMM pool!`
+          ? `Simulation: graduation reached; half the reserves were allocated to equity and half to liquidity.`
           : `Swapped $${params.amount.toLocaleString()} USDC for ${tokensOutNumber.toLocaleString(undefined, { maximumFractionDigits: 2 })} $${token.symbol}`,
         updatedToken: token,
       };
     } else {
       // Sell Mode
-      const tokensInLamports = BigInt(Math.floor(params.amount * 1_000_000));
+      const tokensInLamports = amountIn;
       const sim = simulateSellQuoteOut(
         tokensInLamports,
         virtualQuote,
         virtualTokens,
         realQuote,
-        curve.dynamicFeeBps || 100
+        curve.dynamicFeeBps ?? 100
       );
 
       const quoteOutUsd = Number(sim.netQuoteOut) / 1_000_000;
-      const newRealQuoteUsd = Math.max(0, curve.realQuoteReservesUsd - quoteOutUsd);
+      const newRealQuoteUsd = Number(realQuote - sim.grossQuoteOut) / 1_000_000;
 
       curve.realQuoteReservesUsd = newRealQuoteUsd;
       curve.progressPct = Math.min(
@@ -120,13 +126,14 @@ export class MockTradeService implements ITradeService {
       );
 
       const newVirtualTokens = virtualTokens + tokensInLamports;
-      const newVirtualQuote = (virtualQuote * virtualTokens) / newVirtualTokens;
+      const newVirtualQuote = virtualQuote - sim.grossQuoteOut;
       curve.virtualQuoteReserves = newVirtualQuote.toString();
       curve.virtualTokenReserves = newVirtualTokens.toString();
       curve.realTokenReserves = (realTokens + tokensInLamports).toString();
 
       token.volume24hUsd += quoteOutUsd;
-      token.priceUsd = sim.effectivePriceUsd;
+      token.priceUsd = Number(newVirtualQuote) / Number(newVirtualTokens);
+      token.marketCapUsd = token.priceUsd * (token.totalSupply ?? 1_000_000_000);
       token.priceChange24h -= sim.priceImpactPct * 0.4;
       token.bondingCurve = curve;
       token.treasury = treasury;
