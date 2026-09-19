@@ -16,3 +16,4 @@ keys/
 .env.local
 .env*.local
 test-ledger/
+supabase/.temp/
