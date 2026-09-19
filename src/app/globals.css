@@ -159,7 +159,11 @@
   mask-composite: intersect;
 }
 
-.hero-artwork-stage > img {
+.hero-artwork-stage > img,
+.hero-artwork-stage > video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
   opacity: 1;
 }
 

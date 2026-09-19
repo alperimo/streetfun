@@ -5,7 +5,11 @@ import Image from "next/image";
 import { BULL_ARTWORK as art } from "./bullArtworkConfig";
 import { useCityLighting } from "./useCityLighting";
 
-export function BullArtwork() {
+interface BullArtworkProps {
+  useVideo?: boolean;
+}
+
+export function BullArtwork({ useVideo = false }: BullArtworkProps = {}) {
   const id = useId().replace(/:/g, "");
   const viewport = useRef<HTMLDivElement>(null);
   const svg = useRef<SVGSVGElement>(null);
@@ -89,15 +93,38 @@ export function BullArtwork() {
   return (
     <>
       <div ref={viewport} className="hero-artwork-viewport" aria-hidden="true">
+        {/* Bull Image or Ambient Video Layer */}
         <div className="hero-artwork-faded-layer hero-bull-image">
           <div className="hero-artwork-stage" style={stageStyle}>
-            <Image
-              src="/generated/hero-bull-brand-glasses.png"
-              alt=""
-              fill
-              priority
-              sizes="(max-width: 900px) 900px, 100vw"
-            />
+            {useVideo ? (
+              <video
+                autoPlay
+                loop
+                muted
+                playsInline
+                preload="auto"
+                poster="/generated/hero-bull-brand-glasses.png"
+                className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+              >
+                <source src="/generated/hero-bull-video.webm" type="video/webm" />
+                <source src="/generated/hero-bull-video.mp4" type="video/mp4" />
+                <Image
+                  src="/generated/hero-bull-brand-glasses.png"
+                  alt=""
+                  fill
+                  priority
+                  sizes="(max-width: 900px) 900px, 100vw"
+                />
+              </video>
+            ) : (
+              <Image
+                src="/generated/hero-bull-brand-glasses.png"
+                alt=""
+                fill
+                priority
+                sizes="(max-width: 900px) 900px, 100vw"
+              />
+            )}
           </div>
         </div>
         <div className="hero-bull-foreground-layer">
@@ -109,12 +136,12 @@ export function BullArtwork() {
               priority
               sizes="(max-width: 900px) 900px, 100vw"
             />
-          {/* City light sweep intentionally disabled.
-          <div className="hero-city-light">
-            <Image src="/generated/hero-bull-brand-glasses.png" alt="" fill priority sizes="(max-width: 900px) 900px, 100vw" />
-          </div>
-          */}
-            <svg ref={svg} className="hero-chart" viewBox={`0 0 ${art.width} ${art.height}`} focusable="false">
+            <svg
+              ref={svg}
+              className="hero-chart"
+              viewBox={`0 0 ${art.width} ${art.height}`}
+              focusable="false"
+            >
             <defs>
               <path ref={path} id={`${id}-trend`} d={art.trend} pathLength="1" />
               <g id={`${id}-candles`}>

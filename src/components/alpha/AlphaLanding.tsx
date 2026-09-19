@@ -114,7 +114,7 @@ export function AlphaLanding() {
   const handleShareOnX = () => {
     if (!passData) return;
     const formattedNum = String(passData.passNumber).padStart(4, "0");
-    const tweetText = `Just claimed my @StreetFunSol Alpha Pass #${formattedNum} 🐂\n\nWall Street is coming to Solana memecoins.\n\nGet early access: https://streetfun.fun`;
+    const tweetText = `Claimed Alpha Pass ${formattedNum} on @StreetFunSol 🐂\n\nTrade viral momentum. Graduate to real equities.\n\nhttps://streetfun.fun/alpha`;
     const shareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}`;
     window.open(shareUrl, "_blank", "noopener,noreferrer");
   };
@@ -136,7 +136,7 @@ export function AlphaLanding() {
       {/* Hero Section */}
       <main className="hero-section relative isolate flex-1 flex flex-col justify-center py-12 sm:py-20 overflow-hidden">
         {/* Wall Street Bull Artwork */}
-        <BullArtwork />
+        <BullArtwork useVideo={true} />
 
         <div className="relative mx-auto w-full max-w-[1350px] px-6 sm:px-10 lg:px-0 z-10">
           <div className="max-w-[620px]">
@@ -211,30 +211,26 @@ export function AlphaLanding() {
                   )}
                 </div>
               ) : (
-                <div className="space-y-3">
-                  {/* Clean, Refined Terminal Badge (No Amateur Snackbars) */}
-                  <div className="flex items-center justify-between rounded-xl border border-border bg-card px-4 py-3">
-                    <div>
-                      <div className="text-[10px] font-mono uppercase text-muted tracking-wider">
+                <div className="space-y-4">
+                  {/* Seamless Background Integration - Clean, Minimalist Pass Status */}
+                  <div className="flex items-center justify-between border-b border-border/40 pb-3 pt-1">
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-xs font-medium uppercase tracking-wider text-muted">
                         Alpha Pass
-                      </div>
-                      <div className="font-mono text-2xl font-black text-foreground">
-                        #{String(passData.passNumber).padStart(4, "0")}
-                      </div>
+                      </span>
+                      <span className="font-mono text-base font-semibold text-foreground tracking-tight">
+                        {String(passData.passNumber).padStart(4, "0")}
+                      </span>
+                      <span className="text-xs text-muted/60">/ 1,000</span>
                     </div>
-                    <div className="text-right">
-                      <div className="text-[11px] font-mono text-muted">
-                        {passData.walletAddress.slice(0, 4)}...{passData.walletAddress.slice(-4)}
-                      </div>
-                      <div className="text-xs font-semibold text-brand-cyan">
-                        Day-1 0% Fee Unlocked
-                      </div>
+                    <div className="font-mono text-xs text-muted">
+                      {passData.walletAddress.slice(0, 4)}...{passData.walletAddress.slice(-4)}
                     </div>
                   </div>
 
                   <button
                     onClick={handleShareOnX}
-                    className="flex w-full items-center justify-center gap-2 rounded-xl border border-brand-cyan bg-brand-cyan px-5 py-3 text-sm font-bold text-background transition-all hover:brightness-110 cursor-pointer"
+                    className="flex w-full items-center justify-center gap-2 rounded-xl border border-brand-cyan bg-brand-cyan px-5 py-3.5 text-sm font-bold text-background transition-all hover:brightness-110 cursor-pointer"
                   >
                     <Share2 className="h-4 w-4" />
                     <span>Share on X</span>

@@ -19,40 +19,24 @@ async function main() {
   page.on("pageerror", (err) => console.error(`[Browser Error]:`, err));
 
   try {
-    // 1. Normal Market Page (Default /)
+    // 1. Normal Market Page (Default /) with Ambient Video
     console.log("Navigating to Default Market page (http://localhost:3000/)...");
     await page.goto("http://localhost:3000/", { waitUntil: "networkidle2", timeout: 25000 });
-    await new Promise((r) => setTimeout(r, 2000));
+    await new Promise((r) => setTimeout(r, 2500));
     await page.screenshot({ path: path.join(ARTIFACTS_DIR, "home_market_page.png") });
     console.log("Captured home_market_page.png");
 
-    // 2. Alpha Landing Page (/alpha)
+    // 2. Alpha Landing Page (/alpha) with Ambient Video
     console.log("Navigating to Alpha Landing page (http://localhost:3000/alpha)...");
     await page.goto("http://localhost:3000/alpha", { waitUntil: "networkidle2", timeout: 25000 });
-    await new Promise((r) => setTimeout(r, 2000));
+    await new Promise((r) => setTimeout(r, 2500));
     await page.screenshot({ path: path.join(ARTIFACTS_DIR, "alpha_landing_page.png") });
     console.log("Captured alpha_landing_page.png");
 
-    // 3. Open Terms Modal on /alpha
-    console.log("Clicking Terms button on /alpha...");
-    const termsButtons = await page.$$("footer button");
-    for (const btn of termsButtons) {
-      const text = await page.evaluate((el) => el.textContent, btn);
-      if (text && text.includes("Terms")) {
-        await btn.click();
-        await new Promise((r) => setTimeout(r, 1000));
-        await page.screenshot({ path: path.join(ARTIFACTS_DIR, "alpha_terms_modal.png") });
-        console.log("Captured alpha_terms_modal.png");
-        await page.keyboard.press("Escape");
-        await new Promise((r) => setTimeout(r, 500));
-        break;
-      }
-    }
-
-    // 4. Claimed Alpha Pass State (/alpha?demo_pass=true)
-    console.log("Navigating to Claimed Alpha Pass state (http://localhost:3000/alpha?demo_pass=true)...");
+    // 3. Claimed Alpha Pass State (/alpha?demo_pass=true) - Awakened Bull with Neon Glow & Aura
+    console.log("Navigating to Claimed / Connected State (http://localhost:3000/alpha?demo_pass=true)...");
     await page.goto("http://localhost:3000/alpha?demo_pass=true", { waitUntil: "networkidle2", timeout: 25000 });
-    await new Promise((r) => setTimeout(r, 2000));
+    await new Promise((r) => setTimeout(r, 2500));
     await page.screenshot({ path: path.join(ARTIFACTS_DIR, "alpha_claimed_pass.png") });
     console.log("Captured alpha_claimed_pass.png");
 
