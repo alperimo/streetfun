@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Connection } from "@solana/web3.js";
 import { TradeStoreService } from "@/services/indexer/tradeStore";
-import { readConfirmedCurveTrade } from "@/services/indexer/confirmedTrade";
+import { readConfirmedCurveTrade, InvalidCurveTradeError } from "@/services/indexer/confirmedTrade";
 
 export async function POST(req: NextRequest) {
   try {
@@ -19,6 +19,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: true, indexed: false, trade });
     }
   } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 422 });
+    return NextResponse.json({ error: err.message }, { status: err instanceof InvalidCurveTradeError ? 422 : 503 });
   }
 }

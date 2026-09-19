@@ -3,7 +3,7 @@ const nextConfig = {
   reactStrictMode: true,
   // Keep development and production compilation artifacts isolated so a
   // production build cannot invalidate the dev server's client manifest.
-  distDir: process.env.NODE_ENV === "development" ? ".next-dev" : ".next",
+  distDir: process.env.NEXT_DIST_DIR || (process.env.NODE_ENV === "development" ? ".next-dev" : ".next"),
   images: {
     unoptimized: true,
     remotePatterns: [

@@ -10,6 +10,9 @@ export async function GET(
     const url = new URL(req.url);
     const intervalStr = url.searchParams.get("timeframe") || "15m";
 
+    if (!["1m", "5m", "15m", "1h", "4h", "1D"].includes(intervalStr)) {
+      return NextResponse.json({ error: "Unsupported chart timeframe." }, { status: 400 });
+    }
     let intervalMinutes = 15;
     if (intervalStr === "1m") intervalMinutes = 1;
     else if (intervalStr === "5m") intervalMinutes = 5;

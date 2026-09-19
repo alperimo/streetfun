@@ -27,10 +27,6 @@ export interface TokenRecord {
   meteora_pool?: string;
 }
 
-// In-memory fallback for localnet & dev without Supabase keys
-const localTradesStore: TradeRecord[] = [];
-const localTokensStore: Map<string, TokenRecord> = new Map();
-
 let cachedSupabaseClient: any = null;
 
 const SOLANA_SIGNATURE_PATTERN = /^[1-9A-HJ-NP-Za-km-z]{64,88}$/;
@@ -44,6 +40,7 @@ function isMockDataEnabled(): boolean {
 }
 
 function getSupabaseClient() {
+  if (isMockDataEnabled()) return null;
   if (cachedSupabaseClient) return cachedSupabaseClient;
 
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -65,6 +62,10 @@ function getSupabaseClient() {
 }
 
 export class TradeStoreService {
+  private readonly localTradesStore: TradeRecord[] = [];
+  private readonly localTokensStore = new Map<string, TokenRecord>();
+  constructor(private readonly getClient = getSupabaseClient) {}
+
   private static instance: TradeStoreService;
   private cachedTokens: TokenRecord[] | null = null;
   private lastTokensFetch = 0;
@@ -82,10 +83,10 @@ export class TradeStoreService {
 
   private cacheTrade(trade: TradeRecord): void {
     // The confirmation endpoint and webhook can deliver the same transaction.
-    const index = localTradesStore.findIndex((item) => item.tx_signature === trade.tx_signature);
-    if (index !== -1) localTradesStore.splice(index, 1);
-    localTradesStore.push(trade);
-    localTradesStore.sort(
+    const index = this.localTradesStore.findIndex((item) => item.tx_signature === trade.tx_signature);
+    if (index !== -1) this.localTradesStore.splice(index, 1);
+    this.localTradesStore.push(trade);
+    this.localTradesStore.sort(
       (a, b) => Date.parse(b.created_at || "") - Date.parse(a.created_at || "")
     );
     this.cachedPrices = null;
@@ -117,21 +118,22 @@ export class TradeStoreService {
       return;
     }
 
-    const supabase = getSupabaseClient();
+    const supabase = this.getClient();
     if (!supabase && !isMockDataEnabled()) {
       throw new Error("Live trade index is not configured.");
     }
     if (supabase) {
       try {
         // Ensure token exists in tokens table to avoid foreign key constraint error
-        const { data: existingToken } = await supabase
+        const { data: existingToken, error: metadataError } = await supabase
           .from("tokens")
           .select("mint")
           .eq("mint", trade.mint)
           .maybeSingle();
 
+        if (metadataError) throw new Error(`Could not read token metadata: ${metadataError.message}`);
         if (!existingToken) {
-          const indexedToken = localTokensStore.get(trade.mint);
+          const indexedToken = this.localTokensStore.get(trade.mint);
 
           const { error: tokenError } = await supabase.from("tokens").upsert({
             mint: trade.mint,
@@ -144,7 +146,7 @@ export class TradeStoreService {
             avatar_url: indexedToken?.avatar_url,
             is_graduated: indexedToken?.is_graduated || false,
             meteora_pool: indexedToken?.meteora_pool,
-          });
+          }, { onConflict: "mint", ignoreDuplicates: true });
           if (tokenError) throw new Error(`Could not index curve metadata: ${tokenError.message}`);
         }
 
@@ -175,16 +177,17 @@ export class TradeStoreService {
       } catch (err) {
         console.warn("[TradeStore] Network error posting token:", err);
       }
-      localTokensStore.set(token.mint, token);
+      this.localTokensStore.set(token.mint, token);
+      this.cachedTokens = null;
       return;
     }
 
-    const supabase = getSupabaseClient();
+    const supabase = this.getClient();
     if (supabase) {
       const { error } = await supabase.from("tokens").upsert(token);
       if (error) throw new Error(`Could not persist token metadata: ${error.message}`);
     }
-    localTokensStore.set(token.mint, token);
+    this.localTokensStore.set(token.mint, token);
     this.cachedTokens = null;
   }
 
@@ -197,7 +200,7 @@ export class TradeStoreService {
     const tokensMap = new Map<string, TokenRecord>();
 
     // 1. Query Supabase tokens table
-    const supabase = getSupabaseClient();
+    const supabase = this.getClient();
     if (supabase) {
       try {
         const { data, error } = await supabase
@@ -227,7 +230,7 @@ export class TradeStoreService {
     }
 
     // 2. Merge local tokens store
-    for (const [mint, token] of localTokensStore.entries()) {
+    for (const [mint, token] of this.localTokensStore.entries()) {
       if (!tokensMap.has(mint)) {
         tokensMap.set(mint, token);
       }
@@ -246,7 +249,7 @@ export class TradeStoreService {
     }
 
     const prices: Record<string, { priceUsd: number; marketCapUsd: number }> = {};
-    const supabase = getSupabaseClient();
+    const supabase = this.getClient();
     if (supabase) {
       try {
         const { data, error } = await supabase
@@ -276,7 +279,7 @@ export class TradeStoreService {
     }
 
     // Also check local store
-    for (const trade of localTradesStore) {
+    for (const trade of this.localTradesStore) {
       if (
         !prices[trade.mint] &&
         trade.price_usd &&
@@ -307,7 +310,7 @@ export class TradeStoreService {
 
     const reserves: Record<string, number> = {};
     const tradesBySignature = new Map<string, TradeRecord>();
-    const supabase = getSupabaseClient();
+    const supabase = this.getClient();
     if (supabase) {
       const pageSize = 1_000;
       for (let offset = 0; ; offset += pageSize) {
@@ -325,7 +328,7 @@ export class TradeStoreService {
     }
 
     // Persisted trades are also cached locally; count each signature once.
-    for (const trade of localTradesStore) {
+    for (const trade of this.localTradesStore) {
       if (!tradesBySignature.has(trade.tx_signature)) {
         tradesBySignature.set(trade.tx_signature, trade);
       }
@@ -349,7 +352,7 @@ export class TradeStoreService {
   }
 
   async getTrades(mint: string, limit = 20, verifiedOnly = !isMockDataEnabled()): Promise<TradeRecord[]> {
-    const supabase = getSupabaseClient();
+    const supabase = this.getClient();
     if (supabase) {
       const matches: TradeRecord[] = [];
       const pageSize = verifiedOnly ? 1_000 : limit;
@@ -374,7 +377,7 @@ export class TradeStoreService {
     if (!isMockDataEnabled()) throw new Error("Verified trade index is not configured.");
 
     // Fallback to local store
-    return localTradesStore
+    return this.localTradesStore
       .filter(
         (t) =>
           t.mint === mint &&
@@ -384,7 +387,7 @@ export class TradeStoreService {
   }
 
   async getRedemptions(limit = 20): Promise<TradeRecord[]> {
-    const supabase = getSupabaseClient();
+    const supabase = this.getClient();
     if (supabase) {
       try {
         const { data, error } = await supabase
@@ -401,7 +404,7 @@ export class TradeStoreService {
       } catch (_e) {}
     }
 
-    return localTradesStore
+    return this.localTradesStore
       .filter(
         (t) =>
           t.trade_type === "REDEEM" &&
@@ -430,7 +433,7 @@ export class TradeStoreService {
 
     const cutoffIso = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
     let trades: TradeRecord[] = [];
-    const supabase = getSupabaseClient();
+    const supabase = this.getClient();
 
     if (!supabase && !isMockDataEnabled()) {
       throw new Error("Verified trade index is not configured.");
@@ -453,7 +456,7 @@ export class TradeStoreService {
       }
     }
 
-    const localTrades = localTradesStore.filter(
+    const localTrades = this.localTradesStore.filter(
       (trade) =>
         requestedMints.has(trade.mint) &&
         new Date(trade.created_at || 0).getTime() >= new Date(cutoffIso).getTime()
@@ -491,7 +494,7 @@ export class TradeStoreService {
       const verifiedTrades = await this.getTrades(mint, 10_000, true);
       return this.aggregateOHLCV(verifiedTrades, intervalMinutes).slice(-limit);
     }
-    const supabase = getSupabaseClient();
+    const supabase = this.getClient();
     if (supabase) {
       const { data, error } = await supabase.rpc("get_ohlcv", {
         p_mint: mint,
@@ -512,7 +515,7 @@ export class TradeStoreService {
     }
 
     // Local in-memory OHLCV aggregation from real trades
-    const trades = localTradesStore.filter(
+    const trades = this.localTradesStore.filter(
       (t) =>
         t.mint === mint &&
         (isMockDataEnabled() || isVerifiedChainTrade(t))

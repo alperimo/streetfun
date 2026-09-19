@@ -8,8 +8,11 @@ export async function GET(
   try {
     const { mint } = await params;
     const url = new URL(req.url);
-    const limit = parseInt(url.searchParams.get("limit") || "20", 10);
+    const limit = Number(url.searchParams.get("limit") ?? "20");
 
+    if (!Number.isInteger(limit) || limit < 1 || limit > 1000) {
+      return NextResponse.json({ error: "Limit must be an integer from 1 to 1000." }, { status: 400 });
+    }
     const tradeStore = TradeStoreService.getInstance();
     const trades = await tradeStore.getTrades(mint, limit);
 

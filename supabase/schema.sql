@@ -30,7 +30,7 @@ CREATE TABLE IF NOT EXISTS public.trades (
     trade_type TEXT NOT NULL CHECK (trade_type IN ('BUY', 'SELL', 'REDEEM')),
     price_usd NUMERIC(16, 8) NOT NULL,
     tokens_amount NUMERIC(24, 6) NOT NULL,
-    quote_amount_usd NUMERIC(16, 4) NOT NULL,
+    quote_amount_usd NUMERIC(24, 6) NOT NULL,
     trader TEXT NOT NULL,
     slot BIGINT,
     created_at TIMESTAMPTZ DEFAULT NOW()
@@ -56,22 +56,25 @@ RETURNS TABLE (
     "volume" NUMERIC
 ) AS $$
 BEGIN
+    IF p_interval_minutes NOT IN (1, 5, 15, 60, 240, 1440) OR p_limit < 1 OR p_limit > 1000 THEN
+        RAISE EXCEPTION 'Invalid chart interval or limit';
+    END IF;
     RETURN QUERY
     WITH ranked_trades AS (
         SELECT
-            EXTRACT(EPOCH FROM DATE_TRUNC('minute', created_at) - (CAST(EXTRACT(MINUTE FROM created_at) AS INT) % p_interval_minutes) * INTERVAL '1 minute')::BIGINT AS bucket_time,
+            (FLOOR(EXTRACT(EPOCH FROM created_at) / (p_interval_minutes * 60)) * (p_interval_minutes * 60))::BIGINT AS bucket_time,
             price_usd,
             quote_amount_usd,
             ROW_NUMBER() OVER (
-                PARTITION BY EXTRACT(EPOCH FROM DATE_TRUNC('minute', created_at) - (CAST(EXTRACT(MINUTE FROM created_at) AS INT) % p_interval_minutes) * INTERVAL '1 minute')
+                PARTITION BY (FLOOR(EXTRACT(EPOCH FROM created_at) / (p_interval_minutes * 60)) * (p_interval_minutes * 60))
                 ORDER BY created_at ASC, id ASC
             ) as row_asc,
             ROW_NUMBER() OVER (
-                PARTITION BY EXTRACT(EPOCH FROM DATE_TRUNC('minute', created_at) - (CAST(EXTRACT(MINUTE FROM created_at) AS INT) % p_interval_minutes) * INTERVAL '1 minute')
+                PARTITION BY (FLOOR(EXTRACT(EPOCH FROM created_at) / (p_interval_minutes * 60)) * (p_interval_minutes * 60))
                 ORDER BY created_at DESC, id DESC
             ) as row_desc
         FROM public.trades
-        WHERE mint = p_mint
+        WHERE mint = p_mint AND trade_type IN ('BUY', 'SELL')
     ),
     aggregated AS (
         SELECT

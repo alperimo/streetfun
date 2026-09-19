@@ -2,6 +2,7 @@
 node_modules/
 .next/
 .next-dev/
+.next-verification/
 out/
 target/
 .anchor/

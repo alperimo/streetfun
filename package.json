@@ -7,12 +7,13 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
-    "test": "ts-mocha -p ./tests/tsconfig.json -t 1000000 tests/*.test.ts",
-    "test:contract": "cargo test --package streetfun --lib math",
-    "test:integration": "ts-mocha -p ./tests/tsconfig.json -t 1000000 tests/*.test.ts",
+    "lint": "tsc --noEmit",
+    "test": "npm run test:unit",
+    "test:contract": "cargo test --package streetfun --lib",
+    "test:integration": "ts-mocha -p ./tests/tsconfig.json -t 120000 tests/0*.test.ts",
     "test:webhook": "npx ts-node -P ./tests/tsconfig.json scripts/test_webhook.ts",
-    "dev:indexer": "npx ts-node -P ./tests/tsconfig.json scripts/local_helius_indexer.ts"
+    "dev:indexer": "npx ts-node -P ./tests/tsconfig.json scripts/local_helius_indexer.ts",
+    "test:unit": "node scripts/run_unit_tests.cjs"
   },
   "dependencies": {
     "@coral-xyz/anchor": "^0.30.1",
@@ -47,6 +48,7 @@
     "puppeteer-core": "^25.11.0",
     "tailwindcss": "^3.4.17",
     "ts-mocha": "^10.0.0",
+    "tsconfig-paths": "3.15.0",
     "typescript": "^5.3.3"
   }
 }
