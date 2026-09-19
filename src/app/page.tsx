@@ -12,8 +12,21 @@ import { LaunchModal } from "@/components/modals/LaunchModal";
 import { tokenCreatedAt } from "@/lib/marketFormat";
 import { TokenMetadata } from "@/lib/types";
 import { useMarket } from "@/context/MarketContext";
+import { AlphaLanding } from "@/components/alpha/AlphaLanding";
 
-export default function MarketsPage() {
+export default function Page() {
+  const isAlphaOnly =
+    process.env.NEXT_PUBLIC_ALPHA_ONLY === "true" ||
+    (process.env.NODE_ENV === "production" && process.env.NEXT_PUBLIC_FULL_APP !== "true");
+
+  if (isAlphaOnly) {
+    return <AlphaLanding />;
+  }
+
+  return <MarketsPage />;
+}
+
+function MarketsPage() {
   const { tokens, loading, error } = useMarket();
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
