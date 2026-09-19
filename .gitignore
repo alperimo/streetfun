@@ -17,3 +17,5 @@ keys/
 .env*.local
 test-ledger/
 supabase/.temp/
+.vercel
+.env*
