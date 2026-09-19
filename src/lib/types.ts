@@ -47,7 +47,7 @@ export interface TokenMetadata {
     vaultPda: string;
     proofOfReserveVerified?: boolean;
   };
-  dataSource?: "onchain" | "mock";
+  dataSource?: "onchain" | "indexed" | "mock";
   lastUpdatedAt?: string;
 }
 

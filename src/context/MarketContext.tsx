@@ -52,7 +52,7 @@ export function MarketProvider({ children, initialTokens = [] }: MarketProviderP
   const isMock = isMockMode();
   const [tokens, setTokens] = useState<TokenMetadata[]>(() => {
     if (isMock) return INITIAL_TOKENS;
-    return initialTokens.filter((token) => token.dataSource === "onchain");
+    return initialTokens;
   });
   const [loading, setLoading] = useState(!isMock && initialTokens.length === 0);
   const [error, setError] = useState<string | null>(null);

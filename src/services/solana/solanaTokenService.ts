@@ -20,6 +20,8 @@ interface IndexedTokenMetadata {
   description?: string | null;
   avatar_url?: string | null;
   created_at?: string | null;
+  is_graduated?: boolean | null;
+  meteora_pool?: string | null;
 }
 
 interface IndexedMarketStat {
@@ -57,7 +59,7 @@ export class SolanaTokenService implements ITokenService {
     const { data, error } = await supabase
       .from("tokens")
       .select(
-        "mint, name, symbol, target_equity_symbol, target_equity_mint, creator, description, avatar_url, created_at"
+        "mint, name, symbol, target_equity_symbol, target_equity_mint, creator, description, avatar_url, created_at, is_graduated, meteora_pool"
       );
 
     if (error) {
@@ -73,6 +75,79 @@ export class SolanaTokenService implements ITokenService {
   private async getIndexedStats(mints: string[]): Promise<Record<string, IndexedMarketStat>> {
     if (mints.length === 0) return {};
     return TradeStoreService.getInstance().getMarketStats(mints);
+  }
+
+  private async getIndexedTokens(
+    metadata: Map<string, IndexedTokenMetadata>
+  ): Promise<TokenMetadata[]> {
+    const indexedRows = Array.from(metadata.values());
+    if (indexedRows.length === 0) return [];
+
+    let stats: Record<string, IndexedMarketStat> = {};
+    let statsAvailable = false;
+    try {
+      stats = await this.getIndexedStats(indexedRows.map((token) => token.mint));
+      statsAvailable = true;
+    } catch (error) {
+      console.warn("[SolanaTokenService] Indexed market stats unavailable:", error);
+    }
+
+    const asOf = new Date().toISOString();
+    return indexedRows.map((indexed) => {
+      const knownAsset = VERIFIED_TESSERA_PRE_IPO_ASSETS.find(
+        (asset) =>
+          asset.mintAddress === indexed.target_equity_mint ||
+          asset.symbol === indexed.target_equity_symbol
+      );
+      const stat = stats[indexed.mint];
+      const priceUsd = stat?.latestTradePriceUsd || 0;
+
+      return {
+        mint: indexed.mint,
+        name: indexed.name,
+        symbol: indexed.symbol,
+        description: indexed.description || "Indexed StreetFun market record.",
+        avatarUrl: indexed.avatar_url || "/generated/streetfun-logo.png",
+        creator: indexed.creator,
+        createdAt: indexed.created_at || asOf,
+        marketCapUsd: 0,
+        priceUsd,
+        priceChange24h: 0,
+        priceChange24hAvailable: false,
+        volume24hUsd: stat?.volume24hUsd || 0,
+        volume24hAvailable: statsAvailable,
+        targetEquity: {
+          symbol: knownAsset?.symbol || indexed.target_equity_symbol || "UNKNOWN",
+          name: knownAsset?.name || "Unverified target asset",
+          mintAddress: indexed.target_equity_mint,
+          issuer: knownAsset?.issuer,
+          custodian: knownAsset?.custodian || "Not indexed",
+          legalFramework: knownAsset?.legalFramework || "Not indexed",
+          logoUrl: knownAsset?.logoUrl || "/generated/streetfun-logo.png",
+          stockPriceUsd: 0,
+          isPreIpo: knownAsset?.isPreIpo,
+          meteoraPoolAddress: indexed.meteora_pool || undefined,
+        },
+        bondingCurve: {
+          realQuoteReservesUsd: 0,
+          graduationThresholdUsd: 0,
+          progressPct: 0,
+          virtualQuoteReserves: "0",
+          virtualTokenReserves: "0",
+          realTokenReserves: "0",
+          isGraduated: Boolean(indexed.is_graduated),
+          meteoraPoolAddress: indexed.meteora_pool || undefined,
+        },
+        treasury: {
+          totalEquityLocked: 0,
+          totalEquityValueUsd: 0,
+          vaultPda: "",
+          proofOfReserveVerified: false,
+        },
+        dataSource: "indexed",
+        lastUpdatedAt: asOf,
+      };
+    });
   }
 
   async getTokens(): Promise<TokenMetadata[]> {
@@ -91,7 +166,9 @@ export class SolanaTokenService implements ITokenService {
       this.connection.getSlot("confirmed"),
     ]);
 
-    if (!onChainCurves || onChainCurves.length === 0) return [];
+    if (!onChainCurves || onChainCurves.length === 0) {
+      return this.getIndexedTokens(metadata);
+    }
 
     const [globalConfigPda] = getGlobalConfigPda(PROGRAM_ID);
     const config = await (program.account as any).globalConfig.fetch(globalConfigPda);

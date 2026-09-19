@@ -66,6 +66,11 @@ export function TokenCard({ token }: TokenCardProps) {
                     Graduated
                   </span>
                 )}
+                {token.dataSource === "indexed" && (
+                  <span className="rounded-md border border-border bg-card-hover px-2 py-0.5 text-[10px] font-medium text-muted">
+                    Indexed
+                  </span>
+                )}
               </div>
               <div className="text-sm font-bold text-foreground">
                 {token.name}
