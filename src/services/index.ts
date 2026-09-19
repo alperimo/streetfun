@@ -12,15 +12,13 @@ export * from "./types";
 /**
  * Returns whether the application is running in Simulation / Mock Mode.
  * Controlled via NEXT_PUBLIC_USE_MOCK_DATA in .env.local / .env.
- * Defaults to true for zero-friction local demos, offline testing, and presentations.
+ * Mock data is opt-in. Live mode must never silently fall back to demo data.
  */
 export function isMockMode(): boolean {
-  if (typeof process !== "undefined" && process.env) {
-    if (process.env.NEXT_PUBLIC_USE_MOCK_DATA === "false") {
-      return false;
-    }
-  }
-  return true;
+  return (
+    typeof process !== "undefined" &&
+    process.env?.NEXT_PUBLIC_USE_MOCK_DATA === "true"
+  );
 }
 
 export function getTokenService(): ITokenService {

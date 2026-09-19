@@ -14,7 +14,7 @@ export interface TradeReceiptData {
 export const receiptLabel = (_kind: TradeReceiptData["kind"]) => "Receipt";
 export const receiptNote = (kind: TradeReceiptData["kind"]) =>
   kind === "preview" ? "Illustrative amounts. No transaction submitted." : kind === "demo"
-    ? "" : "Service-reported result. Confirmation not verified.";
+    ? "" : "Confirmed on Solana.";
 export const receiptAmount = (value: number) => value.toLocaleString("en-US", { maximumFractionDigits: 6 });
 const valid = (...values: number[]) => values.every(value => Number.isFinite(value) && value > 0);
 const identity = ({ name, symbol, mint, avatarUrl }: TokenMetadata) => ({ name, symbol, mint, avatarUrl });

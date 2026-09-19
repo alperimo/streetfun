@@ -1,12 +1,11 @@
-import { IRedeemService, RedeemParams, RedeemResult } from "../types";
+import { IRedeemService, RedeemParams, RedeemResult, WalletIdentity } from "../types";
 import { calculateEntitledStock } from "@/sdk/math";
 import { mockTokenService } from "./mockTokenService";
-import { PublicKey } from "@solana/web3.js";
 
 export class MockRedeemService implements IRedeemService {
   async executeRedeem(
     params: RedeemParams,
-    _walletPublicKey?: PublicKey | null
+    wallet?: WalletIdentity
   ): Promise<RedeemResult> {
     await new Promise((r) => setTimeout(r, 600));
 
@@ -40,7 +39,8 @@ export class MockRedeemService implements IRedeemService {
 
     mockTokenService.updateToken(token);
 
-    const traderPubkey = _walletPublicKey ? _walletPublicKey.toBase58() : "519jca26LioEQiPhwoHCkC8mNZiCF7cDmtaXdp98iCv2";
+    const walletPublicKey = wallet instanceof Object && "publicKey" in wallet ? wallet.publicKey : wallet;
+    const traderPubkey = walletPublicKey ? walletPublicKey.toBase58() : "519jca26LioEQiPhwoHCkC8mNZiCF7cDmtaXdp98iCv2";
     try {
       const { TradeStoreService } = await import("../indexer/tradeStore");
       await TradeStoreService.getInstance().recordTrade({

@@ -6,6 +6,7 @@ export interface TokenMetadata {
   avatarUrl: string;
   creator: string;
   createdAt: string;
+  totalSupply?: number;
   marketCapUsd: number;
   priceUsd: number;
   priceChange24h: number;
@@ -30,6 +31,7 @@ export interface TokenMetadata {
     virtualQuoteReserves: string;
     virtualTokenReserves: string;
     realTokenReserves: string;
+    quoteMint?: string;
     isGraduated: boolean;
     graduatedAt?: string;
     meteoraPoolAddress?: string;
@@ -43,6 +45,8 @@ export interface TokenMetadata {
     vaultPda: string;
     proofOfReserveVerified?: boolean;
   };
+  dataSource?: "onchain" | "mock";
+  lastUpdatedAt?: string;
 }
 
 

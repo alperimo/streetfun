@@ -93,7 +93,7 @@ export function TradingViewChart({
     });
 
     // Floor price line for graduated tokens
-    if (isGraduated) {
+    if (isGraduated && floorPrice > 0) {
       candlestickSeries.createPriceLine({
         price: floorPrice,
         color: "#d97706",

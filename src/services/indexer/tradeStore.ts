@@ -1,6 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
 import { OHLCVBar } from "../types";
-import { INITIAL_TOKENS } from "@/lib/mockData";
 
 export interface TradeRecord {
   id?: number | string;
@@ -33,6 +32,16 @@ const localTradesStore: TradeRecord[] = [];
 const localTokensStore: Map<string, TokenRecord> = new Map();
 
 let cachedSupabaseClient: any = null;
+
+const SOLANA_SIGNATURE_PATTERN = /^[1-9A-HJ-NP-Za-km-z]{64,88}$/;
+
+export function isVerifiedChainTrade(trade: Pick<TradeRecord, "tx_signature" | "slot">): boolean {
+  return SOLANA_SIGNATURE_PATTERN.test(trade.tx_signature) && Number.isInteger(trade.slot) && Number(trade.slot) > 0;
+}
+
+function isMockDataEnabled(): boolean {
+  return process.env.NEXT_PUBLIC_USE_MOCK_DATA === "true";
+}
 
 function getSupabaseClient() {
   if (cachedSupabaseClient) return cachedSupabaseClient;
@@ -75,6 +84,10 @@ export class TradeStoreService {
       created_at: trade.created_at || new Date().toISOString(),
     };
 
+    if (!isMockDataEnabled() && !isVerifiedChainTrade(tradeWithTime)) {
+      throw new Error("Live indexing rejected a trade without a confirmed Solana signature and slot.");
+    }
+
     // If executed in browser, delegate persistence to server API route with secret key
     if (typeof window !== "undefined") {
       try {
@@ -101,23 +114,19 @@ export class TradeStoreService {
           .maybeSingle();
 
         if (!existingToken) {
-          // Check if it's one of the initial tokens
-          const initialToken = INITIAL_TOKENS.find(
-            (t) => t.mint.toLowerCase() === trade.mint.toLowerCase()
-          );
+          const indexedToken = localTokensStore.get(trade.mint.toLowerCase());
 
           await supabase.from("tokens").upsert({
             mint: trade.mint,
-            name: initialToken?.name || "StreetFun Protocol Token",
-            symbol: initialToken?.symbol || "TOKEN",
-            target_equity_symbol: initialToken?.targetEquity?.symbol || "$TSPACEX",
+            name: indexedToken?.name || "Unindexed StreetFun Token",
+            symbol: indexedToken?.symbol || "TOKEN",
+            target_equity_symbol: indexedToken?.target_equity_symbol || "UNKNOWN",
             target_equity_mint:
-              initialToken?.targetEquity?.mintAddress ||
-              "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
-            creator: trade.trader || initialToken?.creator || "11111111111111111111111111111111",
-            avatar_url: initialToken?.avatarUrl,
-            is_graduated: initialToken?.bondingCurve?.isGraduated || false,
-            meteora_pool: initialToken?.bondingCurve?.meteoraPoolAddress,
+              indexedToken?.target_equity_mint || "11111111111111111111111111111111",
+            creator: trade.trader || indexedToken?.creator || "11111111111111111111111111111111",
+            avatar_url: indexedToken?.avatar_url,
+            is_graduated: indexedToken?.is_graduated || false,
+            meteora_pool: indexedToken?.meteora_pool,
           });
         }
 
@@ -221,13 +230,17 @@ export class TradeStoreService {
       try {
         const { data, error } = await supabase
           .from("trades")
-          .select("mint, price_usd, created_at")
+          .select("mint, price_usd, created_at, tx_signature, slot")
           .order("created_at", { ascending: false })
           .limit(100);
 
         if (!error && data) {
           for (const trade of data) {
-            if (!prices[trade.mint] && trade.price_usd) {
+            if (
+              !prices[trade.mint] &&
+              trade.price_usd &&
+              (isMockDataEnabled() || isVerifiedChainTrade(trade as TradeRecord))
+            ) {
               const price = Number(trade.price_usd);
               prices[trade.mint] = {
                 priceUsd: price,
@@ -243,7 +256,11 @@ export class TradeStoreService {
 
     // Also check local store
     for (const trade of localTradesStore) {
-      if (!prices[trade.mint] && trade.price_usd) {
+      if (
+        !prices[trade.mint] &&
+        trade.price_usd &&
+        (isMockDataEnabled() || isVerifiedChainTrade(trade))
+      ) {
         const price = Number(trade.price_usd);
         prices[trade.mint] = {
           priceUsd: price,
@@ -305,7 +322,7 @@ export class TradeStoreService {
     return reserves;
   }
 
-  async getTrades(mint: string, limit = 20): Promise<TradeRecord[]> {
+  async getTrades(mint: string, limit = 20, verifiedOnly = !isMockDataEnabled()): Promise<TradeRecord[]> {
     const supabase = getSupabaseClient();
     if (supabase) {
       const { data, error } = await supabase
@@ -313,16 +330,21 @@ export class TradeStoreService {
         .select("*")
         .eq("mint", mint)
         .order("created_at", { ascending: false })
-        .limit(limit);
+        .limit(verifiedOnly ? Math.max(limit * 10, 1_000) : limit);
 
       if (!error && data && data.length > 0) {
-        return data as TradeRecord[];
+        const trades = data as TradeRecord[];
+        return (verifiedOnly ? trades.filter(isVerifiedChainTrade) : trades).slice(0, limit);
       }
     }
 
     // Fallback to local store
     return localTradesStore
-      .filter((t) => t.mint.toLowerCase() === mint.toLowerCase())
+      .filter(
+        (t) =>
+          t.mint.toLowerCase() === mint.toLowerCase() &&
+          (!verifiedOnly || isVerifiedChainTrade(t))
+      )
       .slice(0, limit);
   }
 
@@ -338,14 +360,82 @@ export class TradeStoreService {
           .limit(limit);
 
         if (!error && data && data.length > 0) {
-          return data as TradeRecord[];
+          const trades = data as TradeRecord[];
+          return isMockDataEnabled() ? trades : trades.filter(isVerifiedChainTrade);
         }
       } catch (_e) {}
     }
 
     return localTradesStore
-      .filter((t) => t.trade_type === "REDEEM")
+      .filter(
+        (t) =>
+          t.trade_type === "REDEEM" &&
+          (isMockDataEnabled() || isVerifiedChainTrade(t))
+      )
       .slice(0, limit);
+  }
+
+  async getMarketStats(mints: string[]): Promise<
+    Record<
+      string,
+      { volume24hUsd: number; referencePriceUsd: number | null; latestTradePriceUsd: number | null }
+    >
+  > {
+    const normalizedMints = new Map(mints.map((mint) => [mint.toLowerCase(), mint]));
+    const result: Record<
+      string,
+      { volume24hUsd: number; referencePriceUsd: number | null; latestTradePriceUsd: number | null }
+    > = {};
+
+    for (const mint of mints) {
+      result[mint] = { volume24hUsd: 0, referencePriceUsd: null, latestTradePriceUsd: null };
+    }
+
+    if (mints.length === 0) return result;
+
+    const cutoffIso = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+    let trades: TradeRecord[] = [];
+    const supabase = getSupabaseClient();
+
+    if (supabase) {
+      const { data, error } = await supabase
+        .from("trades")
+        .select("mint, trade_type, price_usd, quote_amount_usd, tx_signature, slot, created_at")
+        .in("mint", mints)
+        .gte("created_at", cutoffIso)
+        .order("created_at", { ascending: true })
+        .limit(10_000);
+
+      if (!error && data) trades = data as TradeRecord[];
+    }
+
+    const localTrades = localTradesStore.filter(
+      (trade) =>
+        normalizedMints.has(trade.mint.toLowerCase()) &&
+        new Date(trade.created_at || 0).getTime() >= new Date(cutoffIso).getTime()
+    );
+    const seen = new Set(trades.map((trade) => trade.tx_signature));
+    trades.push(...localTrades.filter((trade) => !seen.has(trade.tx_signature)));
+
+    if (!isMockDataEnabled()) trades = trades.filter(isVerifiedChainTrade);
+    trades.sort(
+      (a, b) => new Date(a.created_at || 0).getTime() - new Date(b.created_at || 0).getTime()
+    );
+
+    for (const trade of trades) {
+      if (trade.trade_type === "REDEEM") continue;
+      const canonicalMint = normalizedMints.get(trade.mint.toLowerCase());
+      if (!canonicalMint) continue;
+      const stat = result[canonicalMint];
+      const price = Number(trade.price_usd);
+      stat.volume24hUsd += Number(trade.quote_amount_usd) || 0;
+      if (stat.referencePriceUsd === null && Number.isFinite(price) && price > 0) {
+        stat.referencePriceUsd = price;
+      }
+      if (Number.isFinite(price) && price > 0) stat.latestTradePriceUsd = price;
+    }
+
+    return result;
   }
 
   async getOHLCV(
@@ -363,6 +453,10 @@ export class TradeStoreService {
       });
 
       if (!error && data && data.length > 0) {
+        if (!isMockDataEnabled()) {
+          const verifiedTrades = await this.getTrades(mint, 10_000, true);
+          return this.aggregateOHLCV(verifiedTrades, intervalMinutes, currentPrice);
+        }
         return data.map((b: any) => ({
           time: Number(b.time),
           open: Number(b.open),
@@ -376,8 +470,19 @@ export class TradeStoreService {
 
     // Local in-memory OHLCV aggregation from real trades
     const trades = localTradesStore.filter(
-      (t) => t.mint.toLowerCase() === mint.toLowerCase()
+      (t) =>
+        t.mint.toLowerCase() === mint.toLowerCase() &&
+        (isMockDataEnabled() || isVerifiedChainTrade(t))
     );
+
+    return this.aggregateOHLCV(trades, intervalMinutes, currentPrice);
+  }
+
+  private aggregateOHLCV(
+    trades: TradeRecord[],
+    intervalMinutes: number,
+    currentPrice: number
+  ): OHLCVBar[] {
 
     if (trades.length === 0) {
       // If zero trades yet on a fresh curve, return a single candle at current spot price

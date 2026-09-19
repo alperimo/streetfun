@@ -13,7 +13,7 @@ import { TokenMetadata } from "@/lib/types";
 import { useMarket } from "@/context/MarketContext";
 
 export default function MarketsPage() {
-  const { tokens, loading } = useMarket();
+  const { tokens, loading, error } = useMarket();
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [selectedTag, setSelectedTag] = useState("all");
@@ -115,16 +115,23 @@ export default function MarketsPage() {
                 </div>
                 {filteredTokens.length === 0 && (
                   <div className="mt-12 rounded-xl border border-border bg-card p-12 text-center shadow-sm">
-                    <p className="text-sm text-muted">No tokens found.</p>
-                    <button
-                      onClick={() => {
-                        setSearchQuery("");
-                        setSelectedTag("all");
-                      }}
-                      className="mt-2 text-xs font-bold text-brand-cyan hover:underline"
-                    >
-                      Reset filters
-                    </button>
+                    <p className="text-sm font-semibold text-foreground">
+                      {error ? "Live market data unavailable" : "No verified tokens found"}
+                    </p>
+                    <p className="mx-auto mt-2 max-w-xl text-xs leading-relaxed text-muted">
+                      {error || "The configured Solana network has no verified StreetFun curve accounts."}
+                    </p>
+                    {!error && (searchQuery || selectedTag !== "all") && (
+                      <button
+                        onClick={() => {
+                          setSearchQuery("");
+                          setSelectedTag("all");
+                        }}
+                        className="mt-3 text-xs font-bold text-brand-cyan hover:underline"
+                      >
+                        Reset filters
+                      </button>
+                    )}
                   </div>
                 )}
               </>

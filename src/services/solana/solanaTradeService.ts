@@ -1,212 +1,250 @@
-import { Connection, PublicKey } from "@solana/web3.js";
-import { ITradeService, TradeParams, TradeResult } from "../types";
-import { getJupiterQuote } from "@/sdk/jupiter";
-import { USDC_MINT } from "@/sdk/constants";
+import * as anchor from "@coral-xyz/anchor";
+import {
+  Connection,
+  PublicKey,
+  Transaction,
+} from "@solana/web3.js";
+import {
+  TOKEN_PROGRAM_ID,
+  createAssociatedTokenAccountInstruction,
+  getAccount,
+  getAssociatedTokenAddress,
+} from "@solana/spl-token";
+import idl from "@/idl/streetfun.json";
+import { ITradeService, TradeParams, TradeResult, WalletIdentity, WalletTransactionSender } from "../types";
 import { simulateBuyTokensOut, simulateSellQuoteOut } from "@/sdk/math";
-import { TradeStoreService } from "../indexer/tradeStore";
+import { PROGRAM_ID } from "@/sdk/constants";
+import {
+  getCurvePda,
+  getGlobalConfigPda,
+  getQuoteVaultPda,
+  getTokenVaultPda,
+} from "@/sdk/pda";
+import { solanaTokenService } from "./solanaTokenService";
+
+const TOKEN_DECIMALS = 1_000_000;
+
+function isTransactionSender(wallet: WalletIdentity): wallet is WalletTransactionSender {
+  return Boolean(
+    wallet &&
+      !(wallet instanceof PublicKey) &&
+      wallet.publicKey &&
+      typeof wallet.sendTransaction === "function"
+  );
+}
+
+function minimumAfterSlippage(amount: bigint, slippagePct: number): bigint {
+  const bps = BigInt(Math.max(0, Math.min(10_000, Math.floor(slippagePct * 100))));
+  return (amount * (10_000n - bps)) / 10_000n;
+}
 
 export class SolanaTradeService implements ITradeService {
   private connection: Connection;
 
   constructor() {
-    const rpcUrl =
-      process.env.NEXT_PUBLIC_SOLANA_RPC || "https://api.devnet.solana.com";
+    const rpcUrl = process.env.NEXT_PUBLIC_SOLANA_RPC || "https://api.devnet.solana.com";
     this.connection = new Connection(rpcUrl, "confirmed");
+  }
+
+  private getProgram(publicKey: PublicKey): anchor.Program<any> {
+    const readonlyWallet: any = {
+      publicKey,
+      signTransaction: async (tx: any) => tx,
+      signAllTransactions: async (txs: any) => txs,
+    };
+    const provider = new anchor.AnchorProvider(this.connection, readonlyWallet, {
+      commitment: "confirmed",
+      preflightCommitment: "confirmed",
+    });
+    return new anchor.Program(idl as any, provider);
   }
 
   async executeTrade(
     params: TradeParams,
-    walletPublicKey?: PublicKey | null
+    wallet?: WalletIdentity
   ): Promise<TradeResult> {
-    if (!walletPublicKey) {
-      throw new Error("Please connect your wallet to execute trades.");
+    if (!isTransactionSender(wallet)) {
+      throw new Error("Connect a signing Solana wallet to execute a live trade.");
     }
-
-    const token = { ...params.token };
-    const isGraduated = token.bondingCurve.isGraduated;
-
-    if (isGraduated) {
-      // Execute via Jupiter Aggregator V6
-      const memeMint = new PublicKey(token.mint);
-      const isBuy = params.tradeMode === "buy";
-      const inputMint = isBuy ? USDC_MINT : memeMint;
-      const outputMint = isBuy ? memeMint : USDC_MINT;
-      const amountLamports = BigInt(Math.floor(params.amount * 1_000_000));
-
-      const quote = await getJupiterQuote(
-        inputMint,
-        outputMint,
-        amountLamports,
-        Math.floor(params.slippagePct * 100)
+    if (!Number.isFinite(params.amount) || params.amount <= 0) {
+      throw new Error("Enter a valid trade amount.");
+    }
+    if (params.token.bondingCurve.isGraduated) {
+      throw new Error(
+        "This token is graduated, but a verified Meteora/Jupiter swap route is not configured. No transaction was submitted."
       );
-
-      const outAmountNum = Number(quote.outAmount) / 1_000_000;
-      const effectivePrice = isBuy
-        ? params.amount / outAmountNum
-        : outAmountNum / params.amount;
-
-      await TradeStoreService.getInstance().recordTrade({
-        tx_signature: `jup_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
-        mint: token.mint,
-        trade_type: isBuy ? "BUY" : "SELL",
-        price_usd: effectivePrice,
-        tokens_amount: isBuy ? outAmountNum : params.amount,
-        quote_amount_usd: isBuy ? params.amount : outAmountNum,
-        trader: walletPublicKey.toBase58(),
-        created_at: new Date().toISOString(),
-      });
-
-      return {
-        success: true,
-        tokensAmount: isBuy ? outAmountNum : params.amount,
-        quoteAmount: isBuy ? params.amount : outAmountNum,
-        effectivePrice,
-        priceImpactPct: parseFloat(quote.priceImpactPct) || 0.1,
-        isGraduated: true,
-        message: `Jupiter Swap executed: ${isBuy ? `Bought ${outAmountNum.toFixed(2)} $${token.symbol}` : `Sold for $${outAmountNum.toFixed(2)} USDC`}`,
-        updatedToken: token,
-      };
-    } else {
-      // In-Curve execution via Anchor / Meteora DBC Curve
-      const curve = { ...token.bondingCurve };
-      const virtualQuote = BigInt(curve.virtualQuoteReserves);
-      const virtualTokens = BigInt(curve.virtualTokenReserves);
-      const realTokens = BigInt(curve.realTokenReserves);
-      const realQuote = BigInt(Math.floor(curve.realQuoteReservesUsd * 1_000_000));
-
-      if (params.tradeMode === "buy") {
-        const quoteInLamports = BigInt(Math.floor(params.amount * 1_000_000));
-        const sim = simulateBuyTokensOut(
-          quoteInLamports,
-          virtualQuote,
-          virtualTokens,
-          realTokens,
-          curve.dynamicFeeBps || 100
-        );
-
-        const tokensOut = Number(sim.tokensOut) / 1_000_000;
-        const newReserves = curve.realQuoteReservesUsd + params.amount;
-        curve.realQuoteReservesUsd = newReserves;
-        const willGraduate = newReserves >= curve.graduationThresholdUsd;
-        curve.progressPct = Math.min(
-          100,
-          Math.round((newReserves / curve.graduationThresholdUsd) * 100)
-        );
-
-        // Update constant product reserves
-        const newVirtualQuote = virtualQuote + sim.netQuote;
-        const newVirtualTokens = (virtualQuote * virtualTokens) / newVirtualQuote;
-        curve.virtualQuoteReserves = newVirtualQuote.toString();
-        curve.virtualTokenReserves = newVirtualTokens.toString();
-        curve.realTokenReserves = (realTokens - sim.tokensOut).toString();
-
-        const newSpotPrice = Number(newVirtualQuote) / Number(newVirtualTokens);
-        token.priceUsd = Number(newSpotPrice.toFixed(8));
-        token.marketCapUsd = Math.round(token.priceUsd * 1_000_000_000);
-        token.volume24hUsd = (token.volume24hUsd || 0) + params.amount;
-        const initialCurvePrice = 30_000 / 1_073_000_000;
-        token.priceChange24h = ((token.priceUsd - initialCurvePrice) / initialCurvePrice) * 100;
-
-        if (willGraduate) {
-          curve.isGraduated = true;
-          curve.progressPct = 100;
-          token.treasury.totalEquityLocked = 30_000 / (token.targetEquity.stockPriceUsd || 200);
-          token.treasury.totalEquityValueUsd = 30_000;
-        }
-        token.bondingCurve = curve;
-
-        // Persist updated token to local storage if custom
-        if (typeof window !== "undefined") {
-          try {
-            const stored = localStorage.getItem("streetfun_custom_tokens");
-            if (stored) {
-              const list = JSON.parse(stored);
-              const idx = list.findIndex((t: any) => t.mint.toLowerCase() === token.mint.toLowerCase());
-              if (idx >= 0) {
-                list[idx] = token;
-                localStorage.setItem("streetfun_custom_tokens", JSON.stringify(list));
-              }
-            }
-          } catch (_e) {}
-        }
-
-        await TradeStoreService.getInstance().recordTrade({
-          tx_signature: `curve_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
-          mint: token.mint,
-          trade_type: "BUY",
-          price_usd: token.priceUsd,
-          tokens_amount: tokensOut,
-          quote_amount_usd: params.amount,
-          trader: walletPublicKey.toBase58(),
-          created_at: new Date().toISOString(),
-        });
-
-        return {
-          success: true,
-          tokensAmount: tokensOut,
-          quoteAmount: params.amount,
-          effectivePrice: token.priceUsd,
-          priceImpactPct: sim.priceImpactPct,
-          isGraduated: willGraduate,
-          message: willGraduate
-            ? `🎓 Curve Graduated! 60K threshold hit: 30K Pre-IPO equity locked + 30K AMM liquidity seeded.`
-            : `On-Chain curve trade confirmed! Bought ${tokensOut.toFixed(2)} $${token.symbol}`,
-          updatedToken: token,
-        };
-      } else {
-        const tokensInLamports = BigInt(Math.floor(params.amount * 1_000_000));
-        const sim = simulateSellQuoteOut(
-          tokensInLamports,
-          virtualQuote,
-          virtualTokens,
-          realQuote,
-          curve.dynamicFeeBps || 100
-        );
-
-        const quoteOut = Number(sim.netQuoteOut) / 1_000_000;
-        curve.realQuoteReservesUsd = Math.max(0, curve.realQuoteReservesUsd - quoteOut);
-        curve.progressPct = Math.min(
-          100,
-          Math.round((curve.realQuoteReservesUsd / curve.graduationThresholdUsd) * 100)
-        );
-
-        const newVirtualTokens = virtualTokens + tokensInLamports;
-        const newVirtualQuote = (virtualQuote * virtualTokens) / newVirtualTokens;
-        curve.virtualQuoteReserves = newVirtualQuote.toString();
-        curve.virtualTokenReserves = newVirtualTokens.toString();
-        curve.realTokenReserves = (realTokens + tokensInLamports).toString();
-
-        const newSpotPrice = Number(newVirtualQuote) / Number(newVirtualTokens);
-        token.priceUsd = Number(newSpotPrice.toFixed(8));
-        token.marketCapUsd = Math.round(token.priceUsd * 1_000_000_000);
-        token.volume24hUsd = (token.volume24hUsd || 0) + quoteOut;
-        const initialCurvePrice = 30_000 / 1_073_000_000;
-        token.priceChange24h = ((token.priceUsd - initialCurvePrice) / initialCurvePrice) * 100;
-        token.bondingCurve = curve;
-
-        await TradeStoreService.getInstance().recordTrade({
-          tx_signature: `curve_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
-          mint: token.mint,
-          trade_type: "SELL",
-          price_usd: token.priceUsd,
-          tokens_amount: params.amount,
-          quote_amount_usd: quoteOut,
-          trader: walletPublicKey.toBase58(),
-          created_at: new Date().toISOString(),
-        });
-
-        return {
-          success: true,
-          tokensAmount: params.amount,
-          quoteAmount: quoteOut,
-          effectivePrice: token.priceUsd,
-          priceImpactPct: sim.priceImpactPct,
-          isGraduated: false,
-          message: `On-Chain curve trade confirmed! Received $${quoteOut.toFixed(2)} USDC`,
-          updatedToken: token,
-        };
-      }
     }
+
+    const program = this.getProgram(wallet.publicKey);
+    const memeMint = new PublicKey(params.token.mint);
+    const [globalConfigPda] = getGlobalConfigPda(PROGRAM_ID);
+    const [curvePda] = getCurvePda(memeMint, PROGRAM_ID);
+    const [tokenVaultPda] = getTokenVaultPda(curvePda, PROGRAM_ID);
+    const [quoteVaultPda] = getQuoteVaultPda(curvePda, PROGRAM_ID);
+
+    const [curveAccount, globalConfig, quoteVaultAccount] = await Promise.all([
+      (program.account as any).curveAccount.fetch(curvePda),
+      (program.account as any).globalConfig.fetch(globalConfigPda),
+      getAccount(this.connection, quoteVaultPda, "confirmed"),
+    ]);
+
+    if (curveAccount.isGraduated) {
+      throw new Error("The curve graduated before this order was submitted. Refresh and use its AMM route.");
+    }
+
+    const quoteMint = quoteVaultAccount.mint;
+    const userQuoteAccount = await getAssociatedTokenAddress(quoteMint, wallet.publicKey);
+    const userTokenAccount = await getAssociatedTokenAddress(memeMint, wallet.publicKey);
+    const protocolFeeAccount = await getAssociatedTokenAddress(
+      quoteMint,
+      globalConfig.protocolFeeRecipient
+    );
+    const [userQuoteInfo, userTokenInfo, protocolFeeInfo] = await Promise.all([
+      this.connection.getAccountInfo(userQuoteAccount, "confirmed"),
+      this.connection.getAccountInfo(userTokenAccount, "confirmed"),
+      this.connection.getAccountInfo(protocolFeeAccount, "confirmed"),
+    ]);
+
+    if (!protocolFeeInfo) {
+      throw new Error("Protocol fee account is missing on the configured Solana network.");
+    }
+
+    const transaction = new Transaction();
+    if (!userQuoteInfo && params.tradeMode === "sell") {
+      transaction.add(
+        createAssociatedTokenAccountInstruction(
+          wallet.publicKey,
+          userQuoteAccount,
+          wallet.publicKey,
+          quoteMint
+        )
+      );
+    } else if (!userQuoteInfo) {
+      throw new Error("Your wallet has no quote-token account for this curve.");
+    }
+
+    if (!userTokenInfo && params.tradeMode === "buy") {
+      transaction.add(
+        createAssociatedTokenAccountInstruction(
+          wallet.publicKey,
+          userTokenAccount,
+          wallet.publicKey,
+          memeMint
+        )
+      );
+    } else if (!userTokenInfo) {
+      throw new Error(`Your wallet has no $${params.token.symbol} token account.`);
+    }
+
+    const virtualQuote = BigInt(curveAccount.virtualQuoteReserves.toString());
+    const virtualTokens = BigInt(curveAccount.virtualTokenReserves.toString());
+    const realQuote = BigInt(curveAccount.realQuoteReserves.toString());
+    const realTokens = BigInt(curveAccount.realTokenReserves.toString());
+    const feeBps = Number(globalConfig.protocolFeeBps);
+
+    let tokensAmount: number;
+    let quoteAmount: number;
+    let effectivePrice: number;
+    let priceImpactPct: number;
+
+    if (params.tradeMode === "buy") {
+      const quoteAmountIn = BigInt(Math.floor(params.amount * TOKEN_DECIMALS));
+      const simulation = simulateBuyTokensOut(
+        quoteAmountIn,
+        virtualQuote,
+        virtualTokens,
+        realTokens,
+        feeBps
+      );
+      const minTokensOut = minimumAfterSlippage(simulation.tokensOut, params.slippagePct);
+      const instruction = await (program.methods as any)
+        .buyCurve({
+          quoteAmountIn: new anchor.BN(quoteAmountIn.toString()),
+          minTokensOut: new anchor.BN(minTokensOut.toString()),
+        })
+        .accounts({
+          buyer: wallet.publicKey,
+          globalConfig: globalConfigPda,
+          memeMint,
+          curve: curvePda,
+          tokenVault: tokenVaultPda,
+          quoteVault: quoteVaultPda,
+          buyerQuoteAccount: userQuoteAccount,
+          buyerTokenAccount: userTokenAccount,
+          protocolFeeAccount,
+          tokenProgram: TOKEN_PROGRAM_ID,
+        })
+        .instruction();
+      transaction.add(instruction);
+      tokensAmount = Number(simulation.tokensOut) / TOKEN_DECIMALS;
+      quoteAmount = params.amount;
+      effectivePrice = simulation.effectivePriceUsd;
+      priceImpactPct = simulation.priceImpactPct;
+    } else {
+      const tokensAmountIn = BigInt(Math.floor(params.amount * TOKEN_DECIMALS));
+      const simulation = simulateSellQuoteOut(
+        tokensAmountIn,
+        virtualQuote,
+        virtualTokens,
+        realQuote,
+        feeBps
+      );
+      const minQuoteOut = minimumAfterSlippage(simulation.netQuoteOut, params.slippagePct);
+      const instruction = await (program.methods as any)
+        .sellCurve({
+          tokensAmountIn: new anchor.BN(tokensAmountIn.toString()),
+          minQuoteOut: new anchor.BN(minQuoteOut.toString()),
+        })
+        .accounts({
+          seller: wallet.publicKey,
+          globalConfig: globalConfigPda,
+          memeMint,
+          curve: curvePda,
+          tokenVault: tokenVaultPda,
+          quoteVault: quoteVaultPda,
+          sellerTokenAccount: userTokenAccount,
+          sellerQuoteAccount: userQuoteAccount,
+          protocolFeeAccount,
+          tokenProgram: TOKEN_PROGRAM_ID,
+        })
+        .instruction();
+      transaction.add(instruction);
+      tokensAmount = params.amount;
+      quoteAmount = Number(simulation.netQuoteOut) / TOKEN_DECIMALS;
+      effectivePrice = simulation.effectivePriceUsd;
+      priceImpactPct = simulation.priceImpactPct;
+    }
+
+    const signature = await wallet.sendTransaction(transaction, this.connection, {
+      preflightCommitment: "confirmed",
+      skipPreflight: false,
+    });
+    const confirmation = await this.connection.confirmTransaction(signature, "confirmed");
+    if (confirmation.value.err) {
+      throw new Error(`Solana rejected the transaction: ${JSON.stringify(confirmation.value.err)}`);
+    }
+
+    await fetch("/api/trades/confirm", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ signature, mint: params.token.mint }),
+    }).catch(() => null);
+
+    const updatedToken = (await solanaTokenService.getToken(params.token.mint)) || params.token;
+    return {
+      success: true,
+      txSignature: signature,
+      tokensAmount,
+      quoteAmount,
+      effectivePrice,
+      priceImpactPct,
+      isGraduated: updatedToken.bondingCurve.isGraduated,
+      message:
+        params.tradeMode === "buy"
+          ? `Confirmed purchase of ${tokensAmount.toLocaleString("en-US", { maximumFractionDigits: 2 })} $${params.token.symbol}.`
+          : `Confirmed sale for ${quoteAmount.toFixed(2)} USDC.`,
+      updatedToken,
+    };
   }
 }
 

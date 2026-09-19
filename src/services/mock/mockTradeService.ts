@@ -1,4 +1,4 @@
-import { ITradeService, TradeParams, TradeResult } from "../types";
+import { ITradeService, TradeParams, TradeResult, WalletIdentity } from "../types";
 import { simulateBuyTokensOut, simulateSellQuoteOut } from "@/sdk/math";
 import { mockTokenService } from "./mockTokenService";
 import { PublicKey } from "@solana/web3.js";
@@ -6,7 +6,7 @@ import { PublicKey } from "@solana/web3.js";
 export class MockTradeService implements ITradeService {
   async executeTrade(
     params: TradeParams,
-    _walletPublicKey?: PublicKey | null
+    wallet?: WalletIdentity
   ): Promise<TradeResult> {
     await new Promise((r) => setTimeout(r, 600));
 
@@ -69,7 +69,8 @@ export class MockTradeService implements ITradeService {
 
       mockTokenService.updateToken(token);
 
-      const traderPubkey = _walletPublicKey ? _walletPublicKey.toBase58() : "519jca26LioEQiPhwoHCkC8mNZiCF7cDmtaXdp98iCv2";
+      const walletPublicKey = wallet instanceof PublicKey ? wallet : wallet?.publicKey;
+      const traderPubkey = walletPublicKey ? walletPublicKey.toBase58() : "519jca26LioEQiPhwoHCkC8mNZiCF7cDmtaXdp98iCv2";
       try {
         const { TradeStoreService } = await import("../indexer/tradeStore");
         await TradeStoreService.getInstance().recordTrade({
@@ -132,7 +133,8 @@ export class MockTradeService implements ITradeService {
 
       mockTokenService.updateToken(token);
 
-      const traderPubkey = _walletPublicKey ? _walletPublicKey.toBase58() : "519jca26LioEQiPhwoHCkC8mNZiCF7cDmtaXdp98iCv2";
+      const walletPublicKey = wallet instanceof PublicKey ? wallet : wallet?.publicKey;
+      const traderPubkey = walletPublicKey ? walletPublicKey.toBase58() : "519jca26LioEQiPhwoHCkC8mNZiCF7cDmtaXdp98iCv2";
       try {
         const { TradeStoreService } = await import("../indexer/tradeStore");
         await TradeStoreService.getInstance().recordTrade({

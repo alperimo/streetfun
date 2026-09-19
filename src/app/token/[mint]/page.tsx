@@ -10,9 +10,13 @@ import { TradingViewChart } from "@/components/tokens/TradingViewChart";
 import { TradeTerminal } from "@/components/tokens/TradeTerminal";
 import { SearchModal } from "@/components/modals/SearchModal";
 import { LaunchModal } from "@/components/modals/LaunchModal";
-import { TokenMetadata } from "@/lib/types";
 import { useMarket } from "@/context/MarketContext";
 import { TokenDetailSkeleton } from "@/components/common/Skeletons";
+import {
+  formatBondingProgress,
+  formatTokenPrice,
+  formatUsd,
+} from "@/lib/marketFormat";
 
 interface PageProps {
   params: Promise<{ mint: string }>;
@@ -22,7 +26,7 @@ export default function TokenDetailPage({ params }: PageProps) {
   const resolvedParams = use(params);
   const mint = resolvedParams.mint;
 
-  const { tokens, getToken, loading } = useMarket();
+  const { tokens, getToken, loading, error } = useMarket();
   const [copied, setCopied] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isLaunchOpen, setIsLaunchOpen] = useState(false);
@@ -31,8 +35,7 @@ export default function TokenDetailPage({ params }: PageProps) {
 
   const token =
     getToken(mint) ||
-    tokens.find((t) => t.mint.toLowerCase() === mint.toLowerCase()) ||
-    null;
+    tokens.find((t) => t.mint.toLowerCase() === mint.toLowerCase());
 
   const fetchTrades = React.useCallback(async () => {
     const targetMint = mint || token?.mint;
@@ -63,7 +66,7 @@ export default function TokenDetailPage({ params }: PageProps) {
     setTimeout(() => setCopied(false), 1500);
   };
 
-  if (!token) {
+  if (loading && !token) {
     return (
       <div className="flex min-h-screen flex-col bg-background">
         <Header
@@ -76,74 +79,50 @@ export default function TokenDetailPage({ params }: PageProps) {
     );
   }
 
-  // 1. Current Price & Market Cap
-  const currentPrice =
-    trades.length > 0 && trades[0]?.price_usd ? Number(trades[0].price_usd) : token.priceUsd;
-  const currentMarketCap =
-    trades.length > 0 && trades[0]?.price_usd
-      ? currentPrice * 1_000_000_000
-      : token.marketCapUsd;
+  if (!token) {
+    return (
+      <div className="flex min-h-screen flex-col bg-background">
+        <Header
+          onOpenSearch={() => setIsSearchOpen(true)}
+          onOpenLaunch={() => setIsLaunchOpen(true)}
+        />
+        <main className="mx-auto flex w-full max-w-[1350px] flex-1 items-center px-6 py-16 md:px-12 lg:px-0">
+          <div className="w-full rounded-2xl border border-border bg-card p-8 text-center shadow-sm">
+            <h1 className="text-lg font-bold text-foreground">Token unavailable</h1>
+            <p className="mx-auto mt-2 max-w-xl text-sm text-muted">
+              {error || "This mint does not have a verified curve on the configured Solana network."}
+            </p>
+            <Link href="/" className="mt-5 inline-flex text-sm font-semibold text-brand-cyan hover:underline">
+              Return to markets
+            </Link>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
-  const formattedMarketCap =
-    currentMarketCap >= 1_000_000
-      ? `$${(currentMarketCap / 1_000_000).toFixed(2)}M`
-      : `$${(currentMarketCap / 1_000).toFixed(1)}K`;
-
-  const formattedPrice =
-    currentPrice < 0.001 ? `$${currentPrice.toFixed(6)}` : `$${currentPrice.toFixed(4)}`;
-
-  // 2. Dynamic Price Change %
-  const initialCurvePrice = 30_000 / 1_073_000_000;
-  const oldestPrice =
-    trades.length > 0 && trades[trades.length - 1]?.price_usd
-      ? Number(trades[trades.length - 1].price_usd)
-      : initialCurvePrice;
-
-  const computedChangePct =
-    trades.length > 1
-      ? ((currentPrice - oldestPrice) / oldestPrice) * 100
-      : token.priceChange24h;
+  // Spot price, market cap, reserves and progress share one on-chain snapshot.
+  const currentPrice = token.priceUsd;
+  const currentMarketCap = token.marketCapUsd;
+  const formattedMarketCap = formatUsd(currentMarketCap);
+  const formattedPrice = formatTokenPrice(currentPrice);
+  const computedChangePct = token.priceChange24h;
 
   const isNeutralChange = Math.abs(computedChangePct) < 0.01;
   const isPositiveChange = computedChangePct > 0;
 
-  // 3. Dynamic Volume (from real indexed trades or token metadata)
-  const tradesVolume = trades.reduce((acc, t) => acc + (Number(t.quote_amount_usd) || 0), 0);
-  const totalVolume = Math.max(tradesVolume, token.volume24hUsd || 0);
-
-  const formattedVolume =
-    totalVolume >= 1_000_000
-      ? `$${(totalVolume / 1_000_000).toFixed(2)}M`
-      : totalVolume >= 1_000
-      ? `$${(totalVolume / 1_000).toFixed(1)}K`
-      : `$${totalVolume.toFixed(2)}`;
-
-  // 4. Dynamic Bonding Reserves & Progress
-  const totalBuys = trades
-    .filter((t) => t.trade_type === "BUY")
-    .reduce((acc, t) => acc + (Number(t.quote_amount_usd) || 0), 0);
-  const totalSells = trades
-    .filter((t) => t.trade_type === "SELL")
-    .reduce((acc, t) => acc + (Number(t.quote_amount_usd) || 0), 0);
-
-  const currentReserves = Math.max(
-    token.bondingCurve.realQuoteReservesUsd,
-    totalBuys - totalSells
-  );
-
-  const currentProgressPct = Math.min(100, (currentReserves / 60_000) * 100);
-
-  const formattedProgress =
-    currentProgressPct >= 1
-      ? `${Math.round(currentProgressPct)}%`
-      : currentProgressPct > 0
-      ? `${currentProgressPct.toFixed(2)}%`
-      : `0%`;
-
-  const formattedReservesDetail =
-    currentReserves >= 1_000
-      ? `(${(currentReserves / 1_000).toFixed(1)}K / $60K)`
-      : `($${currentReserves.toFixed(0)} / $60,000 USDC)`;
+  const formattedVolume = formatUsd(token.volume24hUsd || 0);
+  const currentReserves = token.bondingCurve.realQuoteReservesUsd;
+  const currentProgressPct = token.bondingCurve.progressPct;
+  const formattedProgress = formatBondingProgress(currentProgressPct);
+  const formattedReservesDetail = `(${formatUsd(currentReserves)} / ${formatUsd(
+    token.bondingCurve.graduationThresholdUsd
+  )} USDC)`;
+  const navFloor =
+    token.totalSupply && token.treasury.totalEquityValueUsd > 0
+      ? token.treasury.totalEquityValueUsd / token.totalSupply
+      : 0;
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
@@ -281,7 +260,7 @@ export default function TokenDetailPage({ params }: PageProps) {
                   <div className="text-[11px] text-muted font-medium">NAV Floor</div>
                   <div className="mt-1 flex items-baseline gap-1.5 font-mono">
                     <span className="rounded-md border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-base font-bold text-amber-300">
-                      $0.0031
+                      {navFloor > 0 ? formatTokenPrice(navFloor) : "—"}
                     </span>
                     <span className="text-[10px] font-normal text-muted">/ token</span>
                   </div>
@@ -307,7 +286,7 @@ export default function TokenDetailPage({ params }: PageProps) {
           <div className="lg:col-span-8 flex flex-col gap-6">
             <TradingViewChart
               token={token}
-              floorPrice={0.0031}
+              floorPrice={navFloor}
             />
 
             {/* Graduation Progress vs Meteora DLMM Active Liquidity Band */}
@@ -322,8 +301,8 @@ export default function TokenDetailPage({ params }: PageProps) {
                     <span className="text-muted">· Dynamic Fee Tier 0.25%</span>
                   </div>
                   <div className="flex flex-wrap items-center gap-4 text-muted font-mono text-[11px]">
-                    <span>DLMM Liquidity: <strong className="text-foreground">$60,000 USDC</strong></span>
-                    <span>LP Status: <strong className="text-emerald-400">Locked Protocol Reserve</strong></span>
+                    <span>Pool: <strong className="text-foreground">{token.bondingCurve.meteoraPoolAddress ? `${token.bondingCurve.meteoraPoolAddress.slice(0, 4)}…${token.bondingCurve.meteoraPoolAddress.slice(-4)}` : "Not indexed"}</strong></span>
+                    <span>State: <strong className="text-emerald-400">On-chain graduated</strong></span>
                   </div>
                 </div>
               </div>
@@ -454,7 +433,9 @@ export default function TokenDetailPage({ params }: PageProps) {
               </div>
               <div className="flex justify-between text-muted">
                 <span>Proof of Reserve:</span>
-                <span className="font-mono text-slate-300 font-medium">Pyth / On-Chain Verified</span>
+                <span className="font-mono text-slate-300 font-medium">
+                  {token.treasury.proofOfReserveVerified ? "On-chain verified" : "Oracle verification unavailable"}
+                </span>
               </div>
               <div className="flex justify-between text-muted">
                 <span>Legal Structure:</span>

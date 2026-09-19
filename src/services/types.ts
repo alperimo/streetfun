@@ -1,5 +1,22 @@
 import { TokenMetadata } from "@/lib/types";
-import { PublicKey } from "@solana/web3.js";
+import {
+  Connection,
+  PublicKey,
+  SendOptions,
+  Transaction,
+  VersionedTransaction,
+} from "@solana/web3.js";
+
+export interface WalletTransactionSender {
+  publicKey: PublicKey;
+  sendTransaction: (
+    transaction: Transaction | VersionedTransaction,
+    connection: Connection,
+    options?: SendOptions
+  ) => Promise<string>;
+}
+
+export type WalletIdentity = PublicKey | WalletTransactionSender | null | undefined;
 
 export interface TokenLaunchParams {
   name: string;
@@ -62,11 +79,11 @@ export interface ITokenService {
 }
 
 export interface ITradeService {
-  executeTrade(params: TradeParams, walletPublicKey?: PublicKey | null): Promise<TradeResult>;
+  executeTrade(params: TradeParams, wallet?: WalletIdentity): Promise<TradeResult>;
 }
 
 export interface IRedeemService {
-  executeRedeem(params: RedeemParams, walletPublicKey?: PublicKey | null): Promise<RedeemResult>;
+  executeRedeem(params: RedeemParams, wallet?: WalletIdentity): Promise<RedeemResult>;
 }
 
 export interface IChartService {

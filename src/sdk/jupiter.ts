@@ -36,49 +36,11 @@ export async function getJupiterQuote(
 ): Promise<JupiterQuoteResponse> {
   const url = `https://quote-api.jup.ag/v6/quote?inputMint=${inputMint.toBase58()}&outputMint=${outputMint.toBase58()}&amount=${amountLamports.toString()}&slippageBps=${slippageBps}`;
 
-  try {
-    const res = await fetch(url);
-    if (!res.ok) {
-      throw new Error(`Jupiter quote API returned status ${res.status}`);
-    }
-    return await res.json();
-  } catch (err) {
-    // Fallback simulation quote for offline / localnet / test runs
-    const isUsdcIn = inputMint.equals(USDC_MINT);
-    const inNum = Number(amountLamports);
-    // Estimated $TSPACEX stock price ~ $215.40
-    const stockPrice = 215.4;
-
-    const simulatedOut = isUsdcIn
-      ? Math.floor((inNum / (stockPrice * 1_000_000)) * 1_000_000)
-      : Math.floor(inNum * stockPrice);
-
-    return {
-      inputMint: inputMint.toBase58(),
-      inAmount: amountLamports.toString(),
-      outputMint: outputMint.toBase58(),
-      outAmount: simulatedOut.toString(),
-      otherAmountThreshold: Math.floor(simulatedOut * 0.995).toString(),
-      swapMode: "ExactIn",
-      slippageBps,
-      priceImpactPct: "0.08",
-      routePlan: [
-        {
-          swapInfo: {
-            ammKey: "MeteoraDLMM_TSPACEX_USDC_Pool",
-            label: "Meteora DLMM",
-            inputMint: inputMint.toBase58(),
-            outputMint: outputMint.toBase58(),
-            inAmount: amountLamports.toString(),
-            outAmount: simulatedOut.toString(),
-            feeAmount: "1500",
-            feeMint: USDC_MINT.toBase58(),
-          },
-          percent: 100,
-        },
-      ],
-    };
+  const res = await fetch(url);
+  if (!res.ok) {
+    throw new Error(`Jupiter quote API returned status ${res.status}`);
   }
+  return await res.json();
 }
 
 /**

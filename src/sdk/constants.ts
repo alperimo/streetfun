@@ -2,13 +2,13 @@ import { PublicKey } from "@solana/web3.js";
 import { DYNAMIC_BONDING_CURVE_PROGRAM_ID } from "@meteora-ag/dynamic-bonding-curve-sdk";
 
 export const PROGRAM_ID = new PublicKey(
-  "6ZiovCkRxRJgUaCS9uftFk3eVnGDsbnDXgUV1XHybH52"
+  process.env.NEXT_PUBLIC_PROGRAM_ID || "6ZiovCkRxRJgUaCS9uftFk3eVnGDsbnDXgUV1XHybH52"
 );
 
 // Meteora Dynamic Bonding Curve (DBC) & DLMM Program IDs
 export const METEORA_DBC_PROGRAM_ID = DYNAMIC_BONDING_CURVE_PROGRAM_ID;
 export const USDC_MINT = new PublicKey(
-  "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
+  process.env.NEXT_PUBLIC_USDC_MINT || "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
 );
 
 export const GLOBAL_CONFIG_SEED = Buffer.from("global-config");

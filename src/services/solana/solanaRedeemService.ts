@@ -1,94 +1,13 @@
-import { Connection, PublicKey } from "@solana/web3.js";
-import { IRedeemService, RedeemParams, RedeemResult } from "../types";
-import { calculateEntitledStock } from "@/sdk/math";
+import { IRedeemService, RedeemParams, RedeemResult, WalletIdentity } from "../types";
 
 export class SolanaRedeemService implements IRedeemService {
-  private connection: Connection;
-
-  constructor() {
-    const rpcUrl =
-      process.env.NEXT_PUBLIC_SOLANA_RPC || "https://api.devnet.solana.com";
-    this.connection = new Connection(rpcUrl, "confirmed");
-  }
-
   async executeRedeem(
-    params: RedeemParams,
-    walletPublicKey?: PublicKey | null
+    _params: RedeemParams,
+    _wallet?: WalletIdentity
   ): Promise<RedeemResult> {
-    if (!walletPublicKey) {
-      throw new Error("Please connect your wallet to redeem equity.");
-    }
-
-    const token = { ...params.token };
-    const treasury = { ...token.treasury };
-
-    const totalMemeSupply = 1_000_000_000n * 1_000_000n;
-    const totalEquityLockedLamports = BigInt(
-      Math.floor((treasury.totalEquityLocked || 139.27) * 1_000_000)
+    throw new Error(
+      "Live redemption is unavailable until the wallet-signed on-chain redemption route and equity oracle are configured. No mock redemption was recorded."
     );
-    const memeInLamports = BigInt(Math.floor(params.memeAmount * 1_000_000));
-
-    const entitledShares =
-      params.memeAmount > 0
-        ? Number(
-            calculateEntitledStock(
-              memeInLamports,
-              totalMemeSupply,
-              totalEquityLockedLamports
-            )
-          ) / 1_000_000
-        : 0;
-
-    const stockPrice = token.targetEquity.stockPriceUsd || 215.4;
-    const usdcValue = entitledShares * stockPrice;
-
-    treasury.totalEquityLocked = Math.max(0, treasury.totalEquityLocked - entitledShares);
-    treasury.totalEquityValueUsd = Math.max(0, treasury.totalEquityValueUsd - usdcValue);
-    token.treasury = treasury;
-
-    // Persist updated token to local storage if custom
-    if (typeof window !== "undefined") {
-      try {
-        const stored = localStorage.getItem("streetfun_custom_tokens");
-        if (stored) {
-          const list = JSON.parse(stored);
-          const idx = list.findIndex((t: any) => t.mint.toLowerCase() === token.mint.toLowerCase());
-          if (idx >= 0) {
-            list[idx] = token;
-            localStorage.setItem("streetfun_custom_tokens", JSON.stringify(list));
-          }
-        }
-      } catch (_e) {}
-    }
-
-    const message =
-      params.actionType === "stock"
-        ? `Burned ${params.memeAmount.toLocaleString()} $${token.symbol} on Solana! Transferred ${entitledShares.toFixed(4)} shares of ${token.targetEquity.symbol} to ${walletPublicKey.toBase58().slice(0, 4)}..${walletPublicKey.toBase58().slice(-4)}`
-        : `Burned ${params.memeAmount.toLocaleString()} $${token.symbol} and swapped for $${usdcValue.toFixed(2)} USDC via Jupiter CPI!`;
-
-    try {
-      const { TradeStoreService } = await import("../indexer/tradeStore");
-      await TradeStoreService.getInstance().recordTrade({
-        tx_signature: `redeem_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
-        mint: token.mint,
-        trade_type: "REDEEM",
-        price_usd: Number((usdcValue / (params.memeAmount || 1)).toFixed(6)),
-        tokens_amount: params.memeAmount,
-        quote_amount_usd: usdcValue,
-        trader: walletPublicKey.toBase58(),
-        created_at: new Date().toISOString(),
-      });
-    } catch (e) {
-      console.warn("[Redeem] Could not record trade:", e);
-    }
-
-    return {
-      success: true,
-      entitledShares,
-      usdcValue,
-      message,
-      updatedToken: token,
-    };
   }
 }
 

@@ -23,17 +23,17 @@ export function HeroBanner() {
     {
       label: "24h Volume",
       value: isMock ? "$4.82M" : formatUsd(totalVolume),
-      change: "+47.3%",
+      change: isMock ? "+47.3%" : "Live",
     },
     {
       label: "Equity TVL",
       value: isMock ? "$40.7M" : formatUsd(totalTvl),
-      change: "+28.1%",
+      change: isMock ? "+28.1%" : "Live",
     },
     {
       label: "Graduated",
       value: isMock ? "1,282" : graduatedCount.toLocaleString(),
-      change: "+12.6%",
+      change: isMock ? "+12.6%" : "Live",
     },
   ];
 

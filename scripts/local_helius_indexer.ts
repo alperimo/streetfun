@@ -50,7 +50,7 @@ async function startLocalIndexer() {
 
   connection.onLogs(
     PROGRAM_ID,
-    async (logsInfo) => {
+    async (logsInfo, context) => {
       const signature = logsInfo.signature;
       const logMessages = logsInfo.logs;
 
@@ -89,7 +89,7 @@ async function startLocalIndexer() {
           source: "STREETFUN_BONDING_CURVE",
           fee: 5000,
           feePayer,
-          slot: 0,
+          slot: context.slot,
           timestamp: Math.floor(Date.now() / 1000),
           meta: {
             logMessages,

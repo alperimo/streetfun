@@ -8,7 +8,7 @@ import { useMarket } from "@/context/MarketContext";
 
 export function WalletButton() {
   const { connected, publicKey, disconnect, connecting, wallets, select } = useWallet();
-  const { isWalletConnected, walletPublicKey, connectDevWallet, disconnectDevWallet } = useMarket();
+  const { isWalletConnected, walletPublicKey, connectDevWallet, disconnectDevWallet, isMock } = useMarket();
   const [copied, setCopied] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [connectMenuOpen, setConnectMenuOpen] = useState(false);
@@ -139,7 +139,7 @@ export function WalletButton() {
                 </a>
               )}
 
-              {isLocalnet && (
+              {isLocalnet && isMock && (
               <button
                 onClick={() => {
                   setConnectMenuOpen(false);

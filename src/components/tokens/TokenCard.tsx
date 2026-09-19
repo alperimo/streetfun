@@ -5,20 +5,10 @@ import Link from "next/link";
 import Image from "next/image";
 import { Copy, Check } from "lucide-react";
 import { TokenMetadata } from "@/lib/types";
+import { formatBondingProgress, formatUsd } from "@/lib/marketFormat";
 
 interface TokenCardProps {
   token: TokenMetadata;
-}
-
-function formatVolume(vol: number): string {
-  if (!vol || vol === 0) return "$0";
-  if (vol >= 1_000_000) {
-    return `$${(vol / 1_000_000).toFixed(2)}M`;
-  }
-  if (vol >= 1_000) {
-    return `$${(vol / 1_000).toFixed(1)}K`;
-  }
-  return `$${vol.toFixed(2)}`;
 }
 
 export function TokenCard({ token }: TokenCardProps) {
@@ -114,17 +104,11 @@ export function TokenCard({ token }: TokenCardProps) {
           </div>
           {token.bondingCurve.isGraduated ? (
             <span className="ml-auto font-mono text-[11px] font-medium text-muted whitespace-nowrap">
-              {token.targetEquity.symbol === "$TSPACEX"
-                ? "Backed: $20.3M"
-                : token.targetEquity.symbol === "$TOPAI"
-                ? "Backed: $10.6M"
-                : token.targetEquity.symbol === "$TSTRIPE"
-                ? "Backed: $5.3M"
-                : "Backed: $4.5M"}
+              Backed: {token.treasury.totalEquityValueUsd > 0 ? formatUsd(token.treasury.totalEquityValueUsd) : "—"}
             </span>
           ) : (
             <span className="font-mono text-[11px] font-medium text-muted whitespace-nowrap pl-2">
-              {token.bondingCurve.progressPct}%
+              {formatBondingProgress(token.bondingCurve.progressPct)}
             </span>
           )}
         </div>
@@ -150,9 +134,7 @@ export function TokenCard({ token }: TokenCardProps) {
               </div>
               <div className="mt-0.5 flex items-baseline justify-between gap-2">
                 <div className="font-mono text-2xl font-extrabold text-foreground tracking-tight">
-                  {token.marketCapUsd >= 1_000_000
-                    ? `$${(token.marketCapUsd / 1_000_000).toFixed(2)}M`
-                    : `$${(token.marketCapUsd / 1_000).toFixed(1)}K`}
+                  {formatUsd(token.marketCapUsd)}
                 </div>
               </div>
             </div>
@@ -163,12 +145,12 @@ export function TokenCard({ token }: TokenCardProps) {
               </div>
               <div className="mt-0.5 flex items-baseline justify-between gap-2">
                 <div className="font-mono text-2xl font-extrabold text-foreground tracking-tight">
-                  ${(token.bondingCurve.realQuoteReservesUsd / 1_000).toFixed(1)}K{" "}
-                  <span className="text-xs font-normal text-muted">/ $60K USDC</span>
+                  {formatUsd(token.bondingCurve.realQuoteReservesUsd)}{" "}
+                  <span className="text-xs font-normal text-muted">/ {formatUsd(token.bondingCurve.graduationThresholdUsd)} USDC</span>
                 </div>
                 {token.bondingCurve.progressPct > 0 ? (
                   <span className="font-mono text-xs font-semibold text-emerald-400">
-                    {token.bondingCurve.progressPct}% to AMM
+                    {formatBondingProgress(token.bondingCurve.progressPct)} to AMM
                   </span>
                 ) : (
                   <span className="font-mono text-xs font-medium text-muted">
@@ -184,7 +166,7 @@ export function TokenCard({ token }: TokenCardProps) {
       {/* Bottom: 24h Volume & Price Change */}
       <div className="mt-4 pt-3 border-t border-border flex items-center justify-between text-xs font-mono">
         <span className="text-muted">
-          Vol {formatVolume(token.volume24hUsd)}
+          Vol {formatUsd(token.volume24hUsd)}
         </span>
         <span
           className={`font-semibold ${

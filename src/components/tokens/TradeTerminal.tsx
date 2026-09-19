@@ -1,14 +1,17 @@
 "use client";
 
-import React, { useState, useMemo, useEffect, useRef } from "react";
+import React, { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import Image from "next/image";
-import { useWallet } from "@solana/wallet-adapter-react";
+import { useConnection, useWallet } from "@solana/wallet-adapter-react";
+import { PublicKey } from "@solana/web3.js";
+import { getAssociatedTokenAddress } from "@solana/spl-token";
 import { Settings, AlertCircle, Check, TrendingUp } from "lucide-react";
 import { TokenMetadata } from "@/lib/types";
 import { simulateBuyTokensOut, simulateSellQuoteOut } from "@/sdk/math";
 import { useMarket } from "@/context/MarketContext";
 import { TradeReceipt } from "./TradeReceipt";
 import { receiptFromTrade, receiptFromRedemption, receiptPreview, type TradeReceiptData } from "./tradeReceiptModel";
+import { formatBondingProgress, formatTokenPrice, formatUsd } from "@/lib/marketFormat";
 
 interface TradeTerminalProps {
   token: TokenMetadata;
@@ -16,9 +19,10 @@ interface TradeTerminalProps {
 }
 
 export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
-  const { connected: walletAdapterConnected } = useWallet();
+  const { connection } = useConnection();
+  const { connected: walletAdapterConnected, publicKey } = useWallet();
   const { isWalletConnected, executeTrade, executeRedeem, isMock } = useMarket();
-  const connected = walletAdapterConnected || isWalletConnected;
+  const connected = isMock ? walletAdapterConnected || isWalletConnected : walletAdapterConnected;
   const [receipt, setReceipt] = useState<TradeReceiptData | null>(null);
   useEffect(() => setReceipt(null), [token.mint]);
   const [tradeMode, setTradeMode] = useState<"buy" | "sell" | "redeem">("buy");
@@ -29,6 +33,8 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
   const [tradeErrorMsg, setTradeErrorMsg] = useState<string | null>(null);
   const [redeemActionType, setRedeemActionType] = useState<"stock" | "usdc">("stock");
   const [buyAnimation, setBuyAnimation] = useState<"idle" | "success">("idle");
+  const [quoteBalance, setQuoteBalance] = useState<number | null>(null);
+  const [tokenBalance, setTokenBalance] = useState<number | null>(null);
   const buyAnimationTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -41,15 +47,47 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
   const virtualTokens = BigInt(token.bondingCurve.virtualTokenReserves);
   const realTokens = BigInt(token.bondingCurve.realTokenReserves);
 
+  const loadBalances = useCallback(async () => {
+    if (!publicKey || !token.bondingCurve.quoteMint) {
+      setQuoteBalance(null);
+      setTokenBalance(null);
+      return;
+    }
+    try {
+      const quoteMint = new PublicKey(token.bondingCurve.quoteMint);
+      const memeMint = new PublicKey(token.mint);
+      const [quoteAccount, memeAccount] = await Promise.all([
+        getAssociatedTokenAddress(quoteMint, publicKey),
+        getAssociatedTokenAddress(memeMint, publicKey),
+      ]);
+      const [quoteInfo, memeInfo] = await Promise.all([
+        connection.getTokenAccountBalance(quoteAccount, "confirmed").catch(() => null),
+        connection.getTokenAccountBalance(memeAccount, "confirmed").catch(() => null),
+      ]);
+      setQuoteBalance(quoteInfo?.value.uiAmount ?? 0);
+      setTokenBalance(memeInfo?.value.uiAmount ?? 0);
+    } catch {
+      setQuoteBalance(null);
+      setTokenBalance(null);
+    }
+  }, [connection, publicKey, token.bondingCurve.quoteMint, token.mint]);
+
+  useEffect(() => {
+    loadBalances();
+    if (!publicKey) return;
+    const interval = setInterval(loadBalances, 10_000);
+    return () => clearInterval(interval);
+  }, [loadBalances, publicKey]);
+
   // Stock Redemption calculation
-  const totalMemeSupply = 1_000_000_000;
+  const totalMemeSupply = token.totalSupply || 0;
   const numTokensToRedeem = parseFloat(amount) || 0;
-  const targetStockPrice = token.targetEquity.stockPriceUsd || 128.5;
-  // At $60k graduation, $30k buys stock:
-  const totalStockSharesInVault = token.treasury.totalEquityLocked || (30_000 / targetStockPrice);
+  const targetStockPrice = token.targetEquity.stockPriceUsd || 0;
+  const totalStockSharesInVault = token.treasury.totalEquityLocked;
   const entitledStockShares = numTokensToRedeem > 0 ? (numTokensToRedeem / totalMemeSupply) * totalStockSharesInVault : 0;
   const entitledUsdcValue = entitledStockShares * targetStockPrice;
-  const floorPricePerToken = 0.0031;
+  const floorPricePerToken =
+    totalMemeSupply > 0 ? token.treasury.totalEquityValueUsd / totalMemeSupply : 0;
 
   // Simulation calculation
   const simulation = useMemo(() => {
@@ -112,6 +150,7 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
         if (res.success) {
           setReceipt(receiptFromTrade(token, tradeMode, res, isMock));
           setAmount("");
+          await loadBalances();
           if (submittedMode === "buy") {
             setBuyAnimation("success");
             if (buyAnimationTimer.current) clearTimeout(buyAnimationTimer.current);
@@ -244,7 +283,9 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
           <div>
             <div className="flex items-center justify-between text-xs text-muted mb-1.5">
               <span>Amount to Redeem (${token.symbol})</span>
-              <span className="font-mono">Balance: 500,000 ${token.symbol}</span>
+              <span className="font-mono">
+                Balance: {tokenBalance === null ? "—" : `${tokenBalance.toLocaleString("en-US", { maximumFractionDigits: 2 })} ${token.symbol}`}
+              </span>
             </div>
 
             <div className="relative flex items-center rounded-lg border border-border bg-card-subtle transition-colors focus-within:border-border-active">
@@ -311,7 +352,7 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
             <div className="flex items-center justify-between border-t border-border/80 pt-2 text-[11px]">
               <span className="text-muted">Vault Floor:</span>
               <span className="font-mono text-amber-300 font-medium">
-                ${floorPricePerToken} / token
+                {floorPricePerToken > 0 ? `${formatTokenPrice(floorPricePerToken)} / token` : "Oracle unavailable"}
               </span>
             </div>
           </div>
@@ -353,7 +394,7 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
                 Bonding Progress
               </span>
               <span className="font-mono text-slate-300 font-semibold whitespace-nowrap">
-                {token.bondingCurve.progressPct}% Funded
+                {formatBondingProgress(token.bondingCurve.progressPct)} Funded
               </span>
             </div>
             {/* Progress bar */}
@@ -364,7 +405,7 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
               />
             </div>
             <div className="flex items-center justify-between text-[10px] text-muted mt-1.5 font-mono">
-              <span>${token.bondingCurve.realQuoteReservesUsd.toLocaleString("en-US")} / $60,000 USDC</span>
+              <span>{formatUsd(token.bondingCurve.realQuoteReservesUsd)} / {formatUsd(token.bondingCurve.graduationThresholdUsd)} USDC</span>
               <span>50% Stock Purchase · 50% Liquidity</span>
             </div>
           </div>
@@ -374,7 +415,9 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
             <div className="flex items-center justify-between text-xs text-muted mb-1.5">
               <span>{tradeMode === "buy" ? "You Pay (USDC)" : `You Sell (${token.symbol})`}</span>
               <span className="font-mono">
-                Balance: {tradeMode === "buy" ? "10,000.00 USDC" : `500,000 ${token.symbol}`}
+                Balance: {tradeMode === "buy"
+                  ? quoteBalance === null ? "—" : `${quoteBalance.toLocaleString("en-US", { maximumFractionDigits: 2 })} USDC`
+                  : tokenBalance === null ? "—" : `${tokenBalance.toLocaleString("en-US", { maximumFractionDigits: 2 })} ${token.symbol}`}
               </span>
             </div>
 
@@ -430,7 +473,7 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
                       key={pct}
                       onClick={() => {
                         const frac = parseInt(pct) / 100;
-                        setAmount((500_000 * frac).toString());
+                        setAmount(((tokenBalance || 0) * frac).toString());
                       }}
                       className="rounded-md bg-card-hover/40 py-1.5 text-muted hover:bg-card-hover hover:text-foreground transition-colors"
                     >
@@ -473,7 +516,7 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
               </div>
 
               <div className="flex items-center justify-between text-muted text-[11px]">
-                <span>Protocol Fee (1%):</span>
+                <span>Protocol Fee ({((token.bondingCurve.dynamicFeeBps || 0) / 100).toFixed(2)}%):</span>
                 <span className="font-mono text-foreground">
                   ${(Number(simulation.feeQuote) / 1_000_000).toFixed(2)} USDC
                 </span>
@@ -530,7 +573,7 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
         </>
       )}
       {receipt && receipt.token.mint === token.mint && <TradeReceipt key={receipt.timestamp} data={receipt} onDismiss={() => setReceipt(null)} />}
-      {!receipt && <button type="button" disabled={isTrading} onClick={() => setReceipt(receiptPreview(token))} className="mt-4 w-full text-center text-[10px] text-muted underline decoration-border underline-offset-4 hover:text-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-cyan">Preview receipt</button>}
+      {isMock && !receipt && <button type="button" disabled={isTrading} onClick={() => setReceipt(receiptPreview(token))} className="mt-4 w-full text-center text-[10px] text-muted underline decoration-border underline-offset-4 hover:text-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-cyan">Preview receipt</button>}
     </div>
   );
 }
