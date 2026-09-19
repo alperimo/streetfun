@@ -27,7 +27,7 @@ export default function TokenDetailPage({ params }: PageProps) {
   const resolvedParams = use(params);
   const mint = resolvedParams.mint;
 
-  const { tokens, getToken, loading, error } = useMarket();
+  const { tokens, getToken, loading, error, walletPublicKey } = useMarket();
   const [copied, setCopied] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isLaunchOpen, setIsLaunchOpen] = useState(false);
@@ -39,27 +39,36 @@ export default function TokenDetailPage({ params }: PageProps) {
     getToken(mint) ||
     tokens.find((t) => t.mint === mint);
 
+  const tradeRequest = React.useRef<AbortController | null>(null);
   const fetchTrades = React.useCallback(async () => {
     const targetMint = mint || token?.mint;
     if (!targetMint) return;
+    tradeRequest.current?.abort();
+    const request = new AbortController();
+    tradeRequest.current = request;
     try {
-      const res = await fetch(`/api/trades/${targetMint}`);
+      const res = await fetch(`/api/trades/${targetMint}`, { signal: request.signal });
       if (res.ok) {
         const data = await res.json();
+        if (request.signal.aborted) return;
         setTrades(data.trades || []);
         setTradesError(false);
       } else {
         setTradesError(true);
       }
     } catch (err) {
+      if (request.signal.aborted) return;
       console.warn("Could not load trades:", err);
       setTradesError(true);
     } finally {
-      setTradesLoading(false);
+      if (!request.signal.aborted) setTradesLoading(false);
     }
   }, [mint, token?.mint]);
 
   useEffect(() => {
+    setTrades([]);
+    setTradesError(false);
+    setTradesLoading(true);
     fetchTrades();
 
     const targetMint = mint || token?.mint;
@@ -92,6 +101,7 @@ export default function TokenDetailPage({ params }: PageProps) {
     }, 15000);
 
     return () => {
+      tradeRequest.current?.abort();
       clearInterval(interval);
       if (supabase && channel) {
         supabase.removeChannel(channel);
@@ -267,8 +277,8 @@ export default function TokenDetailPage({ params }: PageProps) {
 
             <div>
               <div className="text-[11px] text-muted font-medium">Token price</div>
-              <div className="mt-1 flex items-baseline gap-2 font-mono text-xl font-bold text-foreground">
-                <span>{formattedPrice}</span>
+              <div className="mt-1 flex flex-wrap items-baseline gap-x-2 gap-y-1 font-mono text-base font-bold text-foreground sm:text-xl">
+                <span className="break-all">{formattedPrice}</span>
                 <span
                   className={`text-xs font-semibold ${
                     isNeutralChange
@@ -444,6 +454,7 @@ export default function TokenDetailPage({ params }: PageProps) {
           {/* Right Column (4 cols) */}
           <div className="lg:col-span-4 flex flex-col gap-6">
             <TradeTerminal
+              key={`${token.mint}:${walletPublicKey?.toBase58() || "disconnected"}`}
               token={token}
               onTradeSuccess={fetchTrades}
             />

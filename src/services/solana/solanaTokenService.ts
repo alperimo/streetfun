@@ -47,7 +47,7 @@ export class SolanaTokenService implements ITokenService {
     const provider = new anchor.AnchorProvider(this.connection, readonlyWallet, {
       commitment: "confirmed",
     });
-    return new anchor.Program(idl as any, provider);
+    return new anchor.Program({ ...idl, address: PROGRAM_ID.toBase58() } as any, provider);
   }
 
   private async getIndexedMetadata(): Promise<Map<string, IndexedTokenMetadata>> {
@@ -110,7 +110,7 @@ export class SolanaTokenService implements ITokenService {
     const asOf = new Date().toISOString();
 
     const tokens = await Promise.all(
-      onChainCurves.map(async (curveEntry: any): Promise<TokenMetadata> => {
+      onChainCurves.map(async (curveEntry: any): Promise<TokenMetadata | null> => {
         const account = curveEntry.account;
         const mint = account.memeMint.toBase58();
         const indexed = metadata.get(mint);
@@ -136,9 +136,9 @@ export class SolanaTokenService implements ITokenService {
         const [treasuryVaultPda] = getTreasuryVaultPda(curveEntry.publicKey, PROGRAM_ID);
         const quoteVault = await getAccount(this.connection, quoteVaultPda, "confirmed");
         if (!quoteVault.mint.equals(USDC_MINT)) {
-          throw new Error(
-            `Curve ${mint} uses quote mint ${quoteVault.mint.toBase58()}, not the configured USDC mint.`
-          );
+          // Launch is permissionless: an unsupported quote asset must not take
+          // every supported market offline or be displayed as USDC.
+          return null;
         }
         const meteoraPool = account.meteoraDbcPool as PublicKey;
         const hasMeteoraPool = !meteoraPool.equals(PublicKey.default);
@@ -207,7 +207,7 @@ export class SolanaTokenService implements ITokenService {
       })
     );
 
-    return tokens.sort(
+    return tokens.filter((token): token is TokenMetadata => token !== null).sort(
       (a, b) => b.bondingCurve.realQuoteReservesUsd - a.bondingCurve.realQuoteReservesUsd
     );
   }

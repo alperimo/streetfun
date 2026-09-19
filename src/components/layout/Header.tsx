@@ -42,12 +42,12 @@ export function Header({ onOpenSearch, onOpenLaunch }: HeaderProps) {
 
   return (
     <header className="site-header sticky top-0 z-40 w-full bg-background backdrop-blur-md">
-      <div className="mx-auto flex h-[80px] w-full max-w-[1350px] items-center justify-between gap-4 px-6 sm:px-10 lg:px-0">
+      <div className="mx-auto flex h-[80px] w-full max-w-[1350px] items-center justify-between gap-2 px-4 sm:gap-4 sm:px-10 lg:px-0">
         {/* Left: Brand & Treasury */}
-        <div className="flex h-full min-w-0 items-center gap-8">
+        <div className="flex h-full min-w-0 items-center gap-2 sm:gap-8">
           <Link href="/" className="flex shrink-0 items-center gap-2.5" aria-label="StreetFun home">
             <StreetFunLogo size={34} className="h-[34px] w-[34px] flex-shrink-0 text-brand-cyan" />
-            <span className="text-[21px] font-bold tracking-[-0.04em] text-foreground">
+            <span className="hidden text-[21px] font-bold tracking-[-0.04em] text-foreground sm:inline">
               StreetFun
             </span>
           </Link>

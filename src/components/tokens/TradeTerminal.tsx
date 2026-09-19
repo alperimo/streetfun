@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useState, useMemo, useEffect, useRef, useCallback } from "react";
+import { SubmittedTransactionError, pendingTradeKey, savePendingTrade } from "@/services/solana/transactionConfirmation";
+import { toTokenUnits } from "@/sdk/amounts";
 import Image from "next/image";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { PublicKey } from "@solana/web3.js";
@@ -21,7 +23,7 @@ interface TradeTerminalProps {
 export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
   const { connection } = useConnection();
   const { connected: walletAdapterConnected, publicKey } = useWallet();
-  const { isWalletConnected, executeTrade, executeRedeem, isMock } = useMarket();
+  const { isWalletConnected, executeTrade, executeRedeem, isMock, refreshTokens, setWalletDialogOpen } = useMarket();
   const connected = isMock ? walletAdapterConnected || isWalletConnected : walletAdapterConnected;
   const [receipt, setReceipt] = useState<TradeReceiptData | null>(null);
   useEffect(() => setReceipt(null), [token.mint]);
@@ -35,6 +37,44 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
   const [buyAnimation, setBuyAnimation] = useState<"idle" | "success">("idle");
   const [quoteBalance, setQuoteBalance] = useState<number | null>(null);
   const [tokenBalance, setTokenBalance] = useState<number | null>(null);
+  const [pendingSignature, setPendingSignature] = useState<string | null>(null);
+  const orderInFlight = useRef(false);
+  const pendingKey = pendingTradeKey(publicKey?.toBase58(), token.mint);
+  useEffect(() => {
+    try { setPendingSignature(sessionStorage.getItem(pendingKey)); } catch {}
+  }, [pendingKey]);
+  const savePending = (signature: string | null) => {
+    setPendingSignature(signature);
+    savePendingTrade(pendingKey, signature);
+  };
+  const checkPending = async () => {
+    if (!pendingSignature || orderInFlight.current) return;
+    orderInFlight.current = true;
+    setIsTrading(true);
+    try {
+      const result = await connection.getSignatureStatuses([pendingSignature], { searchTransactionHistory: true });
+      const status = result.value[0];
+      if (status?.err) {
+        savePending(null);
+        setTradeErrorMsg("The submitted transaction failed. You can review the amount and try again.");
+      } else if (status?.confirmationStatus === "confirmed" || status?.confirmationStatus === "finalized") {
+        savePending(null);
+        setAmount("");
+        setTradeErrorMsg("Transaction confirmed. Your balances and trade history are updating.");
+        if (!isMock) {
+          // Recover indexing as well as balances when the original confirmation timed out.
+          await fetch("/api/trades/confirm", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ signature: pendingSignature, mint: token.mint }),
+          }).catch(() => null);
+        }
+        await Promise.all([refreshTokens(), loadBalances()]);
+        onTradeSuccess?.();
+      } else setTradeErrorMsg("Confirmation is still pending. Keep this transaction signature and check again.");
+    } catch { setTradeErrorMsg("Could not check confirmation. Your submitted order has not been retried."); }
+    finally { orderInFlight.current = false; setIsTrading(false); }
+  };
   const buyAnimationTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -47,7 +87,9 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
   const virtualTokens = BigInt(token.bondingCurve.virtualTokenReserves);
   const realTokens = BigInt(token.bondingCurve.realTokenReserves);
 
+  const balanceRequest = useRef(0);
   const loadBalances = useCallback(async () => {
+    const request = ++balanceRequest.current;
     if (!publicKey || !token.bondingCurve.quoteMint) {
       setQuoteBalance(null);
       setTokenBalance(null);
@@ -64,19 +106,22 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
         connection.getTokenAccountBalance(quoteAccount, "confirmed").catch(() => null),
         connection.getTokenAccountBalance(memeAccount, "confirmed").catch(() => null),
       ]);
-      setQuoteBalance(quoteInfo?.value.uiAmount ?? 0);
-      setTokenBalance(memeInfo?.value.uiAmount ?? 0);
+      if (request !== balanceRequest.current) return;
+      setQuoteBalance(quoteInfo?.value.uiAmount ?? null);
+      setTokenBalance(memeInfo?.value.uiAmount ?? null);
     } catch {
+      if (request !== balanceRequest.current) return;
       setQuoteBalance(null);
       setTokenBalance(null);
     }
   }, [connection, publicKey, token.bondingCurve.quoteMint, token.mint]);
 
   useEffect(() => {
+    setQuoteBalance(null);
+    setTokenBalance(null);
     loadBalances();
-    if (!publicKey) return;
     const interval = setInterval(loadBalances, 10_000);
-    return () => clearInterval(interval);
+    return () => { clearInterval(interval); balanceRequest.current += 1; };
   }, [loadBalances, publicKey]);
 
   // Stock Redemption calculation
@@ -100,7 +145,7 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
 
     try {
       if (tradeMode === "buy") {
-        const quoteIn = BigInt(Math.floor(numAmount * 1_000_000));
+        const quoteIn = toTokenUnits(numAmount);
         return {
           type: "buy" as const,
           ...simulateBuyTokensOut(
@@ -112,7 +157,7 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
           ),
         };
       } else {
-        const tokensIn = BigInt(Math.floor(numAmount * 1_000_000));
+        const tokensIn = toTokenUnits(numAmount);
         const realQuote = BigInt(Math.floor(token.bondingCurve.realQuoteReservesUsd * 1_000_000));
         return {
           type: "sell" as const,
@@ -131,7 +176,11 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
   }, [amount, tradeMode, virtualQuote, virtualTokens, realTokens, token.bondingCurve.realQuoteReservesUsd, token.bondingCurve.dynamicFeeBps]);
 
   const handleExecuteTrade = async () => {
-    if (!connected) return;
+    if (!connected) { setWalletDialogOpen(true); return; }
+    if (orderInFlight.current || pendingSignature) return;
+    try { toTokenUnits(Number(amount)); }
+    catch (error) { setTradeErrorMsg((error as Error).message); return; }
+    orderInFlight.current = true;
     const submittedMode = tradeMode;
     setIsTrading(true);
     setBuyAnimation("idle");
@@ -169,7 +218,7 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
           }
           setAmount("");
           await loadBalances();
-          if (submittedMode === "buy") {
+          if (submittedMode === "buy" && res.tokensAmount > 0) {
             setBuyAnimation("success");
             if (buyAnimationTimer.current) clearTimeout(buyAnimationTimer.current);
             buyAnimationTimer.current = setTimeout(() => setBuyAnimation("idle"), 1800);
@@ -180,13 +229,15 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
         }
       }
     } catch (err: any) {
+      if (err instanceof SubmittedTransactionError) savePending(err.signature);
       setTradeErrorMsg(err?.message || "Operation failed");
     } finally {
+      orderInFlight.current = false;
       setIsTrading(false);
     }
   };
 
-  if (!isMock && token.bondingCurve.isGraduated) {
+  if (!isMock && token.bondingCurve.isGraduated && !pendingSignature) {
     return (
       <div className="rounded-xl border border-border bg-card p-5 shadow-sm">
         <h2 className="text-sm font-bold text-foreground">Trading route unavailable</h2>
@@ -209,11 +260,20 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
         buyAnimation === "success" ? "trade-terminal-buy-success" : ""
       }`}
     >
+      {pendingSignature && (
+        <div role="status" className="mb-4 rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-300">
+          <p>An order was submitted. Verify its status before placing another.</p>
+          <p className="mt-2 break-all font-mono">{pendingSignature}</p>
+          <button onClick={checkPending} disabled={isTrading} className="mt-2 font-semibold underline disabled:opacity-50">Check transaction status</button>
+        </div>
+      )}
       {/* 3-Tab Switch: Buy / Sell / Redeem Stock */}
       <div className="flex items-center justify-between border-b border-border pb-3">
         <div className="flex items-center gap-1 rounded-lg bg-card-subtle p-1 border border-border/80">
           <button
+            disabled={isTrading || Boolean(pendingSignature)}
             onClick={() => {
+              setTradeErrorMsg(null);
               setTradeMode("buy");
               setAmount("");
             }}
@@ -226,7 +286,9 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
             Buy
           </button>
           <button
+            disabled={isTrading || Boolean(pendingSignature)}
             onClick={() => {
+              setTradeErrorMsg(null);
               setTradeMode("sell");
               setAmount("");
             }}
@@ -239,7 +301,9 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
             Sell
           </button>
           <button
+            disabled={isTrading || Boolean(pendingSignature)}
             onClick={() => {
+              setTradeErrorMsg(null);
               setTradeMode("redeem");
               setAmount("50000");
             }}
@@ -403,7 +467,7 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
           {/* Action Button */}
           <button
             onClick={handleExecuteTrade}
-            disabled={!numTokensToRedeem || isTrading}
+            disabled={isTrading || Boolean(pendingSignature) || (connected && (!Number.isFinite(numTokensToRedeem) || numTokensToRedeem <= 0 || !token.bondingCurve.isGraduated))}
             className={`w-full rounded-lg py-3 text-sm font-semibold transition-colors shadow-xs disabled:opacity-50 ${
               !connected
                 ? "bg-card-hover/50 border border-border text-foreground hover:bg-card-hover"
@@ -578,7 +642,7 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
           {/* Action Button */}
           <button
             onClick={handleExecuteTrade}
-            disabled={!amount || isTrading || buyAnimation === "success" || Boolean(simulation && "error" in simulation)}
+            disabled={isTrading || Boolean(pendingSignature) || buyAnimation === "success" || (connected && (!simulation || "error" in simulation))}
             data-buy-state={tradeMode === "buy" ? (isTrading ? "confirming" : buyAnimation) : undefined}
             className={`trade-action-button relative mt-4 w-full overflow-visible rounded-lg py-3 text-sm font-bold transition-colors shadow-xs disabled:opacity-50 ${
               !connected

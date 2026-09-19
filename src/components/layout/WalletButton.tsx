@@ -1,5 +1,6 @@
 "use client";
 
+import { createPortal } from "react-dom";
 import React, { useState, useRef, useEffect } from "react";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { WalletReadyState } from "@solana/wallet-adapter-base";
@@ -8,10 +9,10 @@ import { useMarket } from "@/context/MarketContext";
 
 export function WalletButton() {
   const { connected, publicKey, disconnect, connecting, wallets, select } = useWallet();
-  const { isWalletConnected, walletPublicKey, connectDevWallet, disconnectDevWallet, isMock } = useMarket();
+  const { isWalletConnected, walletPublicKey, connectDevWallet, disconnectDevWallet, isMock, walletDialogOpen: connectMenuOpen, setWalletDialogOpen: setConnectMenuOpen } = useMarket();
   const [copied, setCopied] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  const [connectMenuOpen, setConnectMenuOpen] = useState(false);
+  const dialogRef = useRef<HTMLDivElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const effectiveConnected = connected || isWalletConnected;
@@ -31,12 +32,29 @@ export function WalletButton() {
   useEffect(() => {
     if (!connectMenuOpen) return;
 
+    const previousFocus = document.activeElement as HTMLElement | null;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const controls = () => Array.from(dialogRef.current?.querySelectorAll<HTMLElement>("button:not(:disabled), a[href]") || []);
+    controls()[0]?.focus();
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") setConnectMenuOpen(false);
+      if (["Tab", "ArrowDown", "ArrowUp"].includes(e.key)) {
+        const items = controls();
+        if (!items.length) return;
+        e.preventDefault();
+        const backwards = e.key === "ArrowUp" || (e.key === "Tab" && e.shiftKey);
+        const index = items.indexOf(document.activeElement as HTMLElement);
+        items[(index + (backwards ? -1 : 1) + items.length) % items.length].focus();
+      }
     };
 
     document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      document.body.style.overflow = previousOverflow;
+      if (previousFocus?.isConnected) previousFocus.focus({ preventScroll: true });
+    };
   }, [connectMenuOpen]);
 
   const handleCopy = () => {
@@ -70,8 +88,9 @@ export function WalletButton() {
           <span className="hidden sm:inline">{connecting ? "Connecting..." : "Connect wallet"}</span>
         </button>
 
-        {connectMenuOpen && (
+        {connectMenuOpen && createPortal(
           <div
+            ref={dialogRef}
             className="fixed inset-0 z-[100] flex h-dvh min-h-screen items-center justify-center overflow-y-auto bg-black/30 p-4 backdrop-blur-[1px]"
             role="dialog"
             aria-modal="true"
@@ -160,7 +179,8 @@ export function WalletButton() {
               </button>
             )}
             </div>
-          </div>
+          </div>,
+          document.body
         )}
       </div>
     );

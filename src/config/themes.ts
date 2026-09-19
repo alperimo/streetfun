@@ -123,7 +123,7 @@ export const THEME_LIST: ThemeTokens[] = Object.values(THEMES);
 export const THEME_IDS: ThemeId[] = Object.keys(THEMES) as ThemeId[];
 
 export function isThemeId(value: unknown): value is ThemeId {
-  return typeof value === "string" && value in THEMES;
+  return typeof value === "string" && Object.prototype.hasOwnProperty.call(THEMES, value);
 }
 
 export function getThemeConfig(themeId?: string | null): ThemeTokens {

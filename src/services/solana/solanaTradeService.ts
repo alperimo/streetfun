@@ -6,14 +6,14 @@ import {
 } from "@solana/web3.js";
 import {
   TOKEN_PROGRAM_ID,
-  createAssociatedTokenAccountInstruction,
+  createAssociatedTokenAccountIdempotentInstruction,
   getAccount,
   getAssociatedTokenAddress,
 } from "@solana/spl-token";
 import idl from "@/idl/streetfun.json";
 import { ITradeService, TradeParams, TradeResult, WalletIdentity, WalletTransactionSender } from "../types";
 import { simulateBuyTokensOut, simulateSellQuoteOut } from "@/sdk/math";
-import { PROGRAM_ID } from "@/sdk/constants";
+import { PROGRAM_ID, USDC_MINT } from "@/sdk/constants";
 import {
   getCurvePda,
   getGlobalConfigPda,
@@ -21,6 +21,9 @@ import {
   getTokenVaultPda,
 } from "@/sdk/pda";
 import { solanaTokenService } from "./solanaTokenService";
+
+import { confirmSubmittedTransaction, SubmittedTransactionError, pendingTradeKey, savePendingTrade } from "./transactionConfirmation";
+import { toTokenUnits, minimumAfterSlippage } from "../../sdk/amounts";
 
 const TOKEN_DECIMALS = 1_000_000;
 
@@ -31,11 +34,6 @@ function isTransactionSender(wallet: WalletIdentity): wallet is WalletTransactio
       wallet.publicKey &&
       typeof wallet.sendTransaction === "function"
   );
-}
-
-function minimumAfterSlippage(amount: bigint, slippagePct: number): bigint {
-  const bps = BigInt(Math.max(0, Math.min(10_000, Math.floor(slippagePct * 100))));
-  return (amount * (10_000n - bps)) / 10_000n;
 }
 
 export class SolanaTradeService implements ITradeService {
@@ -56,7 +54,7 @@ export class SolanaTradeService implements ITradeService {
       commitment: "confirmed",
       preflightCommitment: "confirmed",
     });
-    return new anchor.Program(idl as any, provider);
+    return new anchor.Program({ ...idl, address: PROGRAM_ID.toBase58() } as any, provider);
   }
 
   async executeTrade(
@@ -78,6 +76,9 @@ export class SolanaTradeService implements ITradeService {
       );
     }
 
+    const amountIn = toTokenUnits(params.amount);
+    minimumAfterSlippage(1n, params.slippagePct);
+    if (params.tradeMode !== "buy" && params.tradeMode !== "sell") throw new Error("Invalid trade direction.");
     const program = this.getProgram(wallet.publicKey);
     const memeMint = new PublicKey(params.token.mint);
     const [globalConfigPda] = getGlobalConfigPda(PROGRAM_ID);
@@ -96,6 +97,7 @@ export class SolanaTradeService implements ITradeService {
     }
 
     const quoteMint = quoteVaultAccount.mint;
+    if (!quoteMint.equals(USDC_MINT)) throw new Error("This curve does not use the configured USDC mint.");
     const userQuoteAccount = await getAssociatedTokenAddress(quoteMint, wallet.publicKey);
     const userTokenAccount = await getAssociatedTokenAddress(memeMint, wallet.publicKey);
     const protocolFeeAccount = await getAssociatedTokenAddress(
@@ -115,7 +117,7 @@ export class SolanaTradeService implements ITradeService {
     const transaction = new Transaction();
     if (!userQuoteInfo && params.tradeMode === "sell") {
       transaction.add(
-        createAssociatedTokenAccountInstruction(
+        createAssociatedTokenAccountIdempotentInstruction(
           wallet.publicKey,
           userQuoteAccount,
           wallet.publicKey,
@@ -128,7 +130,7 @@ export class SolanaTradeService implements ITradeService {
 
     if (!userTokenInfo && params.tradeMode === "buy") {
       transaction.add(
-        createAssociatedTokenAccountInstruction(
+        createAssociatedTokenAccountIdempotentInstruction(
           wallet.publicKey,
           userTokenAccount,
           wallet.publicKey,
@@ -151,7 +153,7 @@ export class SolanaTradeService implements ITradeService {
     let priceImpactPct: number;
 
     if (params.tradeMode === "buy") {
-      const quoteAmountIn = BigInt(Math.floor(params.amount * TOKEN_DECIMALS));
+      const quoteAmountIn = amountIn;
       const simulation = simulateBuyTokensOut(
         quoteAmountIn,
         virtualQuote,
@@ -184,7 +186,7 @@ export class SolanaTradeService implements ITradeService {
       effectivePrice = simulation.effectivePriceUsd;
       priceImpactPct = simulation.priceImpactPct;
     } else {
-      const tokensAmountIn = BigInt(Math.floor(params.amount * TOKEN_DECIMALS));
+      const tokensAmountIn = amountIn;
       const simulation = simulateSellQuoteOut(
         tokensAmountIn,
         virtualQuote,
@@ -218,13 +220,21 @@ export class SolanaTradeService implements ITradeService {
       priceImpactPct = simulation.priceImpactPct;
     }
 
+    const blockhash = await this.connection.getLatestBlockhash("confirmed");
+    transaction.recentBlockhash = blockhash.blockhash;
+    transaction.feePayer = wallet.publicKey;
     const signature = await wallet.sendTransaction(transaction, this.connection, {
       preflightCommitment: "confirmed",
       skipPreflight: false,
     });
-    const confirmation = await this.connection.confirmTransaction(signature, "confirmed");
-    if (confirmation.value.err) {
-      throw new Error(`Solana rejected the transaction: ${JSON.stringify(confirmation.value.err)}`);
+    const pendingKey = pendingTradeKey(wallet.publicKey.toBase58(), params.token.mint);
+    savePendingTrade(pendingKey, signature);
+    try {
+      await confirmSubmittedTransaction(this.connection, signature, blockhash);
+      savePendingTrade(pendingKey, null);
+    } catch (error) {
+      if (!(error instanceof SubmittedTransactionError)) savePendingTrade(pendingKey, null);
+      throw error;
     }
 
     let verifiedTrade: { tokens_amount: number; quote_amount_usd: number } | null = null;
