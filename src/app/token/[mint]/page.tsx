@@ -37,7 +37,7 @@ export default function TokenDetailPage({ params }: PageProps) {
 
   const token =
     getToken(mint) ||
-    tokens.find((t) => t.mint.toLowerCase() === mint.toLowerCase());
+    tokens.find((t) => t.mint === mint);
 
   const fetchTrades = React.useCallback(async () => {
     const targetMint = mint || token?.mint;

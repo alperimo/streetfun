@@ -65,7 +65,7 @@ export class SolanaTokenService implements ITokenService {
       return metadata;
     }
     for (const row of (data || []) as IndexedTokenMetadata[]) {
-      metadata.set(row.mint.toLowerCase(), row);
+      metadata.set(row.mint, row);
     }
     return metadata;
   }
@@ -113,11 +113,11 @@ export class SolanaTokenService implements ITokenService {
       onChainCurves.map(async (curveEntry: any): Promise<TokenMetadata> => {
         const account = curveEntry.account;
         const mint = account.memeMint.toBase58();
-        const indexed = metadata.get(mint.toLowerCase());
+        const indexed = metadata.get(mint);
         const targetEquityMint = account.targetEquityMint.toBase58();
-        const indexedStat = indexedStats[mint] || indexedStats[mint.toLowerCase()];
+        const indexedStat = indexedStats[mint];
         const knownAsset = VERIFIED_TESSERA_PRE_IPO_ASSETS.find(
-          (asset) => asset.mintAddress.toLowerCase() === targetEquityMint.toLowerCase()
+          (asset) => asset.mintAddress === targetEquityMint
         );
 
         const virtualQuoteRaw = Number(account.virtualQuoteReserves.toString());
@@ -214,7 +214,7 @@ export class SolanaTokenService implements ITokenService {
 
   async getToken(mint: string): Promise<TokenMetadata | null> {
     const tokens = await this.getTokens();
-    return tokens.find((token) => token.mint.toLowerCase() === mint.toLowerCase()) || null;
+    return tokens.find((token) => token.mint === mint) || null;
   }
 
   async launchToken(

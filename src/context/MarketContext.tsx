@@ -151,7 +151,7 @@ export function MarketProvider({ children, initialTokens = [] }: MarketProviderP
 
   const getToken = useCallback(
     (mint: string) => {
-      return tokens.find((t) => t.mint.toLowerCase() === mint.toLowerCase());
+      return tokens.find((t) => t.mint === mint);
     },
     [tokens]
   );

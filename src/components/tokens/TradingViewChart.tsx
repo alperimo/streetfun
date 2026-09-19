@@ -69,6 +69,7 @@ export function TradingViewChart({
 
     // Candlestick series
     const candlestickSeries = chart.addCandlestickSeries({
+      priceFormat: { type: "price", precision: 8, minMove: 0.00000001 },
       upColor: themeConfig.colors.brandEmerald,
       downColor: themeConfig.colors.brandRose,
       borderUpColor: themeConfig.colors.brandEmerald,
@@ -94,18 +95,6 @@ export function TradingViewChart({
       },
     });
 
-    // Floor price line for graduated tokens
-    if (isGraduated && floorPrice > 0) {
-      candlestickSeries.createPriceLine({
-        price: floorPrice,
-        color: chartTheme.floorLineColor,
-        lineWidth: 1,
-        lineStyle: LineStyle.Dashed,
-        axisLabelVisible: false,
-        title: "",
-      });
-    }
-
     const handleResize = () => {
       if (chartContainerRef.current && chartRef.current) {
         chartRef.current.applyOptions({
@@ -123,14 +112,32 @@ export function TradingViewChart({
       candlestickSeriesRef.current = null;
       volumeSeriesRef.current = null;
     };
+  }, [themeConfig]);
+
+  useEffect(() => {
+    const series = candlestickSeriesRef.current;
+    if (!series || !isGraduated || floorPrice <= 0) return;
+    const line = series.createPriceLine({
+      price: floorPrice,
+      color: themeConfig.chart.floorLineColor,
+      lineWidth: 1,
+      lineStyle: LineStyle.Dashed,
+      axisLabelVisible: false,
+      title: "",
+    });
+    return () => {
+      if (candlestickSeriesRef.current === series) series.removePriceLine(line);
+    };
   }, [themeConfig, isGraduated, floorPrice]);
 
   // Fetch and update data when token or timeframe changes
   useEffect(() => {
     let isCancelled = false;
+    const candlestickSeries = candlestickSeriesRef.current;
+    const volumeSeries = volumeSeriesRef.current;
 
     async function loadData() {
-      if (!candlestickSeriesRef.current || !volumeSeriesRef.current) return;
+      if (!candlestickSeries || !volumeSeries) return;
       setLoadingChart(true);
       try {
         const chartService = getChartService();
@@ -141,7 +148,7 @@ export function TradingViewChart({
         setChartError(false);
 
         // Set Candlestick data
-        candlestickSeriesRef.current.setData(
+        candlestickSeries.setData(
           bars.map((b) => ({
             time: b.time as any,
             open: b.open,
@@ -152,7 +159,7 @@ export function TradingViewChart({
         );
 
         // Set Volume data
-        volumeSeriesRef.current.setData(
+        volumeSeries.setData(
           bars.map((b) => ({
             time: b.time as any,
             value: b.volume,
@@ -168,6 +175,8 @@ export function TradingViewChart({
       } catch (err) {
         console.error("Failed to load chart bars:", err);
         if (!isCancelled) {
+          candlestickSeries.setData([]);
+          volumeSeries.setData([]);
           setHasBars(false);
           setChartError(true);
         }
@@ -181,7 +190,7 @@ export function TradingViewChart({
     return () => {
       isCancelled = true;
     };
-  }, [token.mint, token.priceUsd, timeframe, themeConfig.colors.brandEmerald, themeConfig.colors.brandRose]);
+  }, [token.mint, token.priceUsd, timeframe, themeConfig]);
 
   const timeframes: TimeframeOption[] = ["1m", "5m", "15m", "1h", "4h", "1D"];
 

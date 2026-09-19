@@ -80,6 +80,18 @@ export class TradeStoreService {
     return TradeStoreService.instance;
   }
 
+  private cacheTrade(trade: TradeRecord): void {
+    // The confirmation endpoint and webhook can deliver the same transaction.
+    const index = localTradesStore.findIndex((item) => item.tx_signature === trade.tx_signature);
+    if (index !== -1) localTradesStore.splice(index, 1);
+    localTradesStore.push(trade);
+    localTradesStore.sort(
+      (a, b) => Date.parse(b.created_at || "") - Date.parse(a.created_at || "")
+    );
+    this.cachedPrices = null;
+    this.cachedReserves = null;
+  }
+
   async recordTrade(trade: TradeRecord): Promise<void> {
     const tradeWithTime: TradeRecord = {
       ...trade,
@@ -101,7 +113,7 @@ export class TradeStoreService {
       } catch (err) {
         console.warn("[TradeStore] Network error posting trade:", err);
       }
-      localTradesStore.unshift(tradeWithTime);
+      this.cacheTrade(tradeWithTime);
       return;
     }
 
@@ -119,7 +131,7 @@ export class TradeStoreService {
           .maybeSingle();
 
         if (!existingToken) {
-          const indexedToken = localTokensStore.get(trade.mint.toLowerCase());
+          const indexedToken = localTokensStore.get(trade.mint);
 
           const { error: tokenError } = await supabase.from("tokens").upsert({
             mint: trade.mint,
@@ -149,9 +161,7 @@ export class TradeStoreService {
     }
 
     // Always keep in local store for rapid UI response
-    localTradesStore.unshift(tradeWithTime);
-    this.cachedPrices = null;
-    this.cachedReserves = null;
+    this.cacheTrade(tradeWithTime);
   }
 
   async recordToken(token: TokenRecord): Promise<void> {
@@ -165,7 +175,7 @@ export class TradeStoreService {
       } catch (err) {
         console.warn("[TradeStore] Network error posting token:", err);
       }
-      localTokensStore.set(token.mint.toLowerCase(), token);
+      localTokensStore.set(token.mint, token);
       return;
     }
 
@@ -174,7 +184,7 @@ export class TradeStoreService {
       const { error } = await supabase.from("tokens").upsert(token);
       if (error) throw new Error(`Could not persist token metadata: ${error.message}`);
     }
-    localTokensStore.set(token.mint.toLowerCase(), token);
+    localTokensStore.set(token.mint, token);
     this.cachedTokens = null;
   }
 
@@ -197,7 +207,7 @@ export class TradeStoreService {
 
         if (!error && data) {
           for (const item of data) {
-            tokensMap.set(item.mint.toLowerCase(), {
+            tokensMap.set(item.mint, {
               mint: item.mint,
               name: item.name,
               symbol: item.symbol,
@@ -217,9 +227,9 @@ export class TradeStoreService {
     }
 
     // 2. Merge local tokens store
-    for (const [mintLower, token] of localTokensStore.entries()) {
-      if (!tokensMap.has(mintLower)) {
-        tokensMap.set(mintLower, token);
+    for (const [mint, token] of localTokensStore.entries()) {
+      if (!tokensMap.has(mint)) {
+        tokensMap.set(mint, token);
       }
     }
 
@@ -287,7 +297,7 @@ export class TradeStoreService {
 
   /**
    * Compute net USDC reserves deposited per token mint from all BUY/SELL trades.
-   * BUY adds to reserves, SELL subtracts from reserves.
+   * BUY adds to reserves, SELL subtracts from reserves; equity redemptions are separate.
    */
   async getReservesPerMint(): Promise<Record<string, number>> {
     const now = Date.now();
@@ -296,38 +306,36 @@ export class TradeStoreService {
     }
 
     const reserves: Record<string, number> = {};
+    const tradesBySignature = new Map<string, TradeRecord>();
     const supabase = getSupabaseClient();
     if (supabase) {
-      try {
+      const pageSize = 1_000;
+      for (let offset = 0; ; offset += pageSize) {
         const { data, error } = await supabase
           .from("trades")
-          .select("mint, trade_type, quote_amount_usd");
-
-        if (!error && data) {
-          for (const trade of data) {
-            if (!reserves[trade.mint]) reserves[trade.mint] = 0;
-            const amount = Number(trade.quote_amount_usd) || 0;
-            if (trade.trade_type === "BUY") {
-              reserves[trade.mint] += amount;
-            } else if (trade.trade_type === "SELL" || trade.trade_type === "REDEEM") {
-              reserves[trade.mint] -= amount;
-            }
-          }
+          .select("mint, trade_type, quote_amount_usd, tx_signature, slot")
+          .order("tx_signature", { ascending: true })
+          .range(offset, offset + pageSize - 1);
+        if (error) throw new Error(`Trade reserves index unavailable: ${error.message}`);
+        for (const trade of (data || []) as TradeRecord[]) {
+          tradesBySignature.set(trade.tx_signature, trade);
         }
-      } catch (err) {
-        console.warn("[TradeStore] Failed to fetch reserves from supabase:", err);
+        if (!data || data.length < pageSize) break;
       }
     }
 
-    // Also check local store
+    // Persisted trades are also cached locally; count each signature once.
     for (const trade of localTradesStore) {
-      if (!reserves[trade.mint]) reserves[trade.mint] = 0;
-      const amount = Number(trade.quote_amount_usd) || 0;
-      if (trade.trade_type === "BUY") {
-        reserves[trade.mint] += amount;
-      } else if (trade.trade_type === "SELL" || trade.trade_type === "REDEEM") {
-        reserves[trade.mint] -= amount;
+      if (!tradesBySignature.has(trade.tx_signature)) {
+        tradesBySignature.set(trade.tx_signature, trade);
       }
+    }
+    for (const trade of tradesBySignature.values()) {
+      if (!isMockDataEnabled() && !isVerifiedChainTrade(trade)) continue;
+      const amount = Number(trade.quote_amount_usd) || 0;
+      reserves[trade.mint] ??= 0;
+      if (trade.trade_type === "BUY") reserves[trade.mint] += amount;
+      else if (trade.trade_type === "SELL") reserves[trade.mint] -= amount;
     }
 
     // Ensure no negative reserves
@@ -369,7 +377,7 @@ export class TradeStoreService {
     return localTradesStore
       .filter(
         (t) =>
-          t.mint.toLowerCase() === mint.toLowerCase() &&
+          t.mint === mint &&
           (!verifiedOnly || isVerifiedChainTrade(t))
       )
       .slice(0, limit);
@@ -408,7 +416,7 @@ export class TradeStoreService {
       { volume24hUsd: number; referencePriceUsd: number | null; latestTradePriceUsd: number | null }
     >
   > {
-    const normalizedMints = new Map(mints.map((mint) => [mint.toLowerCase(), mint]));
+    const requestedMints = new Map(mints.map((mint) => [mint, mint]));
     const result: Record<
       string,
       { volume24hUsd: number; referencePriceUsd: number | null; latestTradePriceUsd: number | null }
@@ -447,7 +455,7 @@ export class TradeStoreService {
 
     const localTrades = localTradesStore.filter(
       (trade) =>
-        normalizedMints.has(trade.mint.toLowerCase()) &&
+        requestedMints.has(trade.mint) &&
         new Date(trade.created_at || 0).getTime() >= new Date(cutoffIso).getTime()
     );
     const seen = new Set(trades.map((trade) => trade.tx_signature));
@@ -460,7 +468,7 @@ export class TradeStoreService {
 
     for (const trade of trades) {
       if (trade.trade_type === "REDEEM") continue;
-      const canonicalMint = normalizedMints.get(trade.mint.toLowerCase());
+      const canonicalMint = requestedMints.get(trade.mint);
       if (!canonicalMint) continue;
       const stat = result[canonicalMint];
       const price = Number(trade.price_usd);
@@ -506,7 +514,7 @@ export class TradeStoreService {
     // Local in-memory OHLCV aggregation from real trades
     const trades = localTradesStore.filter(
       (t) =>
-        t.mint.toLowerCase() === mint.toLowerCase() &&
+        t.mint === mint &&
         (isMockDataEnabled() || isVerifiedChainTrade(t))
     );
 
@@ -522,6 +530,7 @@ export class TradeStoreService {
     // Bucket trades by interval
     const buckets = new Map<number, TradeRecord[]>();
     for (const t of trades) {
+      if (t.trade_type === "REDEEM") continue;
       const tradeTime = Math.floor(new Date(t.created_at || Date.now()).getTime() / 1000);
       const bucketTime = Math.floor(tradeTime / (intervalMinutes * 60)) * (intervalMinutes * 60);
       const existing = buckets.get(bucketTime) || [];
