@@ -6,10 +6,12 @@ import { useWallet } from "@solana/wallet-adapter-react";
 import { WalletReadyState } from "@solana/wallet-adapter-base";
 import { Wallet, Copy, Check, LogOut, Terminal, ExternalLink } from "lucide-react";
 import { useMarket } from "@/context/MarketContext";
+import { useWalletConnectionError } from "./WalletProvider";
 
 export function WalletButton() {
   const { connected, publicKey, disconnect, connecting, wallets, select } = useWallet();
   const { isWalletConnected, walletPublicKey, connectDevWallet, disconnectDevWallet, isMock, walletDialogOpen: connectMenuOpen, setWalletDialogOpen: setConnectMenuOpen } = useMarket();
+  const { error: walletError, clearError: clearWalletError } = useWalletConnectionError();
   const [copied, setCopied] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dialogRef = useRef<HTMLDivElement>(null);
@@ -18,6 +20,15 @@ export function WalletButton() {
   const effectiveConnected = connected || isWalletConnected;
   const effectivePublicKey = publicKey || walletPublicKey;
   const detectedWallets = wallets.filter(({ readyState }) => readyState !== WalletReadyState.NotDetected);
+  const walletErrorMessage = walletError === "Unexpected error"
+    ? "Your wallet extension could not connect. Finish setting it up or unlock it, then try again."
+    : walletError
+      ? `${walletError.replace(/[.!?]+$/, "")}. Check your wallet extension and try again.`
+      : null;
+
+  useEffect(() => {
+    if (effectiveConnected && connectMenuOpen) setConnectMenuOpen(false);
+  }, [effectiveConnected, connectMenuOpen, setConnectMenuOpen]);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -78,6 +89,7 @@ export function WalletButton() {
       <div className="relative">
         <button
           onClick={() => {
+            clearWalletError();
             setConnectMenuOpen(!connectMenuOpen);
           }}
           disabled={connecting}
@@ -121,41 +133,55 @@ export function WalletButton() {
                 </button>
               </div>
 
+              {walletErrorMessage && (
+                <p role="alert" className="mb-4 rounded-xl border border-rose-500/30 bg-rose-500/10 p-3 text-sm text-rose-300">
+                  {walletErrorMessage}
+                </p>
+              )}
+
               {detectedWallets.length > 0 ? (
                 <div className="space-y-2">
                   {detectedWallets.map(({ adapter }) => (
                     <button
                       key={adapter.name}
                       onClick={() => {
+                        clearWalletError();
                         select(adapter.name);
-                        setConnectMenuOpen(false);
                       }}
+                      disabled={connecting}
                       className="flex w-full items-center gap-3 rounded-xl border border-border bg-card-subtle p-3.5 text-left text-foreground transition-colors hover:border-brand-cyan/50 hover:bg-card-hover"
                     >
-                      <img src={adapter.icon} alt="" className="h-10 w-10 rounded-xl" />
+                      {adapter.name === "Localnet Dev Wallet"
+                        ? <Terminal className="h-10 w-10 rounded-xl border border-border bg-card p-2 text-emerald-400" />
+                        : <img src={adapter.icon} alt="" className="h-10 w-10 rounded-xl" />}
                       <div className="min-w-0 flex-1">
                         <div className="font-semibold">{adapter.name}</div>
-                        <div className="mt-0.5 text-xs text-brand-cyan">Detected</div>
+                        <div className="mt-0.5 text-xs text-brand-cyan">
+                          {adapter.name === "Localnet Dev Wallet" ? "Test funds added on connect" : "Detected"}
+                        </div>
                       </div>
-                      <span className="text-sm text-muted">Connect</span>
+                      <span className="text-sm text-muted">{connecting ? "Connecting..." : "Connect"}</span>
                     </button>
                   ))}
                 </div>
               ) : (
-                <a
-                  href="https://phantom.com/download"
-                  target="_blank"
-                  rel="noreferrer"
-                  onClick={() => setConnectMenuOpen(false)}
-                  className="flex w-full items-center gap-3 rounded-xl border border-brand-cyan/30 bg-brand-cyan/10 p-3.5 text-left text-foreground transition-colors hover:bg-brand-cyan/15"
-                >
-                  <Wallet className="h-5 w-5 shrink-0 text-brand-cyan" />
-                  <div className="min-w-0 flex-1">
-                    <div className="font-semibold">Get Phantom</div>
-                    <div className="mt-0.5 text-xs text-muted">Recommended for new users</div>
-                  </div>
-                  <ExternalLink className="h-4 w-4 shrink-0 text-muted" />
-                </a>
+                <div className="space-y-3">
+                  <p className="text-sm text-muted">No browser wallet detected. Install or enable a Solana wallet extension in this browser, then reload this page. Your validator keypair does not connect automatically.</p>
+                  <a
+                    href="https://phantom.com/download"
+                    target="_blank"
+                    rel="noreferrer"
+                    onClick={() => setConnectMenuOpen(false)}
+                    className="flex w-full items-center gap-3 rounded-xl border border-brand-cyan/30 bg-brand-cyan/10 p-3.5 text-left text-foreground transition-colors hover:bg-brand-cyan/15"
+                  >
+                    <Wallet className="h-5 w-5 shrink-0 text-brand-cyan" />
+                    <div className="min-w-0 flex-1">
+                      <div className="font-semibold">Get Phantom</div>
+                      <div className="mt-0.5 text-xs text-muted">Recommended for new users</div>
+                    </div>
+                    <ExternalLink className="h-4 w-4 shrink-0 text-muted" />
+                  </a>
+                </div>
               )}
 
               {isLocalnet && isMock && (

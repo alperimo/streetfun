@@ -188,6 +188,13 @@ npm run build
 npm run start
 ```
 
+With `NEXT_PUBLIC_SOLANA_NETWORK=localnet`, a loopback RPC, and mock data off,
+the wallet menu offers **Localnet Dev Wallet**. It creates a disposable browser
+signer for this tab and funds it with 2 test SOL and 10,000 test USDC from the
+local validator. The configured test USDC mint must be controlled by the local
+CLI wallet (`ANCHOR_WALLET` or `~/.config/solana/id.json`). Its key stays in
+browser session storage and is never suitable for another network.
+
 ### 7. Real-Time Indexing & Helius Webhook Architecture
 
 StreetFun utilizes a high-throughput hybrid architecture combining on-chain Solana state with an off-chain real-time indexing pipeline powered by **Helius Webhooks** and **Supabase (PostgreSQL)**:
