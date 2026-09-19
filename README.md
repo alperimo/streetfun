@@ -253,5 +253,58 @@ Apply the database schema located at `supabase/schema.sql` using the Supabase SQ
 
 ---
 
-## 6. License
+## 6. Production Deployment (Vercel & Cloudflare)
+
+StreetFun is architected to run on **Vercel** (Next.js 15 App Router & Server Actions) fronted by **Cloudflare** (DNS, DDoS Mitigation, Edge CDN & SSL).
+
+### Production Architecture
+
+```
+[Users / Wallets]
+       │
+       ▼ (DNS / DDoS / CDN)
+[Cloudflare Edge] (Full Strict SSL / Proxied CNAME)
+       │
+       ▼
+[Vercel Serverless] (Next.js 15 Production Instance)
+       ├── Root (/) ──► Alpha Early Access Landing Page (Active)
+       ├── /api/alpha/* ──► Cüzdan Doğrulama & Pass Kayıt
+       └── /treasury, /token/* ──► Middleware Protected (Redirect to /)
+```
+
+### How to Deploy
+
+#### Method 1: Continuous Deployment via Git Push (Recommended)
+Every push to the `main` branch automatically triggers an optimized production build on Vercel:
+
+```bash
+git add .
+git commit -m "feat: your feature or fix"
+git push origin main
+```
+*Vercel detects the push, executes `npm run build`, and updates the production domains (`https://streetfun.xyz`) within 45-60 seconds.*
+
+#### Method 2: Direct CLI Deployment via Vercel CLI
+You can deploy directly from your local terminal without committing to GitHub:
+
+```bash
+# 1. Deploy directly to Production (Live):
+npx vercel --prod
+
+# 2. Deploy a Preview / Test Build (generates a temporary private test URL):
+npx vercel
+```
+
+### Alpha-Only Mode vs Full Platform Launch
+
+- **Current State (Alpha-Only)**:
+  In production, only the Alpha Early Access page (`/`) and verification APIs (`/api/alpha/*`) are exposed. Any direct URL visits to `/treasury` or `/token/[mint]` are automatically intercepted and redirected to `/` by Next.js `middleware.ts`.
+- **Local Development**:
+  On `http://localhost:3000/`, the full trading terminal (`MarketsPage`), Treasury, and token detail pages remain 100% accessible.
+- **Launching Full Platform in Production**:
+  When ready for Devnet/Mainnet trading, add `NEXT_PUBLIC_FULL_APP=true` to your Vercel Project Environment Variables (Settings ➔ Environment Variables) or set the flag in code.
+
+---
+
+## 7. License
 MIT License.

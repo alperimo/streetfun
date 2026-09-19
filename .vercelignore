@@ -1,0 +1,13 @@
+.next
+node_modules
+.anchor
+test-ledger
+target
+keys
+programs
+tests
+scripts
+.git
+.env*
+.DS_Store
+*.log
