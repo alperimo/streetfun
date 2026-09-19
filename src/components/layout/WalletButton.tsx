@@ -82,7 +82,9 @@ export function WalletButton() {
     setDropdownOpen(false);
   };
 
-  const isLocalnet = process.env.NEXT_PUBLIC_SOLANA_NETWORK === "localnet";
+  const isLocalnet =
+    process.env.NODE_ENV === "development" &&
+    process.env.NEXT_PUBLIC_SOLANA_NETWORK === "localnet";
 
   if (!effectiveConnected) {
     return (

@@ -40,8 +40,11 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
   );
 
   // Wallet Standard discovers browser extensions; the disposable signer is only
-  // available against a validator running on this computer.
+  // available against a validator running on this computer in local development.
   const wallets = useMemo(() => {
+    if (process.env.NODE_ENV !== "development") {
+      return [];
+    }
     const rpcHost = new URL(endpoint).hostname;
     const localnet = process.env.NEXT_PUBLIC_SOLANA_NETWORK === "localnet";
     const loopback = rpcHost === "localhost" || rpcHost === "127.0.0.1";

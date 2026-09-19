@@ -20,8 +20,8 @@ const STORAGE_KEY = "streetfun-localnet-wallet";
 /** A disposable browser signer for the local validator only. Never use its key on a public network. */
 export class LocalnetWalletAdapter extends BaseWalletAdapter<"Localnet Dev Wallet"> {
   name = "Localnet Dev Wallet" as WalletName<"Localnet Dev Wallet">;
-  url = "";
-  icon = "";
+  url = "https://streetfun.fun";
+  icon = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2310b981' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='4 17 10 11 4 5'></polyline><line x1='12' y1='19' x2='20' y2='19'></line></svg>";
   readyState = WalletReadyState.Loadable;
   supportedTransactionVersions = new Set(["legacy", 0] as const);
   private keypair: Keypair | null = null;
