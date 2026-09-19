@@ -230,6 +230,29 @@
   pointer-events: none;
 }
 
+@media (max-width: 639px) {
+  .alpha-landing .hero-section {
+    justify-content: flex-start;
+    padding-top: 2rem;
+  }
+
+  .alpha-landing .alpha-eyebrow {
+    margin-bottom: 1rem;
+  }
+
+  .alpha-landing h1,
+  .alpha-landing .alpha-subtitle {
+    text-shadow: 0 2px 16px var(--background);
+  }
+
+  .alpha-landing .alpha-pass-status {
+    padding: 0.75rem;
+    border: 1px solid var(--border);
+    border-radius: 0.75rem;
+    background: color-mix(in srgb, var(--card) 94%, transparent);
+  }
+}
+
 .terminal-card {
   background: var(--card);
   border: 1px solid var(--border);

@@ -20,8 +20,11 @@ export function WalletButton() {
   const effectiveConnected = connected || isWalletConnected;
   const effectivePublicKey = publicKey || walletPublicKey;
   const detectedWallets = wallets.filter(({ readyState }) => readyState !== WalletReadyState.NotDetected);
+  const isInfrastructureError = Boolean(walletError && /local validator|rpc endpoint|solana validator/i.test(walletError));
   const walletErrorMessage = walletError === "Unexpected error"
-    ? "Your wallet extension could not connect. Finish setting it up or unlock it, then try again."
+      ? "Your wallet extension could not connect. Finish setting it up or unlock it, then try again."
+    : isInfrastructureError
+      ? walletError
     : walletError
       ? `${walletError.replace(/[.!?]+$/, "")}. Check your wallet extension and try again.`
       : null;
