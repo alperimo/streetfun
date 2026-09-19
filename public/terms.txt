@@ -56,8 +56,8 @@ You agree to indemnify, defend, and hold harmless StreetFun, its contributors, o
 16. Modifications and Severability
 We reserve the right to amend these terms at any time by updating the revision date above. Continued use of the platform constitutes acceptance of modified terms. If any provision of these terms is deemed unlawful or unenforceable, the remaining provisions will continue in full force and effect.
 
-17. Genesis Alpha Pass & Early Access Program
-The StreetFun Genesis Alpha Pass is an off-chain digital credential granted to early community members solely to facilitate access to closed Devnet testnet testing phases and promotional fee discounts upon platform launch.
+17. Alpha Pass & Early Access Program
+The StreetFun Alpha Pass is an off-chain digital credential granted to early community members solely to facilitate access to closed Devnet testnet testing phases and promotional fee discounts upon platform launch.
 • No Investment or Security: The Alpha Pass carries zero monetary value and does not constitute equity, a security, a promissory note, an investment contract, or any form of financial instrument. Claiming an Alpha Pass does not guarantee token allocations, airdrops, profits, yield, or future value.
 • Gasless Cryptographic Verification: Verification is executed off-chain via self-custodial wallet signatures. No gas fees or user funds are transferred or custodied.
 • Program Discretion: StreetFun reserves the right to modify, revoke, or terminate the Alpha Pass program, fee discount tiers, or testing access at any time in its sole discretion.

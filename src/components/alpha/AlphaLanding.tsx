@@ -76,7 +76,7 @@ export function AlphaLanding() {
       const nonce = Math.random().toString(36).substring(2, 10);
       const timestamp = new Date().toISOString();
 
-      const messageText = `streetfun.fun wants you to sign in with your Solana account:\n${walletAddress}\n\nI accept the StreetFun Terms of Service and claim my StreetFun Genesis Alpha Pass.\n\nNonce: ${nonce}\nIssued At: ${timestamp}`;
+      const messageText = `streetfun.fun wants you to sign in with your Solana account:\n${walletAddress}\n\nI accept the StreetFun Terms of Service and claim my StreetFun Alpha Pass.\n\nNonce: ${nonce}\nIssued At: ${timestamp}`;
 
       const messageBytes = new TextEncoder().encode(messageText);
       const signatureBytes = await signMessage(messageBytes);
@@ -140,10 +140,10 @@ export function AlphaLanding() {
 
         <div className="relative mx-auto w-full max-w-[1350px] px-6 sm:px-10 lg:px-0 z-10">
           <div className="max-w-[620px]">
-            <div className="alpha-eyebrow mb-6 flex flex-wrap items-center gap-3" aria-label="Genesis Alpha early access">
+            <div className="alpha-eyebrow mb-6 flex flex-wrap items-center gap-3" aria-label="Alpha early access">
               <span className="h-px w-8 bg-brand-cyan" aria-hidden="true" />
               <span className="font-mono text-[11px] font-semibold uppercase tracking-[0.22em] text-brand-cyan">
-                Genesis Alpha
+                Alpha
               </span>
               <span className="rounded-md border border-brand-cyan/30 bg-brand-cyan/10 px-2 py-1 font-mono text-[10px] uppercase tracking-[0.12em] text-brand-cyan">
                 Early access

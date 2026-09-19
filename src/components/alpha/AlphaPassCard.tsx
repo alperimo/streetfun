@@ -32,7 +32,7 @@ export function AlphaPassCard({
   };
 
   const handleShareOnX = () => {
-    const tweetText = `Just claimed my @StreetFunSol Genesis Alpha Pass #${formattedPassNumber} 🐂\n\nWall Street is coming to Solana memecoins with tokenized equity backing.\n\nClaim your Day-1 0% fee pass: https://streetfun.fun`;
+    const tweetText = `Just claimed my @StreetFunSol Alpha Pass #${formattedPassNumber} 🐂\n\nWall Street is coming to Solana memecoins with tokenized equity backing.\n\nClaim your Day-1 0% fee pass: https://streetfun.fun`;
     const shareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}`;
     window.open(shareUrl, "_blank", "noopener,noreferrer");
   };
