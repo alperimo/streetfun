@@ -2,6 +2,7 @@ import { expect } from "chai";
 import { Keypair } from "@solana/web3.js";
 import {
   createProvider,
+  protocolAdmin,
   loadProgram,
   airdropSol,
   createSplMint,
@@ -150,7 +151,7 @@ describe("04 - StreetFun Protocol: Graduation & Treasury Stock Purchase", () => 
           minEquityTokensExpected: new BN(stockSharesToDeposit),
         })
         .accounts({
-          caller: traderBob.publicKey,
+          caller: protocolAdmin.publicKey,
           globalConfig: globalConfigPda,
           memeMint: memeMintKeypair.publicKey,
           targetEquityMint: equityMint,
@@ -165,7 +166,7 @@ describe("04 - StreetFun Protocol: Graduation & Treasury Stock Purchase", () => 
           ammTokenDestination: ammTokenAta.address,
           tokenProgram: TOKEN_PROGRAM_ID,
         })
-        .signers([traderBob, stockProvider])
+        .signers([protocolAdmin, stockProvider])
         .rpc();
       expect.fail("Should have failed GraduationThresholdNotReached");
     } catch (err: any) {
@@ -238,7 +239,7 @@ describe("04 - StreetFun Protocol: Graduation & Treasury Stock Purchase", () => 
         minEquityTokensExpected: new BN(stockSharesToDeposit),
       })
       .accounts({
-        caller: traderBob.publicKey,
+        caller: protocolAdmin.publicKey,
         globalConfig: globalConfigPda,
         memeMint: memeMintKeypair.publicKey,
         targetEquityMint: equityMint,
@@ -253,7 +254,7 @@ describe("04 - StreetFun Protocol: Graduation & Treasury Stock Purchase", () => 
         ammTokenDestination: ammTokenAta.address,
         tokenProgram: TOKEN_PROGRAM_ID,
       })
-      .signers([traderBob, stockProvider])
+      .signers([protocolAdmin, stockProvider])
       .rpc();
 
     expect(tx).to.be.a("string");

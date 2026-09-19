@@ -2,6 +2,7 @@ import { expect } from "chai";
 import { Keypair } from "@solana/web3.js";
 import {
   createProvider,
+  protocolAdmin,
   loadProgram,
   airdropSol,
   createSplMint,
@@ -15,7 +16,7 @@ import {
 } from "./helpers";
 
 describe("01 - StreetFun Protocol: Initialize Global Config", () => {
-  const admin = Keypair.generate();
+  const admin = protocolAdmin;
   const feeRecipient = Keypair.generate();
   const provider = createProvider(admin);
   const program = loadProgram(provider);

@@ -2,6 +2,7 @@ import { expect } from "chai";
 import { Keypair, PublicKey } from "@solana/web3.js";
 import {
   createProvider,
+  protocolAdmin,
   loadProgram,
   airdropSol,
   createSplMint,
@@ -272,7 +273,7 @@ describe("06 - StreetFun Protocol: Complete E2E Lifecycle ($SING - Neural Singul
         minEquityTokensExpected: new BN(totalStockDeposited),
       })
       .accounts({
-        caller: traderAlice.publicKey,
+        caller: protocolAdmin.publicKey,
         globalConfig: globalConfigPda,
         memeMint: memeMint,
         targetEquityMint: equityMint,
@@ -287,7 +288,7 @@ describe("06 - StreetFun Protocol: Complete E2E Lifecycle ($SING - Neural Singul
         ammTokenDestination: ammTokenAta.address,
         tokenProgram: TOKEN_PROGRAM_ID,
       })
-      .signers([traderAlice, stockProvider])
+      .signers([protocolAdmin, stockProvider])
       .rpc();
 
     txReceipts["04_graduation"] = {

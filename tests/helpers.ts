@@ -22,6 +22,8 @@ import * as path from "path";
 
 export { BN, TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID, SystemProgram, SYSVAR_RENT_PUBKEY, LAMPORTS_PER_SOL };
 
+export const protocolAdmin = Keypair.generate();
+
 export const LOCALNET_RPC = "http://127.0.0.1:8899";
 export const PROGRAM_ID = new PublicKey("6ZiovCkRxRJgUaCS9uftFk3eVnGDsbnDXgUV1XHybH52");
 

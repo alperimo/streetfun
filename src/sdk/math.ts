@@ -1,3 +1,10 @@
+const U64_MAX = (1n << 64n) - 1n;
+function validateCurve(input: bigint, quote: bigint, tokens: bigint, reserves: bigint, feeBps: number) {
+  if (input <= 0n || quote <= 0n || tokens <= 0n || reserves < 0n) throw new Error("Invalid curve amount or reserves.");
+  if ([input, quote, tokens, reserves].some(value => value > U64_MAX)) throw new Error("Curve amount exceeds its supported range.");
+  if (!Number.isInteger(feeBps) || feeBps < 0 || feeBps > 1000) throw new Error("Invalid protocol fee.");
+}
+
 export interface BuySimulationResult {
   tokensOut: bigint;
   feeQuote: bigint;
@@ -21,21 +28,14 @@ export function simulateBuyTokensOut(
   realTokens: bigint,
   feeBps: number = 100
 ): BuySimulationResult {
-  if (quoteIn <= 0n) {
-    return {
-      tokensOut: 0n,
-      feeQuote: 0n,
-      netQuote: 0n,
-      effectivePriceUsd: 0,
-      priceImpactPct: 0,
-    };
-  }
+  validateCurve(quoteIn, virtualQuote, virtualTokens, realTokens, feeBps);
 
   const feeQuote = (quoteIn * BigInt(feeBps)) / 10_000n;
   const netQuote = quoteIn - feeQuote;
 
   const k = virtualQuote * virtualTokens;
   const newVirtualQuote = virtualQuote + netQuote;
+  if (newVirtualQuote > U64_MAX) throw new Error("Quote reserves overflow.");
   const newVirtualTokens = (k + newVirtualQuote - 1n) / newVirtualQuote;
 
   const tokensOut = virtualTokens - newVirtualTokens;
@@ -71,18 +71,11 @@ export function simulateSellQuoteOut(
   realQuote: bigint,
   feeBps: number = 100
 ): SellSimulationResult {
-  if (tokensIn <= 0n) {
-    return {
-      netQuoteOut: 0n,
-      feeQuote: 0n,
-      grossQuoteOut: 0n,
-      effectivePriceUsd: 0,
-      priceImpactPct: 0,
-    };
-  }
+  validateCurve(tokensIn, virtualQuote, virtualTokens, realQuote, feeBps);
 
   const k = virtualQuote * virtualTokens;
   const newVirtualTokens = virtualTokens + tokensIn;
+  if (newVirtualTokens > U64_MAX) throw new Error("Token reserves overflow.");
   const newVirtualQuote = (k + newVirtualTokens - 1n) / newVirtualTokens;
 
   const grossQuoteOut = virtualQuote - newVirtualQuote;
@@ -120,6 +113,7 @@ export function calculateEntitledStock(
   if (memeAmountBurned <= 0n || totalEquityLocked <= 0n || totalMemeSupply <= 0n) {
     return 0n;
   }
+  if (memeAmountBurned > totalMemeSupply) throw new Error("Burn amount exceeds the remaining supply.");
   return (memeAmountBurned * totalEquityLocked) / totalMemeSupply;
 }
 

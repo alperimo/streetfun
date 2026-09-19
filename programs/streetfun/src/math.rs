@@ -1,5 +1,5 @@
 use crate::errors::StreetfunError;
-use crate::state::BPS_DENOMINATOR;
+use crate::state::{BPS_DENOMINATOR, MAX_FEE_BPS};
 use anchor_lang::prelude::*;
 
 pub struct BuyResult {
@@ -23,6 +23,7 @@ pub struct SellResult {
 }
 
 pub fn calculate_fee(amount: u64, fee_bps: u16) -> Result<u64> {
+    require!(fee_bps <= MAX_FEE_BPS, StreetfunError::InvalidFeeBps);
     if fee_bps == 0 {
         return Ok(0);
     }
@@ -45,6 +46,7 @@ pub fn calculate_buy_tokens_out(
         return Err(StreetfunError::ZeroAmount.into());
     }
 
+    require!(virtual_quote > 0 && virtual_tokens > 0, StreetfunError::InsufficientLiquidity);
     let fee_quote = calculate_fee(quote_in, fee_bps)?;
     let net_quote = quote_in
         .checked_sub(fee_quote)
@@ -87,8 +89,8 @@ pub fn calculate_buy_tokens_out(
         .checked_sub(tokens_out)
         .ok_or(StreetfunError::MathOverflow)?;
 
-    let new_virtual_quote = (x_new) as u64;
-    let new_virtual_tokens = (y_new) as u64;
+    let new_virtual_quote = u64::try_from(x_new).map_err(|_| StreetfunError::MathOverflow)?;
+    let new_virtual_tokens = u64::try_from(y_new).map_err(|_| StreetfunError::MathOverflow)?;
 
     Ok(BuyResult {
         tokens_out,
@@ -112,6 +114,7 @@ pub fn calculate_sell_quote_out(
         return Err(StreetfunError::ZeroAmount.into());
     }
 
+    require!(virtual_quote > 0 && virtual_tokens > 0, StreetfunError::InsufficientLiquidity);
     let x = virtual_quote as u128;
     let y = virtual_tokens as u128;
     let dy = tokens_in as u128;
@@ -136,6 +139,7 @@ pub fn calculate_sell_quote_out(
 
     let gross_quote_out = dx as u64;
 
+    require!(gross_quote_out > 0, StreetfunError::InsufficientQuoteReserves);
     if gross_quote_out > real_quote {
         return Err(StreetfunError::InsufficientQuoteReserves.into());
     }
@@ -149,8 +153,8 @@ pub fn calculate_sell_quote_out(
         .checked_sub(gross_quote_out)
         .ok_or(StreetfunError::MathOverflow)?;
 
-    let new_virtual_quote = x_new as u64;
-    let new_virtual_tokens = y_new as u64;
+    let new_virtual_quote = u64::try_from(x_new).map_err(|_| StreetfunError::MathOverflow)?;
+    let new_virtual_tokens = u64::try_from(y_new).map_err(|_| StreetfunError::MathOverflow)?;
 
     Ok(SellResult {
         net_quote_out,
@@ -175,6 +179,7 @@ pub fn calculate_pro_rata_equity(
         return Err(StreetfunError::CalculationError.into());
     }
 
+    require!(meme_amount_burned <= total_meme_supply, StreetfunError::CalculationError);
     let entitled_shares = (meme_amount_burned as u128)
         .checked_mul(total_equity_locked as u128)
         .ok_or(StreetfunError::MathOverflow)?
@@ -187,6 +192,21 @@ pub fn calculate_pro_rata_equity(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn rejects_invalid_reserves_and_dust_sales() {
+        assert!(calculate_buy_tokens_out(1, 0, 100, 100, 0).is_err());
+        assert!(calculate_sell_quote_out(1, 1, 100, 1, 0).is_err());
+        assert!(calculate_fee(100, 1001).is_err());
+        assert!(calculate_pro_rata_equity(101, 100, 50).is_err());
+    }
+
+    #[test]
+    fn rejects_reserve_overflow_instead_of_truncating() {
+        assert!(calculate_buy_tokens_out(u64::MAX, 1, 100, 100, 0).is_err());
+        assert!(calculate_sell_quote_out(u64::MAX, 100, 1, 100, 0).is_err());
+    }
+
 
     #[test]
     fn test_constant_product_buy() {

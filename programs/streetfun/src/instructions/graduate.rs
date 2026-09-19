@@ -66,6 +66,7 @@ pub struct GraduateAndExecuteStock<'info> {
     #[account(
         mut,
         token::mint = quote_vault.mint,
+        constraint = equity_purchase_account.key() != quote_vault.key() @ StreetfunError::CurveVaultMismatch,
     )]
     pub equity_purchase_account: Box<Account<'info, TokenAccount>>,
 
@@ -83,6 +84,7 @@ pub struct GraduateAndExecuteStock<'info> {
     #[account(
         mut,
         token::mint = quote_vault.mint,
+        constraint = amm_quote_destination.key() != quote_vault.key() @ StreetfunError::CurveVaultMismatch,
     )]
     pub amm_quote_destination: Box<Account<'info, TokenAccount>>,
 
@@ -90,6 +92,7 @@ pub struct GraduateAndExecuteStock<'info> {
     #[account(
         mut,
         token::mint = meme_mint,
+        constraint = amm_token_destination.key() != token_vault.key() @ StreetfunError::CurveVaultMismatch,
     )]
     pub amm_token_destination: Box<Account<'info, TokenAccount>>,
 
@@ -100,6 +103,13 @@ pub fn handle_graduate_and_execute_stock(
     ctx: Context<GraduateAndExecuteStock>,
     params: GraduateParams,
 ) -> Result<()> {
+    // Destinations and the equity quote are supplied by the operator until a
+    // verified swap/pool CPI is implemented. Only the configured admin may settle.
+    validate_settlement(
+        ctx.accounts.caller.key(),
+        ctx.accounts.global_config.admin,
+        params.min_equity_tokens_expected,
+    )?;
     let curve = &mut ctx.accounts.curve;
 
     if curve.is_graduated {
@@ -219,4 +229,24 @@ pub fn handle_graduate_and_execute_stock(
     );
 
     Ok(())
+}
+
+fn validate_settlement(caller: Pubkey, admin: Pubkey, equity_amount: u64) -> Result<()> {
+    require_keys_eq!(caller, admin, StreetfunError::Unauthorized);
+    require!(equity_amount > 0, StreetfunError::ZeroAmount);
+    Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn settlement_requires_admin_and_nonzero_equity() {
+        let admin = Pubkey::new_unique();
+        assert!(validate_settlement(Pubkey::new_unique(), admin, 1).is_err());
+        assert!(validate_settlement(Pubkey::new_unique(), admin, 0).is_err());
+        assert!(validate_settlement(admin, admin, 0).is_err());
+        assert!(validate_settlement(admin, admin, 1).is_ok());
+    }
 }

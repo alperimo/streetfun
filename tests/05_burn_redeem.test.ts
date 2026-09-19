@@ -2,6 +2,7 @@ import { expect } from "chai";
 import { Keypair } from "@solana/web3.js";
 import {
   createProvider,
+  protocolAdmin,
   loadProgram,
   airdropSol,
   createSplMint,
@@ -170,7 +171,7 @@ describe("05 - StreetFun Protocol: Burn & Redeem for Pro-Rata Stock", () => {
         minEquityTokensExpected: new BN(totalStockDeposited),
       })
       .accounts({
-        caller: traderBob.publicKey,
+        caller: protocolAdmin.publicKey,
         globalConfig: globalConfigPda,
         memeMint: memeMintKeypair.publicKey,
         targetEquityMint: equityMint,
@@ -185,7 +186,7 @@ describe("05 - StreetFun Protocol: Burn & Redeem for Pro-Rata Stock", () => {
         ammTokenDestination: ammTokenAta.address,
         tokenProgram: TOKEN_PROGRAM_ID,
       })
-      .signers([traderBob, stockProvider])
+      .signers([protocolAdmin, stockProvider])
       .rpc();
 
     // Prepare Bob's equity ATA

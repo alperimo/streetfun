@@ -39,6 +39,13 @@ pub fn handle_initialize_global_config(
         return Err(StreetfunError::InvalidFeeBps.into());
     }
 
+    require!(
+        params.graduation_threshold > 0
+            && params.initial_virtual_quote_reserves > 0
+            && params.initial_virtual_token_reserves > crate::instructions::launch::SALE_SUPPLY,
+        StreetfunError::CalculationError
+    );
+
     let config = &mut ctx.accounts.global_config;
     config.admin = ctx.accounts.admin.key();
     config.protocol_fee_recipient = ctx.accounts.protocol_fee_recipient.key();
