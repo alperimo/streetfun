@@ -1,9 +1,10 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  // Keep development and production compilation artifacts isolated so a
-  // production build cannot invalidate the dev server's client manifest.
-  distDir: process.env.NEXT_DIST_DIR || (process.env.NODE_ENV === "development" ? ".next-dev" : ".next"),
+  // Keep the generated Next.js type reference stable during normal dev/build
+  // runs. Dedicated verification runs can still override this with
+  // NEXT_DIST_DIR (for example, .next-verification).
+  distDir: process.env.NEXT_DIST_DIR || ".next",
   images: {
     unoptimized: true,
     remotePatterns: [
