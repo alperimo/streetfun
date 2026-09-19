@@ -57,8 +57,12 @@ export class LocalnetWalletAdapter extends BaseWalletAdapter<"Localnet Dev Walle
       this.keypair = keypair;
       this.emit("connect", keypair.publicKey);
     } catch (cause) {
+      const message = cause instanceof Error ? cause.message : "";
+      const friendlyMessage = message.toLowerCase().includes("fetch failed")
+        ? "The StreetFun local validator is unavailable. Start it on 127.0.0.1:8899 and try again."
+        : message || "Could not connect the local testing wallet.";
       const error = new WalletConnectionError(
-        cause instanceof Error ? cause.message : "Could not connect the local testing wallet.",
+        friendlyMessage,
         cause
       );
       this.emit("error", error);

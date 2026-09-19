@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Search } from "lucide-react";
+import { Check, ChevronDown, Search, SlidersHorizontal } from "lucide-react";
 
 export type StatusFilter = "all" | "bonding" | "graduated";
 export type SortOption = "mcap" | "newest" | "volume" | "progress";
@@ -44,28 +44,28 @@ export function FilterBar({
   onSortChange,
 }: FilterBarProps) {
   return (
-    <div className="mt-4 flex flex-col gap-3.5">
-      {/* Top Controls Row: Search Input + Status Filter + Sort */}
-      <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4">
-        {/* Search Input Box */}
-        <div className="relative w-full lg:flex-1 lg:max-w-[660px]">
+    <div className="mt-5 flex flex-col gap-4">
+      <div className="flex flex-col gap-3 rounded-2xl border border-border bg-card/70 p-2 shadow-xs lg:w-fit lg:flex-row lg:items-center">
+        <div className="relative min-w-0 flex-1 lg:w-[420px] lg:flex-none xl:w-[500px]">
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted" />
           <input
             type="text"
             placeholder="Search name, ticker, or contract address"
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
-            className="w-full rounded-lg border border-border bg-card pl-10 pr-4 py-2 text-sm text-foreground placeholder-muted focus:border-border-active focus:outline-none transition-colors shadow-xs"
+            className="h-11 w-full rounded-xl border border-transparent bg-card-subtle pl-10 pr-4 text-sm text-foreground placeholder-muted transition-colors focus:border-border-active focus:outline-none"
           />
         </div>
 
-        {/* Right Controls: Status Segments + Sort Segments */}
-        <div className="flex min-w-0 flex-wrap items-center gap-4 text-xs">
-          {/* Status Segmented Control (All / In Curve / Graduated) */}
-          <div className="flex items-center rounded-lg border border-border bg-card/60 p-1 shadow-xs gap-1">
+        <div className="flex min-w-0 flex-wrap items-center gap-2 px-1 lg:flex-nowrap">
+          <span className="hidden shrink-0 items-center gap-1.5 px-2 text-[11px] font-semibold text-muted lg:flex">
+            <SlidersHorizontal className="h-3.5 w-3.5" />
+            Status
+          </span>
+          <div className="flex min-w-0 flex-1 items-center gap-1 rounded-xl bg-card-subtle p-1 lg:flex-none">
             {(
               [
-                { id: "all", label: "All status" },
+                { id: "all", label: "All" },
                 { id: "bonding", label: "In Curve" },
                 { id: "graduated", label: "Graduated" },
               ] as const
@@ -73,50 +73,47 @@ export function FilterBar({
               <button
                 key={item.id}
                 onClick={() => onStatusFilterChange(item.id)}
-                className={`rounded-md px-2.5 py-1 text-xs transition-colors duration-150 ${
+                className={`flex-1 whitespace-nowrap rounded-lg px-3 py-2 text-xs transition-colors duration-150 lg:flex-none ${
                   statusFilter === item.id
-                    ? "bg-brand-cyan/10 border border-brand-cyan/40 text-brand-cyan font-medium shadow-xs"
-                    : "border border-transparent text-muted hover:text-foreground hover:bg-card-hover font-medium"
+                    ? "border border-brand-cyan/40 bg-brand-cyan/10 font-semibold text-brand-cyan shadow-xs"
+                    : "border border-transparent font-medium text-muted hover:bg-card-hover hover:text-foreground"
                 }`}
               >
+                {statusFilter === item.id && <Check className="mr-1 inline-block h-3.5 w-3.5" />}
                 {item.label}
               </button>
             ))}
           </div>
 
-          {/* Sort Segmented Control */}
-          <div className="flex w-full min-w-0 items-center gap-2 text-xs lg:w-auto">
-            <span className="shrink-0 text-muted font-medium">Sort:</span>
-            <div className="flex min-w-0 items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+          <label className="relative flex h-11 shrink-0 items-center rounded-xl border border-border bg-card px-3 text-xs text-foreground transition-colors hover:border-border-active">
+            <span className="mr-2 text-muted">Sort</span>
+            <select
+              value={sortBy}
+              onChange={(event) => onSortChange(event.target.value as SortOption)}
+              aria-label="Sort markets"
+              className="appearance-none bg-transparent pr-5 font-semibold outline-none"
+            >
               {SORT_OPTIONS.map((item) => (
-                <button
-                  key={item.id}
-                  onClick={() => onSortChange(item.id)}
-                  className={`whitespace-nowrap rounded-lg px-2.5 py-1 text-xs transition-colors duration-150 ${
-                    sortBy === item.id
-                      ? "bg-brand-cyan/10 border border-brand-cyan/40 text-brand-cyan font-medium shadow-xs"
-                      : "border border-border bg-transparent text-muted font-medium hover:text-foreground hover:bg-card-hover"
-                  }`}
-                >
+                <option key={item.id} value={item.id} className="bg-card text-foreground">
                   {item.label}
-                </button>
+                </option>
               ))}
-            </div>
-          </div>
+            </select>
+            <ChevronDown className="pointer-events-none absolute right-3 h-3.5 w-3.5 text-muted" />
+          </label>
         </div>
       </div>
 
-      {/* Target Equity Filter Tags: Uniform Pill-Box Wrapper for every single category */}
-      <div className="flex w-full min-w-0 items-center gap-2 overflow-x-auto pb-1 text-xs scrollbar-none">
-        <span className="text-muted whitespace-nowrap mr-0.5 font-medium">Backed with:</span>
+      <div className="flex w-full min-w-0 items-center gap-2 overflow-x-auto px-1 pb-1 text-xs scrollbar-none">
+        <span className="mr-1 whitespace-nowrap text-[11px] font-semibold text-muted">Backed with</span>
         {EQUITY_TAGS.map((tag) => (
           <button
             key={tag.id}
             onClick={() => onTagChange(tag.id)}
-            className={`whitespace-nowrap rounded-lg px-3 py-1 text-xs transition-colors duration-150 ${
+            className={`whitespace-nowrap rounded-full border px-3 py-1.5 text-xs transition-colors duration-150 ${
               selectedTag === tag.id
-                ? "bg-brand-cyan/10 border border-brand-cyan/40 text-brand-cyan font-medium shadow-xs"
-                : "border border-border bg-filter text-muted font-medium hover:text-foreground hover:bg-card-hover"
+                ? "border-brand-cyan/40 bg-brand-cyan/10 font-semibold text-brand-cyan shadow-xs"
+                : "border-border bg-transparent font-medium text-muted hover:bg-card-hover hover:text-foreground"
             }`}
           >
             {tag.label}

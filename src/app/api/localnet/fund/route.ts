@@ -8,6 +8,13 @@ import { USDC_MINT } from "@/sdk/constants";
 
 export const runtime = "nodejs";
 
+function isRpcUnavailable(error: unknown): boolean {
+  const message = error instanceof Error ? error.message : String(error);
+  const cause = error instanceof Error && error.cause instanceof Error ? error.cause.message : "";
+  return `${message} ${cause}`.toLowerCase().includes("fetch failed") ||
+    `${message} ${cause}`.toLowerCase().includes("econnrefused");
+}
+
 export async function POST(request: NextRequest) {
   const rpc = process.env.NEXT_PUBLIC_SOLANA_RPC;
   const pageHost = request.nextUrl.hostname;
@@ -50,7 +57,12 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error("[Localnet funding]", error);
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Local wallet funding failed." },
+      {
+        error: isRpcUnavailable(error)
+          ? "The local Solana validator is unavailable. Start it on 127.0.0.1:8899 and try again."
+          : error instanceof Error ? error.message : "Local wallet funding failed.",
+        code: isRpcUnavailable(error) ? "RPC_UNAVAILABLE" : "LOCAL_WALLET_FUNDING_FAILED",
+      },
       { status: 503 }
     );
   }
