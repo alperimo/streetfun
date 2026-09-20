@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { useWalletModal } from "@solana/wallet-adapter-react-ui";
 import bs58 from "bs58";
-import { Wallet, Share2, RefreshCw, Check } from "lucide-react";
+import { Wallet, Share2, RefreshCw } from "lucide-react";
 import { StreetFunLogo } from "@/components/common/StreetFunLogo";
 import { BullArtwork } from "@/components/home/BullArtwork";
 import { TermsModal } from "@/components/modals/TermsModal";
@@ -114,7 +114,7 @@ export function AlphaLanding() {
   const handleShareOnX = () => {
     if (!passData) return;
     const formattedNum = String(passData.passNumber).padStart(4, "0");
-    const tweetText = `Claimed Alpha Pass ${formattedNum} on @StreetFunSol 🐂\n\nTrade viral momentum. Graduate to real equities.\n\nhttps://streetfun.fun/alpha`;
+    const tweetText = `Claimed Alpha Pass ${formattedNum} on @streetfunxyz\n\nTrade viral momentum. Graduate to real equities.\n\nhttps://streetfun.xyz`;
     const shareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}`;
     window.open(shareUrl, "_blank", "noopener,noreferrer");
   };
@@ -140,16 +140,6 @@ export function AlphaLanding() {
 
         <div className="relative mx-auto w-full max-w-[1350px] px-6 sm:px-10 lg:px-0 z-10">
           <div className="max-w-[620px]">
-            <div className="alpha-eyebrow mb-6 flex flex-wrap items-center gap-3" aria-label="Alpha early access">
-              <span className="h-px w-8 bg-brand-cyan" aria-hidden="true" />
-              <span className="font-mono text-[11px] font-semibold uppercase tracking-[0.22em] text-brand-cyan">
-                Alpha
-              </span>
-              <span className="rounded-md border border-brand-cyan/30 bg-brand-cyan/10 px-2 py-1 font-mono text-[10px] uppercase tracking-[0.12em] text-brand-cyan">
-                Early access
-              </span>
-            </div>
-
             <h1 className="text-4xl sm:text-6xl lg:text-[68px] font-black leading-[0.98] tracking-[-0.05em] text-foreground">
               Wall Street Floor <br />
               For <span className="text-brand-cyan">Memecoins</span>
@@ -245,22 +235,6 @@ export function AlphaLanding() {
                     <Share2 className="h-4 w-4" />
                     <span>Share on X</span>
                   </button>
-
-                  <div className="rounded-xl border border-border bg-card/90 px-4 py-4 backdrop-blur-sm">
-                    <div className="font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-muted">
-                      Included with your pass
-                    </div>
-                    <ul className="mt-3 space-y-2.5 text-xs font-medium text-foreground">
-                      <li className="flex items-center gap-2.5">
-                        <Check className="h-3.5 w-3.5 shrink-0 text-brand-cyan" aria-hidden="true" />
-                        <span>Day-1 0% launch fees</span>
-                      </li>
-                      <li className="flex items-center gap-2.5">
-                        <Check className="h-3.5 w-3.5 shrink-0 text-brand-cyan" aria-hidden="true" />
-                        <span>Priority beta access</span>
-                      </li>
-                    </ul>
-                  </div>
                 </div>
               )}
             </div>
@@ -272,12 +246,22 @@ export function AlphaLanding() {
       <footer className="w-full border-t border-border bg-background py-5 text-xs text-muted">
         <div className="mx-auto flex w-full max-w-[1350px] items-center justify-between px-6 sm:px-10 lg:px-0">
           <div className="font-mono text-[11px] text-muted">StreetFun © 2026</div>
-          <button
-            onClick={() => setIsTermsOpen(true)}
-            className="hover:text-foreground transition-colors font-medium text-[11px]"
-          >
-            Terms of Service
-          </button>
+          <div className="flex items-center gap-5">
+            <a
+              href="https://x.com/streetfunxyz"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-foreground transition-colors font-medium text-[11px]"
+            >
+              X
+            </a>
+            <button
+              onClick={() => setIsTermsOpen(true)}
+              className="hover:text-foreground transition-colors font-medium text-[11px]"
+            >
+              Terms of Service
+            </button>
+          </div>
         </div>
       </footer>
 

@@ -11,10 +11,35 @@ import { isMockMode } from "@/services";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://streetfun.xyz"),
   title: "Streetfun · Memecoins With A Wall Street Floor",
   description: "Trade viral momentum. Graduate to real tokenized equities.",
   icons: {
     icon: "/generated/streetfun-logo.png",
+  },
+  openGraph: {
+    title: "Streetfun · Memecoins With A Wall Street Floor",
+    description: "Trade viral momentum. Graduate to real tokenized equities.",
+    url: "https://streetfun.xyz",
+    siteName: "Streetfun",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "Streetfun - Wall Street Floor For Memecoins",
+      },
+    ],
+    locale: "en_US",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Streetfun · Memecoins With A Wall Street Floor",
+    description: "Trade viral momentum. Graduate to real tokenized equities.",
+    site: "@streetfunxyz",
+    creator: "@streetfunxyz",
+    images: ["/og-image.png"],
   },
 };
 

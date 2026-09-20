@@ -103,6 +103,8 @@
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
       Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
     overflow-x: hidden;
+    overflow-y: scroll !important;
+    scrollbar-gutter: stable;
     transition: background-color 0.2s ease, color 0.2s ease;
   }
 
@@ -176,6 +178,8 @@
   overflow: hidden;
   pointer-events: none;
   container-type: size;
+  transform: translateZ(0);
+  backface-visibility: hidden;
 }
 
 .hero-artwork-stage {
@@ -184,7 +188,9 @@
   aspect-ratio: var(--artwork-ratio);
   left: var(--artwork-x);
   top: var(--artwork-y);
-  transform: translate(calc(-1 * var(--artwork-x)), calc(-1 * var(--artwork-y)));
+  transform: translate(calc(-1 * var(--artwork-x)), calc(-1 * var(--artwork-y))) translateZ(0);
+  backface-visibility: hidden;
+  will-change: transform;
 }
 
 .hero-chart {
@@ -295,26 +301,190 @@ input[type="number"] {
   color: #ffffff !important;
 }
 
+/* Modal Root Fixes */
+.wallet-adapter-modal {
+  background: transparent !important;
+  overflow-y: auto !important;
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+  transform: translateZ(0);
+}
+
+.wallet-adapter-modal::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+/* Modal Overlay & Backdrop */
+.wallet-adapter-modal-overlay {
+  background: rgba(0, 0, 0, 0.32) !important;
+  backdrop-filter: blur(1.5px) !important;
+  -webkit-backdrop-filter: blur(1.5px) !important;
+  transform: translateZ(0);
+  will-change: opacity;
+}
+
+/* Modal Window Container */
 .wallet-adapter-modal-wrapper {
   background: var(--card) !important;
   border: 1px solid var(--border) !important;
-  border-radius: 12px !important;
+  border-radius: 18px !important;
   color: var(--foreground) !important;
+  max-width: 400px !important;
+  width: 100% !important;
+  padding: 20px 20px 14px 20px !important;
+  box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.7), 0 0 0 1px var(--border) !important;
+  position: relative !important;
+  box-sizing: border-box !important;
 }
 
+/* Modal Header Title */
 .wallet-adapter-modal-title {
+  font-family: inherit !important;
+  font-size: 1.05rem !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.02em !important;
+  line-height: 1.3 !important;
+  padding: 0 32px 14px 0 !important;
+  margin: 0 !important;
+  text-align: left !important;
   color: var(--foreground) !important;
+  width: 100% !important;
+}
+
+/* Minimalist Close Button */
+.wallet-adapter-modal-button-close {
+  top: 18px !important;
+  right: 18px !important;
+  padding: 7px !important;
+  width: 30px !important;
+  height: 30px !important;
+  background: var(--card-hover) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 8px !important;
+  transition: all 0.15s ease !important;
+}
+
+.wallet-adapter-modal-button-close:hover {
+  background: var(--border) !important;
+  border-color: var(--border-active) !important;
+}
+
+.wallet-adapter-modal-button-close svg {
+  fill: var(--muted) !important;
+  width: 14px !important;
+  height: 14px !important;
+}
+
+.wallet-adapter-modal-button-close:hover svg {
+  fill: var(--foreground) !important;
+}
+
+/* Wallet List & Spacing */
+.wallet-adapter-modal-list {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 6px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  width: 100% !important;
+  list-style: none !important;
+}
+
+.wallet-adapter-modal-list li {
+  margin: 0 !important;
+  padding: 0 !important;
+  list-style: none !important;
 }
 
 .wallet-adapter-modal-list .wallet-adapter-button {
+  display: flex !important;
+  align-items: center !important;
+  height: 46px !important;
+  padding: 0 14px !important;
+  border-radius: 12px !important;
   background-color: var(--card-subtle) !important;
-  color: var(--foreground) !important;
   border: 1px solid var(--border) !important;
+  color: var(--foreground) !important;
+  font-size: 0.85rem !important;
+  font-weight: 600 !important;
+  transition: all 0.15s ease !important;
+  cursor: pointer !important;
+  width: 100% !important;
 }
 
 .wallet-adapter-modal-list .wallet-adapter-button:hover {
   background-color: var(--card-hover) !important;
   border-color: var(--brand-cyan) !important;
+  transform: translateY(-1px) !important;
+}
+
+.wallet-adapter-modal-list .wallet-adapter-button-start-icon,
+.wallet-adapter-modal-list .wallet-adapter-button-start-icon img {
+  width: 26px !important;
+  height: 26px !important;
+  border-radius: 7px !important;
+  margin-right: 12px !important;
+}
+
+.wallet-adapter-modal-list .wallet-adapter-button span {
+  margin-left: auto !important;
+  font-size: 0.65rem !important;
+  font-weight: 500 !important;
+  color: var(--muted) !important;
+  background: rgba(255, 255, 255, 0.04) !important;
+  border: 1px solid var(--border) !important;
+  padding: 1px 6px !important;
+  border-radius: 4px !important;
+  opacity: 0.85 !important;
+  letter-spacing: 0.02em !important;
+  text-transform: uppercase !important;
+  line-height: 1.3 !important;
+}
+
+.wallet-adapter-modal-list .wallet-adapter-button:hover span {
+  color: var(--brand-cyan) !important;
+  border-color: rgba(200, 240, 95, 0.25) !important;
+  opacity: 1 !important;
+}
+
+/* More / Collapse Button */
+.wallet-adapter-modal-list-more {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px !important;
+  padding: 6px 12px 2px 12px !important;
+  margin-top: 4px !important;
+  color: var(--muted) !important;
+  font-size: 0.78rem !important;
+  font-weight: 500 !important;
+  background: transparent !important;
+  border: none !important;
+  outline: none !important;
+  cursor: pointer !important;
+  transition: color 0.15s ease !important;
+  width: 100% !important;
+}
+
+.wallet-adapter-modal-list-more:hover {
+  color: var(--foreground) !important;
+}
+
+.wallet-adapter-modal-list-more svg {
+  fill: currentColor !important;
+  width: 12px !important;
+  height: 12px !important;
+  margin-left: 2px !important;
+}
+
+.wallet-adapter-modal-list-more:focus,
+.wallet-adapter-modal-list-more:focus-visible,
+.wallet-adapter-modal-collapse-button:focus,
+.wallet-adapter-modal-collapse-button:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
 }
 
 /* The extra image shares the original optimized URL and artwork coordinates.
