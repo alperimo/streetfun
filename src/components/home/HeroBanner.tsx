@@ -48,7 +48,7 @@ export function HeroBanner() {
             For <span className="text-brand-cyan">Memecoins</span>
           </h1>
           <p className="mt-4 max-w-lg text-base text-muted sm:text-lg">
-            Trade viral momentum. Graduate to real tokenized equities.
+            Trade viral momentum. Graduate to tokenized stocks.
           </p>
           <div className="mt-6 grid w-full max-w-[480px] grid-cols-3 items-stretch rounded-2xl border border-border bg-background/75 p-3 backdrop-blur-md sm:p-4">
             {stats.map((stat, index) => (

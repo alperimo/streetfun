@@ -13,13 +13,13 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   metadataBase: new URL("https://streetfun.xyz"),
   title: "Streetfun · Memecoins With A Wall Street Floor",
-  description: "Trade viral momentum. Graduate to real tokenized equities.",
+  description: "Trade viral momentum. Graduate to real tokenized stocks.",
   icons: {
     icon: "/generated/streetfun-logo.png",
   },
   openGraph: {
     title: "Streetfun · Memecoins With A Wall Street Floor",
-    description: "Trade viral momentum. Graduate to real tokenized equities.",
+    description: "Trade viral momentum. Graduate to real tokenized stocks.",
     url: "https://streetfun.xyz",
     siteName: "Streetfun",
     images: [
@@ -36,7 +36,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "Streetfun · Memecoins With A Wall Street Floor",
-    description: "Trade viral momentum. Graduate to real tokenized equities.",
+    description: "Trade viral momentum. Graduate to real tokenized stocks.",
     site: "@streetfunxyz",
     creator: "@streetfunxyz",
     images: ["/og-image.png"],

@@ -114,7 +114,7 @@ export function AlphaLanding() {
   const handleShareOnX = () => {
     if (!passData) return;
     const formattedNum = String(passData.passNumber).padStart(4, "0");
-    const tweetText = `Claimed Alpha Pass ${formattedNum} on @streetfunxyz\n\nTrade viral momentum. Graduate to tokenized equities.\n\nhttps://streetfun.xyz`;
+    const tweetText = `Claimed Alpha Pass ${formattedNum} on @streetfunxyz\n\nTrade viral momentum. Graduate to tokenized stocks.\n\nhttps://streetfun.xyz`;
     const shareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}`;
     window.open(shareUrl, "_blank", "noopener,noreferrer");
   };
@@ -146,7 +146,7 @@ export function AlphaLanding() {
             </h1>
 
             <p className="alpha-subtitle mt-4 text-base sm:text-lg text-muted">
-              Trade viral momentum. Graduate to tokenized equities.
+              Trade viral momentum. Graduate to tokenized stocks.
             </p>
 
             {/* Single Elegant Action Area */}
