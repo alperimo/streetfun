@@ -116,6 +116,7 @@ export function BullArtwork({ useVideo = false }: BullArtworkProps = {}) {
                     alt="StreetFun Bull"
                     fill
                     priority
+                    unoptimized
                     sizes="(max-width: 768px) 100vw, 900px"
                     className="object-cover"
                   />
@@ -127,6 +128,7 @@ export function BullArtwork({ useVideo = false }: BullArtworkProps = {}) {
                 alt="StreetFun Bull"
                 fill
                 priority
+                unoptimized
                 sizes="(max-width: 900px) 900px, 100vw"
                 className="object-cover"
               />
@@ -140,6 +142,7 @@ export function BullArtwork({ useVideo = false }: BullArtworkProps = {}) {
               alt=""
               fill
               priority
+              unoptimized
               sizes="(max-width: 900px) 900px, 100vw"
               className="object-cover"
             />

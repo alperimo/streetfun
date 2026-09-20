@@ -1,0 +1,11 @@
+# StreetFun
+
+> Trade viral momentum. Graduate to real tokenized stocks on Solana.
+
+StreetFun bridges speculative meme liquidity with institutional-grade tokenized equities, creating an enduring on-chain equity floor for community tokens.
+
+## Official Links
+- [Website](https://www.streetfun.xyz): Official StreetFun platform
+- [Alpha Access](https://www.streetfun.xyz/alpha): Connect wallet to claim your Alpha Pass
+- [Treasury](https://www.streetfun.xyz/treasury): Real-world asset backing and vault reserves
+- [Twitter / X](https://x.com/streetfunxyz): Official protocol announcements and updates

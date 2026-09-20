@@ -18,6 +18,12 @@ export function middleware(request: NextRequest) {
     pathname === "/alpha" ||
     pathname.startsWith("/api/alpha") ||
     pathname === "/terms.txt" ||
+    pathname === "/robots.txt" ||
+    pathname === "/sitemap.xml" ||
+    pathname === "/llms.txt" ||
+    pathname === "/llms-full.txt" ||
+    pathname.endsWith(".txt") ||
+    pathname.endsWith(".xml") ||
     pathname.startsWith("/generated") ||
     pathname.startsWith("/_next") ||
     pathname === "/favicon.ico" ||
