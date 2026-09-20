@@ -97,32 +97,38 @@ export function BullArtwork({ useVideo = false }: BullArtworkProps = {}) {
         <div className="hero-artwork-faded-layer hero-bull-image">
           <div className="hero-artwork-stage" style={stageStyle}>
             {useVideo ? (
-              <video
-                autoPlay
-                loop
-                muted
-                playsInline
-                preload="auto"
-                poster="/generated/hero-bull-brand-glasses.png"
-                className="absolute inset-0 w-full h-full object-cover pointer-events-none"
-              >
-                <source src="/generated/hero-bull-video.webm" type="video/webm" />
-                <source src="/generated/hero-bull-video.mp4" type="video/mp4" />
-                <Image
-                  src="/generated/hero-bull-brand-glasses.png"
-                  alt=""
-                  fill
-                  priority
-                  sizes="(max-width: 900px) 900px, 100vw"
-                />
-              </video>
+              <>
+                <video
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  preload="none"
+                  poster="/generated/hero-bull-brand-glasses.webp"
+                  className="hidden md:block absolute inset-0 w-full h-full object-cover pointer-events-none"
+                >
+                  <source src="/generated/hero-bull-video.webm" type="video/webm" />
+                  <source src="/generated/hero-bull-video.mp4" type="video/mp4" />
+                </video>
+                <div className="md:hidden absolute inset-0">
+                  <Image
+                    src="/generated/hero-bull-brand-glasses.webp"
+                    alt="StreetFun Bull"
+                    fill
+                    priority
+                    sizes="(max-width: 768px) 100vw, 900px"
+                    className="object-cover"
+                  />
+                </div>
+              </>
             ) : (
               <Image
-                src="/generated/hero-bull-brand-glasses.png"
-                alt=""
+                src="/generated/hero-bull-brand-glasses.webp"
+                alt="StreetFun Bull"
                 fill
                 priority
                 sizes="(max-width: 900px) 900px, 100vw"
+                className="object-cover"
               />
             )}
           </div>
@@ -130,11 +136,12 @@ export function BullArtwork({ useVideo = false }: BullArtworkProps = {}) {
         <div className="hero-bull-foreground-layer">
           <div className="hero-artwork-stage" style={stageStyle}>
             <Image
-              src="/generated/hero-bull-foreground.png"
+              src="/generated/hero-bull-foreground.webp"
               alt=""
               fill
               priority
               sizes="(max-width: 900px) 900px, 100vw"
+              className="object-cover"
             />
             <svg
               ref={svg}

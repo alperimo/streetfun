@@ -240,15 +240,30 @@
   .alpha-landing .hero-section {
     justify-content: flex-start;
     padding-top: 2rem;
+    padding-bottom: 2rem;
   }
 
-  .alpha-landing .alpha-eyebrow {
-    margin-bottom: 1rem;
+  .alpha-landing h1 {
+    font-size: 2.35rem !important;
+    line-height: 1.05 !important;
+    text-shadow: 0 2px 24px rgba(0, 0, 0, 0.95);
   }
 
-  .alpha-landing h1,
   .alpha-landing .alpha-subtitle {
-    text-shadow: 0 2px 16px var(--background);
+    text-shadow: 0 2px 16px rgba(0, 0, 0, 0.95);
+  }
+
+  .alpha-landing .alpha-terms-note {
+    background: rgba(10, 11, 12, 0.78);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 9999px;
+    padding: 5px 14px;
+    display: inline-block;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.6);
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.9);
+    margin-top: 0.75rem;
   }
 
   .alpha-landing .alpha-pass-status {
@@ -256,6 +271,38 @@
     border: 1px solid var(--border);
     border-radius: 0.75rem;
     background: color-mix(in srgb, var(--card) 94%, transparent);
+  }
+}
+
+/* Landing Page Specific: Reduced Right Fade on the Bull Artwork */
+.alpha-landing .hero-bull-image,
+.alpha-landing .hero-bull-foreground-layer {
+  -webkit-mask-image:
+    linear-gradient(to bottom, transparent 5%, black 35%, black 85%, transparent 100%),
+    linear-gradient(to right, transparent 0%, transparent 15%, black 45%, black 93%, transparent 100%);
+  -webkit-mask-composite: source-in;
+  mask-image:
+    linear-gradient(to bottom, transparent 5%, black 35%, black 85%, transparent 100%),
+    linear-gradient(to right, transparent 0%, transparent 15%, black 45%, black 93%, transparent 100%);
+  mask-composite: intersect;
+}
+
+/* Landing Page Mobile Specific: Shift Bull Right to Center Sunglasses & Soften Edges */
+@media (max-width: 767px) {
+  .alpha-landing .hero-artwork-stage {
+    --artwork-x: 74% !important;
+  }
+
+  .alpha-landing .hero-bull-image,
+  .alpha-landing .hero-bull-foreground-layer {
+    -webkit-mask-image:
+      linear-gradient(to bottom, transparent 0%, black 10%, black 85%, transparent 100%),
+      linear-gradient(to right, transparent 0%, black 8%, black 94%, transparent 100%);
+    -webkit-mask-composite: source-in;
+    mask-image:
+      linear-gradient(to bottom, transparent 0%, black 10%, black 85%, transparent 100%),
+      linear-gradient(to right, transparent 0%, black 8%, black 94%, transparent 100%);
+    mask-composite: intersect;
   }
 }
 

@@ -175,7 +175,7 @@ export function WalletButton() {
                   <a
                     href="https://phantom.com/download"
                     target="_blank"
-                    rel="noreferrer"
+                    rel="noopener noreferrer"
                     onClick={() => setConnectMenuOpen(false)}
                     className="flex w-full items-center gap-3 rounded-xl border border-brand-cyan/30 bg-brand-cyan/10 p-3.5 text-left text-foreground transition-colors hover:bg-brand-cyan/15"
                   >

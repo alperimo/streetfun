@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { WalletProvider } from "@/components/layout/WalletProvider";
 import { ThemeProvider } from "@/context/ThemeContext";
@@ -9,6 +9,12 @@ import { TokenMetadata } from "@/lib/types";
 import { isMockMode } from "@/services";
 
 export const dynamic = "force-dynamic";
+
+export const viewport: Viewport = {
+  themeColor: "#0a0b0d",
+  width: "device-width",
+  initialScale: 1,
+};
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://streetfun.xyz"),
@@ -48,8 +54,12 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const isAlphaOnly =
+    process.env.NEXT_PUBLIC_ALPHA_ONLY === "true" ||
+    (process.env.NODE_ENV === "production" && process.env.NEXT_PUBLIC_FULL_APP !== "true");
+
   let initialTokens: TokenMetadata[] = [];
-  if (!isMockMode()) {
+  if (!isAlphaOnly && !isMockMode()) {
     try {
       initialTokens = await getLiveTokens();
     } catch (err) {
@@ -60,6 +70,13 @@ export default async function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        <link
+          rel="preload"
+          as="image"
+          href="/generated/hero-bull-brand-glasses.webp"
+          type="image/webp"
+          fetchPriority="high"
+        />
         <script
           dangerouslySetInnerHTML={{
             __html: `try{var p=new URLSearchParams(window.location.search).get('theme');var t=p||localStorage.getItem('streetfun-theme')||'dark';if(p){try{localStorage.setItem('streetfun-theme',p);}catch(_){}}document.documentElement.setAttribute('data-theme',t);}catch(_){document.documentElement.setAttribute('data-theme','dark');}`,

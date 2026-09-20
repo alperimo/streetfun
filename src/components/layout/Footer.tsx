@@ -17,9 +17,9 @@ export function Footer() {
       <footer className="site-footer mt-auto w-full border-t border-border bg-background py-6 text-xs text-muted">
         <div className="mx-auto flex w-full max-w-[1350px] items-center justify-center gap-6 px-6 sm:gap-8 md:px-12 lg:px-0">
           <a
-            href="https://x.com"
+            href="https://x.com/streetfunxyz"
             target="_blank"
-            rel="noreferrer"
+            rel="noopener noreferrer"
             className="hover:text-foreground transition-colors font-medium"
           >
             X

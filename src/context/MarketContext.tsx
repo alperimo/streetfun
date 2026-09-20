@@ -68,7 +68,10 @@ export function MarketProvider({ children, initialTokens = [] }: MarketProviderP
   const activePublicKey = wallet.publicKey || (isMock && devWalletConnected ? LOCAL_DEV_PUBKEY : null);
 
   const pathname = usePathname();
-  const isAlphaRoute = pathname?.startsWith("/alpha");
+  const isAlphaOnly =
+    process.env.NEXT_PUBLIC_ALPHA_ONLY === "true" ||
+    (process.env.NODE_ENV === "production" && process.env.NEXT_PUBLIC_FULL_APP !== "true");
+  const isAlphaRoute = isAlphaOnly || pathname === "/" || pathname?.startsWith("/alpha");
 
   const connectDevWallet = useCallback(() => {
     setDevWalletConnected(true);

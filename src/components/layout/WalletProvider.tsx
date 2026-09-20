@@ -8,7 +8,7 @@ import {
 import { WalletModalProvider } from "@solana/wallet-adapter-react-ui";
 import { clusterApiUrl } from "@solana/web3.js";
 
-import "@solana/wallet-adapter-react-ui/styles.css";
+import "@/styles/wallet-adapter-base.css";
 import { LocalnetWalletAdapter } from "./LocalnetWalletAdapter";
 
 const WalletConnectionErrorContext = createContext<{
@@ -34,10 +34,29 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
     });
   }
 
-  const endpoint = useMemo(
-    () => process.env.NEXT_PUBLIC_SOLANA_RPC || clusterApiUrl("devnet"),
-    []
-  );
+  const endpoint = useMemo(() => {
+    // If in the browser on a public domain, NEVER route to 127.0.0.1 / localhost (triggers Chrome PNA permission prompt)
+    if (typeof window !== "undefined") {
+      const hostname = window.location.hostname;
+      const isLocalhost =
+        hostname === "localhost" ||
+        hostname === "127.0.0.1" ||
+        hostname.endsWith(".local");
+
+      if (!isLocalhost) {
+        const configuredRpc = process.env.NEXT_PUBLIC_SOLANA_RPC;
+        if (
+          configuredRpc &&
+          !configuredRpc.includes("127.0.0.1") &&
+          !configuredRpc.includes("localhost")
+        ) {
+          return configuredRpc;
+        }
+        return clusterApiUrl("devnet");
+      }
+    }
+    return process.env.NEXT_PUBLIC_SOLANA_RPC || clusterApiUrl("devnet");
+  }, []);
 
   // Wallet Standard discovers browser extensions; the disposable signer is only
   // available against a validator running on this computer in local development.

@@ -163,11 +163,11 @@ export function AlphaLanding() {
                         <span>Connect Wallet for Alpha Access</span>
                       </button>
 
-                      <div className="mt-3 text-[11px] text-muted text-center sm:text-left">
+                      <div className="alpha-terms-note mt-3 text-[11px] text-muted-foreground text-center sm:text-left">
                         By connecting, you agree to the{" "}
                         <button
                           onClick={() => setIsTermsOpen(true)}
-                          className="text-foreground underline hover:text-brand-cyan"
+                          className="text-foreground underline underline-offset-2 hover:text-brand-cyan font-medium transition-colors cursor-pointer"
                         >
                           Terms
                         </button>

@@ -94,6 +94,14 @@ async function main() {
     await page.screenshot({ path: path.join(ARTIFACTS_DIR, "wallet_connect_modal.png") });
     console.log("Captured wallet_connect_modal.png");
 
+    // 5. Mobile Landing Page Viewport (iPhone 14 / 390x844)
+    console.log("Capturing Mobile Landing page (390x844)...");
+    await page.setViewport({ width: 390, height: 844, isMobile: true, hasTouch: true });
+    await page.goto("http://localhost:3000/alpha", { waitUntil: "domcontentloaded", timeout: 25000 });
+    await new Promise((r) => setTimeout(r, 2000));
+    await page.screenshot({ path: path.join(ARTIFACTS_DIR, "alpha_mobile_landing.png") });
+    console.log("Captured alpha_mobile_landing.png");
+
   } catch (err) {
     console.error("Error during Alpha verification capture:", err);
   } finally {
