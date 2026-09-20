@@ -243,6 +243,17 @@
     padding-bottom: 2rem;
   }
 
+  /* Subtle top vignette to isolate text from city background textures */
+  .alpha-landing .hero-section::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    height: 55%;
+    background: linear-gradient(to bottom, rgba(10, 11, 13, 0.92) 0%, rgba(10, 11, 13, 0.65) 45%, transparent 100%);
+    pointer-events: none;
+    z-index: 1;
+  }
+
   .alpha-landing h1 {
     font-size: 2.35rem !important;
     line-height: 1.05 !important;
@@ -250,7 +261,10 @@
   }
 
   .alpha-landing .alpha-subtitle {
-    text-shadow: 0 2px 16px rgba(0, 0, 0, 0.95);
+    color: rgba(226, 232, 240, 0.92) !important;
+    font-weight: 450;
+    text-shadow: 0 2px 14px rgba(0, 0, 0, 1);
+    max-width: 320px;
   }
 
   .alpha-landing .alpha-terms-note {

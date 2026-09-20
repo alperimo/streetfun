@@ -139,7 +139,7 @@ export function AlphaLanding() {
         <BullArtwork useVideo={true} />
 
         <div className="relative mx-auto w-full max-w-[1350px] px-6 sm:px-10 lg:px-0 z-10">
-          <div className="max-w-[620px]">
+          <div className="max-w-[620px] mx-auto sm:mx-0 flex flex-col items-center sm:items-start text-center sm:text-left">
             <h1 className="text-4xl sm:text-6xl lg:text-[68px] font-black leading-[0.98] tracking-[-0.05em] text-foreground">
               Wall Street Floor <br />
               For <span className="text-brand-cyan">Memecoins</span>
@@ -150,11 +150,11 @@ export function AlphaLanding() {
             </p>
 
             {/* Single Elegant Action Area */}
-            <div className="mt-8 max-w-[380px]">
+            <div className="mt-8 w-full max-w-[380px] flex flex-col items-center sm:items-start">
               {!passData ? (
-                <div>
+                <div className="w-full">
                   {!connected ? (
-                    <div>
+                    <div className="flex flex-col items-center sm:items-start w-full">
                       <button
                         onClick={() => setWalletModalVisible(true)}
                         className="flex w-full items-center justify-center gap-2.5 rounded-xl border border-brand-cyan bg-brand-cyan px-6 py-3.5 text-sm font-bold text-background shadow-md shadow-brand-cyan/20 transition-all hover:brightness-110 hover:shadow-brand-cyan/30 cursor-pointer"
