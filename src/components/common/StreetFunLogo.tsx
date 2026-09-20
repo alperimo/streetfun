@@ -9,10 +9,12 @@ interface StreetFunLogoProps {
 export function StreetFunLogo({ className = "h-7 w-7", size = 28 }: StreetFunLogoProps) {
   return (
     <Image
-      src="/generated/streetfun-logo.png"
+      src="/generated/streetfun-logo.webp"
       alt="StreetFun logo"
       width={size}
       height={size}
+      priority
+      unoptimized
       className={className}
     />
   );

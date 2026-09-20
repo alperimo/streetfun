@@ -50,5 +50,10 @@
     "ts-mocha": "^10.0.0",
     "tsconfig-paths": "3.15.0",
     "typescript": "^5.3.3"
-  }
+  },
+  "browserslist": [
+    "defaults and fully supports es6-module",
+    "not dead",
+    "not IE 11"
+  ]
 }

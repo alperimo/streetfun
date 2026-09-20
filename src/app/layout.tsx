@@ -21,7 +21,7 @@ export const metadata: Metadata = {
   title: "Streetfun · Memecoins With A Wall Street Floor",
   description: "Trade viral momentum. Graduate to real tokenized stocks.",
   icons: {
-    icon: "/generated/streetfun-logo.png",
+    icon: "/generated/streetfun-logo.webp",
   },
   openGraph: {
     title: "Streetfun · Memecoins With A Wall Street Floor",
@@ -70,6 +70,13 @@ export default async function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        <link
+          rel="preload"
+          as="image"
+          href="/generated/hero-bull-foreground.webp"
+          type="image/webp"
+          fetchPriority="high"
+        />
         <link
           rel="preload"
           as="image"
