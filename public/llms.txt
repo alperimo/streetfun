@@ -1,8 +1,8 @@
 # StreetFun
 
-> Trade viral momentum. Graduate to real tokenized stocks on Solana.
+> Trade viral momentum. Graduate to tokenized stocks on Solana.
 
-StreetFun bridges speculative meme liquidity with institutional-grade tokenized equities, creating an enduring on-chain equity floor for community tokens.
+StreetFun routes speculative meme liquidity into third-party tokenized equities, establishing a programmatic on-chain equity floor for community tokens.
 
 ## Official Links
 - [Website](https://www.streetfun.xyz): Official StreetFun platform
