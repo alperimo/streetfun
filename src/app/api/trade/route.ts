@@ -13,6 +13,8 @@ import idl from "@/idl/streetfun.json";
 import { PROGRAM_ID, USDC_MINT } from "@/sdk/constants";
 import { getCurvePda, getGlobalConfigPda, getQuoteVaultPda, getTokenVaultPda } from "@/sdk/pda";
 import { solanaTokenService } from "@/services/solana/solanaTokenService";
+import { TradeStoreService } from "@/services/indexer/tradeStore";
+import { readConfirmedCurveTrade } from "@/services/indexer/confirmedTrade";
 import { executeGraduation } from "../graduate/route";
 
 export const dynamic = "force-dynamic";
@@ -128,6 +130,15 @@ export async function POST(req: Request) {
     }
 
     console.log(`[API /api/trade] Trade executed! Mode: ${tradeMode}, Amount: ${amount}, Tx: ${tx}`);
+
+    // Immediately index trade for sub-second updates
+    try {
+      const tradeRecord = await readConfirmedCurveTrade(connection, tx, mint);
+      await TradeStoreService.getInstance().recordTrade(tradeRecord);
+      solanaTokenService.invalidateCache();
+    } catch (indexErr: any) {
+      console.warn("[API /api/trade] Inline indexing note (Helius webhook will also index):", indexErr.message);
+    }
 
     // Fetch updated token
     const updatedToken = await solanaTokenService.getToken(mint);
