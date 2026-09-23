@@ -20,6 +20,13 @@ pub mod streetfun {
         instructions::initialize::handle_initialize_global_config(ctx, params)
     }
 
+    pub fn update_global_config(
+        ctx: Context<UpdateGlobalConfig>,
+        params: UpdateConfigParams,
+    ) -> Result<()> {
+        instructions::initialize::handle_update_global_config(ctx, params)
+    }
+
     pub fn launch_stonk(
         ctx: Context<LaunchStonk>,
         params: LaunchStonkParams,

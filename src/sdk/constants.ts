@@ -8,7 +8,7 @@ export const PROGRAM_ID = new PublicKey(
 // Meteora Dynamic Bonding Curve (DBC) & DLMM Program IDs
 export const METEORA_DBC_PROGRAM_ID = DYNAMIC_BONDING_CURVE_PROGRAM_ID;
 export const USDC_MINT = new PublicKey(
-  process.env.NEXT_PUBLIC_USDC_MINT || "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
+  process.env.NEXT_PUBLIC_USDC_MINT || "DuQ1T5B6tmf5ZfSNpPomVcDntLEzR1mkoB81yHP5rGHG"
 );
 
 export const GLOBAL_CONFIG_SEED = Buffer.from("global-config");
@@ -19,9 +19,9 @@ export const TREASURY_VAULT_SEED = Buffer.from("treasury-vault");
 
 export const TOTAL_MEME_SUPPLY = 1_000_000_000n * 1_000_000n; // 1 Billion tokens (6 decimals)
 export const SALE_SUPPLY = 800_000_000n * 1_000_000n; // 800M for Meteora DBC curve
-export const DEFAULT_GRADUATION_THRESHOLD_USDC = 60_000;
-export const EQUITY_SPOT_BUY_RATIO = 0.5; // 50% (30,000 USDC) to acquire Tessera Pre-IPO token ($TSPACEX)
-export const AMM_MIGRATION_RATIO = 0.5; // 50% (30,000 USDC) + leftover meme supply to Meteora DLMM pool
+export const DEFAULT_GRADUATION_THRESHOLD_USDC = 60; // 60 USDC for fast live testing / devnet demo!
+export const EQUITY_SPOT_BUY_RATIO = 0.5; // 50% (30 USDC) to acquire Tessera Pre-IPO token ($TOPAI)
+export const AMM_MIGRATION_RATIO = 0.5; // 50% (30 USDC) + leftover meme supply to Meteora DLMM pool
 
 export interface TesseraPreIpoAsset {
   symbol: string;
@@ -43,7 +43,7 @@ export const VERIFIED_TESSERA_PRE_IPO_ASSETS: TesseraPreIpoAsset[] = [
     symbol: "$TSPACEX",
     ticker: "TSPACEX",
     name: "SpaceX",
-    mintAddress: "TSPX111111111111111111111111111111111111111",
+    mintAddress: "DiKVjAz8vGALzLwoZz7PPxUTnDsTVyF7GNx9F3BxVYEs",
     issuer: "Tessera Private Equity",
     custodian: "Fireblocks Institutional Custody",
     legalFramework: "Cayman Islands SPC - Loan Participation Right",
@@ -57,7 +57,7 @@ export const VERIFIED_TESSERA_PRE_IPO_ASSETS: TesseraPreIpoAsset[] = [
     symbol: "$TOPAI",
     ticker: "TOPAI",
     name: "OpenAI",
-    mintAddress: "TOPAI111111111111111111111111111111111111111",
+    mintAddress: "3PFKgvU4P8hcuW1X2VjAgRHNsz1TnA4SLyjEDNfhzLC7",
     issuer: "Tessera Private Equity",
     custodian: "Fireblocks Institutional Custody",
     legalFramework: "Cayman Islands SPC - Loan Participation Right",
@@ -71,7 +71,7 @@ export const VERIFIED_TESSERA_PRE_IPO_ASSETS: TesseraPreIpoAsset[] = [
     symbol: "$TSTRIPE",
     ticker: "TSTRIPE",
     name: "Stripe",
-    mintAddress: "TSTRP111111111111111111111111111111111111111",
+    mintAddress: "HjSo935gqYjDaHLMga5SRfkiACjCX5wE3ZnbQpDoqWGb",
     issuer: "Tessera Private Equity",
     custodian: "Fireblocks Institutional Custody",
     legalFramework: "Cayman Islands SPC - Loan Participation Right",
@@ -85,7 +85,7 @@ export const VERIFIED_TESSERA_PRE_IPO_ASSETS: TesseraPreIpoAsset[] = [
     symbol: "$NVDA",
     ticker: "NVDA",
     name: "NVIDIA",
-    mintAddress: "NVDA111111111111111111111111111111111111111",
+    mintAddress: "BpWrd7wGZaS3TTM8Nitk3cHHf91HAE2QWVk2E5dwBqKb",
     issuer: "Backpack Securities",
     custodian: "Fireblocks Institutional Custody",
     legalFramework: "New York UCC Article 8 Securities Intermediary",

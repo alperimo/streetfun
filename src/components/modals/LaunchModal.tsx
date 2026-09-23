@@ -91,9 +91,7 @@ export function LaunchModal({
             <div>
               <h2 className="text-lg font-bold text-foreground">Launch Token</h2>
               <p className="text-xs text-muted">
-                {isMock
-                  ? "Create an equity-backed token in demo mode"
-                  : "Live launch requires a wallet-signed on-chain transaction"}
+                Create an on-chain equity-backed token deployed to Solana Devnet
               </p>
             </div>
           </div>
@@ -107,11 +105,6 @@ export function LaunchModal({
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="mt-5 space-y-4 text-xs">
-          {!isMock && (
-            <p className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-amber-300">
-              Live token launch is not configured yet. This form will not create a mock token.
-            </p>
-          )}
           {launchError && <p role="alert" className="text-rose-400">{launchError}</p>}
           {/* Token Name & Ticker */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -252,20 +245,18 @@ export function LaunchModal({
           <div className="rounded-xl border border-border bg-card-subtle p-3 text-[11px] text-muted flex items-start gap-2">
             <Info className="h-4 w-4 text-brand-cyan flex-shrink-0 mt-0.5" />
             <span className="leading-relaxed">
-              <strong className="text-foreground">Graduation Mechanism:</strong> At 60,000 USDC, 50% ($30K) automatically acquires {selectedEquity.symbol} equity shares into the treasury vault, and 50% ($30K) funds permanent liquidity.
+              <strong className="text-foreground">Graduation Mechanism:</strong> At 60 USDC graduation, 50% ($30) automatically acquires {selectedEquity.symbol} equity shares into the treasury vault, and 50% ($30) funds permanent liquidity.
             </span>
           </div>
 
           {/* Submit Button */}
           <button
             type="submit"
-            disabled={isSubmitting || !isMock}
-            className="w-full rounded-xl bg-brand-cyan py-3 text-sm font-bold text-slate-950 hover:opacity-90 transition-opacity disabled:opacity-50 shadow-md shadow-brand-cyan/20 flex items-center justify-center gap-2"
+            disabled={isSubmitting}
+            className="w-full rounded-xl bg-brand-cyan py-3 text-sm font-bold text-slate-950 hover:opacity-90 transition-opacity disabled:opacity-50 shadow-md shadow-brand-cyan/20 flex items-center justify-center gap-2 cursor-pointer"
           >
-            {!isMock ? (
-              <span>Live launch unavailable</span>
-            ) : isSubmitting ? (
-              <span>Creating Token...</span>
+            {isSubmitting ? (
+              <span>Deploying to Devnet...</span>
             ) : (
               <>
                 <Rocket className="h-4 w-4 stroke-[2.5]" />

@@ -882,6 +882,65 @@
           }
         }
       ]
+    },
+    {
+      "name": "update_global_config",
+      "discriminator": [
+        164,
+        84,
+        130,
+        189,
+        111,
+        58,
+        250,
+        200
+      ],
+      "accounts": [
+        {
+          "name": "admin",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "global_config"
+          ]
+        },
+        {
+          "name": "global_config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  108,
+                  111,
+                  98,
+                  97,
+                  108,
+                  45,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "params",
+          "type": {
+            "defined": {
+              "name": "UpdateConfigParams"
+            }
+          }
+        }
+      ]
     }
   ],
   "accounts": [
@@ -1414,6 +1473,50 @@
           {
             "name": "timestamp",
             "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "UpdateConfigParams",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "protocol_fee_bps",
+            "type": {
+              "option": "u16"
+            }
+          },
+          {
+            "name": "graduation_fee_bps",
+            "type": {
+              "option": "u16"
+            }
+          },
+          {
+            "name": "graduation_threshold",
+            "type": {
+              "option": "u64"
+            }
+          },
+          {
+            "name": "initial_virtual_quote_reserves",
+            "type": {
+              "option": "u64"
+            }
+          },
+          {
+            "name": "initial_virtual_token_reserves",
+            "type": {
+              "option": "u64"
+            }
+          },
+          {
+            "name": "protocol_fee_recipient",
+            "type": {
+              "option": "pubkey"
+            }
           }
         ]
       }

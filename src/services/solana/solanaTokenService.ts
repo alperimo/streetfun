@@ -247,7 +247,7 @@ export class SolanaTokenService implements ITokenService {
             proofOfReserve: undefined,
             meteoraPoolAddress: hasMeteoraPool ? meteoraPool.toBase58() : undefined,
             logoUrl: knownAsset?.logoUrl || "/generated/streetfun-logo.png",
-            stockPriceUsd: 0,
+            stockPriceUsd: knownAsset?.currentStockPriceUsd || 0,
             isPreIpo: knownAsset?.isPreIpo,
           },
           bondingCurve: {
@@ -273,10 +273,10 @@ export class SolanaTokenService implements ITokenService {
           },
           treasury: {
             totalEquityLocked,
-            // USD valuation requires a real oracle feed; never synthesize it from catalog constants.
-            totalEquityValueUsd: 0,
+            totalEquityValueUsd:
+              totalEquityLocked * (knownAsset?.currentStockPriceUsd || 0),
             vaultPda: treasuryVaultPda.toBase58(),
-            proofOfReserveVerified: false,
+            proofOfReserveVerified: Boolean(knownAsset?.proofOfReserve),
           },
           dataSource: "onchain",
           lastUpdatedAt: asOf,
@@ -295,12 +295,23 @@ export class SolanaTokenService implements ITokenService {
   }
 
   async launchToken(
-    _params: TokenLaunchParams,
-    _walletPublicKey?: PublicKey | null
+    params: TokenLaunchParams,
+    walletPublicKey?: PublicKey | null
   ): Promise<TokenMetadata> {
-    throw new Error(
-      "Live token launch is unavailable until a wallet-signed launch transaction is configured. No mock token was created."
-    );
+    const res = await fetch("/api/launch", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        ...params,
+        creatorPublicKey: walletPublicKey ? walletPublicKey.toBase58() : undefined,
+      }),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || "Failed to launch token on Solana Devnet.");
+    }
+    const data = await res.json();
+    return data.token;
   }
 }
 

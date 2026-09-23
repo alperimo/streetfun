@@ -61,3 +61,68 @@ pub fn handle_initialize_global_config(
     msg!("Global config initialized. Admin: {}", config.admin);
     Ok(())
 }
+
+#[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy)]
+pub struct UpdateConfigParams {
+    pub protocol_fee_bps: Option<u16>,
+    pub graduation_fee_bps: Option<u16>,
+    pub graduation_threshold: Option<u64>,
+    pub initial_virtual_quote_reserves: Option<u64>,
+    pub initial_virtual_token_reserves: Option<u64>,
+    pub protocol_fee_recipient: Option<Pubkey>,
+}
+
+#[derive(Accounts)]
+pub struct UpdateGlobalConfig<'info> {
+    #[account(mut)]
+    pub admin: Signer<'info>,
+
+    #[account(
+        mut,
+        seeds = [GLOBAL_CONFIG_SEED],
+        bump = global_config.bump,
+        has_one = admin @ StreetfunError::Unauthorized,
+    )]
+    pub global_config: Account<'info, GlobalConfig>,
+}
+
+pub fn handle_update_global_config(
+    ctx: Context<UpdateGlobalConfig>,
+    params: UpdateConfigParams,
+) -> Result<()> {
+    let config = &mut ctx.accounts.global_config;
+
+    if let Some(bps) = params.protocol_fee_bps {
+        require!(bps <= MAX_FEE_BPS, StreetfunError::InvalidFeeBps);
+        config.protocol_fee_bps = bps;
+    }
+    if let Some(bps) = params.graduation_fee_bps {
+        require!(bps <= MAX_FEE_BPS, StreetfunError::InvalidFeeBps);
+        config.graduation_fee_bps = bps;
+    }
+    if let Some(threshold) = params.graduation_threshold {
+        require!(threshold > 0, StreetfunError::CalculationError);
+        config.graduation_threshold = threshold;
+    }
+    if let Some(reserves) = params.initial_virtual_quote_reserves {
+        require!(reserves > 0, StreetfunError::CalculationError);
+        config.initial_virtual_quote_reserves = reserves;
+    }
+    if let Some(tokens) = params.initial_virtual_token_reserves {
+        require!(
+            tokens > crate::instructions::launch::SALE_SUPPLY,
+            StreetfunError::CalculationError
+        );
+        config.initial_virtual_token_reserves = tokens;
+    }
+    if let Some(recipient) = params.protocol_fee_recipient {
+        config.protocol_fee_recipient = recipient;
+    }
+
+    msg!(
+        "Global config updated. Graduation threshold: {}",
+        config.graduation_threshold
+    );
+    Ok(())
+}
+

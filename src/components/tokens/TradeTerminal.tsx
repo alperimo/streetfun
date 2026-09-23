@@ -24,7 +24,7 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
   const { connection } = useConnection();
   const { connected: walletAdapterConnected, publicKey } = useWallet();
   const { isWalletConnected, executeTrade, executeRedeem, isMock, refreshTokens, setWalletDialogOpen } = useMarket();
-  const connected = isMock ? walletAdapterConnected || isWalletConnected : walletAdapterConnected;
+  const connected = walletAdapterConnected || isWalletConnected;
   const [receipt, setReceipt] = useState<TradeReceiptData | null>(null);
   useEffect(() => setReceipt(null), [token.mint]);
   const [tradeMode, setTradeMode] = useState<"buy" | "sell" | "redeem">("buy");

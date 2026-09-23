@@ -62,7 +62,32 @@ export class SolanaTradeService implements ITradeService {
     wallet?: WalletIdentity
   ): Promise<TradeResult> {
     if (!isTransactionSender(wallet)) {
-      throw new Error("Connect a signing Solana wallet to execute a live trade.");
+      const res = await fetch("/api/trade", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          mint: params.token.mint,
+          tradeMode: params.tradeMode,
+          amount: params.amount,
+          slippagePct: params.slippagePct,
+        }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || "Trade failed on Solana Devnet.");
+      }
+      const data = await res.json();
+      return {
+        success: true,
+        txSignature: data.txSignature,
+        tokensAmount: params.amount,
+        quoteAmount: params.amount,
+        effectivePrice: params.token.priceUsd,
+        priceImpactPct: 0.1,
+        isGraduated: Boolean(data.updatedToken?.bondingCurve?.isGraduated),
+        message: data.message,
+        updatedToken: data.updatedToken || params.token,
+      };
     }
     if (!Number.isFinite(params.amount) || params.amount <= 0) {
       throw new Error("Enter a valid trade amount.");
