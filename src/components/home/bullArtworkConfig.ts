@@ -16,7 +16,7 @@ const trend = `M-64 119 L-38 113 L-16 107 ${levels.map((y, i) => `L${i * 5} ${y}
 export const BULL_ARTWORK = {
   width: 1881,
   height: 836,
-  position: { x: 0.78, y: 0.48 },
+  position: { x: 0.78, y: 0.54 },
   cycleMs: 12_000,
   initialProgress: 0.46,
   traceLength: 0.12,

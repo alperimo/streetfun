@@ -135,40 +135,38 @@
 
 .hero-bull-image {
   -webkit-mask-image:
-    linear-gradient(to bottom, black 0%, black 80%, transparent 100%),
+    linear-gradient(to bottom, black 0%, black 82%, transparent 100%),
     linear-gradient(
       to right,
       transparent 0%,
-      transparent 20%,
-      rgba(0, 0, 0, 0.45) 34%,
-      rgba(0, 0, 0, 0.9) 46%,
-      black 52%,
-      black 68%,
-      rgba(0, 0, 0, 0.95) 75%,
-      rgba(0, 0, 0, 0.75) 82%,
-      rgba(0, 0, 0, 0.45) 88%,
-      rgba(0, 0, 0, 0.18) 93%,
-      rgba(0, 0, 0, 0.04) 96%,
-      transparent 98%,
+      transparent 18%,
+      rgba(0, 0, 0, 0.45) 32%,
+      rgba(0, 0, 0, 0.9) 44%,
+      black 50%,
+      black 65%,
+      rgba(0, 0, 0, 0.92) 72%,
+      rgba(0, 0, 0, 0.7) 78%,
+      rgba(0, 0, 0, 0.4) 83%,
+      rgba(0, 0, 0, 0.15) 87%,
+      transparent 90%,
       transparent 100%
     );
   -webkit-mask-composite: source-in;
   mask-image:
-    linear-gradient(to bottom, black 0%, black 80%, transparent 100%),
+    linear-gradient(to bottom, black 0%, black 82%, transparent 100%),
     linear-gradient(
       to right,
       transparent 0%,
-      transparent 20%,
-      rgba(0, 0, 0, 0.45) 34%,
-      rgba(0, 0, 0, 0.9) 46%,
-      black 52%,
-      black 68%,
-      rgba(0, 0, 0, 0.95) 75%,
-      rgba(0, 0, 0, 0.75) 82%,
-      rgba(0, 0, 0, 0.45) 88%,
-      rgba(0, 0, 0, 0.18) 93%,
-      rgba(0, 0, 0, 0.04) 96%,
-      transparent 98%,
+      transparent 18%,
+      rgba(0, 0, 0, 0.45) 32%,
+      rgba(0, 0, 0, 0.9) 44%,
+      black 50%,
+      black 65%,
+      rgba(0, 0, 0, 0.92) 72%,
+      rgba(0, 0, 0, 0.7) 78%,
+      rgba(0, 0, 0, 0.4) 83%,
+      rgba(0, 0, 0, 0.15) 87%,
+      transparent 90%,
       transparent 100%
     );
   mask-composite: intersect;
@@ -183,40 +181,38 @@
 
 .hero-bull-foreground-layer {
   -webkit-mask-image:
-    linear-gradient(to bottom, black 0%, black 80%, transparent 100%),
+    linear-gradient(to bottom, black 0%, black 82%, transparent 100%),
     linear-gradient(
       to right,
       transparent 0%,
-      transparent 20%,
-      rgba(0, 0, 0, 0.45) 34%,
-      rgba(0, 0, 0, 0.9) 46%,
-      black 52%,
-      black 68%,
-      rgba(0, 0, 0, 0.95) 75%,
-      rgba(0, 0, 0, 0.75) 82%,
-      rgba(0, 0, 0, 0.45) 88%,
-      rgba(0, 0, 0, 0.18) 93%,
-      rgba(0, 0, 0, 0.04) 96%,
-      transparent 98%,
+      transparent 18%,
+      rgba(0, 0, 0, 0.45) 32%,
+      rgba(0, 0, 0, 0.9) 44%,
+      black 50%,
+      black 65%,
+      rgba(0, 0, 0, 0.92) 72%,
+      rgba(0, 0, 0, 0.7) 78%,
+      rgba(0, 0, 0, 0.4) 83%,
+      rgba(0, 0, 0, 0.15) 87%,
+      transparent 90%,
       transparent 100%
     );
   -webkit-mask-composite: source-in;
   mask-image:
-    linear-gradient(to bottom, black 0%, black 80%, transparent 100%),
+    linear-gradient(to bottom, black 0%, black 82%, transparent 100%),
     linear-gradient(
       to right,
       transparent 0%,
-      transparent 20%,
-      rgba(0, 0, 0, 0.45) 34%,
-      rgba(0, 0, 0, 0.9) 46%,
-      black 52%,
-      black 68%,
-      rgba(0, 0, 0, 0.95) 75%,
-      rgba(0, 0, 0, 0.75) 82%,
-      rgba(0, 0, 0, 0.45) 88%,
-      rgba(0, 0, 0, 0.18) 93%,
-      rgba(0, 0, 0, 0.04) 96%,
-      transparent 98%,
+      transparent 18%,
+      rgba(0, 0, 0, 0.45) 32%,
+      rgba(0, 0, 0, 0.9) 44%,
+      black 50%,
+      black 65%,
+      rgba(0, 0, 0, 0.92) 72%,
+      rgba(0, 0, 0, 0.7) 78%,
+      rgba(0, 0, 0, 0.4) 83%,
+      rgba(0, 0, 0, 0.15) 87%,
+      transparent 90%,
       transparent 100%
     );
   mask-composite: intersect;
