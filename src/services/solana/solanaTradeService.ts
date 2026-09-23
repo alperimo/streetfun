@@ -40,7 +40,7 @@ export class SolanaTradeService implements ITradeService {
   private connection: Connection;
 
   constructor() {
-    const rpcUrl = process.env.NEXT_PUBLIC_SOLANA_RPC || "https://api.devnet.solana.com";
+    const rpcUrl = process.env.SOLANA_RPC || "https://api.devnet.solana.com";
     this.connection = new Connection(rpcUrl, "confirmed");
   }
 

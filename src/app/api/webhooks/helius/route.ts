@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
     }
 
     const connection = new Connection(
-      process.env.NEXT_PUBLIC_SOLANA_RPC || "https://api.devnet.solana.com",
+      process.env.SOLANA_RPC || "https://api.devnet.solana.com",
       "confirmed"
     );
     const tradeStore = TradeStoreService.getInstance();

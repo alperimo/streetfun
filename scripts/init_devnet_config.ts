@@ -15,7 +15,7 @@ const INITIAL_VIRTUAL_QUOTE = new BN(30_000 * 1_000_000); // 30,000 USDC
 const INITIAL_VIRTUAL_TOKENS = new BN("1073000000000000"); // 1.073B tokens
 
 async function main() {
-  const rpcUrl = process.env.NEXT_PUBLIC_SOLANA_RPC || "https://api.devnet.solana.com";
+  const rpcUrl = process.env.SOLANA_RPC || "https://api.devnet.solana.com";
   console.log(`[Init Devnet] Connecting to ${rpcUrl}...`);
   const connection = new Connection(rpcUrl, "confirmed");
 

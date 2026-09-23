@@ -58,7 +58,7 @@ export const isDevnet =
   process.env.NEXT_PUBLIC_SOLANA_NETWORK === "devnet";
 
 export const RPC_URL =
-  process.env.NEXT_PUBLIC_SOLANA_RPC ||
+  process.env.SOLANA_RPC ||
   (isDevnet ? "https://api.devnet.solana.com" : "http://127.0.0.1:8899");
 
 export const LOCALNET_RPC = RPC_URL;

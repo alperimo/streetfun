@@ -32,7 +32,7 @@ export async function GET() {
     return NextResponse.json(
       {
         error: unavailable
-          ? "The configured Solana RPC endpoint is unavailable. Start the validator or update NEXT_PUBLIC_SOLANA_RPC."
+          ? "The configured Solana RPC endpoint is unavailable. Start the validator or update SOLANA_RPC."
           : "Live Solana market data is unavailable.",
         code: unavailable ? "RPC_UNAVAILABLE" : "TOKENS_UNAVAILABLE",
         retryable: true,

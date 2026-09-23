@@ -52,7 +52,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Invalid trade parameters" }, { status: 400 });
     }
 
-    const rpcUrl = process.env.NEXT_PUBLIC_SOLANA_RPC || "https://api.devnet.solana.com";
+    const rpcUrl = process.env.SOLANA_RPC || "https://api.devnet.solana.com";
     const connection = new Connection(rpcUrl, "confirmed");
     const admin = getAdminKeypair();
 

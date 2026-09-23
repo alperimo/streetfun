@@ -13,7 +13,7 @@ const PROGRAM_ID = new PublicKey("6ZiovCkRxRJgUaCS9uftFk3eVnGDsbnDXgUV1XHybH52")
 const GLOBAL_CONFIG_SEED = Buffer.from("global-config");
 
 async function main() {
-  const rpcUrl = process.env.NEXT_PUBLIC_SOLANA_RPC || "https://api.devnet.solana.com";
+  const rpcUrl = process.env.SOLANA_RPC || "https://api.devnet.solana.com";
   console.log(`[Devnet Setup] Connecting to ${rpcUrl}...`);
   const connection = new Connection(rpcUrl, "confirmed");
 

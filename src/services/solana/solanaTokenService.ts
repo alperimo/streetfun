@@ -34,10 +34,16 @@ const TOKEN_DECIMALS = 1_000_000;
 
 export class SolanaTokenService implements ITokenService {
   private connection: Connection;
+  private cachedTokensResult: { tokens: TokenMetadata[]; timestamp: number } | null = null;
+  private readonly CACHE_TTL_MS = 3000;
 
   constructor() {
-    const rpcUrl = process.env.NEXT_PUBLIC_SOLANA_RPC || "https://api.devnet.solana.com";
+    const rpcUrl = process.env.SOLANA_RPC || "https://api.devnet.solana.com";
     this.connection = new Connection(rpcUrl, "confirmed");
+  }
+
+  public invalidateCache(): void {
+    this.cachedTokensResult = null;
   }
 
   private getProgram(): anchor.Program<any> {

@@ -51,7 +51,7 @@ export async function POST(req: Request) {
       (a) => a.symbol === targetEquitySymbol || a.ticker === targetEquitySymbol
     ) || VERIFIED_TESSERA_PRE_IPO_ASSETS[1]; // default OpenAI
 
-    const rpcUrl = process.env.NEXT_PUBLIC_SOLANA_RPC || "https://api.devnet.solana.com";
+    const rpcUrl = process.env.SOLANA_RPC || "https://api.devnet.solana.com";
     const connection = new Connection(rpcUrl, "confirmed");
     const admin = getAdminKeypair();
 
