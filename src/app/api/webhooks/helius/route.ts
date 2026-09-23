@@ -1,7 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Connection } from "@solana/web3.js";
+import bs58 from "bs58";
 import { TradeStoreService } from "@/services/indexer/tradeStore";
-import { readConfirmedCurveTrade, InvalidCurveTradeError } from "@/services/indexer/confirmedTrade";
+import {
+  readConfirmedCurveTrade,
+  InvalidCurveTradeError,
+  PendingCurveTradeError,
+} from "@/services/indexer/confirmedTrade";
 import { createServerSupabaseClient } from "@/lib/supabase";
 import { solanaTokenService } from "@/services/solana/solanaTokenService";
 import { VERIFIED_TESSERA_PRE_IPO_ASSETS } from "@/sdk/constants";
@@ -40,15 +45,36 @@ export async function POST(req: NextRequest) {
 
       try {
         // 1. Check if it's a Buy or Sell curve trade
+        let trade: any = null;
         try {
-          const trade = await readConfirmedCurveTrade(connection, signature);
-          await tradeStore.recordTrade(trade);
-          processedCount += 1;
-          continue;
+          trade = await readConfirmedCurveTrade(connection, signature);
         } catch (tradeError) {
+          if (tradeError instanceof PendingCurveTradeError) {
+            throw tradeError;
+          }
           if (!(tradeError instanceof InvalidCurveTradeError)) {
             throw tradeError;
           }
+
+          // If signature is permanently malformed or invalid base58 length, skip immediately
+          try {
+            if (typeof signature !== "string" || bs58.decode(signature).length !== 64) {
+              skippedCount += 1;
+              continue;
+            }
+          } catch {
+            skippedCount += 1;
+            continue;
+          }
+        }
+
+        if (trade) {
+          if (event?.slot && Number(event.slot) !== trade.slot) {
+            throw new InvalidCurveTradeError("Webhook slot does not match the confirmed transaction.");
+          }
+          await tradeStore.recordTrade(trade);
+          processedCount += 1;
+          continue;
         }
 
         // 2. If not a buy/sell trade, check if it's Launch, Graduation, or Redemption
