@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Check, ChevronDown, Search, SlidersHorizontal } from "lucide-react";
+import { ArrowDownUp, Check, Search, SlidersHorizontal } from "lucide-react";
 
 export type StatusFilter = "all" | "bonding" | "graduated";
 export type SortOption = "mcap" | "newest" | "volume" | "progress";
@@ -45,8 +45,8 @@ export function FilterBar({
 }: FilterBarProps) {
   return (
     <div className="mt-5 flex flex-col gap-4">
-      <div className="flex flex-col gap-3 rounded-2xl border border-border bg-card/70 p-2 shadow-xs lg:w-fit lg:flex-row lg:items-center">
-        <div className="relative min-w-0 flex-1 lg:w-[420px] lg:flex-none xl:w-[500px]">
+      <div className="flex w-full flex-col gap-3 rounded-2xl border border-border bg-card/70 p-2 shadow-xs lg:flex-row lg:items-center lg:justify-between">
+        <div className="relative min-w-0 flex-1">
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted" />
           <input
             type="text"
@@ -57,12 +57,12 @@ export function FilterBar({
           />
         </div>
 
-        <div className="flex min-w-0 flex-wrap items-center gap-2 px-1 lg:flex-nowrap">
+        <div className="flex min-w-0 shrink-0 flex-wrap items-center gap-2 px-1 xl:flex-nowrap">
           <span className="hidden shrink-0 items-center gap-1.5 px-2 text-[11px] font-semibold text-muted lg:flex">
             <SlidersHorizontal className="h-3.5 w-3.5" />
             Status
           </span>
-          <div className="flex min-w-0 flex-1 items-center gap-1 rounded-xl bg-card-subtle p-1 lg:flex-none">
+          <div className="flex min-w-0 items-center gap-1 overflow-x-auto rounded-xl bg-card-subtle p-1 scrollbar-none lg:flex-none">
             {(
               [
                 { id: "all", label: "All" },
@@ -85,22 +85,26 @@ export function FilterBar({
             ))}
           </div>
 
-          <label className="relative flex h-11 shrink-0 items-center rounded-xl border border-border bg-card px-3 text-xs text-foreground transition-colors hover:border-border-active">
-            <span className="mr-2 text-muted">Sort</span>
-            <select
-              value={sortBy}
-              onChange={(event) => onSortChange(event.target.value as SortOption)}
-              aria-label="Sort markets"
-              className="appearance-none bg-transparent pr-5 font-semibold outline-none"
-            >
-              {SORT_OPTIONS.map((item) => (
-                <option key={item.id} value={item.id} className="bg-card text-foreground">
-                  {item.label}
-                </option>
-              ))}
-            </select>
-            <ChevronDown className="pointer-events-none absolute right-3 h-3.5 w-3.5 text-muted" />
-          </label>
+          <span className="hidden shrink-0 items-center gap-1.5 px-2 text-[11px] font-semibold text-muted lg:flex">
+            <ArrowDownUp className="h-3.5 w-3.5" />
+            Sort
+          </span>
+          <div className="flex min-w-0 items-center gap-1 overflow-x-auto rounded-xl bg-card-subtle p-1 scrollbar-none lg:flex-none">
+            {SORT_OPTIONS.map((item) => (
+              <button
+                key={item.id}
+                onClick={() => onSortChange(item.id)}
+                className={`flex-1 whitespace-nowrap rounded-lg px-3 py-2 text-xs transition-colors duration-150 lg:flex-none ${
+                  sortBy === item.id
+                    ? "border border-brand-cyan/40 bg-brand-cyan/10 font-semibold text-brand-cyan shadow-xs"
+                    : "border border-transparent font-medium text-muted hover:bg-card-hover hover:text-foreground"
+                }`}
+              >
+                {sortBy === item.id && <Check className="mr-1 inline-block h-3.5 w-3.5" />}
+                {item.label}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 

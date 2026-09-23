@@ -11,6 +11,7 @@
     "test": "npm run test:unit",
     "test:contract": "cargo test --package streetfun --lib",
     "test:integration": "ts-mocha -p ./tests/tsconfig.json -t 120000 tests/0*.test.ts",
+    "test:devnet": "SOLANA_NETWORK=devnet ts-mocha -p ./tests/tsconfig.json -t 120000 tests/06_e2e_lifecycle.test.ts",
     "test:webhook": "npx ts-node -P ./tests/tsconfig.json scripts/test_webhook.ts",
     "dev:indexer": "npx ts-node -P ./tests/tsconfig.json scripts/local_helius_indexer.ts",
     "test:unit": "node scripts/run_unit_tests.cjs"
