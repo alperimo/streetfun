@@ -38,7 +38,7 @@ export class SolanaTokenService implements ITokenService {
   private readonly CACHE_TTL_MS = 3000;
 
   constructor() {
-    const rpcUrl = process.env.SOLANA_RPC || "https://api.devnet.solana.com";
+    const rpcUrl = process.env.NEXT_PUBLIC_SOLANA_RPC || "https://api.devnet.solana.com";
     this.connection = new Connection(rpcUrl, "confirmed");
   }
 
@@ -165,12 +165,29 @@ export class SolanaTokenService implements ITokenService {
       return payload.tokens as TokenMetadata[];
     }
 
+    if (
+      this.cachedTokensResult &&
+      Date.now() - this.cachedTokensResult.timestamp < this.CACHE_TTL_MS
+    ) {
+      return this.cachedTokensResult.tokens;
+    }
+
     const program = this.getProgram();
-    const [onChainCurves, metadata, slot] = await Promise.all([
-      (program.account as any).curveAccount.all(),
-      this.getIndexedMetadata(),
-      this.connection.getSlot("confirmed"),
-    ]);
+    let onChainCurves: any[] = [];
+    let metadata = new Map<string, IndexedTokenMetadata>();
+    let slot = 0;
+
+    try {
+      [onChainCurves, metadata, slot] = await Promise.all([
+        (program.account as any).curveAccount.all(),
+        this.getIndexedMetadata(),
+        this.connection.getSlot("confirmed"),
+      ]);
+    } catch (err: any) {
+      console.warn("[SolanaTokenService] On-chain RPC fetch note, falling back to indexed metadata:", err.message);
+      metadata = await this.getIndexedMetadata();
+      return this.getIndexedTokens(metadata);
+    }
 
     if (!onChainCurves || onChainCurves.length === 0) {
       return this.getIndexedTokens(metadata);
@@ -290,9 +307,11 @@ export class SolanaTokenService implements ITokenService {
       })
     );
 
-    return tokens.filter((token): token is TokenMetadata => token !== null).sort(
+    const result = tokens.filter((token): token is TokenMetadata => token !== null).sort(
       (a, b) => b.bondingCurve.realQuoteReservesUsd - a.bondingCurve.realQuoteReservesUsd
     );
+    this.cachedTokensResult = { tokens: result, timestamp: Date.now() };
+    return result;
   }
 
   async getToken(mint: string): Promise<TokenMetadata | null> {

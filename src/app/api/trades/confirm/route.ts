@@ -7,7 +7,7 @@ export async function POST(req: NextRequest) {
   try {
     const { signature, mint } = await req.json();
     const connection = new Connection(
-      process.env.SOLANA_RPC || "https://api.devnet.solana.com",
+      process.env.NEXT_PUBLIC_SOLANA_RPC || "https://api.devnet.solana.com",
       "confirmed"
     );
     const trade = await readConfirmedCurveTrade(connection, signature, mint);

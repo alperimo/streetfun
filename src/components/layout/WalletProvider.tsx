@@ -43,7 +43,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
         hostname.endsWith(".local");
 
       if (!isLocalhost) {
-        const configuredRpc = process.env.SOLANA_RPC;
+        const configuredRpc = process.env.NEXT_PUBLIC_SOLANA_RPC;
         if (
           configuredRpc &&
           !configuredRpc.includes("127.0.0.1") &&
@@ -54,7 +54,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
         return clusterApiUrl("devnet");
       }
     }
-    return process.env.SOLANA_RPC || clusterApiUrl("devnet");
+    return process.env.NEXT_PUBLIC_SOLANA_RPC || clusterApiUrl("devnet");
   }, []);
 
   // Wallet Standard discovers browser extensions; the disposable signer is only

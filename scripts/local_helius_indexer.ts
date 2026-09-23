@@ -21,7 +21,7 @@ function getWebhookSecret(): string {
 }
 
 async function startLocalIndexer() {
-  const rpcUrl = process.env.SOLANA_RPC || "http://127.0.0.1:8899";
+  const rpcUrl = process.env.NEXT_PUBLIC_SOLANA_RPC || "http://127.0.0.1:8899";
   const webhookUrl = "http://localhost:3000/api/webhooks/helius";
   const secret = getWebhookSecret();
 

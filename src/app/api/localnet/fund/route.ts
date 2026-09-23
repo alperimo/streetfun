@@ -16,7 +16,7 @@ function isRpcUnavailable(error: unknown): boolean {
 }
 
 export async function POST(request: NextRequest) {
-  const rpc = process.env.SOLANA_RPC;
+  const rpc = process.env.NEXT_PUBLIC_SOLANA_RPC;
   const pageHost = request.nextUrl.hostname;
   const rpcHost = rpc ? new URL(rpc).hostname : "";
   const loopback = (host: string) => host === "localhost" || host === "127.0.0.1";
