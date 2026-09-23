@@ -204,8 +204,8 @@ export class SolanaTokenService implements ITokenService {
         const totalSupply = Number(account.totalMemeSupply.toString()) / TOKEN_DECIMALS;
         const spotPrice = virtualTokensRaw > 0 ? virtualQuoteRaw / virtualTokensRaw : 0;
         const isGraduated = Boolean(account.isGraduated);
-        // A migrated token needs a live AMM quote. Curve state is no longer a current price source.
-        const currentPrice = isGraduated ? 0 : spotPrice;
+        // For graduated tokens, reference the latest trade price or final graduation spot price
+        const currentPrice = indexedStat?.latestTradePriceUsd || spotPrice;
         const marketCapUsd = currentPrice * totalSupply;
         // Execution-average trade prices are not a 24-hour spot-price baseline.
         const priceChange24h = 0;

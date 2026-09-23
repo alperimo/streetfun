@@ -38,9 +38,9 @@ export function HeroBanner() {
   ];
 
   return (
-    <section className="hero-section relative isolate min-h-[400px] overflow-hidden">
+    <section className="hero-section relative isolate min-h-[385px] overflow-hidden">
       <BullArtwork />
-      <div className="relative mx-auto flex min-h-[400px] w-full max-w-[1350px] flex-col justify-start px-6 py-9 sm:px-10 lg:px-0 lg:py-9">
+      <div className="relative mx-auto flex min-h-[385px] w-full max-w-[1350px] flex-col justify-start px-6 pt-12 pb-4 sm:px-10 lg:px-0 lg:pt-14 lg:pb-4">
         <div className="max-w-[650px]">
           <h1 className="max-w-[620px] text-4xl font-black leading-[0.98] tracking-[-0.055em] text-foreground sm:text-5xl lg:text-[64px]">
             Wall Street Floor

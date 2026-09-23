@@ -93,7 +93,7 @@ export function MarketsPage() {
         )}
 
         <div className="w-full bg-background">
-          <div className="mx-auto w-full max-w-[1350px] px-6 pt-4 sm:px-10 lg:px-0">
+          <div className="mx-auto w-full max-w-[1350px] px-6 pt-0 sm:px-10 lg:px-0">
             <FilterBar
               searchQuery={searchQuery}
               onSearchChange={setSearchQuery}

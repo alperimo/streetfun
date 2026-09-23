@@ -13,6 +13,7 @@ import idl from "@/idl/streetfun.json";
 import { PROGRAM_ID, USDC_MINT } from "@/sdk/constants";
 import { getCurvePda, getGlobalConfigPda, getQuoteVaultPda, getTokenVaultPda } from "@/sdk/pda";
 import { solanaTokenService } from "@/services/solana/solanaTokenService";
+import { executeGraduation } from "../graduate/route";
 
 export const dynamic = "force-dynamic";
 
@@ -130,6 +131,29 @@ export async function POST(req: Request) {
 
     // Fetch updated token
     const updatedToken = await solanaTokenService.getToken(mint);
+
+    // If trade was a buy and pushed reserves to or past threshold, auto-graduate!
+    if (
+      tradeMode === "buy" &&
+      updatedToken?.bondingCurve &&
+      !updatedToken.bondingCurve.isGraduated &&
+      updatedToken.bondingCurve.realQuoteReservesUsd >= updatedToken.bondingCurve.graduationThresholdUsd
+    ) {
+      console.log(`[API /api/trade] Threshold reached ($${updatedToken.bondingCurve.realQuoteReservesUsd} >= $${updatedToken.bondingCurve.graduationThresholdUsd}). Auto-graduating ${mint}...`);
+      try {
+        const gradResult = await executeGraduation(mint);
+        if (gradResult.updatedToken) {
+          return NextResponse.json({
+            success: true,
+            txSignature: tx,
+            message: `Buy order confirmed & Token Graduated! Pre-IPO shares locked into Treasury Vault.`,
+            updatedToken: gradResult.updatedToken,
+          });
+        }
+      } catch (gradErr: any) {
+        console.warn("[API /api/trade] Auto-graduation note:", gradErr.message);
+      }
+    }
 
     return NextResponse.json({
       success: true,

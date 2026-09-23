@@ -26,8 +26,13 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
   const { isWalletConnected, executeTrade, executeRedeem, isMock, refreshTokens, setWalletDialogOpen } = useMarket();
   const connected = walletAdapterConnected || isWalletConnected;
   const [receipt, setReceipt] = useState<TradeReceiptData | null>(null);
-  useEffect(() => setReceipt(null), [token.mint]);
-  const [tradeMode, setTradeMode] = useState<"buy" | "sell" | "redeem">("buy");
+  const [tradeMode, setTradeMode] = useState<"buy" | "sell" | "redeem">(
+    token.bondingCurve.isGraduated ? "redeem" : "buy"
+  );
+  useEffect(() => {
+    setReceipt(null);
+    setTradeMode(token.bondingCurve.isGraduated ? "redeem" : "buy");
+  }, [token.mint, token.bondingCurve.isGraduated]);
   const [amount, setAmount] = useState("");
   const [slippage, setSlippage] = useState<number>(1.0); // 1%
   const [showSettings, setShowSettings] = useState(false);
@@ -236,23 +241,6 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
       setIsTrading(false);
     }
   };
-
-  if (!isMock && token.bondingCurve.isGraduated && !pendingSignature) {
-    return (
-      <div className="rounded-xl border border-border bg-card p-5 shadow-sm">
-        <h2 className="text-sm font-bold text-foreground">Trading route unavailable</h2>
-        <p className="mt-2 text-xs leading-relaxed text-muted">
-          This curve is graduated. A verified AMM trading and equity redemption route is not configured,
-          so StreetFun will not submit or simulate an order here.
-        </p>
-        {token.bondingCurve.meteoraPoolAddress && (
-          <span className="mt-3 block break-all font-mono text-[10px] text-muted">
-            Pool: {token.bondingCurve.meteoraPoolAddress}
-          </span>
-        )}
-      </div>
-    );
-  }
 
   return (
     <div
@@ -482,6 +470,36 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
               ? `Burn & Redeem ${entitledStockShares.toFixed(4)} ${token.targetEquity.symbol} Stock`
               : `Burn & Swap to $${entitledUsdcValue.toFixed(2)} USDC`}
           </button>
+        </div>
+      ) : token.bondingCurve.isGraduated ? (
+        <div className="mt-4 rounded-xl border border-border/80 bg-card-subtle p-5 text-center">
+          <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-brand-cyan/10 text-brand-cyan">
+            <TrendingUp className="h-5 w-5" />
+          </div>
+          <h3 className="mt-3 text-sm font-bold text-foreground">Graduated to Meteora AMM</h3>
+          <p className="mt-1.5 text-xs text-muted leading-relaxed">
+            This token has graduated from the bonding curve. Liquidity is migrated to the AMM pool.
+            Swap directly on DEX or switch to <strong className="text-amber-300">Redeem Stock</strong> to claim underlying {token.targetEquity.name} shares.
+          </p>
+          <div className="mt-4 flex flex-col sm:flex-row items-center justify-center gap-2">
+            <button
+              onClick={() => {
+                setTradeErrorMsg(null);
+                setTradeMode("redeem");
+              }}
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 rounded-lg bg-amber-500/15 border border-amber-500/30 px-3.5 py-2 text-xs font-semibold text-amber-300 hover:bg-amber-500/25 transition-colors"
+            >
+              Switch to Redeem Stock NAV
+            </button>
+            <a
+              href="https://app.meteora.ag/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 rounded-lg bg-card-hover border border-border px-3.5 py-2 text-xs font-semibold text-foreground hover:bg-card-hover/80 transition-colors"
+            >
+              Trade on Meteora DEX ↗
+            </a>
+          </div>
         </div>
       ) : (
         <>

@@ -160,11 +160,7 @@ export function TokenCard({ token }: TokenCardProps) {
                   {formatUsd(token.bondingCurve.realQuoteReservesUsd)}{" "}
                   <span className="text-xs font-normal text-muted">/ {formatUsd(token.bondingCurve.graduationThresholdUsd)} USDC</span>
                 </div>
-                {token.bondingCurve.progressPct > 0 ? (
-                  <span className="font-mono text-xs font-semibold text-emerald-400">
-                    {formatBondingProgress(token.bondingCurve.progressPct)} to AMM
-                  </span>
-                ) : (
+                {token.bondingCurve.progressPct === 0 && (
                   <span className="font-mono text-xs font-medium text-muted">
                     New Listing
                   </span>

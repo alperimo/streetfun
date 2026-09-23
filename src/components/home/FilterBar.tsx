@@ -44,7 +44,7 @@ export function FilterBar({
   onSortChange,
 }: FilterBarProps) {
   return (
-    <div className="mt-5 flex flex-col gap-4">
+    <div className="mt-2 flex flex-col gap-4">
       <div className="flex w-full flex-col gap-3 rounded-2xl border border-border bg-card/70 p-2 shadow-xs lg:flex-row lg:items-center lg:justify-between">
         <div className="relative min-w-0 flex-1">
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted" />
