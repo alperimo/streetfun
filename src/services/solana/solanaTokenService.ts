@@ -36,6 +36,7 @@ export class SolanaTokenService implements ITokenService {
   private connection: Connection;
   private cachedTokensResult: { tokens: TokenMetadata[]; timestamp: number } | null = null;
   private readonly CACHE_TTL_MS = 3000;
+  private readonly verifiedQuoteCurves = new Set<string>();
 
   constructor() {
     const rpcUrl = process.env.NEXT_PUBLIC_SOLANA_RPC || "https://api.devnet.solana.com";
@@ -232,14 +233,22 @@ export class SolanaTokenService implements ITokenService {
         const marketCapUsd = currentPrice * totalSupply;
         // Execution-average trade prices are not a 24-hour spot-price baseline.
         const priceChange24h = 0;
+        const curvePubkeyStr = curveEntry.publicKey.toBase58();
         const [quoteVaultPda] = getQuoteVaultPda(curveEntry.publicKey, PROGRAM_ID);
         const [treasuryVaultPda] = getTreasuryVaultPda(curveEntry.publicKey, PROGRAM_ID);
-        const quoteVault = await getAccount(this.connection, quoteVaultPda, "confirmed");
-        if (!quoteVault.mint.equals(USDC_MINT)) {
-          // Launch is permissionless: an unsupported quote asset must not take
-          // every supported market offline or be displayed as USDC.
-          return null;
+
+        let quoteMintStr = USDC_MINT.toBase58();
+        if (!this.verifiedQuoteCurves.has(curvePubkeyStr)) {
+          const quoteVault = await getAccount(this.connection, quoteVaultPda, "confirmed");
+          if (!quoteVault.mint.equals(USDC_MINT)) {
+            // Launch is permissionless: an unsupported quote asset must not take
+            // every supported market offline or be displayed as USDC.
+            return null;
+          }
+          this.verifiedQuoteCurves.add(curvePubkeyStr);
+          quoteMintStr = quoteVault.mint.toBase58();
         }
+
         const meteoraPool = account.meteoraDbcPool as PublicKey;
         const hasMeteoraPool = !meteoraPool.equals(PublicKey.default);
         const totalEquityLocked =
@@ -283,7 +292,7 @@ export class SolanaTokenService implements ITokenService {
             virtualQuoteReserves: account.virtualQuoteReserves.toString(),
             virtualTokenReserves: account.virtualTokenReserves.toString(),
             realTokenReserves: account.realTokenReserves.toString(),
-            quoteMint: quoteVault.mint.toBase58(),
+            quoteMint: quoteMintStr,
             isGraduated,
             graduatedAt:
               Number(account.graduatedAt?.toString() || 0) > 0
