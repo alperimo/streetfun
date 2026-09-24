@@ -40,8 +40,8 @@ export default function TreasuryPage() {
     }
 
     // Live On-Chain & Indexed Protocol Stats
-    const graduatedTokens = tokens.filter((t) => t.bondingCurve.isGraduated);
-    const totalEquityValueLockedUsd = tokens.reduce(
+    const graduatedTokens = tokens.filter((t) => t.bondingCurve.isGraduated && t.bondingCurve.meteoraPoolAddress);
+    const totalEquityValueLockedUsd = graduatedTokens.reduce(
       (acc, t) => acc + (t.treasury?.totalEquityValueUsd || 0),
       0
     );
@@ -150,7 +150,15 @@ export default function TreasuryPage() {
           <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
             <div className="text-xs text-muted font-medium">Total Equity Locked</div>
             <div className="mt-1 font-mono text-2xl sm:text-3xl font-bold text-foreground tracking-tight">
-              {isMock ? `$${stats.totalEquityValueLockedUsd.toLocaleString("en-US")}` : "—"}
+              {isMock
+                ? `$${(stats.totalEquityValueLockedUsd as number).toLocaleString("en-US")}`
+                : stats.totalEquityValueLockedUsd > 0
+                ? stats.totalEquityValueLockedUsd >= 1_000_000
+                  ? `$${(stats.totalEquityValueLockedUsd / 1_000_000).toFixed(2)}M`
+                  : stats.totalEquityValueLockedUsd >= 1_000
+                  ? `$${(stats.totalEquityValueLockedUsd / 1_000).toFixed(1)}K`
+                  : `$${(stats.totalEquityValueLockedUsd as number).toFixed(2)}`
+                : "—"}
             </div>
             <div className="mt-1 text-[11px] text-muted">
               Value in vaults now
@@ -160,7 +168,15 @@ export default function TreasuryPage() {
           <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
             <div className="text-xs text-muted font-medium">Total Distributed</div>
             <div className="mt-1 font-mono text-2xl sm:text-3xl font-bold text-foreground tracking-tight">
-              {isMock ? `$${stats.totalRedemptionsUsd.toLocaleString("en-US")}` : "—"}
+              {isMock
+                ? `$${(stats.totalRedemptionsUsd as number).toLocaleString("en-US")}`
+                : (stats.totalRedemptionsUsd as number) > 0
+                ? (stats.totalRedemptionsUsd as number) >= 1_000_000
+                  ? `$${((stats.totalRedemptionsUsd as number) / 1_000_000).toFixed(2)}M`
+                  : (stats.totalRedemptionsUsd as number) >= 1_000
+                  ? `$${((stats.totalRedemptionsUsd as number) / 1_000).toFixed(1)}K`
+                  : `$${(stats.totalRedemptionsUsd as number).toFixed(2)}`
+                : "—"}
             </div>
             <div className="mt-1 text-[11px] text-muted">
               Paid to holders
@@ -170,7 +186,7 @@ export default function TreasuryPage() {
           <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
             <div className="text-xs text-muted font-medium">Graduated Vaults</div>
             <div className="mt-1 font-mono text-2xl sm:text-3xl font-bold text-foreground tracking-tight">
-              {stats.totalGraduatedCurves.toLocaleString("en-US")}
+              {(stats.totalGraduatedCurves as number).toLocaleString("en-US")}
             </div>
             <div className="mt-1 text-[11px] text-muted">
               Active stock vaults
@@ -180,7 +196,11 @@ export default function TreasuryPage() {
           <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
             <div className="text-xs text-muted font-medium">Holder Payouts</div>
             <div className="mt-1 font-mono text-2xl sm:text-3xl font-bold text-foreground tracking-tight">
-              {isMock ? stats.walletsRedeemed.toLocaleString("en-US") : "—"}
+              {isMock
+                ? (stats.walletsRedeemed as number).toLocaleString("en-US")
+                : (stats.walletsRedeemed as number) > 0
+                ? (stats.walletsRedeemed as number).toLocaleString("en-US")
+                : "—"}
             </div>
             <div className="mt-1 text-[11px] text-muted">
               Redemptions executed
@@ -315,7 +335,7 @@ export default function TreasuryPage() {
                       </div>
 
                       <div className="flex flex-col items-end min-w-[130px] flex-shrink-0 text-right">
-                        <div className="font-mono text-xs font-medium text-white tabular-nums whitespace-nowrap">
+                        <div className="font-mono text-xs font-medium text-foreground tabular-nums whitespace-nowrap">
                           +{rdm.sharesRedeemed.toFixed(2)} {rdm.equitySymbol}
                         </div>
                         <div className="text-[10px] font-mono text-muted whitespace-nowrap mt-0.5 tabular-nums">
