@@ -32,7 +32,7 @@
         {
           "name": "target_equity_mint",
           "docs": [
-            "SPL Token mint of the target equity (e.g. $SPCX)"
+            "SPL or Token-2022 mint of the target equity (e.g. OpenAI, SpaceX, Kalshi)"
           ]
         },
         {
@@ -97,8 +97,7 @@
           "writable": true
         },
         {
-          "name": "token_program",
-          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+          "name": "token_program"
         }
       ],
       "args": [
@@ -314,7 +313,7 @@
         {
           "name": "target_equity_mint",
           "docs": [
-            "SPL Token mint of the target equity (e.g., $SPCX, $NVDA)"
+            "SPL or Token-2022 mint of the target equity (e.g., $SPCX, $NVDA, OpenAI)"
           ]
         },
         {
@@ -586,7 +585,10 @@
           "signer": true
         },
         {
-          "name": "target_equity_mint"
+          "name": "target_equity_mint",
+          "docs": [
+            "SPL Token or Token-2022 mint of the target equity (e.g. OpenAI, SpaceX, Kalshi)"
+          ]
         },
         {
           "name": "curve",
@@ -704,8 +706,7 @@
           }
         },
         {
-          "name": "token_program",
-          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+          "name": "token_program"
         },
         {
           "name": "associated_token_program",
@@ -1105,6 +1106,11 @@
       "code": 6015,
       "name": "SettlementUnavailable",
       "msg": "Verified asset purchase and liquidity settlement are unavailable."
+    },
+    {
+      "code": 6016,
+      "name": "InvalidTokenProgram",
+      "msg": "Invalid token program provided for target equity mint."
     }
   ],
   "types": [

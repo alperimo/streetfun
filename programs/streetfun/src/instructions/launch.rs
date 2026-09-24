@@ -38,8 +38,8 @@ pub struct LaunchStonk<'info> {
     )]
     pub meme_mint: Account<'info, Mint>,
 
-    /// Only legacy SPL collateral is supported by this version.
-    pub target_equity_mint: Account<'info, Mint>,
+    /// SPL Token or Token-2022 mint of the target equity (e.g. OpenAI, SpaceX, Kalshi)
+    pub target_equity_mint: InterfaceAccount<'info, anchor_spl::token_interface::Mint>,
 
     #[account(
         init,
@@ -80,10 +80,11 @@ pub struct LaunchStonk<'info> {
         bump,
         token::mint = target_equity_mint,
         token::authority = curve,
+        token::token_program = token_program,
     )]
-    pub treasury_vault: Account<'info, TokenAccount>,
+    pub treasury_vault: InterfaceAccount<'info, anchor_spl::token_interface::TokenAccount>,
 
-    pub token_program: Program<'info, Token>,
+    pub token_program: Interface<'info, anchor_spl::token_interface::TokenInterface>,
     pub associated_token_program: Program<'info, AssociatedToken>,
     pub system_program: Program<'info, System>,
     pub rent: Sysvar<'info, Rent>,

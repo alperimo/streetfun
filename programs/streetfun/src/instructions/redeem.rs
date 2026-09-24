@@ -2,7 +2,8 @@ use crate::errors::StreetfunError;
 use crate::math::calculate_pro_rata_equity;
 use crate::state::{CurveAccount, CURVE_SEED, TREASURY_VAULT_SEED};
 use anchor_lang::prelude::*;
-use anchor_spl::token::{self, Burn, Mint, Token, TokenAccount, Transfer};
+use anchor_spl::token::{Burn, Mint, TokenAccount};
+use anchor_spl::token_interface::{self, Mint as InterfaceMint, TokenAccount as InterfaceTokenAccount, TokenInterface, TransferChecked};
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy)]
 pub struct BurnAndRedeemParams {
@@ -18,8 +19,8 @@ pub struct BurnAndRedeem<'info> {
     #[account(mut)]
     pub meme_mint: Account<'info, Mint>,
 
-    /// SPL Token mint of the target equity (e.g. $SPCX)
-    pub target_equity_mint: Account<'info, Mint>,
+    /// SPL or Token-2022 mint of the target equity (e.g. OpenAI, SpaceX, Kalshi)
+    pub target_equity_mint: InterfaceAccount<'info, InterfaceMint>,
 
     #[account(
         mut,
@@ -36,8 +37,9 @@ pub struct BurnAndRedeem<'info> {
         bump = curve.treasury_vault_bump,
         token::mint = target_equity_mint,
         token::authority = curve,
+        token::token_program = token_program,
     )]
-    pub treasury_vault: Account<'info, TokenAccount>,
+    pub treasury_vault: InterfaceAccount<'info, InterfaceTokenAccount>,
 
     #[account(
         mut,
@@ -50,14 +52,15 @@ pub struct BurnAndRedeem<'info> {
         mut,
         token::mint = target_equity_mint,
         token::authority = redeemer,
+        token::token_program = token_program,
     )]
-    pub redeemer_equity_account: Account<'info, TokenAccount>,
+    pub redeemer_equity_account: InterfaceAccount<'info, InterfaceTokenAccount>,
 
-    pub token_program: Program<'info, Token>,
+    pub token_program: Interface<'info, TokenInterface>,
 }
 
-pub fn handle_burn_and_redeem(
-    ctx: Context<BurnAndRedeem>,
+pub fn handle_burn_and_redeem<'a, 'b, 'c, 'info>(
+    ctx: Context<'a, 'b, 'c, 'info, BurnAndRedeem<'info>>,
     params: BurnAndRedeemParams,
 ) -> Result<()> {
     if params.meme_tokens_to_burn == 0 {
@@ -81,7 +84,7 @@ pub fn handle_burn_and_redeem(
     }
 
     // 1. Burn user's meme tokens permanently
-    token::burn(
+    anchor_spl::token::burn(
         CpiContext::new(
             ctx.accounts.token_program.to_account_info(),
             Burn {
@@ -102,17 +105,29 @@ pub fn handle_burn_and_redeem(
     ];
     let signer_seeds = &[curve_seeds];
 
-    token::transfer(
+    let equity_program = if *ctx.accounts.target_equity_mint.to_account_info().owner == ctx.accounts.token_program.key() {
+        ctx.accounts.token_program.to_account_info()
+    } else {
+        ctx.remaining_accounts
+            .iter()
+            .find(|acc| acc.key == ctx.accounts.target_equity_mint.to_account_info().owner)
+            .ok_or(StreetfunError::InvalidTokenProgram)?
+            .to_account_info()
+    };
+
+    token_interface::transfer_checked(
         CpiContext::new_with_signer(
-            ctx.accounts.token_program.to_account_info(),
-            Transfer {
+            equity_program,
+            TransferChecked {
                 from: ctx.accounts.treasury_vault.to_account_info(),
+                mint: ctx.accounts.target_equity_mint.to_account_info(),
                 to: ctx.accounts.redeemer_equity_account.to_account_info(),
                 authority: curve.to_account_info(),
             },
             signer_seeds,
         ),
         entitled_shares,
+        ctx.accounts.target_equity_mint.decimals,
     )?;
 
     // 3. Update curve supply and remaining locked equity

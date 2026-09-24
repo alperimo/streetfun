@@ -48,15 +48,15 @@ pub mod streetfun {
         instructions::sell::handle_sell_curve(ctx, params)
     }
 
-    pub fn graduate_and_execute_stock(
-        ctx: Context<GraduateAndExecuteStock>,
+    pub fn graduate_and_execute_stock<'a, 'b, 'c, 'info>(
+        ctx: Context<'a, 'b, 'c, 'info, GraduateAndExecuteStock<'info>>,
         params: GraduateParams,
     ) -> Result<()> {
         instructions::graduate::handle_graduate_and_execute_stock(ctx, params)
     }
 
-    pub fn burn_and_redeem(
-        ctx: Context<BurnAndRedeem>,
+    pub fn burn_and_redeem<'a, 'b, 'c, 'info>(
+        ctx: Context<'a, 'b, 'c, 'info, BurnAndRedeem<'info>>,
         params: BurnAndRedeemParams,
     ) -> Result<()> {
         instructions::redeem::handle_burn_and_redeem(ctx, params)

@@ -49,4 +49,7 @@ pub enum StreetfunError {
 
     #[msg("Verified asset purchase and liquidity settlement are unavailable.")]
     SettlementUnavailable,
+
+    #[msg("Invalid token program provided for target equity mint.")]
+    InvalidTokenProgram,
 }

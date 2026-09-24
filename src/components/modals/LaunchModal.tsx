@@ -269,7 +269,7 @@ export function LaunchModal({
           <div className="rounded-xl border border-border bg-card-subtle p-3 text-[11px] text-muted flex items-start gap-2">
             <Info className="h-4 w-4 text-brand-cyan flex-shrink-0 mt-0.5" />
             <span className="leading-relaxed">
-              <strong className="text-foreground">Graduation allocation:</strong> The intended split is 50% for Tessera tokens and 50% for liquidity. Live launches are unavailable until settlement and asset support are verified.
+              <strong className="text-foreground">Graduation allocation:</strong> 50% of raised USDC purchases tokenized equity into the immutable Treasury Vault; 50% USDC + remaining meme supply seeds the Meteora DAMM v2 pool.
             </span>
           </div>
 
