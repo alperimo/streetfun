@@ -152,8 +152,18 @@ export default function TokenDetailPage({ params }: PageProps) {
     );
   }
 
+  const navFloor =
+    token.totalSupply && token.treasury.totalEquityValueUsd > 0
+      ? token.treasury.totalEquityValueUsd / token.totalSupply
+      : 0;
+
   // Spot price, market cap, reserves and progress share one on-chain snapshot.
-  const currentPrice = token.priceUsd;
+  const currentPrice =
+    token.priceUsd > 0
+      ? token.priceUsd
+      : token.bondingCurve.isGraduated && navFloor > 0
+      ? navFloor
+      : 0;
   const currentMarketCap = token.marketCapUsd;
   const formattedMarketCap =
     currentMarketCap > 0
@@ -175,10 +185,6 @@ export default function TokenDetailPage({ params }: PageProps) {
   const formattedReservesDetail = `(${formatUsd(currentReserves)} / ${formatUsd(
     token.bondingCurve.graduationThresholdUsd
   )} USDC)`;
-  const navFloor =
-    token.totalSupply && token.treasury.totalEquityValueUsd > 0
-      ? token.treasury.totalEquityValueUsd / token.totalSupply
-      : 0;
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
@@ -284,19 +290,25 @@ export default function TokenDetailPage({ params }: PageProps) {
               <div className="text-[11px] text-muted font-medium">Token price</div>
               <div className="mt-1 flex flex-wrap items-baseline gap-x-2 gap-y-1 font-mono text-base font-bold text-foreground sm:text-xl">
                 <span className="break-all">{formattedPrice}</span>
-                <span
-                  className={`text-xs font-semibold ${
-                    isNeutralChange
-                      ? "text-muted"
-                      : isPositiveChange
-                      ? "text-emerald-400"
-                      : "text-rose-400"
-                  }`}
-                >
-                  {token.priceChange24hAvailable === false ? "—" : (
-                    <>{isPositiveChange && !isNeutralChange ? "+" : ""}{computedChangePct.toFixed(1)}%</>
-                  )}
-                </span>
+                {token.bondingCurve.isGraduated ? (
+                  <span className="rounded border border-amber-500/30 bg-amber-500/10 px-1.5 py-0.5 text-[10px] font-semibold text-amber-300">
+                    Floor
+                  </span>
+                ) : (
+                  <span
+                    className={`text-xs font-semibold ${
+                      isNeutralChange
+                        ? "text-muted"
+                        : isPositiveChange
+                        ? "text-emerald-400"
+                        : "text-rose-400"
+                    }`}
+                  >
+                    {token.priceChange24hAvailable === false ? "—" : (
+                      <>{isPositiveChange && !isNeutralChange ? "+" : ""}{computedChangePct.toFixed(1)}%</>
+                    )}
+                  </span>
+                )}
               </div>
             </div>
 
