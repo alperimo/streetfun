@@ -31,7 +31,7 @@ export function HeroBanner() {
     {
       label: "Equity TVL",
       value: isMock ? "$40.7M" : !error && !loading && equityValuationAvailable ? formatUsd(totalEquityTvl) : "—",
-      change: isMock ? "+28.1%" : error || !equityValuationAvailable ? "Valuation unavailable" : "Pre-IPO Mark Value",
+      change: isMock ? "+28.1%" : error || !equityValuationAvailable ? "Valuation unavailable" : "Mark Value",
     },
     {
       label: "Graduated",
