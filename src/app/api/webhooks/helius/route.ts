@@ -18,7 +18,13 @@ export async function POST(req: NextRequest) {
   let processedCount = 0, skippedCount = 0, retryCount = 0;
   if (payload.length) {
     try { await assertConfiguredCluster(connection); }
-    catch { return NextResponse.json({ error: "RPC cluster unavailable" }, { status: 503 }); }
+    catch (err) {
+      console.error("[Helius Webhook] Cluster assertion failed:", err);
+      return NextResponse.json({
+        error: "RPC cluster unavailable",
+        detail: err instanceof Error ? err.message : "Cluster check failed"
+      }, { status: 503 });
+    }
   }
   // Helius raw and enhanced payloads have different signature locations.
   for (let offset = 0; offset < payload.length; offset += 4) {
