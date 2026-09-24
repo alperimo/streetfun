@@ -13,7 +13,7 @@ export function HeroBanner() {
   const volumeAvailable = tokens.every((token) => token.volume24hAvailable !== false);
   const equityValuationAvailable = tokens.every(t => t.treasury.totalEquityLocked === 0 || t.treasury.valuationAvailable === true);
   const totalEquityTvl = tokens.reduce((sum, t) => sum + (t.treasury?.totalEquityValueUsd || 0), 0);
-  const graduatedCount = tokens.filter((t) => t.bondingCurve?.isGraduated).length;
+  const graduatedCount = tokens.filter((t) => t.bondingCurve?.isGraduated && t.bondingCurve?.meteoraPoolAddress).length;
 
   const formatUsd = (num: number) => {
     if (num >= 1_000_000) return `$${(num / 1_000_000).toFixed(2)}M`;
