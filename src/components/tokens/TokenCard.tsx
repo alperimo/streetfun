@@ -176,11 +176,7 @@ export function TokenCard({ token }: TokenCardProps) {
         <span className="text-muted">
           Vol {token.volume24hAvailable === false ? "—" : formatUsd(token.volume24hUsd)}
         </span>
-        {token.bondingCurve.isGraduated ? (
-          <span className="font-semibold text-amber-300 text-[11px] tracking-wide">
-            NAV Floor
-          </span>
-        ) : (
+        {token.priceChange24hAvailable && (
           <span
             className={`font-semibold ${
               isNeutral
@@ -190,9 +186,7 @@ export function TokenCard({ token }: TokenCardProps) {
                 : "text-rose-400"
             }`}
           >
-            {token.priceChange24hAvailable === false ? "—" : (
-              <>{isPositive && !isNeutral ? "+" : ""}{token.priceChange24h.toFixed(1)}%</>
-            )}
+            {isPositive && !isNeutral ? "+" : ""}{token.priceChange24h.toFixed(1)}%
           </span>
         )}
       </div>

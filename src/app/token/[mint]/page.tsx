@@ -290,11 +290,7 @@ export default function TokenDetailPage({ params }: PageProps) {
               <div className="text-[11px] text-muted font-medium">Token price</div>
               <div className="mt-1 flex flex-wrap items-baseline gap-x-2 gap-y-1 font-mono text-base font-bold text-foreground sm:text-xl">
                 <span className="break-all">{formattedPrice}</span>
-                {token.bondingCurve.isGraduated ? (
-                  <span className="rounded border border-amber-500/30 bg-amber-500/10 px-1.5 py-0.5 text-[10px] font-semibold text-amber-300">
-                    Floor
-                  </span>
-                ) : (
+                {token.priceChange24hAvailable && (
                   <span
                     className={`text-xs font-semibold ${
                       isNeutralChange
@@ -304,9 +300,7 @@ export default function TokenDetailPage({ params }: PageProps) {
                         : "text-rose-400"
                     }`}
                   >
-                    {token.priceChange24hAvailable === false ? "—" : (
-                      <>{isPositiveChange && !isNeutralChange ? "+" : ""}{computedChangePct.toFixed(1)}%</>
-                    )}
+                    {isPositiveChange && !isNeutralChange ? "+" : ""}{computedChangePct.toFixed(1)}%
                   </span>
                 )}
               </div>
