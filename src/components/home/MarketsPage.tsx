@@ -45,15 +45,20 @@ export function MarketsPage() {
           return false;
         }
         if (selectedTag !== "all") {
-          const sym = (token.targetEquity.symbol || "").toLowerCase();
-          const name = (token.targetEquity.name || "").toLowerCase();
-          const tag = selectedTag.toLowerCase();
+          const sym = (token.targetEquity.symbol || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+          const name = (token.targetEquity.name || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+          const tag = selectedTag.toLowerCase().replace(/[^a-z0-9]/g, "");
           const matches =
             sym.includes(tag) ||
             name.includes(tag) ||
             (tag === "openai" && (sym.includes("opai") || name.includes("openai"))) ||
             (tag === "spacex" && (sym.includes("spcx") || name.includes("spacex"))) ||
-            (tag === "kalshi" && (sym.includes("kls") || name.includes("kalshi")));
+            (tag === "kalshi" && (sym.includes("kls") || name.includes("kalshi"))) ||
+            (tag === "anthropic" && (sym.includes("anth") || name.includes("anthropic"))) ||
+            (tag === "anduril" && (sym.includes("and") || name.includes("anduril"))) ||
+            (tag === "figureai" && (sym.includes("fig") || name.includes("figure"))) ||
+            (tag === "neuralink" && (sym.includes("neur") || name.includes("neuralink"))) ||
+            (tag === "polymarket" && (sym.includes("poly") || name.includes("polymarket")));
           if (!matches) return false;
         }
 

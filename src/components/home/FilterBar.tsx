@@ -24,8 +24,9 @@ const EQUITY_TAGS = [
   { id: "anthropic", label: "Anthropic" },
   { id: "kalshi", label: "Kalshi" },
   { id: "anduril", label: "Anduril" },
-  { id: "stripe", label: "Stripe" },
-  { id: "nvidia", label: "NVIDIA" },
+  { id: "figureai", label: "Figure AI" },
+  { id: "neuralink", label: "Neuralink" },
+  { id: "polymarket", label: "Polymarket" },
 ];
 
 const SORT_OPTIONS: { id: SortOption; label: string }[] = [
