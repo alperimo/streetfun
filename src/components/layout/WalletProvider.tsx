@@ -9,6 +9,7 @@ import { WalletModalProvider } from "@solana/wallet-adapter-react-ui";
 import { getBrowserRpcUrl } from "@/sdk/network";
 
 import { LocalnetWalletAdapter } from "./LocalnetWalletAdapter";
+import { DevnetWalletAdapter } from "./DevnetWalletAdapter";
 
 const WalletConnectionErrorContext = createContext<{
   error: string | null;
@@ -65,10 +66,12 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
     }
     const rpcHost = new URL(endpoint).hostname;
     const localnet = process.env.NEXT_PUBLIC_SOLANA_NETWORK === "localnet";
+    const devnet = process.env.NEXT_PUBLIC_SOLANA_NETWORK === "devnet";
     const loopback = rpcHost === "localhost" || rpcHost === "127.0.0.1";
-    return localnet && loopback && process.env.NEXT_PUBLIC_USE_MOCK_DATA !== "true"
-      ? [new LocalnetWalletAdapter()]
-      : [];
+    if (process.env.NEXT_PUBLIC_USE_MOCK_DATA === "true") return [];
+    if (localnet && loopback) return [new LocalnetWalletAdapter()];
+    if (devnet) return [new DevnetWalletAdapter()];
+    return [];
   }, [endpoint]);
 
   return (
