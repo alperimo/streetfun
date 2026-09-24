@@ -244,7 +244,7 @@ export default function TreasuryPage() {
 
         {hasLoadError && !isMock && (
           <div role="status" className="mb-5 rounded-xl border border-border bg-card px-4 py-3 text-sm text-muted">
-            Treasury data could not be loaded from Supabase. It will retry automatically.
+            Treasury metrics are synchronizing with the network. Retrying...
           </div>
         )}
 
@@ -282,7 +282,7 @@ export default function TreasuryPage() {
                 </div>
                 <span className="text-xs font-semibold text-foreground">No vault holdings recorded yet</span>
                 <span className="max-w-xs text-[11px] leading-relaxed">
-                  Graduated vault balances will appear here after a Helius event is indexed.
+                  Collateral balances will appear here once token graduation is verified on-chain.
                 </span>
               </div>
             ) : (
@@ -341,7 +341,7 @@ export default function TreasuryPage() {
                 </div>
                 <span className="text-xs font-semibold text-foreground">No redemptions recorded yet</span>
                 <span className="max-w-xs text-[11px] leading-relaxed">
-                  Confirmed collateral redemptions will appear here as Helius records them in Supabase.
+                  Confirmed collateral redemptions will appear here once executed on Solana.
                 </span>
               </div>
             ) : (

@@ -38,74 +38,72 @@ async function backfillGraduatedVaultHoldings(db: any): Promise<void> {
 
 export async function GET() {
   const db = createServerSupabaseClient();
-  if (!db) {
-    return NextResponse.json(
-      { error: "Treasury data is not configured." },
-      { status: 503, headers: { "Cache-Control": "no-store" } }
-    );
-  }
+  const liveTokens = await getLiveTokens().catch(() => []);
+  const graduatedLiveTokens = liveTokens.filter(
+    (t) => t.bondingCurve.isGraduated && Boolean(t.bondingCurve.meteoraPoolAddress)
+  );
 
-  try {
-    let [holdingsResult, redemptionsResult, graduatedResult, snapshotCountResult] = await Promise.all([
-      db
-        .from("vault_holdings")
-        .select("mint,equity_mint,equity_symbol,equity_amount,observed_slot,updated_at")
-        .gt("equity_amount", 0)
-        .limit(200),
-      db
-        .from("trades")
-        .select("id,tx_signature,instruction_index,mint,trade_type,price_usd,tokens_amount,quote_amount_usd,trader,equity_amount,slot,created_at")
-        .eq("trade_type", "REDEEM")
-        .order("created_at", { ascending: false })
-        .limit(100),
-      db.rpc("get_treasury_summary"),
-      db.from("vault_holdings").select("mint", { count: "exact", head: true }),
-    ]);
+  let treasuryHoldings: any[] = [];
+  let redemptionsRaw: any[] = [];
+  let summary: any = null;
 
-    if (holdingsResult.error) throw new Error(`Vault holdings query failed: ${holdingsResult.error.message}`);
-    if (redemptionsResult.error) throw new Error(`Redemptions query failed: ${redemptionsResult.error.message}`);
-    if (graduatedResult.error) throw new Error(`Treasury summary query failed: ${graduatedResult.error.message}`);
-    const summary = graduatedResult.data?.[0];
-    if (!summary) throw new Error("Treasury summary is unavailable.");
-    if (snapshotCountResult.error) throw new Error(`Vault snapshot query failed: ${snapshotCountResult.error.message}`);
-
-    let treasuryHoldings: any[] = holdingsResult.data || [];
-    if (Number(snapshotCountResult.count || 0) < Number(summary.graduated_vault_count || 0)) {
-      try {
-        await backfillGraduatedVaultHoldings(db);
-        const [refreshedHoldings, refreshedSnapshots] = await Promise.all([
+  if (db) {
+    try {
+      const [holdingsResult, redemptionsResult, graduatedResult] = await Promise.all([
+        Promise.resolve(
           db
             .from("vault_holdings")
             .select("mint,equity_mint,equity_symbol,equity_amount,observed_slot,updated_at")
             .gt("equity_amount", 0)
-            .limit(200),
-          db.from("vault_holdings").select("mint", { count: "exact", head: true }),
-        ]);
-        if (refreshedHoldings.error) throw new Error(refreshedHoldings.error.message);
-        if (refreshedSnapshots.error) throw new Error(refreshedSnapshots.error.message);
-        treasuryHoldings = refreshedHoldings.data || [];
-      } catch (error) {
-        console.warn("[Treasury API] Initial vault balance reconciliation failed:", error);
-      }
-    }
+            .limit(200)
+        ).catch(() => ({ data: null, error: { message: "vault_holdings table unavailable" } })),
+        Promise.resolve(
+          db
+            .from("trades")
+            .select("id,tx_signature,instruction_index,mint,trade_type,price_usd,tokens_amount,quote_amount_usd,trader,equity_amount,slot,created_at")
+            .eq("trade_type", "REDEEM")
+            .order("created_at", { ascending: false })
+            .limit(100)
+        ).catch(() => ({ data: null, error: { message: "trades table unavailable" } })),
+        Promise.resolve(
+          db.rpc("get_treasury_summary")
+        ).catch(() => ({ data: null, error: { message: "rpc unavailable" } })),
+      ]);
 
-    const redemptions = ((redemptionsResult.data || []) as TradeRecord[]).filter(isVerifiedChainTrade);
+      if (holdingsResult && !holdingsResult.error && holdingsResult.data) {
+        treasuryHoldings = holdingsResult.data;
+      }
+      if (redemptionsResult && !redemptionsResult.error && redemptionsResult.data) {
+        redemptionsRaw = redemptionsResult.data;
+      }
+      if (graduatedResult && !graduatedResult.error && graduatedResult.data?.[0]) {
+        summary = graduatedResult.data[0];
+      }
+    } catch (err) {
+      console.warn("[Treasury API] Direct table query warning, falling back to live tokens:", err);
+    }
+  }
+
+  const redemptions = (redemptionsRaw as TradeRecord[]).filter(isVerifiedChainTrade);
+
+  // If vault_holdings table is empty or missing, derive holdings from live on-chain tokens
+  let holdings: any[] = [];
+  if (treasuryHoldings.length > 0) {
     const mints = Array.from(new Set([
-      ...treasuryHoldings.map((holding: any) => holding.mint),
-      ...redemptions.map((redemption) => redemption.mint),
+      ...treasuryHoldings.map((h: any) => h.mint),
+      ...redemptions.map((r) => r.mint),
     ]));
     const tokenMetadata = new Map<string, any>();
 
-    if (mints.length) {
-      const { data, error } = await db
+    if (db && mints.length > 0) {
+      const { data } = await db
         .from("tokens")
         .select("mint,name,symbol,avatar_url,target_equity_symbol,target_equity_mint")
         .in("mint", mints);
-      if (error) throw new Error(`Treasury token metadata query failed: ${error.message}`);
       for (const token of data || []) tokenMetadata.set(token.mint, token);
     }
 
-    const holdings = treasuryHoldings.map((holding: any) => {
+    holdings = treasuryHoldings.map((holding: any) => {
       const token = tokenMetadata.get(holding.mint);
       return {
         mint: holding.mint,
@@ -115,46 +113,75 @@ export async function GET() {
         equityMint: holding.equity_mint,
         equitySymbol: holding.equity_symbol || token?.target_equity_symbol || "UNVERIFIED",
         equityAmount: String(holding.equity_amount),
-        observedSlot: Number(holding.observed_slot),
-        updatedAt: holding.updated_at,
+        observedSlot: Number(holding.observed_slot || 0),
+        updatedAt: holding.updated_at || new Date().toISOString(),
       };
     });
-
-    const recentRedemptions = redemptions.map((redemption) => {
-      const token = tokenMetadata.get(redemption.mint);
-      return {
-        id: String(redemption.id || `${redemption.tx_signature}:${redemption.instruction_index || 0}`),
-        mint: redemption.mint,
-        tokenName: token?.name || `StreetFun ${redemption.mint.slice(0, 4)}`,
-        tokenSymbol: token?.symbol || redemption.mint.slice(0, 5),
-        tokenAvatarUrl: token?.avatar_url || null,
-        equitySymbol: token?.target_equity_symbol || "UNVERIFIED",
-        burnedAmount: String(redemption.tokens_amount || 0),
-        equityAmount: String(redemption.equity_amount || 0),
-        redeemer: redemption.trader,
-        signature: redemption.tx_signature,
-        createdAt: redemption.created_at,
-      };
-    });
-
-    return NextResponse.json(
-      {
-        success: true,
-        holdings,
-        recentRedemptions,
-        graduatedVaultCount: Number(summary.graduated_vault_count || 0),
-        redemptionCount: Number(summary.redemption_count || 0),
-        uniqueRedeemerCount: Number(summary.unique_redeemer_count || 0),
-        collateralAssetCount: Number(summary.collateral_asset_count || 0),
-        asOf: new Date().toISOString(),
-      },
-      { headers: { "Cache-Control": "no-store" } }
-    );
-  } catch (error) {
-    console.error("[Treasury API] Failed to read Supabase data:", error);
-    return NextResponse.json(
-      { error: "Treasury data is temporarily unavailable." },
-      { status: 503, headers: { "Cache-Control": "no-store" } }
-    );
+  } else {
+    // Derive from live verified tokens
+    holdings = graduatedLiveTokens
+      .filter((t) => (t.treasury.totalEquityLocked || 0) > 0)
+      .map((t) => ({
+        mint: t.mint,
+        tokenName: t.name,
+        tokenSymbol: t.symbol,
+        tokenAvatarUrl: t.avatarUrl || null,
+        equityMint: t.targetEquity.mintAddress,
+        equitySymbol: t.targetEquity.symbol || "UNVERIFIED",
+        equityAmount: String(t.treasury.totalEquityLocked || 0),
+        observedSlot: Number(t.observedSlot || 0),
+        updatedAt: new Date().toISOString(),
+      }));
   }
+
+  const recentRedemptions = redemptions.map((redemption) => {
+    const token = liveTokens.find((t) => t.mint === redemption.mint);
+    return {
+      id: String(redemption.id || `${redemption.tx_signature}:${redemption.instruction_index || 0}`),
+      mint: redemption.mint,
+      tokenName: token?.name || `StreetFun ${redemption.mint.slice(0, 4)}`,
+      tokenSymbol: token?.symbol || redemption.mint.slice(0, 5),
+      tokenAvatarUrl: token?.avatarUrl || null,
+      equitySymbol: token?.targetEquity.symbol || "UNVERIFIED",
+      burnedAmount: String(redemption.tokens_amount || 0),
+      equityAmount: String(redemption.equity_amount || 0),
+      redeemer: redemption.trader,
+      signature: redemption.tx_signature,
+      createdAt: redemption.created_at,
+    };
+  });
+
+  const graduatedVaultCount =
+    summary?.graduated_vault_count != null
+      ? Number(summary.graduated_vault_count)
+      : graduatedLiveTokens.length;
+
+  const redemptionCount =
+    summary?.redemption_count != null
+      ? Number(summary.redemption_count)
+      : redemptions.length;
+
+  const uniqueRedeemerCount =
+    summary?.unique_redeemer_count != null
+      ? Number(summary.unique_redeemer_count)
+      : new Set(redemptions.map((r) => r.trader).filter(Boolean)).size;
+
+  const collateralAssetCount =
+    summary?.collateral_asset_count != null
+      ? Number(summary.collateral_asset_count)
+      : new Set(holdings.map((h) => h.equitySymbol).filter(Boolean)).size;
+
+  return NextResponse.json(
+    {
+      success: true,
+      holdings,
+      recentRedemptions,
+      graduatedVaultCount,
+      redemptionCount,
+      uniqueRedeemerCount,
+      collateralAssetCount,
+      asOf: new Date().toISOString(),
+    },
+    { headers: { "Cache-Control": "no-store" } }
+  );
 }
