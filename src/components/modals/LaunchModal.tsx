@@ -36,6 +36,7 @@ export function LaunchModal({
   const [providerFilter, setProviderFilter] = useState<"prestocks" | "tessera" | "all">("prestocks");
   const [liveAssets, setLiveAssets] = useState<(TesseraPreIpoAsset & { launchEnabled?: boolean; unavailableReason?: string; provider?: string })[]>([]);
   const [assetError, setAssetError] = useState<string | null>(null);
+  const [isLoadingAssets, setIsLoadingAssets] = useState(false);
   const assets = isMock ? DEMO_TOKENIZED_EQUITIES : liveAssets;
 
   const filteredAssets = assets.filter((eq: any) => {
@@ -49,13 +50,15 @@ export function LaunchModal({
     if (!isOpen || isMock) return;
     const controller = new AbortController();
     setAssetError(null);
+    setIsLoadingAssets(true);
     fetch("/api/assets", { signal: controller.signal }).then(async response => {
       if (!response.ok) throw new Error("Verified Pre-IPO assets are unavailable.");
       const data = await response.json();
       setLiveAssets(data.assets);
       const first = data.assets.find((a: any) => a.provider === "prestocks") || data.assets[0];
       if (first) setSelectedEquitySymbol(first.symbol);
-    }).catch(error => { if (!controller.signal.aborted) setAssetError(error.message); });
+    }).catch(error => { if (!controller.signal.aborted) setAssetError(error.message); })
+      .finally(() => { setIsLoadingAssets(false); });
     return () => controller.abort();
   }, [isOpen, isMock]);
   useEffect(() => {
@@ -218,47 +221,68 @@ export function LaunchModal({
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 max-h-56 overflow-y-auto pr-1">
-              {filteredAssets.map((eq) => {
-                const isSelected = selectedEquitySymbol === eq.symbol;
-                return (
-                  <button
-                    type="button"
-                    key={eq.symbol}
-                    onClick={() => setSelectedEquitySymbol(eq.symbol)}
-                    className={`flex flex-col justify-between p-3 rounded-xl border text-left transition-all ${
-                      isSelected
-                        ? "border-brand-cyan bg-brand-cyan/10 text-foreground shadow-xs"
-                        : "border-border bg-card text-muted hover:border-brand-cyan/40 hover:text-foreground"
-                    }`}
+              {isLoadingAssets ? (
+                Array.from({ length: 4 }).map((_, i) => (
+                  <div
+                    key={i}
+                    className="flex flex-col justify-between p-3 rounded-xl border border-border bg-card animate-pulse"
                   >
                     <div className="flex items-center justify-between w-full">
-                      <div className="flex items-center gap-2 min-w-0">
-                        <div className="relative h-5 w-5 rounded-full overflow-hidden flex-shrink-0 border border-border">
-                          <Image
-                            src={eq.logoUrl}
-                            alt={eq.name}
-                            fill
-                            className="object-cover"
-                            sizes="20px"
-                          />
-                        </div>
-                        <span className="font-bold text-xs text-foreground tracking-tight">{eq.symbol}</span>
+                      <div className="flex items-center gap-2">
+                        <div className="h-5 w-5 rounded-full bg-card-hover flex-shrink-0" />
+                        <div className="h-3 w-14 rounded bg-card-hover" />
                       </div>
-                      <span className="text-[9px] uppercase tracking-wider font-bold px-2 py-0.5 rounded-md bg-slate-800/70 text-slate-300 border border-slate-700/60 font-mono whitespace-nowrap">
-                        {eq.isPreIpo ? "Pre-IPO" : "Public"}
-                      </span>
+                      <div className="h-4 w-12 rounded-md bg-card-hover" />
                     </div>
                     <div className="flex items-center justify-between w-full mt-2 pt-1.5 border-t border-border/40">
-                      <span className="text-[11px] font-medium text-slate-300 truncate max-w-[120px]">
-                        {eq.name}
-                      </span>
-                      <span className="text-[11px] font-mono font-medium text-muted">
-                        ${eq.currentStockPriceUsd.toLocaleString()} mark
-                      </span>
+                      <div className="h-3 w-20 rounded bg-card-hover" />
+                      <div className="h-3 w-16 rounded bg-card-hover" />
                     </div>
-                  </button>
-                );
-              })}
+                  </div>
+                ))
+              ) : (
+                filteredAssets.map((eq) => {
+                  const isSelected = selectedEquitySymbol === eq.symbol;
+                  return (
+                    <button
+                      type="button"
+                      key={eq.symbol}
+                      onClick={() => setSelectedEquitySymbol(eq.symbol)}
+                      className={`flex flex-col justify-between p-3 rounded-xl border text-left transition-all ${
+                        isSelected
+                          ? "border-brand-cyan bg-brand-cyan/10 text-foreground shadow-xs"
+                          : "border-border bg-card text-muted hover:border-brand-cyan/40 hover:text-foreground"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between w-full">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <div className="relative h-5 w-5 rounded-full overflow-hidden flex-shrink-0 border border-border">
+                            <Image
+                              src={eq.logoUrl}
+                              alt={eq.name}
+                              fill
+                              className="object-cover"
+                              sizes="20px"
+                            />
+                          </div>
+                          <span className="font-bold text-xs text-foreground tracking-tight">{eq.symbol}</span>
+                        </div>
+                        <span className="text-[9px] uppercase tracking-wider font-bold px-2 py-0.5 rounded-md bg-slate-800/70 text-slate-300 border border-slate-700/60 font-mono whitespace-nowrap">
+                          {eq.isPreIpo ? "Pre-IPO" : "Public"}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between w-full mt-2 pt-1.5 border-t border-border/40">
+                        <span className="text-[11px] font-medium text-slate-300 truncate max-w-[120px]">
+                          {eq.name}
+                        </span>
+                        <span className="text-[11px] font-mono font-medium text-muted">
+                          ${eq.currentStockPriceUsd.toLocaleString()} mark
+                        </span>
+                      </div>
+                    </button>
+                  );
+                })
+              )}
             </div>
           </div>
 
