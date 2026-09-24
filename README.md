@@ -1,6 +1,6 @@
 # StreetFun
 
-StreetFun is a decentralized launchpad and bonding curve engine on Solana where every memecoin is backed by verified tokenized equity and pre-IPO assets (such as SpaceX, OpenAI, Anthropic, Anduril, Figure AI, Kalshi, and Polymarket).
+StreetFun is an equity-backed token launchpad on Solana where every memecoin is backed by verified tokenized equity and pre-IPO assets (such as SpaceX, OpenAI, Anthropic, Anduril, Figure AI, Kalshi, and Polymarket).
 
 Upon reaching graduation, the protocol executes an automated dual-allocation:
 1. **50% of USDC Reserves** purchases the underlying tokenized equity and locks it into an immutable Anchor PDA Treasury Vault.
