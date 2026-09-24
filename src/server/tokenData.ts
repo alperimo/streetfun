@@ -11,6 +11,7 @@ import { TradeStoreService } from "@/services/indexer/tradeStore";
 import { assertConfiguredCluster, getServerConnection } from "./rpc";
 import { getTesseraAvailability, getTesseraCatalog } from "./tessera";
 import { getPreStocksAvailability, getPreStocksCatalog } from "./prestocks";
+import { getOfficialEquityLogo } from "@/lib/assetLogos";
 
 /** Server snapshots are coalesced per process and invalidated by verified events. */
 export class SolanaTokenService {
@@ -133,7 +134,7 @@ export class SolanaTokenService {
             issuer: asset?.issuer || "PreStocks SPV",
             custodian: asset?.custodian || "Institutional Custody",
             legalFramework: asset?.legalFramework || "1:1 SPV Exposure",
-            logoUrl: asset?.logoUrl || "/generated/streetfun-logo.png",
+            logoUrl: getOfficialEquityLogo(asset?.symbol || indexed?.target_equity_symbol || asset?.name),
             stockPriceUsd: asset?.currentStockPriceUsd || 0,
             isPreIpo: !!asset,
             decimals: equityDecimals,

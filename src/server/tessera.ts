@@ -1,6 +1,7 @@
 import { Connection, PublicKey } from "@solana/web3.js";
 import { TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID, unpackMint } from "@solana/spl-token";
 import type { TesseraPreIpoAsset } from "@/sdk/constants";
+import { getOfficialEquityLogo } from "@/lib/assetLogos";
 
 export interface TesseraAsset extends TesseraPreIpoAsset {
   priceSource: "tessera-mark";
@@ -24,7 +25,7 @@ export function parseTesseraCatalog(data: unknown, now = new Date().toISOString(
       mintAddress: mint, currentStockPriceUsd: row.markPrice,
       issuer: "Tessera", custodian: "See Tessera issuer disclosures",
       legalFramework: "Loan participation right; not company shares",
-      proofOfReserve: "", meteoraPoolAddress: "", logoUrl: "/generated/streetfun-logo.png",
+      proofOfReserve: "", meteoraPoolAddress: "", logoUrl: getOfficialEquityLogo(row.code || row.symbol || row.name),
       isPreIpo: true, priceSource: "tessera-mark", fetchedAt: now, network: "mainnet-beta",
     };
   });

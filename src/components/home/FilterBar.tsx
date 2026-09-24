@@ -19,11 +19,13 @@ interface FilterBarProps {
 
 const EQUITY_TAGS = [
   { id: "all", label: "All" },
-  { id: "$TSPACEX", label: "SpaceX ($TSPACEX)" },
-  { id: "$TOPAI", label: "OpenAI ($TOPAI)" },
-  { id: "$TSTRIPE", label: "Stripe ($TSTRIPE)" },
-  { id: "$NVDA", label: "Nvidia ($NVDA)" },
-  { id: "$TSLA", label: "Tesla ($TSLA)" },
+  { id: "openai", label: "OpenAI" },
+  { id: "spacex", label: "SpaceX" },
+  { id: "anthropic", label: "Anthropic" },
+  { id: "kalshi", label: "Kalshi" },
+  { id: "anduril", label: "Anduril" },
+  { id: "stripe", label: "Stripe" },
+  { id: "nvidia", label: "NVIDIA" },
 ];
 
 const SORT_OPTIONS: { id: SortOption; label: string }[] = [

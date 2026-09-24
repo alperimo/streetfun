@@ -1,4 +1,5 @@
 import type { TesseraPreIpoAsset } from "../sdk/constants";
+import { getOfficialEquityLogo } from "./assetLogos";
 
 // Fixtures for explicitly selected local simulation only; never a verified catalog.
 export const DEMO_EQUITIES: TesseraPreIpoAsset[] = [
@@ -12,7 +13,7 @@ export const DEMO_EQUITIES: TesseraPreIpoAsset[] = [
     legalFramework: "Cayman Islands SPC - Loan Participation Right",
     proofOfReserve: "Pyth Network Oracle / On-Chain PoR",
     meteoraPoolAddress: "METspcxPoolAddress1111111111111111111111111",
-    logoUrl: "https://images.unsplash.com/photo-1541185933-ef5d8ed016c2?w=128&q=80",
+    logoUrl: getOfficialEquityLogo("SPACEX"),
     currentStockPriceUsd: 215.4,
     isPreIpo: true,
   },
@@ -26,7 +27,7 @@ export const DEMO_EQUITIES: TesseraPreIpoAsset[] = [
     legalFramework: "Cayman Islands SPC - Loan Participation Right",
     proofOfReserve: "Pyth Network Oracle / On-Chain PoR",
     meteoraPoolAddress: "METopeNAIPoolAddress111111111111111111111111",
-    logoUrl: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=128&q=80",
+    logoUrl: getOfficialEquityLogo("OPENAI"),
     currentStockPriceUsd: 185.0,
     isPreIpo: true,
   },
@@ -40,7 +41,7 @@ export const DEMO_EQUITIES: TesseraPreIpoAsset[] = [
     legalFramework: "Cayman Islands SPC - Loan Participation Right",
     proofOfReserve: "Pyth Network Oracle / On-Chain PoR",
     meteoraPoolAddress: "METstripePoolAddress111111111111111111111111",
-    logoUrl: "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=128&q=80",
+    logoUrl: getOfficialEquityLogo("STRIPE"),
     currentStockPriceUsd: 72.5,
     isPreIpo: true,
   },
@@ -54,7 +55,7 @@ export const DEMO_EQUITIES: TesseraPreIpoAsset[] = [
     legalFramework: "New York UCC Article 8 Securities Intermediary",
     proofOfReserve: "Pyth Network Oracle / On-Chain PoR",
     meteoraPoolAddress: "METnvdaPoolAddress1111111111111111111111111",
-    logoUrl: "https://images.unsplash.com/photo-1591488320449-011701bb6704?w=128&q=80",
+    logoUrl: getOfficialEquityLogo("NVDA"),
     currentStockPriceUsd: 128.5,
     isPreIpo: false,
   },
@@ -68,7 +69,7 @@ export const DEMO_EQUITIES: TesseraPreIpoAsset[] = [
     legalFramework: "New York UCC Article 8 Securities Intermediary",
     proofOfReserve: "Pyth Network Oracle / On-Chain PoR",
     meteoraPoolAddress: "METtslaPoolAddress1111111111111111111111111",
-    logoUrl: "https://images.unsplash.com/photo-1563986768609-322da13575f3?w=128&q=80",
+    logoUrl: getOfficialEquityLogo("TSLA"),
     currentStockPriceUsd: 245.2,
     isPreIpo: false,
   },

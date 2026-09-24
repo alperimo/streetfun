@@ -1,6 +1,7 @@
 import { Connection, PublicKey } from "@solana/web3.js";
 import { TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID, unpackMint } from "@solana/spl-token";
 import type { TesseraPreIpoAsset } from "@/sdk/constants";
+import { getOfficialEquityLogo } from "@/lib/assetLogos";
 
 export interface PreStocksAsset extends TesseraPreIpoAsset {
   priceSource: "prestocks-api";
@@ -171,7 +172,7 @@ export function parsePreStocksCatalog(
       legalFramework: "1:1 SPV exposure tracking underlying private company shares",
       proofOfReserve: "PreStocks On-Chain Proof of Reserve (Pyth & SPV Ledger)",
       meteoraPoolAddress: "",
-      logoUrl: row.image || "/generated/streetfun-logo.png",
+      logoUrl: getOfficialEquityLogo(row.symbol) || row.image || "/logos/openai.png",
       isPreIpo: true,
       priceSource: "prestocks-api",
       provider: "prestocks",

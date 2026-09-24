@@ -44,12 +44,17 @@ export function MarketsPage() {
         if (statusFilter === "bonding" && token.bondingCurve.isGraduated) {
           return false;
         }
-        if (
-          selectedTag !== "all" &&
-          token.targetEquity.symbol !== selectedTag &&
-          token.targetEquity.symbol.replace("T", "") !== selectedTag.replace("T", "")
-        ) {
-          return false;
+        if (selectedTag !== "all") {
+          const sym = (token.targetEquity.symbol || "").toLowerCase();
+          const name = (token.targetEquity.name || "").toLowerCase();
+          const tag = selectedTag.toLowerCase();
+          const matches =
+            sym.includes(tag) ||
+            name.includes(tag) ||
+            (tag === "openai" && (sym.includes("opai") || name.includes("openai"))) ||
+            (tag === "spacex" && (sym.includes("spcx") || name.includes("spacex"))) ||
+            (tag === "kalshi" && (sym.includes("kls") || name.includes("kalshi")));
+          if (!matches) return false;
         }
 
         if (searchQuery.trim()) {

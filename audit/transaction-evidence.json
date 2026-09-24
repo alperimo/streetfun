@@ -1,5 +1,5 @@
 {
-  "checkedAt": "2026-09-24T09:45:33.160Z",
+  "checkedAt": "2026-09-24T11:25:01.507Z",
   "genesisHash": "EtWTRABZaYq6iMfeYKouRu166VU2xqa1wcaWoxPkrZBG",
   "transactions": [
     {
@@ -997,6 +997,238 @@
         }
       ],
       "explorer": "https://explorer.solana.com/tx/3EBZEvWAVNGKrtj9JE7bVfXiYVHKMgbwam7qhgmLNVPSbeJRehyrNS45MiAcJUY9RgNgrQ9Xz7AYr4K7WMwBQomV?cluster=devnet"
+    },
+    {
+      "signature": "5kBwWKMLxWBfAm23YYCr5p9FKKSqPrXciBXa8DGtxZFj3fV3hKyiMQUpPfa7vauuUJ5yYw2B56X6VaGZdXCQBPVv",
+      "slot": 503431703,
+      "time": "2026-09-24T10:50:46.000Z",
+      "instructions": [
+        {
+          "name": "launchStonk",
+          "accounts": [
+            "519jca26LioEQiPhwoHCkC8mNZiCF7cDmtaXdp98iCv2",
+            "Ga2gFmA5givTNEKcJBsNWU9wbvndjfZuDySdsKDiDQu3",
+            "EVoXoZCsBbNDG6AwU1fbkkehe2sDzckqTAS9FQYRkwSU",
+            "3PFKgvU4P8hcuW1X2VjAgRHNsz1TnA4SLyjEDNfhzLC7",
+            "HUmjSFuPDjLH4hq6Z4adhUiBvNf4KgtGByEaWyeCYKcV",
+            "56SybgtPN9Sf3jvs2gUnRuTftnEa19NcNwxaE15avS6b",
+            "DuQ1T5B6tmf5ZfSNpPomVcDntLEzR1mkoB81yHP5rGHG",
+            "FsXwgGAbt4JQXtz6FMVbuhKq2Kgk7fWUh9v2Ex6uu3Jq",
+            "Az9Q1FeMr1bbsbAW7CJFbuPaPqrdjBLYpd6BZyXywvJV",
+            "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+            "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL",
+            "11111111111111111111111111111111",
+            "SysvarRent111111111111111111111111111111111"
+          ],
+          "logs": [
+            "Program log: Instruction: LaunchStonk",
+            "Program log: Stonk launched. Curve: HUmjSFuPDjLH4hq6Z4adhUiBvNf4KgtGByEaWyeCYKcV, Meme Mint: EVoXoZCsBbNDG6AwU1fbkkehe2sDzckqTAS9FQYRkwSU, Target Equity: 3PFKgvU4P8hcuW1X2VjAgRHNsz1TnA4SLyjEDNfhzLC7",
+            "Program 6ZiovCkRxRJgUaCS9uftFk3eVnGDsbnDXgUV1XHybH52 consumed 57212 of 200000 compute units"
+          ]
+        }
+      ],
+      "explorer": "https://explorer.solana.com/tx/5kBwWKMLxWBfAm23YYCr5p9FKKSqPrXciBXa8DGtxZFj3fV3hKyiMQUpPfa7vauuUJ5yYw2B56X6VaGZdXCQBPVv?cluster=devnet"
+    },
+    {
+      "signature": "4hYBG8XdSKXFxGXacuwD9rsntsZzRXtMVB1UBUJBsh12pwfFtVTHe3ipe3A5C67rKkYEYYgbKpqWiQRL1g5q7Kdb",
+      "slot": 503431719,
+      "time": "2026-09-24T10:50:49.000Z",
+      "instructions": [
+        {
+          "name": "buyCurve",
+          "accounts": [
+            "2r4A6G1KBJJms12EAfqJFE4si4hzzeaVzEJrE7Vpb63L",
+            "Ga2gFmA5givTNEKcJBsNWU9wbvndjfZuDySdsKDiDQu3",
+            "EVoXoZCsBbNDG6AwU1fbkkehe2sDzckqTAS9FQYRkwSU",
+            "HUmjSFuPDjLH4hq6Z4adhUiBvNf4KgtGByEaWyeCYKcV",
+            "56SybgtPN9Sf3jvs2gUnRuTftnEa19NcNwxaE15avS6b",
+            "FsXwgGAbt4JQXtz6FMVbuhKq2Kgk7fWUh9v2Ex6uu3Jq",
+            "JAzwWfF8qCoP73uAKM8W7h8PzkD9xDvmn34A4BordEZo",
+            "5HAEHDwsCqZMiHFN2xQtPrP75ZL92imkYeN2gXCXyEU5",
+            "Y4z6xpoxgK8siKnVeNKiBzfsghfBv5euaaBUGSNP69b",
+            "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+          ],
+          "logs": [
+            "Program log: Instruction: BuyCurve",
+            "Program log: Buy executed. Spent: 18000000, Received: 636983631722, New Real Quote: 17820000",
+            "Program 6ZiovCkRxRJgUaCS9uftFk3eVnGDsbnDXgUV1XHybH52 consumed 23434 of 200000 compute units"
+          ]
+        }
+      ],
+      "explorer": "https://explorer.solana.com/tx/4hYBG8XdSKXFxGXacuwD9rsntsZzRXtMVB1UBUJBsh12pwfFtVTHe3ipe3A5C67rKkYEYYgbKpqWiQRL1g5q7Kdb?cluster=devnet"
+    },
+    {
+      "signature": "2ZnJcP8oMjhQb46cTnqEf5tNPZjctTZcWUaCLiErkaSohbFucZxYEnsg6MbY19EFxtiEdaK7JRLuZ7z1PVwGF2gf",
+      "slot": 503431769,
+      "time": "2026-09-24T10:50:57.000Z",
+      "instructions": [
+        {
+          "name": "sellCurve",
+          "accounts": [
+            "2r4A6G1KBJJms12EAfqJFE4si4hzzeaVzEJrE7Vpb63L",
+            "Ga2gFmA5givTNEKcJBsNWU9wbvndjfZuDySdsKDiDQu3",
+            "EVoXoZCsBbNDG6AwU1fbkkehe2sDzckqTAS9FQYRkwSU",
+            "HUmjSFuPDjLH4hq6Z4adhUiBvNf4KgtGByEaWyeCYKcV",
+            "56SybgtPN9Sf3jvs2gUnRuTftnEa19NcNwxaE15avS6b",
+            "FsXwgGAbt4JQXtz6FMVbuhKq2Kgk7fWUh9v2Ex6uu3Jq",
+            "5HAEHDwsCqZMiHFN2xQtPrP75ZL92imkYeN2gXCXyEU5",
+            "JAzwWfF8qCoP73uAKM8W7h8PzkD9xDvmn34A4BordEZo",
+            "Y4z6xpoxgK8siKnVeNKiBzfsghfBv5euaaBUGSNP69b",
+            "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+          ],
+          "logs": [
+            "Program log: Instruction: SellCurve",
+            "Program log: Sell executed. Sold: 100000000000, Received Quote: 2770971, New Real Quote: 15021040",
+            "Program 6ZiovCkRxRJgUaCS9uftFk3eVnGDsbnDXgUV1XHybH52 consumed 23438 of 200000 compute units"
+          ]
+        }
+      ],
+      "explorer": "https://explorer.solana.com/tx/2ZnJcP8oMjhQb46cTnqEf5tNPZjctTZcWUaCLiErkaSohbFucZxYEnsg6MbY19EFxtiEdaK7JRLuZ7z1PVwGF2gf?cluster=devnet"
+    },
+    {
+      "signature": "2jsrLdEmm2a9FuqLNAKMWJkoFUGbXPUWMmqzqn3Hnofmy8u8N2Vw8cTSXbf2MFP1vXxepBLHbiqLQ71kYdSoxiMY",
+      "slot": 503431776,
+      "time": "2026-09-24T10:50:58.000Z",
+      "instructions": [
+        {
+          "name": "buyCurve",
+          "accounts": [
+            "2r4A6G1KBJJms12EAfqJFE4si4hzzeaVzEJrE7Vpb63L",
+            "Ga2gFmA5givTNEKcJBsNWU9wbvndjfZuDySdsKDiDQu3",
+            "EVoXoZCsBbNDG6AwU1fbkkehe2sDzckqTAS9FQYRkwSU",
+            "HUmjSFuPDjLH4hq6Z4adhUiBvNf4KgtGByEaWyeCYKcV",
+            "56SybgtPN9Sf3jvs2gUnRuTftnEa19NcNwxaE15avS6b",
+            "FsXwgGAbt4JQXtz6FMVbuhKq2Kgk7fWUh9v2Ex6uu3Jq",
+            "JAzwWfF8qCoP73uAKM8W7h8PzkD9xDvmn34A4BordEZo",
+            "5HAEHDwsCqZMiHFN2xQtPrP75ZL92imkYeN2gXCXyEU5",
+            "Y4z6xpoxgK8siKnVeNKiBzfsghfBv5euaaBUGSNP69b",
+            "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+          ],
+          "logs": [
+            "Program log: Instruction: BuyCurve",
+            "Program log: Buy executed. Spent: 62000000, Received: 2188685403454, New Real Quote: 76401040",
+            "Program 6ZiovCkRxRJgUaCS9uftFk3eVnGDsbnDXgUV1XHybH52 consumed 23443 of 200000 compute units"
+          ]
+        }
+      ],
+      "explorer": "https://explorer.solana.com/tx/2jsrLdEmm2a9FuqLNAKMWJkoFUGbXPUWMmqzqn3Hnofmy8u8N2Vw8cTSXbf2MFP1vXxepBLHbiqLQ71kYdSoxiMY?cluster=devnet"
+    },
+    {
+      "signature": "5F8YGnBCx1ywardYnVVNRvxYFvMYKHM3ECKAnCqPXsMMvZtmpZQ4hCp87pud3XwGQi2TNoWQXkvDUFgNopPs98mu",
+      "slot": 503431815,
+      "time": "2026-09-24T10:51:05.000Z",
+      "instructions": [
+        {
+          "name": "graduateAndExecuteStock",
+          "accounts": [
+            "519jca26LioEQiPhwoHCkC8mNZiCF7cDmtaXdp98iCv2",
+            "Ga2gFmA5givTNEKcJBsNWU9wbvndjfZuDySdsKDiDQu3",
+            "EVoXoZCsBbNDG6AwU1fbkkehe2sDzckqTAS9FQYRkwSU",
+            "3PFKgvU4P8hcuW1X2VjAgRHNsz1TnA4SLyjEDNfhzLC7",
+            "HUmjSFuPDjLH4hq6Z4adhUiBvNf4KgtGByEaWyeCYKcV",
+            "56SybgtPN9Sf3jvs2gUnRuTftnEa19NcNwxaE15avS6b",
+            "FsXwgGAbt4JQXtz6FMVbuhKq2Kgk7fWUh9v2Ex6uu3Jq",
+            "Az9Q1FeMr1bbsbAW7CJFbuPaPqrdjBLYpd6BZyXywvJV",
+            "Y4z6xpoxgK8siKnVeNKiBzfsghfBv5euaaBUGSNP69b",
+            "8tQX4hVp34otCsW24oku18eWcGw7Phru3LNpnTpoSFMG",
+            "519jca26LioEQiPhwoHCkC8mNZiCF7cDmtaXdp98iCv2",
+            "CwcNewE3jKhQBVd8Uf97wXJsJndqemib7b3DXXpM5LKQ",
+            "5jRPtUxWtMQ5Bvm73mdpbFdh3ry6k3x11XUjwge11Pmi",
+            "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+          ],
+          "logs": [
+            "Program log: Instruction: GraduateAndExecuteStock",
+            "Program log: Curve graduated successfully! Equity locked: 150000000, USDC deployed to AMM: 38200520",
+            "Program 6ZiovCkRxRJgUaCS9uftFk3eVnGDsbnDXgUV1XHybH52 consumed 29562 of 200000 compute units"
+          ]
+        }
+      ],
+      "explorer": "https://explorer.solana.com/tx/5F8YGnBCx1ywardYnVVNRvxYFvMYKHM3ECKAnCqPXsMMvZtmpZQ4hCp87pud3XwGQi2TNoWQXkvDUFgNopPs98mu?cluster=devnet"
+    },
+    {
+      "signature": "62xD6ViTWebRiaHPJfs8s1tSnj8BU8kt8QP6ZDr5J642gDi9pjjGfEc4DbaXAoUVhPNpw5vTx9fiTLsdP1bMrC6r",
+      "slot": 503431844,
+      "time": "2026-09-24T10:51:10.000Z",
+      "instructions": [
+        {
+          "name": "burnAndRedeem",
+          "accounts": [
+            "2r4A6G1KBJJms12EAfqJFE4si4hzzeaVzEJrE7Vpb63L",
+            "EVoXoZCsBbNDG6AwU1fbkkehe2sDzckqTAS9FQYRkwSU",
+            "3PFKgvU4P8hcuW1X2VjAgRHNsz1TnA4SLyjEDNfhzLC7",
+            "HUmjSFuPDjLH4hq6Z4adhUiBvNf4KgtGByEaWyeCYKcV",
+            "Az9Q1FeMr1bbsbAW7CJFbuPaPqrdjBLYpd6BZyXywvJV",
+            "5HAEHDwsCqZMiHFN2xQtPrP75ZL92imkYeN2gXCXyEU5",
+            "CETnW4sLAjWeBgbRTT3n7k5kiEtoSiuaBmFLnRpULuEi",
+            "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+          ],
+          "logs": [
+            "Program log: Instruction: BurnAndRedeem",
+            "Program log: Burn and redeem completed. Burned: 1000000000000, Redeemed Shares: 150000, Remaining Locked: 149850000",
+            "Program 6ZiovCkRxRJgUaCS9uftFk3eVnGDsbnDXgUV1XHybH52 consumed 15893 of 200000 compute units"
+          ]
+        }
+      ],
+      "explorer": "https://explorer.solana.com/tx/62xD6ViTWebRiaHPJfs8s1tSnj8BU8kt8QP6ZDr5J642gDi9pjjGfEc4DbaXAoUVhPNpw5vTx9fiTLsdP1bMrC6r?cluster=devnet"
+    },
+    {
+      "signature": "3tYpP49ZrjtByVFViUqPsubJFQChZZ7GHzRaADkrqdDMCbZUo1PHruy1hQPQrqQRYHMcJbn6VsWw6sRebtbZnbKd",
+      "slot": 503431972,
+      "time": "2026-09-24T10:51:31.000Z",
+      "instructions": [
+        {
+          "name": "launchStonk",
+          "accounts": [
+            "519jca26LioEQiPhwoHCkC8mNZiCF7cDmtaXdp98iCv2",
+            "Ga2gFmA5givTNEKcJBsNWU9wbvndjfZuDySdsKDiDQu3",
+            "Fe25SJ385FLSKmmgFHnrvGqotmN3UPSmSh7Gx5YZfkfN",
+            "DiKVjAz8vGALzLwoZz7PPxUTnDsTVyF7GNx9F3BxVYEs",
+            "BnC6pqnnbepQeB3XkXSZusZ2cPtT2WkYfxUVSZpF69Wy",
+            "AzrQg5e138K7DTLK6EmmXhUj1rYGGaVs1RcP9z6CHJ5d",
+            "DuQ1T5B6tmf5ZfSNpPomVcDntLEzR1mkoB81yHP5rGHG",
+            "GScx3Yucecg2kQczpF3uu6Loo6iXdj1kcW9dh8LJGjSB",
+            "8vv3iwxwbBHPEpzJCDdnDsHoGFc5gzigsDULh7meYhGB",
+            "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+            "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL",
+            "11111111111111111111111111111111",
+            "SysvarRent111111111111111111111111111111111"
+          ],
+          "logs": [
+            "Program log: Instruction: LaunchStonk",
+            "Program log: Stonk launched. Curve: BnC6pqnnbepQeB3XkXSZusZ2cPtT2WkYfxUVSZpF69Wy, Meme Mint: Fe25SJ385FLSKmmgFHnrvGqotmN3UPSmSh7Gx5YZfkfN, Target Equity: DiKVjAz8vGALzLwoZz7PPxUTnDsTVyF7GNx9F3BxVYEs",
+            "Program 6ZiovCkRxRJgUaCS9uftFk3eVnGDsbnDXgUV1XHybH52 consumed 61796 of 200000 compute units"
+          ]
+        }
+      ],
+      "explorer": "https://explorer.solana.com/tx/3tYpP49ZrjtByVFViUqPsubJFQChZZ7GHzRaADkrqdDMCbZUo1PHruy1hQPQrqQRYHMcJbn6VsWw6sRebtbZnbKd?cluster=devnet"
+    },
+    {
+      "signature": "3yEqTVwvSMRWdFZiDQwNntLvR8Arx3MvuWMrLPBWgsKi5P3Zk4qNjjkdtqXXZPZ5s5G1UpXvU1GkqquiM6aUB9Sa",
+      "slot": 503431990,
+      "time": "2026-09-24T10:51:34.000Z",
+      "instructions": [
+        {
+          "name": "buyCurve",
+          "accounts": [
+            "BERYU2zCg7ffw6P9H7Rdq9xSU1E9nSMZLh3hF1tJjfV7",
+            "Ga2gFmA5givTNEKcJBsNWU9wbvndjfZuDySdsKDiDQu3",
+            "Fe25SJ385FLSKmmgFHnrvGqotmN3UPSmSh7Gx5YZfkfN",
+            "BnC6pqnnbepQeB3XkXSZusZ2cPtT2WkYfxUVSZpF69Wy",
+            "AzrQg5e138K7DTLK6EmmXhUj1rYGGaVs1RcP9z6CHJ5d",
+            "GScx3Yucecg2kQczpF3uu6Loo6iXdj1kcW9dh8LJGjSB",
+            "GsemigT83iZ3nbFZvEqxKMheNiPes9WsFRFpQgWLeoBo",
+            "4GAm75Ve1P4peNgWvQb7qPEkr4cdgp8wWjuKZPFWi8ap",
+            "Y4z6xpoxgK8siKnVeNKiBzfsghfBv5euaaBUGSNP69b",
+            "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+          ],
+          "logs": [
+            "Program log: Instruction: BuyCurve",
+            "Program log: Buy executed. Spent: 10000000, Received: 353973188847, New Real Quote: 9900000",
+            "Program 6ZiovCkRxRJgUaCS9uftFk3eVnGDsbnDXgUV1XHybH52 consumed 23430 of 200000 compute units"
+          ]
+        }
+      ],
+      "explorer": "https://explorer.solana.com/tx/3yEqTVwvSMRWdFZiDQwNntLvR8Arx3MvuWMrLPBWgsKi5P3Zk4qNjjkdtqXXZPZ5s5G1UpXvU1GkqquiM6aUB9Sa?cluster=devnet"
     }
   ],
   "reconciliation": [
@@ -1118,7 +1350,7 @@
     },
     {
       "signature": "2YHXyZcfvErNoxfwNoXcAoWxD8iGo9MwjGoJSevPa5sGm61aQ7fY8mxXyBaZsQ75aFCeJozDpbPaL3fabHn5GKpd",
-      "error": "Could not persist confirmed trade: Could not find the 'equity_amount' column of 'trades' in the schema cache"
+      "indexed": 1
     },
     {
       "signature": "59atJu66LFH3ArfJN5vVLm5XC6EodpvHSncg4TwngY7a36zpMoLeq4B53C8fZjEjun4Zn41rYKD4jiDsy1oqmt1z",
@@ -1135,6 +1367,38 @@
     {
       "signature": "3EBZEvWAVNGKrtj9JE7bVfXiYVHKMgbwam7qhgmLNVPSbeJRehyrNS45MiAcJUY9RgNgrQ9Xz7AYr4K7WMwBQomV",
       "indexed": 1
+    },
+    {
+      "signature": "5kBwWKMLxWBfAm23YYCr5p9FKKSqPrXciBXa8DGtxZFj3fV3hKyiMQUpPfa7vauuUJ5yYw2B56X6VaGZdXCQBPVv",
+      "indexed": 1
+    },
+    {
+      "signature": "4hYBG8XdSKXFxGXacuwD9rsntsZzRXtMVB1UBUJBsh12pwfFtVTHe3ipe3A5C67rKkYEYYgbKpqWiQRL1g5q7Kdb",
+      "indexed": 1
+    },
+    {
+      "signature": "2ZnJcP8oMjhQb46cTnqEf5tNPZjctTZcWUaCLiErkaSohbFucZxYEnsg6MbY19EFxtiEdaK7JRLuZ7z1PVwGF2gf",
+      "indexed": 1
+    },
+    {
+      "signature": "2jsrLdEmm2a9FuqLNAKMWJkoFUGbXPUWMmqzqn3Hnofmy8u8N2Vw8cTSXbf2MFP1vXxepBLHbiqLQ71kYdSoxiMY",
+      "indexed": 1
+    },
+    {
+      "signature": "5F8YGnBCx1ywardYnVVNRvxYFvMYKHM3ECKAnCqPXsMMvZtmpZQ4hCp87pud3XwGQi2TNoWQXkvDUFgNopPs98mu",
+      "indexed": 1
+    },
+    {
+      "signature": "62xD6ViTWebRiaHPJfs8s1tSnj8BU8kt8QP6ZDr5J642gDi9pjjGfEc4DbaXAoUVhPNpw5vTx9fiTLsdP1bMrC6r",
+      "indexed": 1
+    },
+    {
+      "signature": "3tYpP49ZrjtByVFViUqPsubJFQChZZ7GHzRaADkrqdDMCbZUo1PHruy1hQPQrqQRYHMcJbn6VsWw6sRebtbZnbKd",
+      "indexed": 1
+    },
+    {
+      "signature": "3yEqTVwvSMRWdFZiDQwNntLvR8Arx3MvuWMrLPBWgsKi5P3Zk4qNjjkdtqXXZPZ5s5G1UpXvU1GkqquiM6aUB9Sa",
+      "indexed": 1
     }
   ],
   "assets": [
@@ -1142,67 +1406,64 @@
       "symbol": "T-OpenAI",
       "ticker": "tOpenAI",
       "name": "T-OpenAI",
-      "mintAddress": "oPAiAikWTaFj9RYoRFD35ccfwhnMcB3ThgBZRHSkjTZ",
+      "mintAddress": "3PFKgvU4P8hcuW1X2VjAgRHNsz1TnA4SLyjEDNfhzLC7",
       "currentStockPriceUsd": 812.79,
       "issuer": "Tessera",
       "custodian": "See Tessera issuer disclosures",
       "legalFramework": "Loan participation right; not company shares",
       "proofOfReserve": "",
       "meteoraPoolAddress": "",
-      "logoUrl": "/generated/streetfun-logo.png",
+      "logoUrl": "/logos/openai.png",
       "isPreIpo": true,
       "priceSource": "tessera-mark",
-      "fetchedAt": "2026-09-24T09:45:33.787Z",
+      "fetchedAt": "2026-09-24T11:25:02.230Z",
       "network": "mainnet-beta",
-      "existsOnConfiguredNetwork": false,
-      "tokenProgram": null,
-      "decimals": null,
-      "launchEnabled": false,
-      "unavailableReason": "Tessera has no verified asset deployment on the configured network."
+      "existsOnConfiguredNetwork": true,
+      "tokenProgram": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+      "decimals": 6,
+      "launchEnabled": true
     },
     {
       "symbol": "T-Kalshi",
       "ticker": "tKalshi",
       "name": "T-Kalshi",
-      "mintAddress": "TKLSidmLVt3cqGaaodG8tyRzoANfQwoh67AccjmubeZ",
+      "mintAddress": "HjSo935gqYjDaHLMga5SRfkiACjCX5wE3ZnbQpDoqWGb",
       "currentStockPriceUsd": 413.8,
       "issuer": "Tessera",
       "custodian": "See Tessera issuer disclosures",
       "legalFramework": "Loan participation right; not company shares",
       "proofOfReserve": "",
       "meteoraPoolAddress": "",
-      "logoUrl": "/generated/streetfun-logo.png",
+      "logoUrl": "/logos/kalshi.png",
       "isPreIpo": true,
       "priceSource": "tessera-mark",
-      "fetchedAt": "2026-09-24T09:45:33.787Z",
+      "fetchedAt": "2026-09-24T11:25:02.230Z",
       "network": "mainnet-beta",
-      "existsOnConfiguredNetwork": false,
-      "tokenProgram": null,
-      "decimals": null,
-      "launchEnabled": false,
-      "unavailableReason": "Tessera has no verified asset deployment on the configured network."
+      "existsOnConfiguredNetwork": true,
+      "tokenProgram": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+      "decimals": 6,
+      "launchEnabled": true
     },
     {
       "symbol": "T-SpaceX",
       "ticker": "tSpaceX",
       "name": "T-SpaceX",
-      "mintAddress": "TSPXcLV76s6V2zDiZQ18kBfcbnjaE2ZzNT3ga2Pd99v",
+      "mintAddress": "DiKVjAz8vGALzLwoZz7PPxUTnDsTVyF7GNx9F3BxVYEs",
       "currentStockPriceUsd": 423,
       "issuer": "Tessera",
       "custodian": "See Tessera issuer disclosures",
       "legalFramework": "Loan participation right; not company shares",
       "proofOfReserve": "",
       "meteoraPoolAddress": "",
-      "logoUrl": "/generated/streetfun-logo.png",
+      "logoUrl": "/logos/spacex.png",
       "isPreIpo": true,
       "priceSource": "tessera-mark",
-      "fetchedAt": "2026-09-24T09:45:33.787Z",
+      "fetchedAt": "2026-09-24T11:25:02.230Z",
       "network": "mainnet-beta",
-      "existsOnConfiguredNetwork": false,
-      "tokenProgram": null,
-      "decimals": null,
-      "launchEnabled": false,
-      "unavailableReason": "Tessera has no verified asset deployment on the configured network."
+      "existsOnConfiguredNetwork": true,
+      "tokenProgram": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+      "decimals": 6,
+      "launchEnabled": true
     }
   ],
   "tokens": [
@@ -1222,16 +1483,18 @@
       "volume24hUsd": 30,
       "volume24hAvailable": true,
       "targetEquity": {
-        "symbol": "UNVERIFIED",
-        "name": "Unverified collateral token",
+        "symbol": "OPENAI",
+        "name": "OpenAI PreStocks",
         "mintAddress": "3PFKgvU4P8hcuW1X2VjAgRHNsz1TnA4SLyjEDNfhzLC7",
-        "custodian": "Unverified",
-        "legalFramework": "Unverified",
-        "logoUrl": "/generated/streetfun-logo.png",
-        "stockPriceUsd": 0,
-        "isPreIpo": false,
+        "issuer": "PreStocks SPV",
+        "custodian": "PreStocks Institutional Custody",
+        "legalFramework": "1:1 SPV exposure tracking underlying private company shares",
+        "logoUrl": "/logos/openai.png",
+        "stockPriceUsd": 1023.0057828876481,
+        "isPreIpo": true,
         "decimals": 6,
-        "verifiedTessera": false
+        "verifiedTessera": false,
+        "verifiedPreStocks": true
       },
       "bondingCurve": {
         "realQuoteReservesUsd": 29.7,
@@ -1251,38 +1514,95 @@
         "totalEquityValueUsd": 0,
         "vaultPda": "8sk97tDDtHevwC6vpFfuAMcRtU9ahTq7n512jRwe3tFj",
         "proofOfReserveVerified": false,
-        "valuationAvailable": false
+        "valuationAvailable": true,
+        "valuationSource": "PreStocks SPV mark price"
       },
       "dataSource": "onchain",
-      "lastUpdatedAt": "2026-09-24T09:45:57.790Z",
-      "observedSlot": 503408250
+      "lastUpdatedAt": "2026-09-24T11:25:30.280Z",
+      "observedSlot": 503444271
+    },
+    {
+      "mint": "Fe25SJ385FLSKmmgFHnrvGqotmN3UPSmSh7Gx5YZfkfN",
+      "name": "Starlink Fleet",
+      "symbol": "STAR",
+      "description": "High-throughput orbital connectivity token backed by SpaceX PreStocks.",
+      "avatarUrl": "https://images.unsplash.com/photo-1541185933-ef5d8ed016c2?w=160&q=80",
+      "creator": "519jca26LioEQiPhwoHCkC8mNZiCF7cDmtaXdp98iCv2",
+      "createdAt": "2026-09-24T10:51:31+00:00",
+      "totalSupply": 1000000000,
+      "priceUsd": 0.00002797744945666354,
+      "marketCapUsd": 27977.44945666354,
+      "priceChange24h": 0,
+      "priceChange24hAvailable": false,
+      "volume24hUsd": 10,
+      "volume24hAvailable": true,
+      "targetEquity": {
+        "symbol": "SPACEX",
+        "name": "SpaceX PreStocks",
+        "mintAddress": "DiKVjAz8vGALzLwoZz7PPxUTnDsTVyF7GNx9F3BxVYEs",
+        "issuer": "PreStocks SPV",
+        "custodian": "PreStocks Institutional Custody",
+        "legalFramework": "1:1 SPV exposure tracking underlying private company shares",
+        "logoUrl": "/logos/spacex.png",
+        "stockPriceUsd": 147.67234072470848,
+        "isPreIpo": true,
+        "decimals": 6,
+        "verifiedTessera": false,
+        "verifiedPreStocks": true
+      },
+      "bondingCurve": {
+        "realQuoteReservesUsd": 9.9,
+        "graduationThresholdUsd": 60,
+        "progressPct": 16.5,
+        "virtualQuoteReserves": "30009900000",
+        "virtualTokenReserves": "1072646026811153",
+        "realTokenReserves": "799646026811153",
+        "quoteMint": "DuQ1T5B6tmf5ZfSNpPomVcDntLEzR1mkoB81yHP5rGHG",
+        "isGraduated": false,
+        "dynamicFeeBps": 100,
+        "equityPurchaseBudgetUsd": 30,
+        "ammLiquidityBudgetUsd": 30
+      },
+      "treasury": {
+        "totalEquityLocked": 0,
+        "totalEquityValueUsd": 0,
+        "vaultPda": "8vv3iwxwbBHPEpzJCDdnDsHoGFc5gzigsDULh7meYhGB",
+        "proofOfReserveVerified": false,
+        "valuationAvailable": true,
+        "valuationSource": "PreStocks SPV mark price"
+      },
+      "dataSource": "onchain",
+      "lastUpdatedAt": "2026-09-24T11:25:30.279Z",
+      "observedSlot": 503444271
     },
     {
       "mint": "7TUcDnopkaCxUfr8D7LDT6imx9aMMZUGqmfKj4UgZyFU",
       "name": "OpenAI Autonomous Intelligence",
       "symbol": "TOPAI",
-      "description": "On-chain StreetFun market.",
-      "avatarUrl": "/generated/streetfun-logo.png",
+      "description": "Autonomous reasoning agent coin backed by OpenAI equity.",
+      "avatarUrl": "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=160&q=80",
       "creator": "519jca26LioEQiPhwoHCkC8mNZiCF7cDmtaXdp98iCv2",
       "createdAt": "2026-09-23T12:34:25+00:00",
       "totalSupply": 1000000000,
       "priceUsd": 0,
-      "marketCapUsd": 0,
+      "marketCapUsd": 0.0010230057828876482,
       "priceChange24h": 0,
       "priceChange24hAvailable": false,
       "volume24hUsd": 61,
       "volume24hAvailable": true,
       "targetEquity": {
-        "symbol": "UNVERIFIED",
-        "name": "Unverified collateral token",
+        "symbol": "OPENAI",
+        "name": "OpenAI PreStocks",
         "mintAddress": "3PFKgvU4P8hcuW1X2VjAgRHNsz1TnA4SLyjEDNfhzLC7",
-        "custodian": "Unverified",
-        "legalFramework": "Unverified",
-        "logoUrl": "/generated/streetfun-logo.png",
-        "stockPriceUsd": 0,
-        "isPreIpo": false,
+        "issuer": "PreStocks SPV",
+        "custodian": "PreStocks Institutional Custody",
+        "legalFramework": "1:1 SPV exposure tracking underlying private company shares",
+        "logoUrl": "/logos/openai.png",
+        "stockPriceUsd": 1023.0057828876481,
+        "isPreIpo": true,
         "decimals": 6,
-        "verifiedTessera": false
+        "verifiedTessera": false,
+        "verifiedPreStocks": true
       },
       "bondingCurve": {
         "realQuoteReservesUsd": 0,
@@ -1300,14 +1620,15 @@
       },
       "treasury": {
         "totalEquityLocked": 0.000001,
-        "totalEquityValueUsd": 0,
+        "totalEquityValueUsd": 0.0010230057828876482,
         "vaultPda": "HzNi2C3bjiBxrdD13i4fUUU4rYs6rr6TtivBVespb852",
         "proofOfReserveVerified": false,
-        "valuationAvailable": false
+        "valuationAvailable": true,
+        "valuationSource": "PreStocks SPV mark price"
       },
       "dataSource": "onchain",
-      "lastUpdatedAt": "2026-09-24T09:45:57.789Z",
-      "observedSlot": 503408250
+      "lastUpdatedAt": "2026-09-24T11:25:30.278Z",
+      "observedSlot": 503444271
     },
     {
       "mint": "GHQnijfucK5SrJZuvhYRipmTLy5CX3wy4mMDXSUNQwry",
@@ -1325,16 +1646,18 @@
       "volume24hUsd": 0,
       "volume24hAvailable": true,
       "targetEquity": {
-        "symbol": "UNVERIFIED",
-        "name": "Unverified collateral token",
+        "symbol": "OPENAI",
+        "name": "OpenAI PreStocks",
         "mintAddress": "3PFKgvU4P8hcuW1X2VjAgRHNsz1TnA4SLyjEDNfhzLC7",
-        "custodian": "Unverified",
-        "legalFramework": "Unverified",
-        "logoUrl": "/generated/streetfun-logo.png",
-        "stockPriceUsd": 0,
-        "isPreIpo": false,
+        "issuer": "PreStocks SPV",
+        "custodian": "PreStocks Institutional Custody",
+        "legalFramework": "1:1 SPV exposure tracking underlying private company shares",
+        "logoUrl": "/logos/openai.png",
+        "stockPriceUsd": 1023.0057828876481,
+        "isPreIpo": true,
         "decimals": 6,
-        "verifiedTessera": false
+        "verifiedTessera": false,
+        "verifiedPreStocks": true
       },
       "bondingCurve": {
         "realQuoteReservesUsd": 0,
@@ -1354,38 +1677,41 @@
         "totalEquityValueUsd": 0,
         "vaultPda": "CJU5otbixCpqbnBuSscA69PvR6w8Wz9t1yC6pwcEywnX",
         "proofOfReserveVerified": false,
-        "valuationAvailable": false
+        "valuationAvailable": true,
+        "valuationSource": "PreStocks SPV mark price"
       },
       "dataSource": "onchain",
-      "lastUpdatedAt": "2026-09-24T09:45:57.789Z",
-      "observedSlot": 503408250
+      "lastUpdatedAt": "2026-09-24T11:25:30.279Z",
+      "observedSlot": 503444271
     },
     {
       "mint": "36Xb9SQ3tLrpZCXdXt6kdSAHNhZnfr6VnvqdrQudMd76",
       "name": "Neural Singularity",
       "symbol": "SING",
-      "description": "On-chain StreetFun market.",
-      "avatarUrl": "/generated/streetfun-logo.png",
+      "description": "Bet on the advent of artificial general intelligence.",
+      "avatarUrl": "https://images.unsplash.com/photo-1677442136019-21780ecad995?w=160&q=80",
       "creator": "519jca26LioEQiPhwoHCkC8mNZiCF7cDmtaXdp98iCv2",
       "createdAt": "2026-09-23T13:20:34+00:00",
       "totalSupply": 1000000000,
       "priceUsd": 0,
-      "marketCapUsd": 0,
+      "marketCapUsd": 102300.57828876481,
       "priceChange24h": 0,
       "priceChange24hAvailable": false,
       "volume24hUsd": 82.770971,
       "volume24hAvailable": true,
       "targetEquity": {
-        "symbol": "UNVERIFIED",
-        "name": "Unverified collateral token",
+        "symbol": "OPENAI",
+        "name": "OpenAI PreStocks",
         "mintAddress": "3PFKgvU4P8hcuW1X2VjAgRHNsz1TnA4SLyjEDNfhzLC7",
-        "custodian": "Unverified",
-        "legalFramework": "Unverified",
-        "logoUrl": "/generated/streetfun-logo.png",
-        "stockPriceUsd": 0,
-        "isPreIpo": false,
+        "issuer": "PreStocks SPV",
+        "custodian": "PreStocks Institutional Custody",
+        "legalFramework": "1:1 SPV exposure tracking underlying private company shares",
+        "logoUrl": "/logos/openai.png",
+        "stockPriceUsd": 1023.0057828876481,
+        "isPreIpo": true,
         "decimals": 6,
-        "verifiedTessera": false
+        "verifiedTessera": false,
+        "verifiedPreStocks": true
       },
       "bondingCurve": {
         "realQuoteReservesUsd": 0,
@@ -1403,41 +1729,44 @@
       },
       "treasury": {
         "totalEquityLocked": 100,
-        "totalEquityValueUsd": 0,
+        "totalEquityValueUsd": 102300.57828876481,
         "vaultPda": "BHghp45LPwGj6m39GbFTDvsA7a9QSApHakge3BVYx4sE",
         "proofOfReserveVerified": false,
-        "valuationAvailable": false
+        "valuationAvailable": true,
+        "valuationSource": "PreStocks SPV mark price"
       },
       "dataSource": "onchain",
-      "lastUpdatedAt": "2026-09-24T09:45:57.790Z",
-      "observedSlot": 503408250
+      "lastUpdatedAt": "2026-09-24T11:25:30.279Z",
+      "observedSlot": 503444271
     },
     {
       "mint": "6Gzc8cMvaQsaGJAfzZosCePJ8Hx7tLV7A7x58oGerggb",
       "name": "Neural Singularity",
       "symbol": "SING",
-      "description": "On-chain StreetFun market.",
-      "avatarUrl": "/generated/streetfun-logo.png",
+      "description": "Core weight checkpoint memecoin backed by private OpenAI shares.",
+      "avatarUrl": "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=160&q=80",
       "creator": "519jca26LioEQiPhwoHCkC8mNZiCF7cDmtaXdp98iCv2",
       "createdAt": "2026-09-23T13:15:34+00:00",
       "totalSupply": 1000000000,
       "priceUsd": 0,
-      "marketCapUsd": 0,
+      "marketCapUsd": 153450.8674331472,
       "priceChange24h": 0,
       "priceChange24hAvailable": false,
       "volume24hUsd": 82.770971,
       "volume24hAvailable": true,
       "targetEquity": {
-        "symbol": "UNVERIFIED",
-        "name": "Unverified collateral token",
+        "symbol": "OPENAI",
+        "name": "OpenAI PreStocks",
         "mintAddress": "3PFKgvU4P8hcuW1X2VjAgRHNsz1TnA4SLyjEDNfhzLC7",
-        "custodian": "Unverified",
-        "legalFramework": "Unverified",
-        "logoUrl": "/generated/streetfun-logo.png",
-        "stockPriceUsd": 0,
-        "isPreIpo": false,
+        "issuer": "PreStocks SPV",
+        "custodian": "PreStocks Institutional Custody",
+        "legalFramework": "1:1 SPV exposure tracking underlying private company shares",
+        "logoUrl": "/logos/openai.png",
+        "stockPriceUsd": 1023.0057828876481,
+        "isPreIpo": true,
         "decimals": 6,
-        "verifiedTessera": false
+        "verifiedTessera": false,
+        "verifiedPreStocks": true
       },
       "bondingCurve": {
         "realQuoteReservesUsd": 0,
@@ -1455,41 +1784,44 @@
       },
       "treasury": {
         "totalEquityLocked": 150,
-        "totalEquityValueUsd": 0,
+        "totalEquityValueUsd": 153450.8674331472,
         "vaultPda": "6EvPjfooXbTCD4pDQPa6orNyVcqPYV9vbYyt91c73JS3",
         "proofOfReserveVerified": false,
-        "valuationAvailable": false
+        "valuationAvailable": true,
+        "valuationSource": "PreStocks SPV mark price"
       },
       "dataSource": "onchain",
-      "lastUpdatedAt": "2026-09-24T09:45:57.790Z",
-      "observedSlot": 503408250
+      "lastUpdatedAt": "2026-09-24T11:25:30.279Z",
+      "observedSlot": 503444271
     },
     {
       "mint": "9QYWLdsbQD3twA8ycCnrRMbL2Bjpi8h4jAHf9QUxXdLh",
       "name": "Neural Singularity",
       "symbol": "SING",
-      "description": "On-chain StreetFun market.",
-      "avatarUrl": "/generated/streetfun-logo.png",
+      "description": "The world's first compute-backed sovereign cult coin.",
+      "avatarUrl": "https://images.unsplash.com/photo-1620712943543-bcc4688e7485?w=160&q=80",
       "creator": "519jca26LioEQiPhwoHCkC8mNZiCF7cDmtaXdp98iCv2",
       "createdAt": "2026-09-23T13:31:08+00:00",
       "totalSupply": 999000000,
       "priceUsd": 0,
-      "marketCapUsd": 0,
+      "marketCapUsd": 153297.41656571405,
       "priceChange24h": 0,
       "priceChange24hAvailable": false,
       "volume24hUsd": 82.770971,
       "volume24hAvailable": true,
       "targetEquity": {
-        "symbol": "UNVERIFIED",
-        "name": "Unverified collateral token",
+        "symbol": "OPENAI",
+        "name": "OpenAI PreStocks",
         "mintAddress": "3PFKgvU4P8hcuW1X2VjAgRHNsz1TnA4SLyjEDNfhzLC7",
-        "custodian": "Unverified",
-        "legalFramework": "Unverified",
-        "logoUrl": "/generated/streetfun-logo.png",
-        "stockPriceUsd": 0,
-        "isPreIpo": false,
+        "issuer": "PreStocks SPV",
+        "custodian": "PreStocks Institutional Custody",
+        "legalFramework": "1:1 SPV exposure tracking underlying private company shares",
+        "logoUrl": "/logos/openai.png",
+        "stockPriceUsd": 1023.0057828876481,
+        "isPreIpo": true,
         "decimals": 6,
-        "verifiedTessera": false
+        "verifiedTessera": false,
+        "verifiedPreStocks": true
       },
       "bondingCurve": {
         "realQuoteReservesUsd": 0,
@@ -1507,41 +1839,44 @@
       },
       "treasury": {
         "totalEquityLocked": 149.85,
-        "totalEquityValueUsd": 0,
+        "totalEquityValueUsd": 153297.41656571405,
         "vaultPda": "kG1c2wcnPYkEhkgqkgM1ainvrDUF1HVyox1XkHgFupA",
         "proofOfReserveVerified": false,
-        "valuationAvailable": false
+        "valuationAvailable": true,
+        "valuationSource": "PreStocks SPV mark price"
       },
       "dataSource": "onchain",
-      "lastUpdatedAt": "2026-09-24T09:45:57.790Z",
-      "observedSlot": 503408250
+      "lastUpdatedAt": "2026-09-24T11:25:30.279Z",
+      "observedSlot": 503444271
     },
     {
       "mint": "7UR1AXhvitB3PK4Kikxmov6iSTJZzu7UYWGaARnE2ktJ",
       "name": "Neural Singularity",
       "symbol": "SING",
-      "description": "On-chain StreetFun market.",
-      "avatarUrl": "/generated/streetfun-logo.png",
+      "description": "Deep intelligence momentum coin anchored by frontier AI models.",
+      "avatarUrl": "https://images.unsplash.com/photo-1634017839464-5c339ebe3cb4?w=160&q=80",
       "creator": "519jca26LioEQiPhwoHCkC8mNZiCF7cDmtaXdp98iCv2",
       "createdAt": "2026-09-23T13:30:07+00:00",
       "totalSupply": 1000000000,
       "priceUsd": 0,
-      "marketCapUsd": 0,
+      "marketCapUsd": 102300.57828876481,
       "priceChange24h": 0,
       "priceChange24hAvailable": false,
       "volume24hUsd": 82.770971,
       "volume24hAvailable": true,
       "targetEquity": {
-        "symbol": "UNVERIFIED",
-        "name": "Unverified collateral token",
+        "symbol": "OPENAI",
+        "name": "OpenAI PreStocks",
         "mintAddress": "3PFKgvU4P8hcuW1X2VjAgRHNsz1TnA4SLyjEDNfhzLC7",
-        "custodian": "Unverified",
-        "legalFramework": "Unverified",
-        "logoUrl": "/generated/streetfun-logo.png",
-        "stockPriceUsd": 0,
-        "isPreIpo": false,
+        "issuer": "PreStocks SPV",
+        "custodian": "PreStocks Institutional Custody",
+        "legalFramework": "1:1 SPV exposure tracking underlying private company shares",
+        "logoUrl": "/logos/openai.png",
+        "stockPriceUsd": 1023.0057828876481,
+        "isPreIpo": true,
         "decimals": 6,
-        "verifiedTessera": false
+        "verifiedTessera": false,
+        "verifiedPreStocks": true
       },
       "bondingCurve": {
         "realQuoteReservesUsd": 0,
@@ -1559,41 +1894,44 @@
       },
       "treasury": {
         "totalEquityLocked": 100,
-        "totalEquityValueUsd": 0,
+        "totalEquityValueUsd": 102300.57828876481,
         "vaultPda": "HEM3fqEzLJzMrNNtymd6pWJhexmZSvpaNsLm5vHCuwpy",
         "proofOfReserveVerified": false,
-        "valuationAvailable": false
+        "valuationAvailable": true,
+        "valuationSource": "PreStocks SPV mark price"
       },
       "dataSource": "onchain",
-      "lastUpdatedAt": "2026-09-24T09:45:57.790Z",
-      "observedSlot": 503408250
+      "lastUpdatedAt": "2026-09-24T11:25:30.279Z",
+      "observedSlot": 503444271
     },
     {
       "mint": "5gNBrKp3q48r8LT5pgXVqKPVwXEq66DZttdGGdR9v7C",
       "name": "Neural Singularity",
       "symbol": "SING",
-      "description": "On-chain StreetFun market.",
-      "avatarUrl": "/generated/streetfun-logo.png",
+      "description": "Direct economic proxy for frontier compute and private AI equity.",
+      "avatarUrl": "https://images.unsplash.com/photo-1591488320449-011701bb6704?w=160&q=80",
       "creator": "519jca26LioEQiPhwoHCkC8mNZiCF7cDmtaXdp98iCv2",
       "createdAt": "2026-09-23T13:08:00+00:00",
       "totalSupply": 1000000000,
       "priceUsd": 0,
-      "marketCapUsd": 0,
+      "marketCapUsd": 153450.8674331472,
       "priceChange24h": 0,
       "priceChange24hAvailable": false,
       "volume24hUsd": 80,
       "volume24hAvailable": true,
       "targetEquity": {
-        "symbol": "UNVERIFIED",
-        "name": "Unverified collateral token",
+        "symbol": "OPENAI",
+        "name": "OpenAI PreStocks",
         "mintAddress": "3PFKgvU4P8hcuW1X2VjAgRHNsz1TnA4SLyjEDNfhzLC7",
-        "custodian": "Unverified",
-        "legalFramework": "Unverified",
-        "logoUrl": "/generated/streetfun-logo.png",
-        "stockPriceUsd": 0,
-        "isPreIpo": false,
+        "issuer": "PreStocks SPV",
+        "custodian": "PreStocks Institutional Custody",
+        "legalFramework": "1:1 SPV exposure tracking underlying private company shares",
+        "logoUrl": "/logos/openai.png",
+        "stockPriceUsd": 1023.0057828876481,
+        "isPreIpo": true,
         "decimals": 6,
-        "verifiedTessera": false
+        "verifiedTessera": false,
+        "verifiedPreStocks": true
       },
       "bondingCurve": {
         "realQuoteReservesUsd": 0,
@@ -1611,17 +1949,73 @@
       },
       "treasury": {
         "totalEquityLocked": 150,
-        "totalEquityValueUsd": 0,
+        "totalEquityValueUsd": 153450.8674331472,
         "vaultPda": "CzwGZrw7E9W5m5WLJkrcJnfwYL5RytsJxG4dVAMFcgq9",
         "proofOfReserveVerified": false,
-        "valuationAvailable": false
+        "valuationAvailable": true,
+        "valuationSource": "PreStocks SPV mark price"
       },
       "dataSource": "onchain",
-      "lastUpdatedAt": "2026-09-24T09:45:57.790Z",
-      "observedSlot": 503408250
+      "lastUpdatedAt": "2026-09-24T11:25:30.279Z",
+      "observedSlot": 503444271
+    },
+    {
+      "mint": "EVoXoZCsBbNDG6AwU1fbkkehe2sDzckqTAS9FQYRkwSU",
+      "name": "Neural Singularity",
+      "symbol": "SING",
+      "description": "Autonomous evolution vector backed by OpenAI equity.",
+      "avatarUrl": "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=160&q=80",
+      "creator": "519jca26LioEQiPhwoHCkC8mNZiCF7cDmtaXdp98iCv2",
+      "createdAt": "2026-09-24T10:50:46+00:00",
+      "totalSupply": 999000000,
+      "priceUsd": 0,
+      "marketCapUsd": 153297.41656571405,
+      "priceChange24h": 0,
+      "priceChange24hAvailable": false,
+      "volume24hUsd": 82.770971,
+      "volume24hAvailable": true,
+      "targetEquity": {
+        "symbol": "OPENAI",
+        "name": "OpenAI PreStocks",
+        "mintAddress": "3PFKgvU4P8hcuW1X2VjAgRHNsz1TnA4SLyjEDNfhzLC7",
+        "issuer": "PreStocks SPV",
+        "custodian": "PreStocks Institutional Custody",
+        "legalFramework": "1:1 SPV exposure tracking underlying private company shares",
+        "logoUrl": "/logos/openai.png",
+        "stockPriceUsd": 1023.0057828876481,
+        "isPreIpo": true,
+        "decimals": 6,
+        "verifiedTessera": false,
+        "verifiedPreStocks": true
+      },
+      "bondingCurve": {
+        "realQuoteReservesUsd": 0,
+        "graduationThresholdUsd": 60,
+        "progressPct": 100,
+        "virtualQuoteReserves": "30076401040",
+        "virtualTokenReserves": "1070274330964824",
+        "realTokenReserves": "0",
+        "quoteMint": "DuQ1T5B6tmf5ZfSNpPomVcDntLEzR1mkoB81yHP5rGHG",
+        "isGraduated": true,
+        "graduatedAt": "2026-09-24T10:51:05.000Z",
+        "dynamicFeeBps": 100,
+        "equityPurchaseBudgetUsd": 30,
+        "ammLiquidityBudgetUsd": 30
+      },
+      "treasury": {
+        "totalEquityLocked": 149.85,
+        "totalEquityValueUsd": 153297.41656571405,
+        "vaultPda": "Az9Q1FeMr1bbsbAW7CJFbuPaPqrdjBLYpd6BZyXywvJV",
+        "proofOfReserveVerified": false,
+        "valuationAvailable": true,
+        "valuationSource": "PreStocks SPV mark price"
+      },
+      "dataSource": "onchain",
+      "lastUpdatedAt": "2026-09-24T11:25:30.280Z",
+      "observedSlot": 503444271
     }
   ],
-  "snapshotMs": 533,
+  "snapshotMs": 1128,
   "cachedSnapshotMs": 0,
   "persistedTrades": [
     {
@@ -1634,7 +2028,9 @@
       "quote_amount_usd": 10,
       "trader": "519jca26LioEQiPhwoHCkC8mNZiCF7cDmtaXdp98iCv2",
       "slot": 503009263,
-      "created_at": "2026-09-23T15:24:09+00:00"
+      "created_at": "2026-09-23T15:24:09+00:00",
+      "instruction_index": 0,
+      "equity_amount": null
     },
     {
       "id": 49,
@@ -1646,7 +2042,9 @@
       "quote_amount_usd": 61,
       "trader": "519jca26LioEQiPhwoHCkC8mNZiCF7cDmtaXdp98iCv2",
       "slot": 502947888,
-      "created_at": "2026-09-23T12:34:41+00:00"
+      "created_at": "2026-09-23T12:34:41+00:00",
+      "instruction_index": 0,
+      "equity_amount": null
     },
     {
       "id": 50,
@@ -1658,7 +2056,9 @@
       "quote_amount_usd": 20,
       "trader": "519jca26LioEQiPhwoHCkC8mNZiCF7cDmtaXdp98iCv2",
       "slot": 502955387,
-      "created_at": "2026-09-23T12:55:25+00:00"
+      "created_at": "2026-09-23T12:55:25+00:00",
+      "instruction_index": 0,
+      "equity_amount": null
     },
     {
       "id": 51,
@@ -1670,7 +2070,9 @@
       "quote_amount_usd": 18,
       "trader": "CeDNgzgfSSaNi5AmAZbrcLwjD1hPQocCBhjUxRdY5yba",
       "slot": 502959949,
-      "created_at": "2026-09-23T13:08:02+00:00"
+      "created_at": "2026-09-23T13:08:02+00:00",
+      "instruction_index": 0,
+      "equity_amount": null
     },
     {
       "id": 52,
@@ -1682,7 +2084,9 @@
       "quote_amount_usd": 62,
       "trader": "CeDNgzgfSSaNi5AmAZbrcLwjD1hPQocCBhjUxRdY5yba",
       "slot": 502960004,
-      "created_at": "2026-09-23T13:08:11+00:00"
+      "created_at": "2026-09-23T13:08:11+00:00",
+      "instruction_index": 0,
+      "equity_amount": null
     },
     {
       "id": 53,
@@ -1694,7 +2098,9 @@
       "quote_amount_usd": 18,
       "trader": "CJ8DAzJEgzxHMPtrtEyjExJE6PrrYpc9mgrLtL9WzseC",
       "slot": 502962700,
-      "created_at": "2026-09-23T13:15:36+00:00"
+      "created_at": "2026-09-23T13:15:36+00:00",
+      "instruction_index": 0,
+      "equity_amount": null
     },
     {
       "id": 54,
@@ -1706,7 +2112,9 @@
       "quote_amount_usd": 2.770971,
       "trader": "CJ8DAzJEgzxHMPtrtEyjExJE6PrrYpc9mgrLtL9WzseC",
       "slot": 502962755,
-      "created_at": "2026-09-23T13:15:46+00:00"
+      "created_at": "2026-09-23T13:15:46+00:00",
+      "instruction_index": 0,
+      "equity_amount": null
     },
     {
       "id": 55,
@@ -1718,7 +2126,9 @@
       "quote_amount_usd": 62,
       "trader": "CJ8DAzJEgzxHMPtrtEyjExJE6PrrYpc9mgrLtL9WzseC",
       "slot": 502962761,
-      "created_at": "2026-09-23T13:15:47+00:00"
+      "created_at": "2026-09-23T13:15:47+00:00",
+      "instruction_index": 0,
+      "equity_amount": null
     },
     {
       "id": 56,
@@ -1730,7 +2140,9 @@
       "quote_amount_usd": 18,
       "trader": "6s7ntThbSvQefvDEb43aTNuDShoCYvi9bqtCm5BcAAMH",
       "slot": 502964552,
-      "created_at": "2026-09-23T13:20:41+00:00"
+      "created_at": "2026-09-23T13:20:41+00:00",
+      "instruction_index": 0,
+      "equity_amount": null
     },
     {
       "id": 57,
@@ -1742,7 +2154,9 @@
       "quote_amount_usd": 2.770971,
       "trader": "6s7ntThbSvQefvDEb43aTNuDShoCYvi9bqtCm5BcAAMH",
       "slot": 502964560,
-      "created_at": "2026-09-23T13:20:42+00:00"
+      "created_at": "2026-09-23T13:20:42+00:00",
+      "instruction_index": 0,
+      "equity_amount": null
     },
     {
       "id": 58,
@@ -1754,7 +2168,9 @@
       "quote_amount_usd": 62,
       "trader": "6s7ntThbSvQefvDEb43aTNuDShoCYvi9bqtCm5BcAAMH",
       "slot": 502964573,
-      "created_at": "2026-09-23T13:20:44+00:00"
+      "created_at": "2026-09-23T13:20:44+00:00",
+      "instruction_index": 0,
+      "equity_amount": null
     },
     {
       "id": 59,
@@ -1766,7 +2182,9 @@
       "quote_amount_usd": 18,
       "trader": "FhzH6VK3ir1qgkHmj1rPQyfRVhXo1BczbUWmKjqgMz4J",
       "slot": 502967992,
-      "created_at": "2026-09-23T13:30:09+00:00"
+      "created_at": "2026-09-23T13:30:09+00:00",
+      "instruction_index": 0,
+      "equity_amount": null
     },
     {
       "id": 60,
@@ -1778,7 +2196,9 @@
       "quote_amount_usd": 2.770971,
       "trader": "FhzH6VK3ir1qgkHmj1rPQyfRVhXo1BczbUWmKjqgMz4J",
       "slot": 502968044,
-      "created_at": "2026-09-23T13:30:17+00:00"
+      "created_at": "2026-09-23T13:30:17+00:00",
+      "instruction_index": 0,
+      "equity_amount": null
     },
     {
       "id": 61,
@@ -1790,7 +2210,9 @@
       "quote_amount_usd": 62,
       "trader": "FhzH6VK3ir1qgkHmj1rPQyfRVhXo1BczbUWmKjqgMz4J",
       "slot": 502968051,
-      "created_at": "2026-09-23T13:30:18+00:00"
+      "created_at": "2026-09-23T13:30:18+00:00",
+      "instruction_index": 0,
+      "equity_amount": null
     },
     {
       "id": 62,
@@ -1802,7 +2224,9 @@
       "quote_amount_usd": 18,
       "trader": "EmK3rSJ9SdJfRKrjYKAiCq2Q4rwWs9XqHhLEybLq1zwH",
       "slot": 502968364,
-      "created_at": "2026-09-23T13:31:10+00:00"
+      "created_at": "2026-09-23T13:31:10+00:00",
+      "instruction_index": 0,
+      "equity_amount": null
     },
     {
       "id": 63,
@@ -1814,7 +2238,9 @@
       "quote_amount_usd": 2.770971,
       "trader": "EmK3rSJ9SdJfRKrjYKAiCq2Q4rwWs9XqHhLEybLq1zwH",
       "slot": 502968416,
-      "created_at": "2026-09-23T13:31:19+00:00"
+      "created_at": "2026-09-23T13:31:19+00:00",
+      "instruction_index": 0,
+      "equity_amount": null
     },
     {
       "id": 64,
@@ -1826,7 +2252,93 @@
       "quote_amount_usd": 62,
       "trader": "EmK3rSJ9SdJfRKrjYKAiCq2Q4rwWs9XqHhLEybLq1zwH",
       "slot": 502968419,
-      "created_at": "2026-09-23T13:31:19+00:00"
+      "created_at": "2026-09-23T13:31:19+00:00",
+      "instruction_index": 0,
+      "equity_amount": null
+    },
+    {
+      "id": 66,
+      "tx_signature": "2YHXyZcfvErNoxfwNoXcAoWxD8iGo9MwjGoJSevPa5sGm61aQ7fY8mxXyBaZsQ75aFCeJozDpbPaL3fabHn5GKpd",
+      "mint": "9QYWLdsbQD3twA8ycCnrRMbL2Bjpi8h4jAHf9QUxXdLh",
+      "trade_type": "REDEEM",
+      "price_usd": 0,
+      "tokens_amount": 1000000,
+      "quote_amount_usd": 0,
+      "trader": "EmK3rSJ9SdJfRKrjYKAiCq2Q4rwWs9XqHhLEybLq1zwH",
+      "slot": 502968485,
+      "created_at": "2026-09-23T13:31:30+00:00",
+      "instruction_index": 0,
+      "equity_amount": 0.15
+    },
+    {
+      "id": 68,
+      "tx_signature": "3yEqTVwvSMRWdFZiDQwNntLvR8Arx3MvuWMrLPBWgsKi5P3Zk4qNjjkdtqXXZPZ5s5G1UpXvU1GkqquiM6aUB9Sa",
+      "mint": "Fe25SJ385FLSKmmgFHnrvGqotmN3UPSmSh7Gx5YZfkfN",
+      "trade_type": "BUY",
+      "price_usd": 0.0000282507272163,
+      "tokens_amount": 353973.188847,
+      "quote_amount_usd": 10,
+      "trader": "BERYU2zCg7ffw6P9H7Rdq9xSU1E9nSMZLh3hF1tJjfV7",
+      "slot": 503431990,
+      "created_at": "2026-09-24T10:51:34+00:00",
+      "instruction_index": 0,
+      "equity_amount": null
+    },
+    {
+      "id": 87,
+      "tx_signature": "4hYBG8XdSKXFxGXacuwD9rsntsZzRXtMVB1UBUJBsh12pwfFtVTHe3ipe3A5C67rKkYEYYgbKpqWiQRL1g5q7Kdb",
+      "mint": "EVoXoZCsBbNDG6AwU1fbkkehe2sDzckqTAS9FQYRkwSU",
+      "trade_type": "BUY",
+      "price_usd": 0.0000282581829479,
+      "tokens_amount": 636983.631722,
+      "quote_amount_usd": 18,
+      "trader": "2r4A6G1KBJJms12EAfqJFE4si4hzzeaVzEJrE7Vpb63L",
+      "slot": 503431719,
+      "created_at": "2026-09-24T10:50:49+00:00",
+      "instruction_index": 0,
+      "equity_amount": null
+    },
+    {
+      "id": 88,
+      "tx_signature": "2ZnJcP8oMjhQb46cTnqEf5tNPZjctTZcWUaCLiErkaSohbFucZxYEnsg6MbY19EFxtiEdaK7JRLuZ7z1PVwGF2gf",
+      "mint": "EVoXoZCsBbNDG6AwU1fbkkehe2sDzckqTAS9FQYRkwSU",
+      "trade_type": "SELL",
+      "price_usd": 0.00002770971,
+      "tokens_amount": 100000,
+      "quote_amount_usd": 2.770971,
+      "trader": "2r4A6G1KBJJms12EAfqJFE4si4hzzeaVzEJrE7Vpb63L",
+      "slot": 503431769,
+      "created_at": "2026-09-24T10:50:57+00:00",
+      "instruction_index": 0,
+      "equity_amount": null
+    },
+    {
+      "id": 89,
+      "tx_signature": "2jsrLdEmm2a9FuqLNAKMWJkoFUGbXPUWMmqzqn3Hnofmy8u8N2Vw8cTSXbf2MFP1vXxepBLHbiqLQ71kYdSoxiMY",
+      "mint": "EVoXoZCsBbNDG6AwU1fbkkehe2sDzckqTAS9FQYRkwSU",
+      "trade_type": "BUY",
+      "price_usd": 0.0000283275065033,
+      "tokens_amount": 2188685.403454,
+      "quote_amount_usd": 62,
+      "trader": "2r4A6G1KBJJms12EAfqJFE4si4hzzeaVzEJrE7Vpb63L",
+      "slot": 503431776,
+      "created_at": "2026-09-24T10:50:58+00:00",
+      "instruction_index": 0,
+      "equity_amount": null
+    },
+    {
+      "id": 90,
+      "tx_signature": "62xD6ViTWebRiaHPJfs8s1tSnj8BU8kt8QP6ZDr5J642gDi9pjjGfEc4DbaXAoUVhPNpw5vTx9fiTLsdP1bMrC6r",
+      "mint": "EVoXoZCsBbNDG6AwU1fbkkehe2sDzckqTAS9FQYRkwSU",
+      "trade_type": "REDEEM",
+      "price_usd": 0,
+      "tokens_amount": 1000000,
+      "quote_amount_usd": 0,
+      "trader": "2r4A6G1KBJJms12EAfqJFE4si4hzzeaVzEJrE7Vpb63L",
+      "slot": 503431844,
+      "created_at": "2026-09-24T10:51:10+00:00",
+      "instruction_index": 0,
+      "equity_amount": 0.15
     }
   ],
   "databaseError": null
