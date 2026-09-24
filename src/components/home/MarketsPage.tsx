@@ -44,6 +44,10 @@ export function MarketsPage() {
         if (statusFilter === "bonding" && token.bondingCurve.isGraduated) {
           return false;
         }
+        // Exclude graduated tokens without verified AMM pool liquidity from the active trading feed
+        if (token.bondingCurve.isGraduated && !token.bondingCurve.meteoraPoolAddress) {
+          return false;
+        }
         if (selectedTag !== "all") {
           const sym = (token.targetEquity.symbol || "").toLowerCase().replace(/[^a-z0-9]/g, "");
           const name = (token.targetEquity.name || "").toLowerCase().replace(/[^a-z0-9]/g, "");

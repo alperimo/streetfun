@@ -18,14 +18,16 @@ export function SearchModal({ isOpen, onClose, tokens }: SearchModalProps) {
   const [query, setQuery] = useState("");
   const [selectedIndex, setSelectedIndex] = useState(0);
 
-  const filteredTokens = tokens.filter(
-    (t) =>
+  const filteredTokens = tokens.filter((t) => {
+    if (t.bondingCurve.isGraduated && !t.bondingCurve.meteoraPoolAddress) return false;
+    return (
       t.name.toLowerCase().includes(query.toLowerCase()) ||
       t.symbol.toLowerCase().includes(query.toLowerCase()) ||
       t.targetEquity.symbol.toLowerCase().includes(query.toLowerCase()) ||
       t.targetEquity.name.toLowerCase().includes(query.toLowerCase()) ||
       t.mint.toLowerCase().includes(query.toLowerCase())
-  );
+    );
+  });
 
   const handleSelect = (token: TokenMetadata) => {
     onClose();
