@@ -27,13 +27,14 @@ function getLocalDevnetKeypair(): Keypair | null {
 }
 
 export async function GET(req: Request) {
-  // Only available in development mode
-  if (process.env.NODE_ENV === "production" && process.env.NEXT_PUBLIC_FULL_APP === "true") {
-    const host = req.headers.get("host") || "";
-    const isLocalhost = host.includes("localhost") || host.includes("127.0.0.1");
-    if (!isLocalhost) {
-      return NextResponse.json({ error: "Only available on local development" }, { status: 403 });
-    }
+  // Strictly reject if not in local development mode
+  if (process.env.NODE_ENV !== "development") {
+    return NextResponse.json({ error: "Only available in local development" }, { status: 403 });
+  }
+  const host = req.headers.get("host") || "";
+  const isLocalhost = host.startsWith("localhost") || host.startsWith("127.0.0.1");
+  if (!isLocalhost) {
+    return NextResponse.json({ error: "Only available on localhost" }, { status: 403 });
   }
 
   const keypair = getLocalDevnetKeypair();

@@ -64,6 +64,13 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
     if (process.env.NODE_ENV !== "development") {
       return [];
     }
+    if (typeof window !== "undefined") {
+      const hostname = window.location.hostname;
+      const isLocalhost = hostname === "localhost" || hostname === "127.0.0.1";
+      if (!isLocalhost) {
+        return [];
+      }
+    }
     const rpcHost = new URL(endpoint).hostname;
     const localnet = process.env.NEXT_PUBLIC_SOLANA_NETWORK === "localnet";
     const devnet = process.env.NEXT_PUBLIC_SOLANA_NETWORK === "devnet";
