@@ -147,6 +147,7 @@ export class SolanaTokenService {
             virtualQuoteReserves: account.virtualQuoteReserves.toString(), virtualTokenReserves: account.virtualTokenReserves.toString(),
             realTokenReserves: account.realTokenReserves.toString(), quoteMint: quote.mint.toBase58(), isGraduated,
             graduatedAt: isGraduated ? new Date(Number(account.graduatedAt.toString()) * 1000).toISOString() : undefined,
+            meteoraPoolAddress: indexed?.meteora_pool || undefined,
             dynamicFeeBps: Number(config.protocolFeeBps),
             equityPurchaseBudgetUsd: Math.max(reserves, threshold) / 2,
             ammLiquidityBudgetUsd: Math.max(reserves, threshold) / 2,
