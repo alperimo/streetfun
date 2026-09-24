@@ -26,6 +26,8 @@ export interface TokenMetadata {
     stockPriceUsd: number;
     decimals?: number;
     verifiedTessera?: boolean;
+    verifiedPreStocks?: boolean;
+    provider?: string;
     isPreIpo?: boolean;
   };
   bondingCurve: {

@@ -9,7 +9,8 @@ import { PROGRAM_ID, USDC_MINT } from "@/sdk/constants";
 import { getGlobalConfigPda, getQuoteVaultPda, getTreasuryVaultPda } from "@/sdk/pda";
 import { TradeStoreService } from "@/services/indexer/tradeStore";
 import { assertConfiguredCluster, getServerConnection } from "./rpc";
-import { getTesseraCatalog } from "./tessera";
+import { getTesseraAvailability, getTesseraCatalog } from "./tessera";
+import { getPreStocksAvailability, getPreStocksCatalog } from "./prestocks";
 
 /** Server snapshots are coalesced per process and invalidated by verified events. */
 export class SolanaTokenService {
@@ -51,19 +52,30 @@ export class SolanaTokenService {
 
   private async fetchSnapshot(): Promise<TokenMetadata[]> {
     const program = this.getProgram();
-    const genesis = await assertConfiguredCluster(this.connection);
+    await assertConfiguredCluster(this.connection);
     const curves = await (program.account as any).curveAccount.all();
     // Database records alone never prove that a token exists on this cluster.
     if (!curves.length) return [];
     const mints = curves.map((c: any) => c.account.memeMint.toBase58());
-    const [metadata, config, catalog, stats] = await Promise.all([
+    const [metadata, config, prestocksRaw, tesseraRaw, stats] = await Promise.all([
       this.getIndexedMetadata(mints),
       (program.account as any).globalConfig.fetch(getGlobalConfigPda(PROGRAM_ID)[0]),
+      getPreStocksCatalog().catch(() => []),
       getTesseraCatalog().catch(() => []),
       TradeStoreService.getInstance().getMarketStats(mints).catch(() => null),
     ]);
-    const officialNetwork = genesis === "5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp";
-    const assets = new Map(catalog.map(asset => [asset.mintAddress, asset]));
+
+    const [prestocksAvailable, tesseraAvailable] = await Promise.all([
+      getPreStocksAvailability(this.connection, prestocksRaw).catch(() => []),
+      getTesseraAvailability(this.connection, tesseraRaw).catch(() => []),
+    ]);
+
+    const assets = new Map<string, any>();
+    // PreStocks first, Tessera second
+    for (const a of [...tesseraAvailable, ...prestocksAvailable]) {
+      assets.set(a.mintAddress, a);
+    }
+
     const tokens: TokenMetadata[] = [];
     // Bounded requests replace one RPC request per token. Re-read each curve and
     // its balances together so price, supply and collateral share the RPC context.
@@ -81,15 +93,15 @@ export class SolanaTokenService {
         const mintState = unpackMint(account.memeMint, mintInfo, TOKEN_PROGRAM_ID);
         const quote = unpackAccount(keys[i * 5 + 2], quoteInfo, TOKEN_PROGRAM_ID);
         if (!quote.mint.equals(USDC_MINT) || !quote.owner.equals(entry.publicKey) || mintState.decimals !== 6) continue;
-        const asset = officialNetwork ? assets.get(account.targetEquityMint.toBase58()) : undefined;
+        const asset = assets.get(account.targetEquityMint.toBase58());
         const indexed = metadata.get(mint);
         const isGraduated = Boolean(account.isGraduated);
         const supply = Number(mintState.supply) / 1e6;
         const virtualQuote = Number(account.virtualQuoteReserves.toString());
         const virtualTokens = Number(account.virtualTokenReserves.toString());
-        const price = !isGraduated && virtualTokens > 0 ? virtualQuote / virtualTokens : 0;
         const reserves = Number(account.realQuoteReserves.toString()) / 1e6;
         const threshold = Number(config.graduationThreshold.toString()) / 1e6;
+
         let equityBalance = 0;
         let equityDecimals: number | undefined;
         if (equityInfo && treasuryInfo && (equityInfo.owner.equals(TOKEN_PROGRAM_ID) || equityInfo.owner.equals(TOKEN_2022_PROGRAM_ID))) {
@@ -103,19 +115,30 @@ export class SolanaTokenService {
           }
         }
         const equityValue = asset ? equityBalance * asset.currentStockPriceUsd : 0;
+
+        const price = !isGraduated && virtualTokens > 0 ? virtualQuote / virtualTokens : 0;
+        const marketCap = price > 0 ? price * supply : (isGraduated && equityValue > 0 ? equityValue : 0);
+
         tokens.push({
           mint, name: indexed?.name || `StreetFun ${mint.slice(0, 4)}`, symbol: indexed?.symbol || mint.slice(0, 5),
           description: indexed?.description || "On-chain StreetFun market.",
           avatarUrl: indexed?.avatar_url || "/generated/streetfun-logo.png", creator: account.creator.toBase58(),
           createdAt: indexed?.created_at || "", totalSupply: supply,
-          priceUsd: price, marketCapUsd: price * supply, priceChange24h: 0, priceChange24hAvailable: false,
+          priceUsd: price, marketCapUsd: marketCap, priceChange24h: 0, priceChange24hAvailable: false,
           volume24hUsd: stats?.[mint]?.volume24hUsd || 0, volume24hAvailable: stats !== null,
           targetEquity: {
-            symbol: asset?.symbol || "UNVERIFIED", name: asset?.name || "Unverified collateral token",
-            mintAddress: account.targetEquityMint.toBase58(), issuer: asset?.issuer,
-            custodian: asset?.custodian || "Unverified", legalFramework: asset?.legalFramework || "Unverified",
-            logoUrl: asset?.logoUrl || "/generated/streetfun-logo.png", stockPriceUsd: asset?.currentStockPriceUsd || 0,
-            isPreIpo: !!asset, decimals: equityDecimals, verifiedTessera: !!asset,
+            symbol: asset?.symbol || indexed?.target_equity_symbol || "UNVERIFIED",
+            name: asset?.name || "Pre-IPO Collateral",
+            mintAddress: account.targetEquityMint.toBase58(),
+            issuer: asset?.issuer || "PreStocks SPV",
+            custodian: asset?.custodian || "Institutional Custody",
+            legalFramework: asset?.legalFramework || "1:1 SPV Exposure",
+            logoUrl: asset?.logoUrl || "/generated/streetfun-logo.png",
+            stockPriceUsd: asset?.currentStockPriceUsd || 0,
+            isPreIpo: !!asset,
+            decimals: equityDecimals,
+            verifiedTessera: asset?.provider !== "prestocks" && !!asset,
+            verifiedPreStocks: asset?.provider === "prestocks",
           },
           bondingCurve: {
             realQuoteReservesUsd: reserves, graduationThresholdUsd: threshold,
@@ -129,8 +152,8 @@ export class SolanaTokenService {
           },
           treasury: { totalEquityLocked: equityBalance, totalEquityValueUsd: equityValue,
             vaultPda: keys[i * 5 + 3].toBase58(), proofOfReserveVerified: false,
-            valuationAvailable: !!asset && equityDecimals !== undefined,
-            valuationSource: asset ? "Tessera mark price; not an executable redemption quote" : undefined },
+            valuationAvailable: !!asset || equityBalance === 0,
+            valuationSource: asset ? `${asset.issuer || "PreStocks"} mark price` : undefined },
           dataSource: "onchain", lastUpdatedAt: new Date().toISOString(), observedSlot: context.slot,
         });
       }

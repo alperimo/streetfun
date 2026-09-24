@@ -33,18 +33,28 @@ export function LaunchModal({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [launchError, setLaunchError] = useState<string | null>(null);
 
-  const [liveAssets, setLiveAssets] = useState<(TesseraPreIpoAsset & { launchEnabled?: boolean; unavailableReason?: string })[]>([]);
+  const [providerFilter, setProviderFilter] = useState<"prestocks" | "tessera" | "all">("prestocks");
+  const [liveAssets, setLiveAssets] = useState<(TesseraPreIpoAsset & { launchEnabled?: boolean; unavailableReason?: string; provider?: string })[]>([]);
   const [assetError, setAssetError] = useState<string | null>(null);
   const assets = isMock ? DEMO_TOKENIZED_EQUITIES : liveAssets;
+
+  const filteredAssets = assets.filter((eq: any) => {
+    if (providerFilter === "all") return true;
+    if (providerFilter === "prestocks") return eq.provider === "prestocks" || eq.issuer?.includes("PreStocks");
+    if (providerFilter === "tessera") return eq.provider !== "prestocks" && !eq.issuer?.includes("PreStocks");
+    return true;
+  });
+
   useEffect(() => {
     if (!isOpen || isMock) return;
     const controller = new AbortController();
     setAssetError(null);
     fetch("/api/assets", { signal: controller.signal }).then(async response => {
-      if (!response.ok) throw new Error("Verified Tessera assets are unavailable.");
+      if (!response.ok) throw new Error("Verified Pre-IPO assets are unavailable.");
       const data = await response.json();
       setLiveAssets(data.assets);
-      setSelectedEquitySymbol(data.assets[0]?.symbol || "");
+      const first = data.assets.find((a: any) => a.provider === "prestocks") || data.assets[0];
+      if (first) setSelectedEquitySymbol(first.symbol);
     }).catch(error => { if (!controller.signal.aborted) setAssetError(error.message); });
     return () => controller.abort();
   }, [isOpen, isMock]);
@@ -57,9 +67,10 @@ export function LaunchModal({
   if (!isOpen) return null;
 
   const selectedEquity =
-    assets.find(
-      (e) => e.symbol === selectedEquitySymbol
-    ) || assets[0];
+    filteredAssets.find((e) => e.symbol === selectedEquitySymbol) ||
+    assets.find((e) => e.symbol === selectedEquitySymbol) ||
+    filteredAssets[0] ||
+    assets[0];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -76,7 +87,7 @@ export function LaunchModal({
         description:
           description ||
           `Decentralized culture coin backed by ${selectedEquity.name} ($${selectedEquity.symbol}) via ${
-            selectedEquity.issuer || "Tessera Private Equity"
+            selectedEquity.issuer || "PreStocks SPV"
           } ${selectedEquity.legalFramework}.`,
         avatarUrl:
           avatarUrl ||
@@ -101,7 +112,7 @@ export function LaunchModal({
   return (
     <div onClick={onClose} role="dialog" aria-modal="true" aria-label="Launch Token" className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/30 backdrop-blur-[1px] animate-in fade-in duration-150">
       <div
-        className="w-full max-w-lg rounded-2xl border border-border bg-card p-6 shadow-2xl"
+        className="w-full max-w-lg rounded-2xl border border-border bg-card p-6 shadow-2xl max-h-[92vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -113,7 +124,7 @@ export function LaunchModal({
             <div>
               <h2 className="text-lg font-bold text-foreground">Launch Token</h2>
               <p className="text-xs text-muted">
-                Choose a verified Tessera asset for your token
+                Choose a verified PreStocks or Tessera pre-IPO backing asset
               </p>
             </div>
           </div>
@@ -128,7 +139,9 @@ export function LaunchModal({
         {/* Form */}
         <form onSubmit={handleSubmit} className="mt-5 space-y-4 text-xs">
           {assetError && <p role="alert" className="text-rose-400">{assetError}</p>}
-          {!isMock && selectedEquity && "unavailableReason" in selectedEquity && <p role="status" className="text-amber-300">{String(selectedEquity.unavailableReason)}</p>}
+          {!isMock && Boolean(selectedEquity && "unavailableReason" in selectedEquity && (selectedEquity as any).unavailableReason) && (
+            <p role="status" className="text-amber-300">{String((selectedEquity as any).unavailableReason)}</p>
+          )}
           {launchError && <p role="alert" className="text-rose-400">{launchError}</p>}
           {/* Token Name & Ticker */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -162,17 +175,50 @@ export function LaunchModal({
 
           {/* Target Backed Equity Selection */}
           <div>
-            <div className="flex items-center justify-between mb-1.5">
+            <div className="flex items-center justify-between mb-2">
               <label className="text-muted font-medium">
                 Select Backing Asset
               </label>
-              <span className="text-[10px] text-slate-300 font-mono flex items-center gap-1">
-                <ShieldCheck className="h-3 w-3 text-slate-400" />
-                {isMock ? "Demo asset catalog" : "Target asset catalog"}
-              </span>
+              {/* Provider Selection Tabs */}
+              <div className="flex items-center gap-1 rounded-lg border border-border bg-card-subtle p-0.5">
+                <button
+                  type="button"
+                  onClick={() => setProviderFilter("prestocks")}
+                  className={`px-2 py-0.5 rounded-md text-[10px] font-bold transition-all ${
+                    providerFilter === "prestocks"
+                      ? "bg-brand-cyan/20 border border-brand-cyan/40 text-brand-cyan"
+                      : "text-muted hover:text-foreground"
+                  }`}
+                >
+                  PreStocks (Official)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setProviderFilter("tessera")}
+                  className={`px-2 py-0.5 rounded-md text-[10px] font-bold transition-all ${
+                    providerFilter === "tessera"
+                      ? "bg-brand-cyan/20 border border-brand-cyan/40 text-brand-cyan"
+                      : "text-muted hover:text-foreground"
+                  }`}
+                >
+                  Tessera
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setProviderFilter("all")}
+                  className={`px-2 py-0.5 rounded-md text-[10px] font-bold transition-all ${
+                    providerFilter === "all"
+                      ? "bg-brand-cyan/20 border border-brand-cyan/40 text-brand-cyan"
+                      : "text-muted hover:text-foreground"
+                  }`}
+                >
+                  All
+                </button>
+              </div>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-              {assets.map((eq) => {
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 max-h-56 overflow-y-auto pr-1">
+              {filteredAssets.map((eq) => {
                 const isSelected = selectedEquitySymbol === eq.symbol;
                 return (
                   <button
@@ -203,7 +249,7 @@ export function LaunchModal({
                       </span>
                     </div>
                     <div className="flex items-center justify-between w-full mt-2 pt-1.5 border-t border-border/40">
-                      <span className="text-[11px] font-medium text-slate-300">
+                      <span className="text-[11px] font-medium text-slate-300 truncate max-w-[120px]">
                         {eq.name}
                       </span>
                       <span className="text-[11px] font-mono font-medium text-muted">

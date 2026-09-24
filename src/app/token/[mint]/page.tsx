@@ -155,7 +155,12 @@ export default function TokenDetailPage({ params }: PageProps) {
   // Spot price, market cap, reserves and progress share one on-chain snapshot.
   const currentPrice = token.priceUsd;
   const currentMarketCap = token.marketCapUsd;
-  const formattedMarketCap = currentPrice > 0 ? formatUsd(currentMarketCap) : "—";
+  const formattedMarketCap =
+    currentMarketCap > 0
+      ? formatUsd(currentMarketCap)
+      : currentPrice > 0 && token.totalSupply
+      ? formatUsd(currentPrice * token.totalSupply)
+      : "—";
   const formattedPrice = formatTokenPrice(currentPrice);
   const computedChangePct = token.priceChange24h;
 

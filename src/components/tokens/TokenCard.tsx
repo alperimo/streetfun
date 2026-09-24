@@ -146,7 +146,7 @@ export function TokenCard({ token }: TokenCardProps) {
               </div>
               <div className="mt-0.5 flex items-baseline justify-between gap-2">
                 <div className="font-mono text-2xl font-extrabold text-foreground tracking-tight">
-                  {token.priceUsd > 0 ? formatUsd(token.marketCapUsd) : "—"}
+                  {token.marketCapUsd > 0 ? formatUsd(token.marketCapUsd) : (token.priceUsd > 0 && token.totalSupply ? formatUsd(token.priceUsd * token.totalSupply) : "—")}
                 </div>
               </div>
             </div>

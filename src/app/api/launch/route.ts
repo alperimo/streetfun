@@ -15,6 +15,7 @@ import {
   getTreasuryVaultPda,
 } from "@/sdk/pda";
 import { getTesseraAvailability, getTesseraCatalog } from "@/server/tessera";
+import { getPreStocksAvailability, getPreStocksCatalog } from "@/server/prestocks";
 import { getServerConnection } from "@/server/rpc";
 import { createServerSupabaseClient } from "@/server/supabase";
 import type { TokenMetadata } from "@/lib/types";
@@ -69,21 +70,33 @@ export async function POST(req: Request) {
     }
 
     const connection = getServerConnection();
-    const catalog = await getTesseraCatalog();
-    const selected = catalog.find(
-      (a) => a.symbol === targetEquitySymbol || a.ticker === targetEquitySymbol
+    const [prestocksCatalog, tesseraCatalog] = await Promise.all([
+      getPreStocksCatalog().catch(() => []),
+      getTesseraCatalog().catch(() => []),
+    ]);
+
+    const targetUpper = targetEquitySymbol.toUpperCase().replace(/^\$/, "");
+    const selectedPreStocks = prestocksCatalog.find(
+      (a) => a.symbol.toUpperCase() === targetUpper || a.ticker.toUpperCase() === targetUpper
+    );
+    const selectedTessera = tesseraCatalog.find(
+      (a) => a.symbol === targetEquitySymbol || a.ticker === targetEquitySymbol || a.symbol.toUpperCase().includes(targetUpper)
     );
 
+    const selected = selectedPreStocks || selectedTessera;
     if (!selected) {
-      return NextResponse.json({ error: "Unknown Tessera asset." }, { status: 422 });
+      return NextResponse.json({ error: "Unknown Pre-IPO collateral asset." }, { status: 422 });
     }
 
-    const [availableAsset] = await getTesseraAvailability(connection, [selected]);
+    const availableAsset = selectedPreStocks
+      ? (await getPreStocksAvailability(connection, [selectedPreStocks]))[0]
+      : (await getTesseraAvailability(connection, [selectedTessera!]))[0];
+
     if (!availableAsset.launchEnabled) {
       return NextResponse.json(
         {
           error: availableAsset.unavailableReason || "Asset unavailable for launch on current cluster.",
-          code: "TESSERA_LAUNCH_UNAVAILABLE",
+          code: "COLLATERAL_LAUNCH_UNAVAILABLE",
           mint: availableAsset.mintAddress,
         },
         { status: 503 }
@@ -111,7 +124,7 @@ export async function POST(req: Request) {
     const targetEquityMint = new PublicKey(availableAsset.mintAddress);
 
     console.log(
-      `[API /api/launch] Launching ${name} ($${symbol.toUpperCase()}) backed by ${availableAsset.name}...`
+      `[API /api/launch] Launching ${name} ($${symbol.toUpperCase()}) backed by ${availableAsset.name} (${availableAsset.mintAddress})...`
     );
 
     const tx = await (program.methods as any)
