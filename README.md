@@ -1,30 +1,36 @@
-# Streetfun (StonkCurves)
+# StreetFun
 
-Streetfun is a decentralized launchpad and bonding curve engine on Solana where every memecoin is backed by a verified tokenized equity asset (such as SpaceX `$SPCX`, Nvidia `$NVDA`, Grindr `$GRND`, or SanDisk `$SNDK`).
+StreetFun is a decentralized launchpad and bonding curve engine on Solana where every memecoin is backed by verified tokenized equity and pre-IPO assets (such as SpaceX, OpenAI, Anthropic, Anduril, Figure AI, Kalshi, and Polymarket).
 
-Upon reaching graduation, 50% of the accumulated USDC purchases the underlying tokenized equity and locks it permanently into an immutable Anchor PDA Treasury, establishing an unbreakable dual redemption floor. Holders can burn their meme tokens at any time post-graduation to redeem their pro-rata share of real tokenized equities or swap them back to USDC in a single click.
+Upon reaching graduation, the protocol executes an automated dual-allocation:
+1. **50% of USDC Reserves** purchases the underlying tokenized equity and locks it into an immutable Anchor PDA Treasury Vault.
+2. **50% of USDC Reserves plus remaining token supply** seeds an automated market maker pool on Meteora (DAMM v2 / DLMM), establishing deep secondary market liquidity.
+3. **Dual Floor**: Holders can burn their meme tokens at any time post-graduation to redeem their exact pro-rata share of real tokenized equities directly to their wallet, or swap them on Meteora.
 
 ---
 
-## 1. Core Architecture & Differentiators
+## 1. Core Architecture & Protocol Features
 
-Unlike traditional pump engines or paired-token platforms, Streetfun implements four distinct architectural features:
+Unlike traditional bonding curve platforms that operate as extractive zero-sum games, StreetFun transforms speculative momentum into durable institutional collateral:
 
 1. **Collateralized Equity Backing ("Backed By")**:
-   Each token card and terminal indicates the underlying stock collateral with a verified vault badge, referencing the canonical Sunrise SPL mint custodied under New York UCC Article 8 by Backpack Securities.
+   Each token is bound to a verified backing asset sourced from institutional on-chain providers:
+   - **PreStocks**: 1:1 SPV-backed pre-IPO equities with audited mark pricing.
+   - **Tessera**: Tokenized private market debt and equity participation instruments.
 
-2. **Graduation Progress Gauge**:
-   A deterministic progress indicator measuring current quote reserves against the graduation threshold (default: 60,000 USDC) alongside projected equity share purchases.
+2. **Deterministic Bonding Curve**:
+   Trades execute along a constant-product curve quoted in USDC, preventing quote asset volatility. Real-time progress indicators track quote accumulation toward graduation.
 
-3. **Burn & Redeem Module**:
-   A dedicated post-graduation module allowing holders to burn meme tokens for their pro-rata share of real tokenized stock held in the PDA vault, with two execution modes:
-   - **Direct Stock Withdrawal**: Transfers the canonical equity SPL tokens directly to the user's wallet.
-   - **1-Click Cash Settlement**: Automatically routes equity liquidation back to USDC.
+3. **Automated Meteora Liquidity Migration**:
+   On graduation, trading on the curve locks permanently. The contract allocates 50% of accumulated funds to acquire and vault the target equity, while routing the remaining 50% USDC and remaining meme tokens to initialize a Meteora liquidity pool.
 
-4. **Streamlined Navigation**:
-   - **Explore**: Live bonding curves, filters by backed equity, and market metrics.
-   - **Treasury / Proof of Assets**: Real-time on-chain vault metrics, TVL, and equity distribution ledger.
-   - **Launch a Stonk**: 5-second token creation wizard with verified equity selection.
+4. **On-Chain Burn & Redeem Module**:
+   A post-graduation redemption mechanism allowing holders to burn meme tokens for their pro-rata share of real tokenized stock held in the PDA vault, establishing a mathematical arbitrage floor.
+
+5. **Integrated Platform Suites**:
+   - **Explore**: Discover live curves, filter by backed equity provider, and track market momentum.
+   - **Treasury / Proof of Assets**: Real-time on-chain vault metrics, aggregate TVL, and verifiable redemption records.
+   - **Launch Token**: Seamless token creation wizard with verified pre-IPO asset selection and instant liquidity preview.
 
 ---
 
