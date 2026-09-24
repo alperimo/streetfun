@@ -396,21 +396,18 @@ export class TradeStoreService {
   async getRedemptions(limit = 20): Promise<TradeRecord[]> {
     const supabase = this.getClient();
     if (supabase) {
-      try {
-        const { data, error } = await supabase
-          .from("trades")
-          .select("*")
-          .eq("trade_type", "REDEEM")
-          .order("created_at", { ascending: false })
-          .limit(limit);
-
-        if (!error && data && data.length > 0) {
-          const trades = data as TradeRecord[];
-          return isMockDataEnabled() ? trades : trades.filter(isVerifiedChainTrade);
-        }
-      } catch (_e) {}
+      const { data, error } = await supabase
+        .from("trades")
+        .select("*")
+        .eq("trade_type", "REDEEM")
+        .order("created_at", { ascending: false })
+        .limit(limit);
+      if (error) throw new Error(`Redemption index unavailable: ${error.message}`);
+      const trades = (data || []) as TradeRecord[];
+      return isMockDataEnabled() ? trades : trades.filter(isVerifiedChainTrade);
     }
 
+    if (!isMockDataEnabled()) throw new Error("Redemption index is not configured.");
     return this.localTradesStore
       .filter(
         (t) =>

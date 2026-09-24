@@ -9,6 +9,7 @@ import { parseCurveTrade, InvalidCurveTradeError, PendingCurveTradeError } from 
 import { createServerSupabaseClient } from "./supabase";
 import { getServerConnection } from "./rpc";
 import { solanaTokenService } from "./tokenData";
+import { persistVaultHoldingSnapshot } from "./treasury";
 
 const coder = new BorshCoder(new Program({ ...idl, address: PROGRAM_ID.toBase58() } as any, { connection: getServerConnection() } as any).idl);
 
@@ -110,6 +111,16 @@ export async function indexConfirmedTransaction(connection: Connection, signatur
         created_at: new Date(tx.blockTime! * 1000).toISOString(),
       };
       await store.recordTrade(trade); trades.push(trade);
+    }
+    if (isGraduate || isRedeem) {
+      await persistVaultHoldingSnapshot(
+        connection,
+        db,
+        curveKey,
+        curve,
+        tx.slot,
+        existing?.target_equity_symbol || "UNVERIFIED"
+      );
     }
     indexed++;
   }

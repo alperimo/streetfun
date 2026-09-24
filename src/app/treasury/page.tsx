@@ -1,132 +1,231 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
-import { Flame } from "lucide-react";
+import { Activity, Flame, Landmark, Users } from "lucide-react";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { SearchModal } from "@/components/modals/SearchModal";
 import { LaunchModal } from "@/components/modals/LaunchModal";
 import { INITIAL_TREASURY_STATS } from "@/lib/mockData";
-import { TokenMetadata } from "@/lib/types";
+import { getOfficialEquityLogo } from "@/lib/assetLogos";
 import { useMarket } from "@/context/MarketContext";
+import { createBrowserSupabaseClient } from "@/lib/supabase";
+
+interface VaultHolding {
+  mint: string;
+  tokenName: string;
+  tokenSymbol: string;
+  tokenAvatarUrl: string | null;
+  equityMint: string;
+  equitySymbol: string;
+  equityAmount: string;
+  observedSlot: number;
+  updatedAt: string;
+}
+
+interface TreasuryRedemption {
+  id: string;
+  mint: string;
+  tokenName: string;
+  tokenSymbol: string;
+  tokenAvatarUrl: string | null;
+  equitySymbol: string;
+  burnedAmount: string;
+  equityAmount: string;
+  redeemer: string;
+  signature: string;
+  createdAt: string;
+}
+
+interface TreasuryData {
+  holdings: VaultHolding[];
+  recentRedemptions: TreasuryRedemption[];
+  graduatedVaultCount: number;
+  redemptionCount: number;
+  uniqueRedeemerCount: number;
+  collateralAssetCount: number;
+}
+
+const compactNumber = new Intl.NumberFormat("en-US", { maximumFractionDigits: 4 });
+
+function formatAmount(value: string | number): string {
+  const amount = Number(typeof value === "string" ? value.replace(/,/g, "") : value);
+  return Number.isFinite(amount) ? compactNumber.format(amount) : "0";
+}
+
+function shortAddress(value: string): string {
+  return value.length > 12 ? `${value.slice(0, 4)}…${value.slice(-4)}` : value;
+}
+
+function timeAgo(value: string): string {
+  const seconds = Math.max(1, Math.floor((Date.now() - new Date(value).getTime()) / 1000));
+  if (seconds < 60) return `${seconds}s ago`;
+  if (seconds < 3600) return `${Math.floor(seconds / 60)} mins ago`;
+  if (seconds < 86400) return `${Math.floor(seconds / 3600)} hrs ago`;
+  return `${Math.floor(seconds / 86400)} days ago`;
+}
 
 export default function TreasuryPage() {
   const { tokens, isMock } = useMarket();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isLaunchOpen, setIsLaunchOpen] = useState(false);
-  const [redemptions, setRedemptions] = useState<any[]>([]);
+  const [treasuryData, setTreasuryData] = useState<TreasuryData | null>(null);
+  const [isLoading, setIsLoading] = useState(!isMock);
+  const [hasLoadError, setHasLoadError] = useState(false);
 
   useEffect(() => {
-    async function loadRedemptions() {
+    if (isMock) return;
+
+    let disposed = false;
+    let refreshTimer: ReturnType<typeof setTimeout> | null = null;
+
+    const loadTreasury = async () => {
       try {
-        const res = await fetch("/api/trades/redemptions");
-        if (res.ok) {
-          const data = await res.json();
-          setRedemptions(data.redemptions || []);
-        }
-      } catch (e) {
-        console.warn("[Treasury] Could not fetch real redemptions:", e);
+        const response = await fetch("/api/treasury", { cache: "no-store" });
+        if (!response.ok) throw new Error("Treasury data is temporarily unavailable.");
+        const data = (await response.json()) as TreasuryData;
+        if (disposed) return;
+        setTreasuryData(data);
+        setHasLoadError(false);
+      } catch (error) {
+        if (disposed) return;
+        console.warn("[Treasury] Could not load Supabase data:", error);
+        setHasLoadError(true);
+      } finally {
+        if (!disposed) setIsLoading(false);
       }
-    }
-    loadRedemptions();
-    const interval = setInterval(loadRedemptions, 4000);
-    return () => clearInterval(interval);
-  }, []);
-
-  const stats = useMemo(() => {
-    if (isMock) {
-      return INITIAL_TREASURY_STATS;
-    }
-
-    // Live On-Chain & Indexed Protocol Stats
-    const graduatedTokens = tokens.filter((t) => t.bondingCurve.isGraduated && t.bondingCurve.meteoraPoolAddress);
-    const totalEquityValueLockedUsd = graduatedTokens.reduce(
-      (acc, t) => acc + (t.treasury?.totalEquityValueUsd || 0),
-      0
-    );
-    const totalGraduatedCurves = graduatedTokens.length;
-
-    const totalRedemptionsUsd = redemptions.reduce(
-      (acc, r) => acc + (Number(r.quote_amount_usd) || 0),
-      0
-    );
-    const uniqueRedeemers = new Set(redemptions.map((r) => r.trader)).size;
-
-    // Asset Breakdown by Supported Pre-IPO assets
-    const assetBreakdown = Array.from(new Map(tokens.map(token => [token.targetEquity.mintAddress, token.targetEquity])).values()).map((asset) => {
-      const assetTokens = tokens.filter(
-        (t) =>
-          t.targetEquity.mintAddress === asset.mintAddress &&
-          t.bondingCurve.isGraduated
-      );
-      const sharesLocked = assetTokens.reduce(
-        (acc, t) => acc + (t.treasury?.totalEquityLocked || 0),
-        0
-      );
-      const valueUsd = assetTokens.reduce(
-        (acc, t) => acc + (t.treasury?.totalEquityValueUsd || 0),
-        0
-      );
-      const backingPercentage =
-        totalEquityValueLockedUsd > 0
-          ? Number(((valueUsd / totalEquityValueLockedUsd) * 100).toFixed(1))
-          : 0;
-
-      return {
-        symbol: asset.symbol,
-        name: asset.name,
-        sharesLocked,
-        valueUsd,
-        backingPercentage,
-        mintAddress: asset.mintAddress,
-        logoUrl: asset.logoUrl,
-      };
-    }).filter((asset) => asset.sharesLocked > 0).sort((a, b) => b.valueUsd - a.valueUsd);
-
-    // Recent Redemptions mapped to UI format
-    const recentRedemptions = redemptions.map((rdm, idx) => {
-      const matchedToken = tokens.find(
-        (t) => t.mint === rdm.mint
-      );
-      const sec = Math.max(
-        1,
-        Math.floor((Date.now() - new Date(rdm.created_at || Date.now()).getTime()) / 1000)
-      );
-      const timeAgo =
-        sec < 60
-          ? `${sec}s ago`
-          : sec < 3600
-          ? `${Math.floor(sec / 60)} mins ago`
-          : `${Math.floor(sec / 3600)} hrs ago`;
-
-      return {
-        id: String(rdm.id || idx),
-        timestamp: timeAgo,
-        tokenSymbol: matchedToken?.symbol || "TOKEN",
-        equitySymbol: matchedToken?.targetEquity.symbol || "UNVERIFIED",
-        burnedMemeAmount: `${Number(rdm.tokens_amount).toLocaleString("en-US", { maximumFractionDigits: 2 })} $${matchedToken?.symbol || "TOKEN"}`,
-        sharesRedeemed: Number(rdm.equity_amount || 0),
-        redeemerAddress: rdm.trader
-          ? `${rdm.trader.slice(0, 4)}...${rdm.trader.slice(-4)}`
-          : "Trader",
-        txHash: rdm.tx_signature
-          ? `${rdm.tx_signature.slice(0, 4)}...${rdm.tx_signature.slice(-4)}`
-          : "tx",
-        tokenAvatarUrl: matchedToken?.avatarUrl,
-        estimatedValueUsd: Number(rdm.quote_amount_usd) || 0,
-      };
-    });
-
-    return {
-      totalEquityValueLockedUsd,
-      totalGraduatedCurves,
-      totalRedemptionsUsd,
-      walletsRedeemed: uniqueRedeemers,
-      assetBreakdown,
-      recentRedemptions,
     };
-  }, [tokens, redemptions, isMock]);
+
+    const scheduleRefresh = () => {
+      if (document.visibilityState !== "visible" || refreshTimer) return;
+      refreshTimer = setTimeout(() => {
+        refreshTimer = null;
+        void loadTreasury();
+      }, 300);
+    };
+
+    void loadTreasury();
+    const interval = setInterval(() => {
+      if (document.visibilityState === "visible") void loadTreasury();
+    }, 20_000);
+    const supabase = createBrowserSupabaseClient();
+    const channel = supabase
+      ?.channel("streetfun-live-treasury")
+      .on("postgres_changes", { event: "*", schema: "public", table: "vault_holdings" }, scheduleRefresh)
+      .on("postgres_changes", { event: "*", schema: "public", table: "trades" }, scheduleRefresh)
+      .on("postgres_changes", { event: "*", schema: "public", table: "tokens" }, scheduleRefresh)
+      .subscribe();
+
+    const refreshWhenVisible = () => {
+      if (document.visibilityState === "visible") void loadTreasury();
+    };
+    window.addEventListener("focus", refreshWhenVisible);
+    document.addEventListener("visibilitychange", refreshWhenVisible);
+
+    return () => {
+      disposed = true;
+      clearInterval(interval);
+      if (refreshTimer) clearTimeout(refreshTimer);
+      window.removeEventListener("focus", refreshWhenVisible);
+      document.removeEventListener("visibilitychange", refreshWhenVisible);
+      if (supabase && channel) void supabase.removeChannel(channel);
+    };
+  }, [isMock]);
+
+  const holdings = useMemo<VaultHolding[]>(() => {
+    if (!isMock) return treasuryData?.holdings || [];
+    return INITIAL_TREASURY_STATS.assetBreakdown.map((asset, index) => ({
+      mint: `mock-vault-${index}`,
+      tokenName: asset.name,
+      tokenSymbol: asset.symbol,
+      tokenAvatarUrl: asset.logoUrl || null,
+      equityMint: asset.mintAddress,
+      equitySymbol: asset.symbol,
+      equityAmount: String(asset.sharesLocked),
+      observedSlot: index + 1,
+      updatedAt: new Date().toISOString(),
+    }));
+  }, [isMock, treasuryData]);
+
+  const holdingGroups = useMemo(() => {
+    const groups = new Map<string, {
+      equityMint: string;
+      equitySymbol: string;
+      equityAmount: number;
+      vaultCount: number;
+    }>();
+
+    for (const holding of holdings) {
+      const key = holding.equityMint || holding.equitySymbol;
+      const group = groups.get(key) || {
+        equityMint: key,
+        equitySymbol: holding.equitySymbol,
+        equityAmount: 0,
+        vaultCount: 0,
+      };
+      group.equityAmount += Number(holding.equityAmount) || 0;
+      group.vaultCount += 1;
+      groups.set(key, group);
+    }
+
+    return Array.from(groups.values()).sort((a, b) => a.equitySymbol.localeCompare(b.equitySymbol));
+  }, [holdings]);
+
+  const redemptions = useMemo<TreasuryRedemption[]>(() => {
+    if (!isMock) return treasuryData?.recentRedemptions || [];
+    return INITIAL_TREASURY_STATS.recentRedemptions.map((redemption, index) => ({
+      id: redemption.id,
+      mint: `mock-redemption-${index}`,
+      tokenName: redemption.tokenSymbol,
+      tokenSymbol: redemption.tokenSymbol,
+      tokenAvatarUrl: redemption.tokenAvatarUrl || null,
+      equitySymbol: redemption.equitySymbol,
+      burnedAmount: redemption.burnedMemeAmount.replace(/[^0-9,.]/g, ""),
+      equityAmount: String(redemption.sharesRedeemed),
+      redeemer: redemption.redeemerAddress,
+      signature: redemption.txHash,
+      createdAt: new Date(Date.now() - (index + 1) * 5 * 60_000).toISOString(),
+    }));
+  }, [isMock, treasuryData]);
+
+  const stats = {
+    collateralAssetCount: isMock ? holdingGroups.length : treasuryData?.collateralAssetCount || 0,
+    redemptionCount: isMock ? redemptions.length : treasuryData?.redemptionCount || 0,
+    graduatedVaultCount: isMock
+      ? INITIAL_TREASURY_STATS.totalGraduatedCurves
+      : treasuryData?.graduatedVaultCount || 0,
+    uniqueRedeemerCount: isMock
+      ? INITIAL_TREASURY_STATS.walletsRedeemed
+      : treasuryData?.uniqueRedeemerCount || 0,
+  };
+
+  const statCards = [
+    {
+      label: "Collateral assets",
+      value: stats.collateralAssetCount,
+      detail: "Distinct on-chain collateral types",
+      icon: Landmark,
+    },
+    {
+      label: "Completed redemptions",
+      value: stats.redemptionCount,
+      detail: "Confirmed on Solana",
+      icon: Activity,
+    },
+    {
+      label: "Graduated vaults",
+      value: stats.graduatedVaultCount,
+      detail: "Graduated StreetFun tokens",
+      icon: Flame,
+    },
+    {
+      label: "Unique redeemers",
+      value: stats.uniqueRedeemerCount,
+      detail: "Wallets that received collateral",
+      icon: Users,
+    },
+  ];
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
@@ -136,218 +235,163 @@ export default function TreasuryPage() {
       />
 
       <main className="mx-auto flex-1 w-full max-w-[1350px] px-6 py-8 sm:px-10 lg:px-0">
-        <div className="flex flex-col gap-2 mb-8">
-          <h1 className="text-3xl sm:text-4xl font-black text-foreground tracking-tight">
-            Treasury
-          </h1>
+        <div className="mb-8 flex flex-col gap-2">
+          <h1 className="text-3xl font-black tracking-tight text-foreground sm:text-4xl">Treasury</h1>
           <p className="max-w-2xl text-sm text-muted">
-            On-chain treasury balances for graduated tokens. USD valuation is unavailable until a verified oracle is connected.
+            On-chain collateral balances for graduated tokens. Holdings are shown in token units; USD marks require a verified price source.
           </p>
         </div>
 
-        {/* 4 Stats Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
-            <div className="text-xs text-muted font-medium">Total Equity Locked</div>
-            <div className="mt-1 font-mono text-2xl sm:text-3xl font-bold text-foreground tracking-tight">
-              {isMock
-                ? `$${(stats.totalEquityValueLockedUsd as number).toLocaleString("en-US")}`
-                : stats.totalEquityValueLockedUsd > 0
-                ? stats.totalEquityValueLockedUsd >= 1_000_000
-                  ? `$${(stats.totalEquityValueLockedUsd / 1_000_000).toFixed(2)}M`
-                  : stats.totalEquityValueLockedUsd >= 1_000
-                  ? `$${(stats.totalEquityValueLockedUsd / 1_000).toFixed(1)}K`
-                  : `$${(stats.totalEquityValueLockedUsd as number).toFixed(2)}`
-                : "—"}
-            </div>
-            <div className="mt-1 text-[11px] text-muted">
-              Value in vaults now
-            </div>
+        {hasLoadError && !isMock && (
+          <div role="status" className="mb-5 rounded-xl border border-border bg-card px-4 py-3 text-sm text-muted">
+            Treasury data could not be loaded from Supabase. It will retry automatically.
           </div>
+        )}
 
-          <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
-            <div className="text-xs text-muted font-medium">Total Distributed</div>
-            <div className="mt-1 font-mono text-2xl sm:text-3xl font-bold text-foreground tracking-tight">
-              {isMock
-                ? `$${(stats.totalRedemptionsUsd as number).toLocaleString("en-US")}`
-                : (stats.totalRedemptionsUsd as number) > 0
-                ? (stats.totalRedemptionsUsd as number) >= 1_000_000
-                  ? `$${((stats.totalRedemptionsUsd as number) / 1_000_000).toFixed(2)}M`
-                  : (stats.totalRedemptionsUsd as number) >= 1_000
-                  ? `$${((stats.totalRedemptionsUsd as number) / 1_000).toFixed(1)}K`
-                  : `$${(stats.totalRedemptionsUsd as number).toFixed(2)}`
-                : "—"}
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {statCards.map(({ label, value, detail, icon: Icon }) => (
+            <div key={label} className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+              <div className="flex items-center justify-between gap-3">
+                <div className="text-xs font-medium text-muted">{label}</div>
+                <Icon className="h-4 w-4 text-muted" aria-hidden="true" />
+              </div>
+              <div className="mt-1 font-mono text-2xl font-bold tracking-tight text-foreground sm:text-3xl tabular-nums">
+                {isLoading && !isMock ? "…" : hasLoadError && !isMock ? "—" : value.toLocaleString("en-US")}
+              </div>
+              <div className="mt-1 text-[11px] text-muted">{detail}</div>
             </div>
-            <div className="mt-1 text-[11px] text-muted">
-              Paid to holders
-            </div>
-          </div>
-
-          <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
-            <div className="text-xs text-muted font-medium">Graduated Vaults</div>
-            <div className="mt-1 font-mono text-2xl sm:text-3xl font-bold text-foreground tracking-tight">
-              {(stats.totalGraduatedCurves as number).toLocaleString("en-US")}
-            </div>
-            <div className="mt-1 text-[11px] text-muted">
-              Active stock vaults
-            </div>
-          </div>
-
-          <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
-            <div className="text-xs text-muted font-medium">Holder Payouts</div>
-            <div className="mt-1 font-mono text-2xl sm:text-3xl font-bold text-foreground tracking-tight">
-              {isMock
-                ? (stats.walletsRedeemed as number).toLocaleString("en-US")
-                : (stats.walletsRedeemed as number) > 0
-                ? (stats.walletsRedeemed as number).toLocaleString("en-US")
-                : "—"}
-            </div>
-            <div className="mt-1 text-[11px] text-muted">
-              Redemptions executed
-            </div>
-          </div>
+          ))}
         </div>
 
-        {/* Two Tables */}
-        <div className="mt-8 grid grid-cols-1 lg:grid-cols-12 gap-6">
-          {/* Left Table: Top Equity Holdings */}
-          <div className="lg:col-span-7 rounded-2xl border border-border bg-card p-5 sm:p-6 shadow-sm flex flex-col justify-between">
-            <div>
-              <div className="flex items-center justify-between border-b border-border/50 pb-3 mb-1">
-                <h3 className="text-base font-bold text-foreground">
-                  Top Vault Holdings
-                </h3>
-                <span className="text-xs text-muted font-mono">
-                  Ranked by total stock value locked
+        <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-12">
+          <section className="flex flex-col rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6 lg:col-span-7">
+            <div className="mb-1 flex items-center justify-between gap-3 border-b border-border/50 pb-3">
+              <h2 className="text-base font-bold text-foreground">Top Vault Holdings</h2>
+              <span className="text-right text-xs text-muted">Current collateral balances by asset</span>
+            </div>
+
+            {isLoading && !isMock ? (
+              <div className="flex flex-col gap-3 py-5" aria-label="Loading vault holdings">
+                <div className="h-14 animate-pulse rounded-xl bg-card-hover/50" />
+                <div className="h-14 animate-pulse rounded-xl bg-card-hover/50" />
+              </div>
+            ) : holdingGroups.length === 0 ? (
+              <div className="flex min-h-40 flex-col items-center justify-center gap-2 text-center text-muted">
+                <div className="rounded-full border border-border bg-card-subtle p-3">
+                  <Landmark className="h-5 w-5" />
+                </div>
+                <span className="text-xs font-semibold text-foreground">No vault holdings recorded yet</span>
+                <span className="max-w-xs text-[11px] leading-relaxed">
+                  Graduated vault balances will appear here after a Helius event is indexed.
                 </span>
               </div>
-
+            ) : (
               <div className="flex flex-col">
-                {stats.assetBreakdown.map((asset, index) => (
+                {holdingGroups.map((asset) => (
                   <div
-                    key={asset.symbol}
-                    className="py-3 px-2 sm:px-2.5 flex items-center justify-between gap-4 hover:bg-card-hover/40 rounded-xl transition-colors border-b border-white/[0.05] last:border-b-0"
+                    key={asset.equityMint}
+                    className="flex items-center justify-between gap-4 rounded-xl border-b border-border/40 px-2 py-3 transition-colors last:border-b-0 hover:bg-card-hover/40 sm:px-2.5"
                   >
-                    <div className="flex items-center gap-3 min-w-0">
-                      <span className="font-mono text-xs font-bold text-muted w-4 flex-shrink-0 text-center">
-                        {index + 1}
-                      </span>
-                      {asset.logoUrl && (
-                        <div className="relative h-9 w-9 overflow-hidden rounded-full border border-border bg-card-subtle flex-shrink-0">
-                          <Image
-                            src={asset.logoUrl}
-                            alt={asset.name}
-                            fill
-                            className="object-cover"
-                            sizes="36px"
-                          />
-                        </div>
-                      )}
+                    <div className="flex min-w-0 items-center gap-3">
+                      <div className="relative h-9 w-9 flex-shrink-0 overflow-hidden rounded-full border border-border bg-card-subtle">
+                        <Image
+                          src={getOfficialEquityLogo(asset.equitySymbol)}
+                          alt=""
+                          fill
+                          className="object-cover"
+                          sizes="36px"
+                        />
+                      </div>
                       <div className="min-w-0">
-                        <div className="font-bold text-foreground text-sm truncate">
-                          {asset.name.split(" (")[0]}{" "}
-                          {asset.name.includes(" (") && (
-                            <span className="font-normal text-muted text-xs">
-                              ({asset.name.split(" (")[1]}
-                            </span>
-                          )}
+                        <div className="truncate text-sm font-bold text-foreground">
+                          {asset.equitySymbol.replace(/^\$/, "")}
                         </div>
-                        <div className="text-xs text-muted mt-0.5 truncate font-mono">
-                          <span className="font-semibold text-slate-300">{asset.symbol}</span> • {asset.sharesLocked.toLocaleString("en-US")} shares • {asset.backingPercentage}% TVL
+                        <div className="mt-0.5 truncate font-mono text-xs text-muted">
+                          {asset.vaultCount.toLocaleString("en-US")} {asset.vaultCount === 1 ? "vault" : "vaults"} · {formatAmount(asset.equityAmount)} collateral units
                         </div>
                       </div>
                     </div>
-
-                    <div className="flex flex-col items-end min-w-[110px] flex-shrink-0 text-right">
-                      <div className="font-mono text-sm font-bold text-foreground tabular-nums">
-                        {asset.valueUsd >= 1_000_000
-                          ? `$${(asset.valueUsd / 1_000_000).toFixed(2)}M`
-                          : asset.valueUsd >= 1_000
-                          ? `$${(asset.valueUsd / 1_000).toFixed(1)}K`
-                          : `$${asset.valueUsd.toFixed(2)}`}
+                    <div className="min-w-[120px] flex-shrink-0 text-right">
+                      <div className="font-mono text-sm font-bold tabular-nums text-foreground">
+                        {formatAmount(asset.equityAmount)} units
                       </div>
-                      {!isMock && <span className="mt-0.5 text-[11px] text-muted">Oracle value unavailable</span>}
+                      <div className="mt-0.5 text-[11px] text-muted">Current on-chain balance</div>
                     </div>
                   </div>
                 ))}
               </div>
-            </div>
-          </div>
+            )}
+          </section>
 
-          {/* Right Table: Recent Redemptions */}
-          <div className="lg:col-span-5 rounded-2xl border border-border bg-card p-5 sm:p-6 shadow-sm flex flex-col justify-between">
-            <div>
-              <div className="flex items-center justify-between border-b border-border/50 pb-3 mb-1">
-                <h3 className="text-base font-bold text-foreground">
-                  Recent Redemptions
-                </h3>
-                <span className="text-xs text-muted font-mono">
-                  Newest first
+          <section className="flex flex-col rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6 lg:col-span-5">
+            <div className="mb-1 flex items-center justify-between gap-3 border-b border-border/50 pb-3">
+              <h2 className="text-base font-bold text-foreground">Recent Redemptions</h2>
+              <span className="text-xs text-muted">Newest first</span>
+            </div>
+
+            {isLoading && !isMock ? (
+              <div className="flex flex-col gap-3 py-5" aria-label="Loading redemptions">
+                <div className="h-14 animate-pulse rounded-xl bg-card-hover/50" />
+                <div className="h-14 animate-pulse rounded-xl bg-card-hover/50" />
+              </div>
+            ) : redemptions.length === 0 ? (
+              <div className="flex min-h-40 flex-col items-center justify-center gap-2 text-center text-muted">
+                <div className="rounded-full border border-border bg-card-subtle p-3">
+                  <Flame className="h-5 w-5 text-amber-500/70" />
+                </div>
+                <span className="text-xs font-semibold text-foreground">No redemptions recorded yet</span>
+                <span className="max-w-xs text-[11px] leading-relaxed">
+                  Confirmed collateral redemptions will appear here as Helius records them in Supabase.
                 </span>
               </div>
-
-              {stats.recentRedemptions.length === 0 ? (
-                <div className="py-12 flex flex-col items-center justify-center gap-2 text-center text-muted">
-                  <div className="p-3 rounded-full bg-card-subtle border border-border">
-                    <Flame className="h-5 w-5 text-amber-500/70" />
-                  </div>
-                  <span className="text-xs font-semibold text-foreground">No Redemptions Recorded Yet</span>
-                  <span className="text-[11px] text-muted max-w-xs leading-relaxed">
-                    After verified graduation, holders can burn tokens to redeem the vault’s collateral tokens. Tessera tokens represent loan participation rights, not physical company shares.
-                  </span>
-                </div>
-              ) : (
-                <div className="flex flex-col">
-                  {stats.recentRedemptions.map((rdm) => (
-                    <div
-                      key={rdm.id}
-                      className="py-3 px-2 sm:px-2.5 flex items-center justify-between gap-4 hover:bg-card-hover/40 rounded-xl transition-colors border-b border-white/[0.05] last:border-b-0"
-                    >
-                      <div className="flex items-center gap-3 min-w-0 flex-1">
-                        <div className="relative h-9 w-9 flex-shrink-0">
-                          {rdm.tokenAvatarUrl ? (
-                            <div className="relative h-9 w-9 overflow-hidden rounded-full border border-border bg-card-subtle">
-                              <Image
-                                src={rdm.tokenAvatarUrl}
-                                alt={rdm.tokenSymbol}
-                                fill
-                                className="object-cover"
-                                sizes="36px"
-                              />
-                            </div>
-                          ) : (
-                            <div className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-card-subtle">
-                              <Flame className="h-4 w-4 text-amber-500" />
-                            </div>
-                          )}
-                          <span className="absolute -bottom-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-card border border-border text-[9px] shadow-xs">
-                            🔥
-                          </span>
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <div className="font-bold text-foreground text-xs truncate">
-                            Burned {rdm.burnedMemeAmount}
+            ) : (
+              <div className="flex flex-col">
+                {redemptions.slice(0, 8).map((redemption) => (
+                  <div
+                    key={redemption.id}
+                    className="flex items-center justify-between gap-3 rounded-xl border-b border-border/40 px-2 py-3 transition-colors last:border-b-0 hover:bg-card-hover/40 sm:px-2.5"
+                  >
+                    <div className="flex min-w-0 flex-1 items-center gap-3">
+                      <div className="relative h-9 w-9 flex-shrink-0">
+                        {redemption.tokenAvatarUrl ? (
+                          <div className="relative h-9 w-9 overflow-hidden rounded-full border border-border bg-card-subtle">
+                            <Image
+                              src={redemption.tokenAvatarUrl}
+                              alt={redemption.tokenSymbol}
+                              fill
+                              className="object-cover"
+                              sizes="36px"
+                            />
                           </div>
-                          <div className="text-[11px] text-muted font-mono mt-0.5 truncate">
-                            {rdm.redeemerAddress} · <span className="text-muted/70">{rdm.timestamp}</span>
+                        ) : (
+                          <div className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-card-subtle">
+                            <Flame className="h-4 w-4 text-amber-500" />
                           </div>
-                        </div>
+                        )}
+                        <span className="absolute -bottom-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full border border-border bg-card text-[9px] shadow-xs">🔥</span>
                       </div>
-
-                      <div className="flex flex-col items-end min-w-[130px] flex-shrink-0 text-right">
-                        <div className="font-mono text-xs font-medium text-foreground tabular-nums whitespace-nowrap">
-                          +{rdm.sharesRedeemed.toFixed(2)} {rdm.equitySymbol}
+                      <div className="min-w-0 flex-1">
+                        <div className="truncate text-xs font-bold text-foreground">
+                          Burned {formatAmount(redemption.burnedAmount)} ${redemption.tokenSymbol.replace(/^\$/, "")}
                         </div>
-                        <div className="text-[10px] font-mono text-muted whitespace-nowrap mt-0.5 tabular-nums">
-                          {rdm.estimatedValueUsd ? `≈ $${rdm.estimatedValueUsd.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : rdm.txHash}
+                        <div className="mt-0.5 truncate font-mono text-[11px] text-muted">
+                          {shortAddress(redemption.redeemer)} · <span className="text-muted/70">{timeAgo(redemption.createdAt)}</span>
                         </div>
                       </div>
                     </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
+                    <div className="min-w-[118px] flex-shrink-0 text-right">
+                      <div className="whitespace-nowrap font-mono text-xs font-medium tabular-nums text-foreground">
+                        +{formatAmount(redemption.equityAmount)} {redemption.equitySymbol.replace(/^\$/, "")}
+                      </div>
+                      <div className="mt-0.5 whitespace-nowrap font-mono text-[10px] text-muted">
+                        {shortAddress(redemption.signature)}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
         </div>
       </main>
 
