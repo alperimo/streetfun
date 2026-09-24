@@ -1,12 +1,11 @@
 import { PublicKey } from "@solana/web3.js";
-import { DYNAMIC_BONDING_CURVE_PROGRAM_ID } from "@meteora-ag/dynamic-bonding-curve-sdk";
 
 export const PROGRAM_ID = new PublicKey(
   process.env.NEXT_PUBLIC_PROGRAM_ID || "6ZiovCkRxRJgUaCS9uftFk3eVnGDsbnDXgUV1XHybH52"
 );
 
 // Meteora Dynamic Bonding Curve (DBC) & DLMM Program IDs
-export const METEORA_DBC_PROGRAM_ID = DYNAMIC_BONDING_CURVE_PROGRAM_ID;
+export const METEORA_DBC_PROGRAM_ID = new PublicKey("dbcij3LWUppWqq96dh6gJWwBifmcGfLSB5D4DuSMaqN");
 export const USDC_MINT = new PublicKey(
   process.env.NEXT_PUBLIC_USDC_MINT || "DuQ1T5B6tmf5ZfSNpPomVcDntLEzR1mkoB81yHP5rGHG"
 );
@@ -19,7 +18,6 @@ export const TREASURY_VAULT_SEED = Buffer.from("treasury-vault");
 
 export const TOTAL_MEME_SUPPLY = 1_000_000_000n * 1_000_000n; // 1 Billion tokens (6 decimals)
 export const SALE_SUPPLY = 800_000_000n * 1_000_000n; // 800M for Meteora DBC curve
-export const DEFAULT_GRADUATION_THRESHOLD_USDC = 60; // 60 USDC for fast live testing / devnet demo!
 export const EQUITY_SPOT_BUY_RATIO = 0.5; // 50% (30 USDC) to acquire Tessera Pre-IPO token ($TOPAI)
 export const AMM_MIGRATION_RATIO = 0.5; // 50% (30 USDC) + leftover meme supply to Meteora DLMM pool
 
@@ -37,80 +35,3 @@ export interface TesseraPreIpoAsset {
   currentStockPriceUsd: number;
   isPreIpo: boolean;
 }
-
-export const VERIFIED_TESSERA_PRE_IPO_ASSETS: TesseraPreIpoAsset[] = [
-  {
-    symbol: "$TSPACEX",
-    ticker: "TSPACEX",
-    name: "SpaceX",
-    mintAddress: "DiKVjAz8vGALzLwoZz7PPxUTnDsTVyF7GNx9F3BxVYEs",
-    issuer: "Tessera Private Equity",
-    custodian: "Fireblocks Institutional Custody",
-    legalFramework: "Cayman Islands SPC - Loan Participation Right",
-    proofOfReserve: "Pyth Network Oracle / On-Chain PoR",
-    meteoraPoolAddress: "METspcxPoolAddress1111111111111111111111111",
-    logoUrl: "https://images.unsplash.com/photo-1541185933-ef5d8ed016c2?w=128&q=80",
-    currentStockPriceUsd: 215.4,
-    isPreIpo: true,
-  },
-  {
-    symbol: "$TOPAI",
-    ticker: "TOPAI",
-    name: "OpenAI",
-    mintAddress: "3PFKgvU4P8hcuW1X2VjAgRHNsz1TnA4SLyjEDNfhzLC7",
-    issuer: "Tessera Private Equity",
-    custodian: "Fireblocks Institutional Custody",
-    legalFramework: "Cayman Islands SPC - Loan Participation Right",
-    proofOfReserve: "Pyth Network Oracle / On-Chain PoR",
-    meteoraPoolAddress: "METopeNAIPoolAddress111111111111111111111111",
-    logoUrl: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=128&q=80",
-    currentStockPriceUsd: 185.0,
-    isPreIpo: true,
-  },
-  {
-    symbol: "$TSTRIPE",
-    ticker: "TSTRIPE",
-    name: "Stripe",
-    mintAddress: "HjSo935gqYjDaHLMga5SRfkiACjCX5wE3ZnbQpDoqWGb",
-    issuer: "Tessera Private Equity",
-    custodian: "Fireblocks Institutional Custody",
-    legalFramework: "Cayman Islands SPC - Loan Participation Right",
-    proofOfReserve: "Pyth Network Oracle / On-Chain PoR",
-    meteoraPoolAddress: "METstripePoolAddress111111111111111111111111",
-    logoUrl: "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=128&q=80",
-    currentStockPriceUsd: 72.5,
-    isPreIpo: true,
-  },
-  {
-    symbol: "$NVDA",
-    ticker: "NVDA",
-    name: "NVIDIA",
-    mintAddress: "BpWrd7wGZaS3TTM8Nitk3cHHf91HAE2QWVk2E5dwBqKb",
-    issuer: "Backpack Securities",
-    custodian: "Fireblocks Institutional Custody",
-    legalFramework: "New York UCC Article 8 Securities Intermediary",
-    proofOfReserve: "Pyth Network Oracle / On-Chain PoR",
-    meteoraPoolAddress: "METnvdaPoolAddress1111111111111111111111111",
-    logoUrl: "https://images.unsplash.com/photo-1591488320449-011701bb6704?w=128&q=80",
-    currentStockPriceUsd: 128.5,
-    isPreIpo: false,
-  },
-  {
-    symbol: "$TSLA",
-    ticker: "TSLA",
-    name: "Tesla",
-    mintAddress: "TSLA111111111111111111111111111111111111111",
-    issuer: "Backpack Securities",
-    custodian: "Fireblocks Institutional Custody",
-    legalFramework: "New York UCC Article 8 Securities Intermediary",
-    proofOfReserve: "Pyth Network Oracle / On-Chain PoR",
-    meteoraPoolAddress: "METtslaPoolAddress1111111111111111111111111",
-    logoUrl: "https://images.unsplash.com/photo-1563986768609-322da13575f3?w=128&q=80",
-    currentStockPriceUsd: 245.2,
-    isPreIpo: false,
-  },
-];
-
-// Backward-compatible alias for existing UI components
-export type TokenizedEquity = TesseraPreIpoAsset;
-export const VERIFIED_TOKENIZED_EQUITIES = VERIFIED_TESSERA_PRE_IPO_ASSETS;

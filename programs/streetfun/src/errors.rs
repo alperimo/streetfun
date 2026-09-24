@@ -46,4 +46,7 @@ pub enum StreetfunError {
 
     #[msg("Fee basis points exceed maximum allowed limit.")]
     InvalidFeeBps,
+
+    #[msg("Verified asset purchase and liquidity settlement are unavailable.")]
+    SettlementUnavailable,
 }

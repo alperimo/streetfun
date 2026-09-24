@@ -1,21 +1,9 @@
+import { normalizeHandle, validAlphaClaim } from "@/lib/alphaClaim";
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
 import bs58 from "bs58";
 import { PublicKey } from "@solana/web3.js";
-import { createServerSupabaseClient } from "@/lib/supabase";
-
-// In-memory fallback for local dev / sandbox when Supabase credentials are not populated
-interface InMemPass {
-  passNumber: number;
-  walletAddress: string;
-  signature: string;
-  message: string;
-  xHandle?: string;
-  createdAt: string;
-}
-
-const memoryPasses = new Map<string, InMemPass>();
-let passCounter = 138; // Initial seed offset for alpha hype
+import { createServerSupabaseClient } from "@/server/supabase";
 
 function verifySolanaSignature(
   message: string,
@@ -55,6 +43,9 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const cleanXHandle = normalizeHandle(xHandle);
+    if (!validAlphaClaim(message, walletAddress, cleanXHandle)) return NextResponse.json({ error: "Sign a fresh StreetFun claim for this wallet and handle." }, { status: 400 });
+
     // Verify cryptographic signature
     const isValid = verifySolanaSignature(message, signature, walletAddress);
     if (!isValid) {
@@ -63,10 +54,6 @@ export async function POST(req: NextRequest) {
         { status: 401 }
       );
     }
-
-    const cleanXHandle = xHandle
-      ? String(xHandle).trim().replace(/^@/, "")
-      : null;
 
     const supabase = createServerSupabaseClient();
 
@@ -79,7 +66,7 @@ export async function POST(req: NextRequest) {
         .maybeSingle();
 
       if (fetchErr) {
-        console.error("[Alpha Claim] Supabase fetch error:", fetchErr);
+        throw new Error("Alpha claims are temporarily unavailable.");
       }
 
       if (existing) {
@@ -132,32 +119,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Fallback: in-memory store
-    let pass = memoryPasses.get(walletAddress);
-    if (!pass) {
-      passCounter += 1;
-      pass = {
-        passNumber: passCounter,
-        walletAddress,
-        signature,
-        message,
-        xHandle: cleanXHandle || undefined,
-        createdAt: new Date().toISOString(),
-      };
-      memoryPasses.set(walletAddress, pass);
-      return NextResponse.json({
-        success: true,
-        pass: { ...pass, isNew: true },
-      });
-    } else {
-      if (cleanXHandle && !pass.xHandle) {
-        pass.xHandle = cleanXHandle;
-      }
-      return NextResponse.json({
-        success: true,
-        pass: { ...pass, isNew: false },
-      });
-    }
+    return NextResponse.json({ error: "Alpha claims could not be saved. Please try again." }, { status: 503 });
   } catch (err: any) {
     console.error("[Alpha Claim API] Unexpected error:", err);
     return NextResponse.json(

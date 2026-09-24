@@ -24,6 +24,8 @@ export interface TokenMetadata {
     meteoraPoolAddress?: string;
     logoUrl: string;
     stockPriceUsd: number;
+    decimals?: number;
+    verifiedTessera?: boolean;
     isPreIpo?: boolean;
   };
   bondingCurve: {
@@ -46,9 +48,12 @@ export interface TokenMetadata {
     totalEquityValueUsd: number;
     vaultPda: string;
     proofOfReserveVerified?: boolean;
+    valuationAvailable?: boolean;
+    valuationSource?: string;
   };
   dataSource?: "onchain" | "indexed" | "mock";
   lastUpdatedAt?: string;
+  observedSlot?: number;
 }
 
 

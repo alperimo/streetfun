@@ -1,0 +1,1833 @@
+{
+  "checkedAt": "2026-09-24T09:45:33.160Z",
+  "genesisHash": "EtWTRABZaYq6iMfeYKouRu166VU2xqa1wcaWoxPkrZBG",
+  "transactions": [
+    {
+      "signature": "4ZsgiNJdpJxGmkYhiJsbSAaBRyuqvAGbqaJJGDDz83kbJBvHVJQrLipSMwtQXFT6f1oBHv6dXo75qXR8diRcbysH",
+      "error": "Error"
+    },
+    {
+      "signature": "jMc1FtdWsGLLRgpx3t2YPPud8y9kxKvSM3Y1akyYTtxwMZaCANyStRvpZTwJajU3EmqfeSPPyMYoGm6iur47fLh",
+      "slot": 502935271,
+      "time": "2026-09-23T11:59:47.000Z",
+      "instructions": [
+        {
+          "name": "initializeGlobalConfig",
+          "accounts": [
+            "519jca26LioEQiPhwoHCkC8mNZiCF7cDmtaXdp98iCv2",
+            "519jca26LioEQiPhwoHCkC8mNZiCF7cDmtaXdp98iCv2",
+            "Ga2gFmA5givTNEKcJBsNWU9wbvndjfZuDySdsKDiDQu3",
+            "11111111111111111111111111111111"
+          ],
+          "logs": [
+            "Program log: Instruction: InitializeGlobalConfig",
+            "Program log: Global config initialized. Admin: 519jca26LioEQiPhwoHCkC8mNZiCF7cDmtaXdp98iCv2",
+            "Program 6ZiovCkRxRJgUaCS9uftFk3eVnGDsbnDXgUV1XHybH52 consumed 10332 of 200000 compute units"
+          ]
+        }
+      ],
+      "explorer": "https://explorer.solana.com/tx/jMc1FtdWsGLLRgpx3t2YPPud8y9kxKvSM3Y1akyYTtxwMZaCANyStRvpZTwJajU3EmqfeSPPyMYoGm6iur47fLh?cluster=devnet"
+    },
+    {
+      "signature": "5URe1ej64rTDWj6YHyknaPQq2KhRLWP3dvU5ZuZS6Z983PcykruXTjgw9pC5Eg778xLEHretp1f2Z3MUULf6homC",
+      "error": "Error"
+    },
+    {
+      "signature": "2WnY3rNzChg9bRT1zT4jNF5UQo86gFdVRNRASFreDHywZL9xrXmK5WkhXMwRMUcHiejrWWbk2GJb6BoZWfQTtXbf",
+      "error": "Error"
+    },
+    {
+      "signature": "4RLxxxMXkUzQq2eQrt3DhBzuUtkWdR5P5iiLWazvgaKpTdSxETqDt9uqqDRw9BmJ7i6XzPRKFJGnvUKJchVf5Ge",
+      "slot": 502945341,
+      "time": "2026-09-23T12:27:40.000Z",
+      "instructions": [
+        {
+          "name": "updateGlobalConfig",
+          "accounts": [
+            "519jca26LioEQiPhwoHCkC8mNZiCF7cDmtaXdp98iCv2",
+            "Ga2gFmA5givTNEKcJBsNWU9wbvndjfZuDySdsKDiDQu3"
+          ],
+          "logs": [
+            "Program log: Instruction: UpdateGlobalConfig",
+            "Program log: Global config updated. Graduation threshold: 60000000",
+            "Program 6ZiovCkRxRJgUaCS9uftFk3eVnGDsbnDXgUV1XHybH52 consumed 4158 of 200000 compute units"
+          ]
+        }
+      ],
+      "explorer": "https://explorer.solana.com/tx/4RLxxxMXkUzQq2eQrt3DhBzuUtkWdR5P5iiLWazvgaKpTdSxETqDt9uqqDRw9BmJ7i6XzPRKFJGnvUKJchVf5Ge?cluster=devnet"
+    },
+    {
+      "signature": "3RbedqvFcbP8yuotXhpRyE2u9KTA2cuLLDv6YLRQ6gGaJpwZ2qveVJZ1gPjW3GtJQ33rv6jBLKdvCaouVUZyzont",
+      "slot": 502947792,
+      "time": "2026-09-23T12:34:25.000Z",
+      "instructions": [
+        {
+          "name": "launchStonk",
+          "accounts": [
+            "519jca26LioEQiPhwoHCkC8mNZiCF7cDmtaXdp98iCv2",
+            "Ga2gFmA5givTNEKcJBsNWU9wbvndjfZuDySdsKDiDQu3",
+            "7TUcDnopkaCxUfr8D7LDT6imx9aMMZUGqmfKj4UgZyFU",
+            "3PFKgvU4P8hcuW1X2VjAgRHNsz1TnA4SLyjEDNfhzLC7",
+            "45kaKwshoPeG7XcDXmFVSXMF8yTtZStwkLskDuXR5t2t",
+            "A5LoJijdJzQHTjeg9qMLRBKnEeRkvR4iMLmnYFiLrftB",
+            "DuQ1T5B6tmf5ZfSNpPomVcDntLEzR1mkoB81yHP5rGHG",
+            "3Q9146Z7qoeM1WZF8YNPfBFGDd3M4tUmMsbQZNC3xoCU",
+            "HzNi2C3bjiBxrdD13i4fUUU4rYs6rr6TtivBVespb852",
+            "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+            "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL",
+            "11111111111111111111111111111111",
+            "SysvarRent111111111111111111111111111111111"
+          ],
+          "logs": [
+            "Program log: Instruction: LaunchStonk",
+            "Program log: Stonk launched. Curve: 45kaKwshoPeG7XcDXmFVSXMF8yTtZStwkLskDuXR5t2t, Meme Mint: 7TUcDnopkaCxUfr8D7LDT6imx9aMMZUGqmfKj4UgZyFU, Target Equity: 3PFKgvU4P8hcuW1X2VjAgRHNsz1TnA4SLyjEDNfhzLC7",
+            "Program 6ZiovCkRxRJgUaCS9uftFk3eVnGDsbnDXgUV1XHybH52 consumed 57286 of 200000 compute units"
+          ]
+        }
+      ],
+      "explorer": "https://explorer.solana.com/tx/3RbedqvFcbP8yuotXhpRyE2u9KTA2cuLLDv6YLRQ6gGaJpwZ2qveVJZ1gPjW3GtJQ33rv6jBLKdvCaouVUZyzont?cluster=devnet"
+    },
+    {
+      "signature": "4MmE6CCMhTSC1qg5DWcxDSqQhJjTq8qP3WdXMr3CJ4bkz3bxKWWZC4HPypDHwDPiYiK477BrvWxxE3toEEih9pUk",
+      "slot": 502947888,
+      "time": "2026-09-23T12:34:41.000Z",
+      "instructions": [
+        {
+          "name": "buyCurve",
+          "accounts": [
+            "519jca26LioEQiPhwoHCkC8mNZiCF7cDmtaXdp98iCv2",
+            "Ga2gFmA5givTNEKcJBsNWU9wbvndjfZuDySdsKDiDQu3",
+            "7TUcDnopkaCxUfr8D7LDT6imx9aMMZUGqmfKj4UgZyFU",
+            "45kaKwshoPeG7XcDXmFVSXMF8yTtZStwkLskDuXR5t2t",
+            "A5LoJijdJzQHTjeg9qMLRBKnEeRkvR4iMLmnYFiLrftB",
+            "3Q9146Z7qoeM1WZF8YNPfBFGDd3M4tUmMsbQZNC3xoCU",
+            "Y4z6xpoxgK8siKnVeNKiBzfsghfBv5euaaBUGSNP69b",
+            "3fFbsfBdbbgjEo1C3cmYyFPrFvCvodJ7ziao8jVMoaVR",
+            "Y4z6xpoxgK8siKnVeNKiBzfsghfBv5euaaBUGSNP69b",
+            "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+          ],
+          "logs": [
+            "Program log: Instruction: BuyCurve",
+            "Program log: Buy executed. Spent: 61000000, Received: 2155609757558, New Real Quote: 60390000",
+            "Program 6ZiovCkRxRJgUaCS9uftFk3eVnGDsbnDXgUV1XHybH52 consumed 23282 of 200000 compute units"
+          ]
+        }
+      ],
+      "explorer": "https://explorer.solana.com/tx/4MmE6CCMhTSC1qg5DWcxDSqQhJjTq8qP3WdXMr3CJ4bkz3bxKWWZC4HPypDHwDPiYiK477BrvWxxE3toEEih9pUk?cluster=devnet"
+    },
+    {
+      "signature": "3foiP2Q57posP5XVyaEGCMjt5c3Yv3XekNeF46zNvu1dCt3rXESmx4czng1dCHW2DHHzBEVcfMgAnazpCJhw3mQs",
+      "slot": 502947899,
+      "time": "2026-09-23T12:34:43.000Z",
+      "instructions": [
+        {
+          "name": "graduateAndExecuteStock",
+          "accounts": [
+            "519jca26LioEQiPhwoHCkC8mNZiCF7cDmtaXdp98iCv2",
+            "Ga2gFmA5givTNEKcJBsNWU9wbvndjfZuDySdsKDiDQu3",
+            "7TUcDnopkaCxUfr8D7LDT6imx9aMMZUGqmfKj4UgZyFU",
+            "3PFKgvU4P8hcuW1X2VjAgRHNsz1TnA4SLyjEDNfhzLC7",
+            "45kaKwshoPeG7XcDXmFVSXMF8yTtZStwkLskDuXR5t2t",
+            "A5LoJijdJzQHTjeg9qMLRBKnEeRkvR4iMLmnYFiLrftB",
+            "3Q9146Z7qoeM1WZF8YNPfBFGDd3M4tUmMsbQZNC3xoCU",
+            "HzNi2C3bjiBxrdD13i4fUUU4rYs6rr6TtivBVespb852",
+            "Y4z6xpoxgK8siKnVeNKiBzfsghfBv5euaaBUGSNP69b",
+            "8tQX4hVp34otCsW24oku18eWcGw7Phru3LNpnTpoSFMG",
+            "519jca26LioEQiPhwoHCkC8mNZiCF7cDmtaXdp98iCv2",
+            "BDyLHCqXwpxGYX27eHNiEcTTHAXd4PTk5iCq6dGBDynF",
+            "FVUtHUWZzs2rf9tTSRxEdKaD8jfkUBzDgodVYmz5VGFn",
+            "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+          ],
+          "logs": [
+            "Program log: Instruction: GraduateAndExecuteStock",
+            "Program log: Curve graduated successfully! Equity locked: 1, USDC deployed to AMM: 30195000",
+            "Program 6ZiovCkRxRJgUaCS9uftFk3eVnGDsbnDXgUV1XHybH52 consumed 29504 of 200000 compute units"
+          ]
+        }
+      ],
+      "explorer": "https://explorer.solana.com/tx/3foiP2Q57posP5XVyaEGCMjt5c3Yv3XekNeF46zNvu1dCt3rXESmx4czng1dCHW2DHHzBEVcfMgAnazpCJhw3mQs?cluster=devnet"
+    },
+    {
+      "signature": "2vTxBtmuwd4yMwqxiaXopQy9Pt3HCQcqQ5GFEVj3xwNcFs7diyHBDpNm9igUCQFAU4zEKP6A6rH2S88NTa5m3Gzn",
+      "slot": 502954609,
+      "time": "2026-09-23T12:53:16.000Z",
+      "instructions": [
+        {
+          "name": "launchStonk",
+          "accounts": [
+            "519jca26LioEQiPhwoHCkC8mNZiCF7cDmtaXdp98iCv2",
+            "Ga2gFmA5givTNEKcJBsNWU9wbvndjfZuDySdsKDiDQu3",
+            "Ax6GBX7HUfXuoKaNzw8xEyrKkaDrMWdxvWzhVVXpAzQY",
+            "3PFKgvU4P8hcuW1X2VjAgRHNsz1TnA4SLyjEDNfhzLC7",
+            "GFovMp9hFeFUjt6ksMGm6XBPtYVAgvvdZKQynAi3fG4y",
+            "J4ReYY2Fc9iCsu5YrFX3WdVp3X697C2ohTrEB8jDYZNv",
+            "DuQ1T5B6tmf5ZfSNpPomVcDntLEzR1mkoB81yHP5rGHG",
+            "4HMMr6TngscYmvQ9V6F3Vuq99SEfekpntaTH1LC8Ezcr",
+            "8sk97tDDtHevwC6vpFfuAMcRtU9ahTq7n512jRwe3tFj",
+            "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+            "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL",
+            "11111111111111111111111111111111",
+            "SysvarRent111111111111111111111111111111111"
+          ],
+          "logs": [
+            "Program log: Instruction: LaunchStonk",
+            "Program log: Stonk launched. Curve: GFovMp9hFeFUjt6ksMGm6XBPtYVAgvvdZKQynAi3fG4y, Meme Mint: Ax6GBX7HUfXuoKaNzw8xEyrKkaDrMWdxvWzhVVXpAzQY, Target Equity: 3PFKgvU4P8hcuW1X2VjAgRHNsz1TnA4SLyjEDNfhzLC7",
+            "Program 6ZiovCkRxRJgUaCS9uftFk3eVnGDsbnDXgUV1XHybH52 consumed 58725 of 200000 compute units"
+          ]
+        }
+      ],
+      "explorer": "https://explorer.solana.com/tx/2vTxBtmuwd4yMwqxiaXopQy9Pt3HCQcqQ5GFEVj3xwNcFs7diyHBDpNm9igUCQFAU4zEKP6A6rH2S88NTa5m3Gzn?cluster=devnet"
+    },
+    {
+      "signature": "4zstXWpRoXKGqQAXpER3KP9g1iYczp2a7gzfV4xCYv2U5sbQBE9Cb6VvZ78TaGkhRLtLCHxRBuxmUMZURGLKG85D",
+      "slot": 502955387,
+      "time": "2026-09-23T12:55:25.000Z",
+      "instructions": [
+        {
+          "name": "buyCurve",
+          "accounts": [
+            "519jca26LioEQiPhwoHCkC8mNZiCF7cDmtaXdp98iCv2",
+            "Ga2gFmA5givTNEKcJBsNWU9wbvndjfZuDySdsKDiDQu3",
+            "Ax6GBX7HUfXuoKaNzw8xEyrKkaDrMWdxvWzhVVXpAzQY",
+            "GFovMp9hFeFUjt6ksMGm6XBPtYVAgvvdZKQynAi3fG4y",
+            "J4ReYY2Fc9iCsu5YrFX3WdVp3X697C2ohTrEB8jDYZNv",
+            "4HMMr6TngscYmvQ9V6F3Vuq99SEfekpntaTH1LC8Ezcr",
+            "Y4z6xpoxgK8siKnVeNKiBzfsghfBv5euaaBUGSNP69b",
+            "8hbmqqqdN9RLoCv3RYwEZZvsUurrUN1jinNm76tZ8vFG",
+            "Y4z6xpoxgK8siKnVeNKiBzfsghfBv5euaaBUGSNP69b",
+            "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+          ],
+          "logs": [
+            "Program log: Instruction: BuyCurve",
+            "Program log: Buy executed. Spent: 20000000, Received: 707712909479, New Real Quote: 19800000",
+            "Program 6ZiovCkRxRJgUaCS9uftFk3eVnGDsbnDXgUV1XHybH52 consumed 23274 of 200000 compute units"
+          ]
+        }
+      ],
+      "explorer": "https://explorer.solana.com/tx/4zstXWpRoXKGqQAXpER3KP9g1iYczp2a7gzfV4xCYv2U5sbQBE9Cb6VvZ78TaGkhRLtLCHxRBuxmUMZURGLKG85D?cluster=devnet"
+    },
+    {
+      "signature": "qGdrzYcUzF8uXCaVuNCKyAUC5JYbSkfbR92he6snirh2x6eagQiMCdYET9jchjSmiWfbsrMvtVdpGwfmUnHtZb4",
+      "slot": 502959936,
+      "time": "2026-09-23T13:08:00.000Z",
+      "instructions": [
+        {
+          "name": "launchStonk",
+          "accounts": [
+            "519jca26LioEQiPhwoHCkC8mNZiCF7cDmtaXdp98iCv2",
+            "Ga2gFmA5givTNEKcJBsNWU9wbvndjfZuDySdsKDiDQu3",
+            "5gNBrKp3q48r8LT5pgXVqKPVwXEq66DZttdGGdR9v7C",
+            "3PFKgvU4P8hcuW1X2VjAgRHNsz1TnA4SLyjEDNfhzLC7",
+            "F2wqrL1EgGCPmdgfzgtmZ91NeGFReEs9rErUEeuNdPvK",
+            "96JwqRyDFGmmhozeCtVhKrL5kJZz15wjg43nxA8HaFCe",
+            "DuQ1T5B6tmf5ZfSNpPomVcDntLEzR1mkoB81yHP5rGHG",
+            "DHYm1134E2Kmsv9g4iBYavPexaawpj7m6haTAzBySP5u",
+            "CzwGZrw7E9W5m5WLJkrcJnfwYL5RytsJxG4dVAMFcgq9",
+            "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+            "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL",
+            "11111111111111111111111111111111",
+            "SysvarRent111111111111111111111111111111111"
+          ],
+          "logs": [
+            "Program log: Instruction: LaunchStonk",
+            "Program log: Stonk launched. Curve: F2wqrL1EgGCPmdgfzgtmZ91NeGFReEs9rErUEeuNdPvK, Meme Mint: 5gNBrKp3q48r8LT5pgXVqKPVwXEq66DZttdGGdR9v7C, Target Equity: 3PFKgvU4P8hcuW1X2VjAgRHNsz1TnA4SLyjEDNfhzLC7",
+            "Program 6ZiovCkRxRJgUaCS9uftFk3eVnGDsbnDXgUV1XHybH52 consumed 58696 of 200000 compute units"
+          ]
+        }
+      ],
+      "explorer": "https://explorer.solana.com/tx/qGdrzYcUzF8uXCaVuNCKyAUC5JYbSkfbR92he6snirh2x6eagQiMCdYET9jchjSmiWfbsrMvtVdpGwfmUnHtZb4?cluster=devnet"
+    },
+    {
+      "signature": "4V4zdSWcYKo8ibw7a2jyWPGN6TZjpmTDHaPXf8iinu2m5g5d9sYwpnsJWjiVZG5wgbfdjdqvBHCDp8JJ4vCiddhU",
+      "slot": 502959949,
+      "time": "2026-09-23T13:08:02.000Z",
+      "instructions": [
+        {
+          "name": "buyCurve",
+          "accounts": [
+            "CeDNgzgfSSaNi5AmAZbrcLwjD1hPQocCBhjUxRdY5yba",
+            "Ga2gFmA5givTNEKcJBsNWU9wbvndjfZuDySdsKDiDQu3",
+            "5gNBrKp3q48r8LT5pgXVqKPVwXEq66DZttdGGdR9v7C",
+            "F2wqrL1EgGCPmdgfzgtmZ91NeGFReEs9rErUEeuNdPvK",
+            "96JwqRyDFGmmhozeCtVhKrL5kJZz15wjg43nxA8HaFCe",
+            "DHYm1134E2Kmsv9g4iBYavPexaawpj7m6haTAzBySP5u",
+            "9FJ6uuJC9qiLTQ4BNvvwrsCDLYiceUPEvqGDkweF5ZgW",
+            "BaRiZJJLZr8XrbfKh6ropqEjoyqMYSBZG9ZFzyBinrGK",
+            "Y4z6xpoxgK8siKnVeNKiBzfsghfBv5euaaBUGSNP69b",
+            "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+          ],
+          "logs": [
+            "Program log: Instruction: BuyCurve",
+            "Program log: Buy executed. Spent: 18000000, Received: 636983631722, New Real Quote: 17820000",
+            "Program 6ZiovCkRxRJgUaCS9uftFk3eVnGDsbnDXgUV1XHybH52 consumed 23434 of 200000 compute units"
+          ]
+        }
+      ],
+      "explorer": "https://explorer.solana.com/tx/4V4zdSWcYKo8ibw7a2jyWPGN6TZjpmTDHaPXf8iinu2m5g5d9sYwpnsJWjiVZG5wgbfdjdqvBHCDp8JJ4vCiddhU?cluster=devnet"
+    },
+    {
+      "signature": "UkASgEiSNoQsxmEhYTwpdc98JsfzFacbYBjjdHHZCszyrC2GNYPS6QiCoKeXqo1oeKkfwWdYMqrP3AHVhTqCqZ9",
+      "slot": 502960004,
+      "time": "2026-09-23T13:08:11.000Z",
+      "instructions": [
+        {
+          "name": "buyCurve",
+          "accounts": [
+            "CeDNgzgfSSaNi5AmAZbrcLwjD1hPQocCBhjUxRdY5yba",
+            "Ga2gFmA5givTNEKcJBsNWU9wbvndjfZuDySdsKDiDQu3",
+            "5gNBrKp3q48r8LT5pgXVqKPVwXEq66DZttdGGdR9v7C",
+            "F2wqrL1EgGCPmdgfzgtmZ91NeGFReEs9rErUEeuNdPvK",
+            "96JwqRyDFGmmhozeCtVhKrL5kJZz15wjg43nxA8HaFCe",
+            "DHYm1134E2Kmsv9g4iBYavPexaawpj7m6haTAzBySP5u",
+            "9FJ6uuJC9qiLTQ4BNvvwrsCDLYiceUPEvqGDkweF5ZgW",
+            "BaRiZJJLZr8XrbfKh6ropqEjoyqMYSBZG9ZFzyBinrGK",
+            "Y4z6xpoxgK8siKnVeNKiBzfsghfBv5euaaBUGSNP69b",
+            "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+          ],
+          "logs": [
+            "Program log: Instruction: BuyCurve",
+            "Program log: Buy executed. Spent: 62000000, Received: 2188277678418, New Real Quote: 79200000",
+            "Program 6ZiovCkRxRJgUaCS9uftFk3eVnGDsbnDXgUV1XHybH52 consumed 23442 of 200000 compute units"
+          ]
+        }
+      ],
+      "explorer": "https://explorer.solana.com/tx/UkASgEiSNoQsxmEhYTwpdc98JsfzFacbYBjjdHHZCszyrC2GNYPS6QiCoKeXqo1oeKkfwWdYMqrP3AHVhTqCqZ9?cluster=devnet"
+    },
+    {
+      "signature": "5GN5ViwLiiAmxE1X1bWvkT44k31WAfBQD9xwpotJgZhkKxQGmhLjpZwyeMaeAMcFz85n3qk8J3vDjDZyhw74r9bZ",
+      "slot": 502960043,
+      "time": "2026-09-23T13:08:17.000Z",
+      "instructions": [
+        {
+          "name": "graduateAndExecuteStock",
+          "accounts": [
+            "519jca26LioEQiPhwoHCkC8mNZiCF7cDmtaXdp98iCv2",
+            "Ga2gFmA5givTNEKcJBsNWU9wbvndjfZuDySdsKDiDQu3",
+            "5gNBrKp3q48r8LT5pgXVqKPVwXEq66DZttdGGdR9v7C",
+            "3PFKgvU4P8hcuW1X2VjAgRHNsz1TnA4SLyjEDNfhzLC7",
+            "F2wqrL1EgGCPmdgfzgtmZ91NeGFReEs9rErUEeuNdPvK",
+            "96JwqRyDFGmmhozeCtVhKrL5kJZz15wjg43nxA8HaFCe",
+            "DHYm1134E2Kmsv9g4iBYavPexaawpj7m6haTAzBySP5u",
+            "CzwGZrw7E9W5m5WLJkrcJnfwYL5RytsJxG4dVAMFcgq9",
+            "Y4z6xpoxgK8siKnVeNKiBzfsghfBv5euaaBUGSNP69b",
+            "8tQX4hVp34otCsW24oku18eWcGw7Phru3LNpnTpoSFMG",
+            "519jca26LioEQiPhwoHCkC8mNZiCF7cDmtaXdp98iCv2",
+            "5Mkqsc6Bpfqe2npRr3oSQaxgckxJ25xEejMjkgnuQyRe",
+            "BN7j3cPhJBVSHMSbdXwm11VnH4ip5tvaNgPZHcpAJqqh",
+            "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+          ],
+          "logs": [
+            "Program log: Instruction: GraduateAndExecuteStock",
+            "Program log: Curve graduated successfully! Equity locked: 150000000, USDC deployed to AMM: 39600000",
+            "Program 6ZiovCkRxRJgUaCS9uftFk3eVnGDsbnDXgUV1XHybH52 consumed 29562 of 200000 compute units"
+          ]
+        }
+      ],
+      "explorer": "https://explorer.solana.com/tx/5GN5ViwLiiAmxE1X1bWvkT44k31WAfBQD9xwpotJgZhkKxQGmhLjpZwyeMaeAMcFz85n3qk8J3vDjDZyhw74r9bZ?cluster=devnet"
+    },
+    {
+      "signature": "22S3E4MVa8kizkMYbqRcvhMCVmeEuTUyLepDQnt3cpvRnV37bb5S4V7GKmuBSiVvgpqZ4VB4RWH4JBF96GMr4wEo",
+      "slot": 502962686,
+      "time": "2026-09-23T13:15:34.000Z",
+      "instructions": [
+        {
+          "name": "launchStonk",
+          "accounts": [
+            "519jca26LioEQiPhwoHCkC8mNZiCF7cDmtaXdp98iCv2",
+            "Ga2gFmA5givTNEKcJBsNWU9wbvndjfZuDySdsKDiDQu3",
+            "6Gzc8cMvaQsaGJAfzZosCePJ8Hx7tLV7A7x58oGerggb",
+            "3PFKgvU4P8hcuW1X2VjAgRHNsz1TnA4SLyjEDNfhzLC7",
+            "86nEDJBsLi23fQm2g1GAyrE3m1aHUtEk1iP8EKEif5ar",
+            "8vfXZdvg24uLHwNZVag6VLfjTsMMeXW6cuC2ZhsEcqzi",
+            "DuQ1T5B6tmf5ZfSNpPomVcDntLEzR1mkoB81yHP5rGHG",
+            "41N2xmXezVjUVMazJriVBQ5i6fcDcRMTqEgN59TGmgLG",
+            "6EvPjfooXbTCD4pDQPa6orNyVcqPYV9vbYyt91c73JS3",
+            "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+            "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL",
+            "11111111111111111111111111111111",
+            "SysvarRent111111111111111111111111111111111"
+          ],
+          "logs": [
+            "Program log: Instruction: LaunchStonk",
+            "Program log: Stonk launched. Curve: 86nEDJBsLi23fQm2g1GAyrE3m1aHUtEk1iP8EKEif5ar, Meme Mint: 6Gzc8cMvaQsaGJAfzZosCePJ8Hx7tLV7A7x58oGerggb, Target Equity: 3PFKgvU4P8hcuW1X2VjAgRHNsz1TnA4SLyjEDNfhzLC7",
+            "Program 6ZiovCkRxRJgUaCS9uftFk3eVnGDsbnDXgUV1XHybH52 consumed 60212 of 200000 compute units"
+          ]
+        }
+      ],
+      "explorer": "https://explorer.solana.com/tx/22S3E4MVa8kizkMYbqRcvhMCVmeEuTUyLepDQnt3cpvRnV37bb5S4V7GKmuBSiVvgpqZ4VB4RWH4JBF96GMr4wEo?cluster=devnet"
+    },
+    {
+      "signature": "4fRPWbZGHkZbrR8YYCmvoFobUgYZ8kwdg1C1vrTysW89M31ytg15UVFYzyJNH4jnP6DNitSoSTyDKJggCraPkTJG",
+      "slot": 502962700,
+      "time": "2026-09-23T13:15:36.000Z",
+      "instructions": [
+        {
+          "name": "buyCurve",
+          "accounts": [
+            "CJ8DAzJEgzxHMPtrtEyjExJE6PrrYpc9mgrLtL9WzseC",
+            "Ga2gFmA5givTNEKcJBsNWU9wbvndjfZuDySdsKDiDQu3",
+            "6Gzc8cMvaQsaGJAfzZosCePJ8Hx7tLV7A7x58oGerggb",
+            "86nEDJBsLi23fQm2g1GAyrE3m1aHUtEk1iP8EKEif5ar",
+            "8vfXZdvg24uLHwNZVag6VLfjTsMMeXW6cuC2ZhsEcqzi",
+            "41N2xmXezVjUVMazJriVBQ5i6fcDcRMTqEgN59TGmgLG",
+            "8qsmx4dSddDjhHKoxiCU4XgksL21GCBMHnfd4mhyAs54",
+            "Aev4MQKDPpnh5ymQkZSkugLoCJ6CP5fAKRCdh7jSv9HS",
+            "Y4z6xpoxgK8siKnVeNKiBzfsghfBv5euaaBUGSNP69b",
+            "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+          ],
+          "logs": [
+            "Program log: Instruction: BuyCurve",
+            "Program log: Buy executed. Spent: 18000000, Received: 636983631722, New Real Quote: 17820000",
+            "Program 6ZiovCkRxRJgUaCS9uftFk3eVnGDsbnDXgUV1XHybH52 consumed 23434 of 200000 compute units"
+          ]
+        }
+      ],
+      "explorer": "https://explorer.solana.com/tx/4fRPWbZGHkZbrR8YYCmvoFobUgYZ8kwdg1C1vrTysW89M31ytg15UVFYzyJNH4jnP6DNitSoSTyDKJggCraPkTJG?cluster=devnet"
+    },
+    {
+      "signature": "3KKoaNwFDxNGwLpE91qyNmmxjppZatsom8pQHfMrNVoUYAMA3Bbci74TwMPpXQKaPHjCAZun6oCdbY3xnBdYdJM5",
+      "slot": 502962755,
+      "time": "2026-09-23T13:15:46.000Z",
+      "instructions": [
+        {
+          "name": "sellCurve",
+          "accounts": [
+            "CJ8DAzJEgzxHMPtrtEyjExJE6PrrYpc9mgrLtL9WzseC",
+            "Ga2gFmA5givTNEKcJBsNWU9wbvndjfZuDySdsKDiDQu3",
+            "6Gzc8cMvaQsaGJAfzZosCePJ8Hx7tLV7A7x58oGerggb",
+            "86nEDJBsLi23fQm2g1GAyrE3m1aHUtEk1iP8EKEif5ar",
+            "8vfXZdvg24uLHwNZVag6VLfjTsMMeXW6cuC2ZhsEcqzi",
+            "41N2xmXezVjUVMazJriVBQ5i6fcDcRMTqEgN59TGmgLG",
+            "Aev4MQKDPpnh5ymQkZSkugLoCJ6CP5fAKRCdh7jSv9HS",
+            "8qsmx4dSddDjhHKoxiCU4XgksL21GCBMHnfd4mhyAs54",
+            "Y4z6xpoxgK8siKnVeNKiBzfsghfBv5euaaBUGSNP69b",
+            "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+          ],
+          "logs": [
+            "Program log: Instruction: SellCurve",
+            "Program log: Sell executed. Sold: 100000000000, Received Quote: 2770971, New Real Quote: 15021040",
+            "Program 6ZiovCkRxRJgUaCS9uftFk3eVnGDsbnDXgUV1XHybH52 consumed 23438 of 200000 compute units"
+          ]
+        }
+      ],
+      "explorer": "https://explorer.solana.com/tx/3KKoaNwFDxNGwLpE91qyNmmxjppZatsom8pQHfMrNVoUYAMA3Bbci74TwMPpXQKaPHjCAZun6oCdbY3xnBdYdJM5?cluster=devnet"
+    },
+    {
+      "signature": "5DBWLcDCJU2NizBqMhUJG3wsJHc5qrmfnAgrD6M5nwuCxrWjKT4VJodWQ23N6KZrVHCq35QYgHT19sZwayZ5Jkey",
+      "slot": 502962761,
+      "time": "2026-09-23T13:15:47.000Z",
+      "instructions": [
+        {
+          "name": "buyCurve",
+          "accounts": [
+            "CJ8DAzJEgzxHMPtrtEyjExJE6PrrYpc9mgrLtL9WzseC",
+            "Ga2gFmA5givTNEKcJBsNWU9wbvndjfZuDySdsKDiDQu3",
+            "6Gzc8cMvaQsaGJAfzZosCePJ8Hx7tLV7A7x58oGerggb",
+            "86nEDJBsLi23fQm2g1GAyrE3m1aHUtEk1iP8EKEif5ar",
+            "8vfXZdvg24uLHwNZVag6VLfjTsMMeXW6cuC2ZhsEcqzi",
+            "41N2xmXezVjUVMazJriVBQ5i6fcDcRMTqEgN59TGmgLG",
+            "8qsmx4dSddDjhHKoxiCU4XgksL21GCBMHnfd4mhyAs54",
+            "Aev4MQKDPpnh5ymQkZSkugLoCJ6CP5fAKRCdh7jSv9HS",
+            "Y4z6xpoxgK8siKnVeNKiBzfsghfBv5euaaBUGSNP69b",
+            "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+          ],
+          "logs": [
+            "Program log: Instruction: BuyCurve",
+            "Program log: Buy executed. Spent: 62000000, Received: 2188685403454, New Real Quote: 76401040",
+            "Program 6ZiovCkRxRJgUaCS9uftFk3eVnGDsbnDXgUV1XHybH52 consumed 23443 of 200000 compute units"
+          ]
+        }
+      ],
+      "explorer": "https://explorer.solana.com/tx/5DBWLcDCJU2NizBqMhUJG3wsJHc5qrmfnAgrD6M5nwuCxrWjKT4VJodWQ23N6KZrVHCq35QYgHT19sZwayZ5Jkey?cluster=devnet"
+    },
+    {
+      "signature": "2zLiQWf8PqwL7VLuq2PBVbVR6EakhyFsWwgGfZwpqDLVA9KiAqvX8uDSf7Ej9Poht7iEUSi6u2dNrKkUVinkDiZJ",
+      "slot": 502962800,
+      "time": "2026-09-23T13:15:53.000Z",
+      "instructions": [
+        {
+          "name": "graduateAndExecuteStock",
+          "accounts": [
+            "519jca26LioEQiPhwoHCkC8mNZiCF7cDmtaXdp98iCv2",
+            "Ga2gFmA5givTNEKcJBsNWU9wbvndjfZuDySdsKDiDQu3",
+            "6Gzc8cMvaQsaGJAfzZosCePJ8Hx7tLV7A7x58oGerggb",
+            "3PFKgvU4P8hcuW1X2VjAgRHNsz1TnA4SLyjEDNfhzLC7",
+            "86nEDJBsLi23fQm2g1GAyrE3m1aHUtEk1iP8EKEif5ar",
+            "8vfXZdvg24uLHwNZVag6VLfjTsMMeXW6cuC2ZhsEcqzi",
+            "41N2xmXezVjUVMazJriVBQ5i6fcDcRMTqEgN59TGmgLG",
+            "6EvPjfooXbTCD4pDQPa6orNyVcqPYV9vbYyt91c73JS3",
+            "Y4z6xpoxgK8siKnVeNKiBzfsghfBv5euaaBUGSNP69b",
+            "8tQX4hVp34otCsW24oku18eWcGw7Phru3LNpnTpoSFMG",
+            "519jca26LioEQiPhwoHCkC8mNZiCF7cDmtaXdp98iCv2",
+            "BtSHDcY2X78WLXYHPXBQwNucWX9igd6ApFJEHDaervg",
+            "3s5sAvavnCMg9zVN6mQd8Dj7V84iUXC8jGCx1iQ3HCx2",
+            "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+          ],
+          "logs": [
+            "Program log: Instruction: GraduateAndExecuteStock",
+            "Program log: Curve graduated successfully! Equity locked: 150000000, USDC deployed to AMM: 38200520",
+            "Program 6ZiovCkRxRJgUaCS9uftFk3eVnGDsbnDXgUV1XHybH52 consumed 29562 of 200000 compute units"
+          ]
+        }
+      ],
+      "explorer": "https://explorer.solana.com/tx/2zLiQWf8PqwL7VLuq2PBVbVR6EakhyFsWwgGfZwpqDLVA9KiAqvX8uDSf7Ej9Poht7iEUSi6u2dNrKkUVinkDiZJ?cluster=devnet"
+    },
+    {
+      "signature": "5oSpKjxyqkdaZB95zuRnfVTY3MyjCYx7i9zCbbp3Uv7xQKER3RcF1upscVKMzGmnLUW8MXve9mEXtoyW1cDBre2M",
+      "slot": 502964513,
+      "time": "2026-09-23T13:20:34.000Z",
+      "instructions": [
+        {
+          "name": "launchStonk",
+          "accounts": [
+            "519jca26LioEQiPhwoHCkC8mNZiCF7cDmtaXdp98iCv2",
+            "Ga2gFmA5givTNEKcJBsNWU9wbvndjfZuDySdsKDiDQu3",
+            "36Xb9SQ3tLrpZCXdXt6kdSAHNhZnfr6VnvqdrQudMd76",
+            "3PFKgvU4P8hcuW1X2VjAgRHNsz1TnA4SLyjEDNfhzLC7",
+            "5Y77dXJyvcC93WVdnBkpamzG1WjVoCSqC7FwBgg9naFw",
+            "CbecKCezFkLZwrZPX7gqDtdzFYThWBzcKLL9A8FXdESa",
+            "DuQ1T5B6tmf5ZfSNpPomVcDntLEzR1mkoB81yHP5rGHG",
+            "pt5YBAd8V8tDZdqDcQtQGJzkq4MSyYnwsKncZ93egTV",
+            "BHghp45LPwGj6m39GbFTDvsA7a9QSApHakge3BVYx4sE",
+            "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+            "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL",
+            "11111111111111111111111111111111",
+            "SysvarRent111111111111111111111111111111111"
+          ],
+          "logs": [
+            "Program log: Instruction: LaunchStonk",
+            "Program log: Stonk launched. Curve: 5Y77dXJyvcC93WVdnBkpamzG1WjVoCSqC7FwBgg9naFw, Meme Mint: 36Xb9SQ3tLrpZCXdXt6kdSAHNhZnfr6VnvqdrQudMd76, Target Equity: 3PFKgvU4P8hcuW1X2VjAgRHNsz1TnA4SLyjEDNfhzLC7",
+            "Program 6ZiovCkRxRJgUaCS9uftFk3eVnGDsbnDXgUV1XHybH52 consumed 60212 of 200000 compute units"
+          ]
+        }
+      ],
+      "explorer": "https://explorer.solana.com/tx/5oSpKjxyqkdaZB95zuRnfVTY3MyjCYx7i9zCbbp3Uv7xQKER3RcF1upscVKMzGmnLUW8MXve9mEXtoyW1cDBre2M?cluster=devnet"
+    },
+    {
+      "signature": "5wuCCjsJz5xADVnXsB7Wq2WJKKkm1HTLEcaRRjao7ubiHvkk4Kw7AnekeWBbPBuwiGjU2TFSEhxVBtuSQRwCDCjc",
+      "slot": 502964552,
+      "time": "2026-09-23T13:20:41.000Z",
+      "instructions": [
+        {
+          "name": "buyCurve",
+          "accounts": [
+            "6s7ntThbSvQefvDEb43aTNuDShoCYvi9bqtCm5BcAAMH",
+            "Ga2gFmA5givTNEKcJBsNWU9wbvndjfZuDySdsKDiDQu3",
+            "36Xb9SQ3tLrpZCXdXt6kdSAHNhZnfr6VnvqdrQudMd76",
+            "5Y77dXJyvcC93WVdnBkpamzG1WjVoCSqC7FwBgg9naFw",
+            "CbecKCezFkLZwrZPX7gqDtdzFYThWBzcKLL9A8FXdESa",
+            "pt5YBAd8V8tDZdqDcQtQGJzkq4MSyYnwsKncZ93egTV",
+            "ELfX8agyTejuqp1qdsxrwPEM9hPwcLKxoNCNqrSY1CQT",
+            "94QxuNk9u1HMMBC2ydHNxHnrLgLmA9hpMD36PYvEJhLG",
+            "Y4z6xpoxgK8siKnVeNKiBzfsghfBv5euaaBUGSNP69b",
+            "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+          ],
+          "logs": [
+            "Program log: Instruction: BuyCurve",
+            "Program log: Buy executed. Spent: 18000000, Received: 636983631722, New Real Quote: 17820000",
+            "Program 6ZiovCkRxRJgUaCS9uftFk3eVnGDsbnDXgUV1XHybH52 consumed 23434 of 200000 compute units"
+          ]
+        }
+      ],
+      "explorer": "https://explorer.solana.com/tx/5wuCCjsJz5xADVnXsB7Wq2WJKKkm1HTLEcaRRjao7ubiHvkk4Kw7AnekeWBbPBuwiGjU2TFSEhxVBtuSQRwCDCjc?cluster=devnet"
+    },
+    {
+      "signature": "5uQb23cCicpNwYigAW1BnQ18yZamrYi29C4MMn66kUhwXdLoHCmyMEm5Hk3fhoR3ybKgfSwQAXnJUHHNL1BUS1b1",
+      "slot": 502964560,
+      "time": "2026-09-23T13:20:42.000Z",
+      "instructions": [
+        {
+          "name": "sellCurve",
+          "accounts": [
+            "6s7ntThbSvQefvDEb43aTNuDShoCYvi9bqtCm5BcAAMH",
+            "Ga2gFmA5givTNEKcJBsNWU9wbvndjfZuDySdsKDiDQu3",
+            "36Xb9SQ3tLrpZCXdXt6kdSAHNhZnfr6VnvqdrQudMd76",
+            "5Y77dXJyvcC93WVdnBkpamzG1WjVoCSqC7FwBgg9naFw",
+            "CbecKCezFkLZwrZPX7gqDtdzFYThWBzcKLL9A8FXdESa",
+            "pt5YBAd8V8tDZdqDcQtQGJzkq4MSyYnwsKncZ93egTV",
+            "94QxuNk9u1HMMBC2ydHNxHnrLgLmA9hpMD36PYvEJhLG",
+            "ELfX8agyTejuqp1qdsxrwPEM9hPwcLKxoNCNqrSY1CQT",
+            "Y4z6xpoxgK8siKnVeNKiBzfsghfBv5euaaBUGSNP69b",
+            "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+          ],
+          "logs": [
+            "Program log: Instruction: SellCurve",
+            "Program log: Sell executed. Sold: 100000000000, Received Quote: 2770971, New Real Quote: 15021040",
+            "Program 6ZiovCkRxRJgUaCS9uftFk3eVnGDsbnDXgUV1XHybH52 consumed 23438 of 200000 compute units"
+          ]
+        }
+      ],
+      "explorer": "https://explorer.solana.com/tx/5uQb23cCicpNwYigAW1BnQ18yZamrYi29C4MMn66kUhwXdLoHCmyMEm5Hk3fhoR3ybKgfSwQAXnJUHHNL1BUS1b1?cluster=devnet"
+    },
+    {
+      "signature": "qunVekw61yRrfmSqVFkSqu1Mm5h3pqmuVQ5rEpz1X3ht1Hhki7bvcPtquEr7WMRuzoSQtFFy4AftfHXyTLuYi4Q",
+      "slot": 502964573,
+      "time": "2026-09-23T13:20:44.000Z",
+      "instructions": [
+        {
+          "name": "buyCurve",
+          "accounts": [
+            "6s7ntThbSvQefvDEb43aTNuDShoCYvi9bqtCm5BcAAMH",
+            "Ga2gFmA5givTNEKcJBsNWU9wbvndjfZuDySdsKDiDQu3",
+            "36Xb9SQ3tLrpZCXdXt6kdSAHNhZnfr6VnvqdrQudMd76",
+            "5Y77dXJyvcC93WVdnBkpamzG1WjVoCSqC7FwBgg9naFw",
+            "CbecKCezFkLZwrZPX7gqDtdzFYThWBzcKLL9A8FXdESa",
+            "pt5YBAd8V8tDZdqDcQtQGJzkq4MSyYnwsKncZ93egTV",
+            "ELfX8agyTejuqp1qdsxrwPEM9hPwcLKxoNCNqrSY1CQT",
+            "94QxuNk9u1HMMBC2ydHNxHnrLgLmA9hpMD36PYvEJhLG",
+            "Y4z6xpoxgK8siKnVeNKiBzfsghfBv5euaaBUGSNP69b",
+            "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+          ],
+          "logs": [
+            "Program log: Instruction: BuyCurve",
+            "Program log: Buy executed. Spent: 62000000, Received: 2188685403454, New Real Quote: 76401040",
+            "Program 6ZiovCkRxRJgUaCS9uftFk3eVnGDsbnDXgUV1XHybH52 consumed 23443 of 200000 compute units"
+          ]
+        }
+      ],
+      "explorer": "https://explorer.solana.com/tx/qunVekw61yRrfmSqVFkSqu1Mm5h3pqmuVQ5rEpz1X3ht1Hhki7bvcPtquEr7WMRuzoSQtFFy4AftfHXyTLuYi4Q?cluster=devnet"
+    },
+    {
+      "signature": "k87ESWCzCE9bnHNVv1nLS9ZJHJQQZ7nSbD3nwTLbFbskHKKNwJGHegbaqHBMWqHiqN8SKTRA3p3SxQXDFuU38PN",
+      "slot": 502967980,
+      "time": "2026-09-23T13:30:07.000Z",
+      "instructions": [
+        {
+          "name": "launchStonk",
+          "accounts": [
+            "519jca26LioEQiPhwoHCkC8mNZiCF7cDmtaXdp98iCv2",
+            "Ga2gFmA5givTNEKcJBsNWU9wbvndjfZuDySdsKDiDQu3",
+            "7UR1AXhvitB3PK4Kikxmov6iSTJZzu7UYWGaARnE2ktJ",
+            "3PFKgvU4P8hcuW1X2VjAgRHNsz1TnA4SLyjEDNfhzLC7",
+            "E8bjsf7ThTSect6kaANgVgU9H3mqmUCMhhqtAEQcCekL",
+            "EHtKm1zNXEXi8KV8KLhMMvNamYietJEkMTcTQDw3HLBv",
+            "DuQ1T5B6tmf5ZfSNpPomVcDntLEzR1mkoB81yHP5rGHG",
+            "3tmrxaPfs3KGTzBUvSifpzrF9fKaxpeF7NMuNMpvr864",
+            "HEM3fqEzLJzMrNNtymd6pWJhexmZSvpaNsLm5vHCuwpy",
+            "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+            "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL",
+            "11111111111111111111111111111111",
+            "SysvarRent111111111111111111111111111111111"
+          ],
+          "logs": [
+            "Program log: Instruction: LaunchStonk",
+            "Program log: Stonk launched. Curve: E8bjsf7ThTSect6kaANgVgU9H3mqmUCMhhqtAEQcCekL, Meme Mint: 7UR1AXhvitB3PK4Kikxmov6iSTJZzu7UYWGaARnE2ktJ, Target Equity: 3PFKgvU4P8hcuW1X2VjAgRHNsz1TnA4SLyjEDNfhzLC7",
+            "Program 6ZiovCkRxRJgUaCS9uftFk3eVnGDsbnDXgUV1XHybH52 consumed 61712 of 200000 compute units"
+          ]
+        }
+      ],
+      "explorer": "https://explorer.solana.com/tx/k87ESWCzCE9bnHNVv1nLS9ZJHJQQZ7nSbD3nwTLbFbskHKKNwJGHegbaqHBMWqHiqN8SKTRA3p3SxQXDFuU38PN?cluster=devnet"
+    },
+    {
+      "signature": "4zkCkm6331wj4vQ2edceA9KxSrLqzwnPW4EsjyrszL41piybmiG2b1Y1faGt9P7ZTwidKcL5hG4ts2pYzXQViwXZ",
+      "slot": 502967992,
+      "time": "2026-09-23T13:30:09.000Z",
+      "instructions": [
+        {
+          "name": "buyCurve",
+          "accounts": [
+            "FhzH6VK3ir1qgkHmj1rPQyfRVhXo1BczbUWmKjqgMz4J",
+            "Ga2gFmA5givTNEKcJBsNWU9wbvndjfZuDySdsKDiDQu3",
+            "7UR1AXhvitB3PK4Kikxmov6iSTJZzu7UYWGaARnE2ktJ",
+            "E8bjsf7ThTSect6kaANgVgU9H3mqmUCMhhqtAEQcCekL",
+            "EHtKm1zNXEXi8KV8KLhMMvNamYietJEkMTcTQDw3HLBv",
+            "3tmrxaPfs3KGTzBUvSifpzrF9fKaxpeF7NMuNMpvr864",
+            "FWTy5kr7yDbrPbW4i6HZAKCuDhbbKWsZCNfgRhAx9kSY",
+            "CUo9w6EvQbJDEqGfzP7JmSM5vbrDZ5cRhZYJntwgPJeF",
+            "Y4z6xpoxgK8siKnVeNKiBzfsghfBv5euaaBUGSNP69b",
+            "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+          ],
+          "logs": [
+            "Program log: Instruction: BuyCurve",
+            "Program log: Buy executed. Spent: 18000000, Received: 636983631722, New Real Quote: 17820000",
+            "Program 6ZiovCkRxRJgUaCS9uftFk3eVnGDsbnDXgUV1XHybH52 consumed 23434 of 200000 compute units"
+          ]
+        }
+      ],
+      "explorer": "https://explorer.solana.com/tx/4zkCkm6331wj4vQ2edceA9KxSrLqzwnPW4EsjyrszL41piybmiG2b1Y1faGt9P7ZTwidKcL5hG4ts2pYzXQViwXZ?cluster=devnet"
+    },
+    {
+      "signature": "4mnoLtGAQZ2QQCkv1dJvEU5kEaXZDYjwS1t6no4AZt4QVYZGTcV2xDAbeMUoX7ty4kaSsC7vFv1cWSaqevFnbQAU",
+      "slot": 502968044,
+      "time": "2026-09-23T13:30:17.000Z",
+      "instructions": [
+        {
+          "name": "sellCurve",
+          "accounts": [
+            "FhzH6VK3ir1qgkHmj1rPQyfRVhXo1BczbUWmKjqgMz4J",
+            "Ga2gFmA5givTNEKcJBsNWU9wbvndjfZuDySdsKDiDQu3",
+            "7UR1AXhvitB3PK4Kikxmov6iSTJZzu7UYWGaARnE2ktJ",
+            "E8bjsf7ThTSect6kaANgVgU9H3mqmUCMhhqtAEQcCekL",
+            "EHtKm1zNXEXi8KV8KLhMMvNamYietJEkMTcTQDw3HLBv",
+            "3tmrxaPfs3KGTzBUvSifpzrF9fKaxpeF7NMuNMpvr864",
+            "CUo9w6EvQbJDEqGfzP7JmSM5vbrDZ5cRhZYJntwgPJeF",
+            "FWTy5kr7yDbrPbW4i6HZAKCuDhbbKWsZCNfgRhAx9kSY",
+            "Y4z6xpoxgK8siKnVeNKiBzfsghfBv5euaaBUGSNP69b",
+            "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+          ],
+          "logs": [
+            "Program log: Instruction: SellCurve",
+            "Program log: Sell executed. Sold: 100000000000, Received Quote: 2770971, New Real Quote: 15021040",
+            "Program 6ZiovCkRxRJgUaCS9uftFk3eVnGDsbnDXgUV1XHybH52 consumed 23438 of 200000 compute units"
+          ]
+        }
+      ],
+      "explorer": "https://explorer.solana.com/tx/4mnoLtGAQZ2QQCkv1dJvEU5kEaXZDYjwS1t6no4AZt4QVYZGTcV2xDAbeMUoX7ty4kaSsC7vFv1cWSaqevFnbQAU?cluster=devnet"
+    },
+    {
+      "signature": "mhZWapXpCRdEfGNZQtXdDQPQo39aGzYyDWpPxjDwwwpowF3ApdjuyoRCffcTtpSgYGSTaQUwvE5iW1Ezwaim43U",
+      "slot": 502968051,
+      "time": "2026-09-23T13:30:18.000Z",
+      "instructions": [
+        {
+          "name": "buyCurve",
+          "accounts": [
+            "FhzH6VK3ir1qgkHmj1rPQyfRVhXo1BczbUWmKjqgMz4J",
+            "Ga2gFmA5givTNEKcJBsNWU9wbvndjfZuDySdsKDiDQu3",
+            "7UR1AXhvitB3PK4Kikxmov6iSTJZzu7UYWGaARnE2ktJ",
+            "E8bjsf7ThTSect6kaANgVgU9H3mqmUCMhhqtAEQcCekL",
+            "EHtKm1zNXEXi8KV8KLhMMvNamYietJEkMTcTQDw3HLBv",
+            "3tmrxaPfs3KGTzBUvSifpzrF9fKaxpeF7NMuNMpvr864",
+            "FWTy5kr7yDbrPbW4i6HZAKCuDhbbKWsZCNfgRhAx9kSY",
+            "CUo9w6EvQbJDEqGfzP7JmSM5vbrDZ5cRhZYJntwgPJeF",
+            "Y4z6xpoxgK8siKnVeNKiBzfsghfBv5euaaBUGSNP69b",
+            "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+          ],
+          "logs": [
+            "Program log: Instruction: BuyCurve",
+            "Program log: Buy executed. Spent: 62000000, Received: 2188685403454, New Real Quote: 76401040",
+            "Program 6ZiovCkRxRJgUaCS9uftFk3eVnGDsbnDXgUV1XHybH52 consumed 23443 of 200000 compute units"
+          ]
+        }
+      ],
+      "explorer": "https://explorer.solana.com/tx/mhZWapXpCRdEfGNZQtXdDQPQo39aGzYyDWpPxjDwwwpowF3ApdjuyoRCffcTtpSgYGSTaQUwvE5iW1Ezwaim43U?cluster=devnet"
+    },
+    {
+      "signature": "DrvRHchLJiM9fT69ViDc9efmeC3JTeB3H6hs3cdAif4XXPBcxJ2n3mxmkPnL7ZBuks2eb3yQX7ReLcC7Wiqik8V",
+      "slot": 502968348,
+      "time": "2026-09-23T13:31:08.000Z",
+      "instructions": [
+        {
+          "name": "launchStonk",
+          "accounts": [
+            "519jca26LioEQiPhwoHCkC8mNZiCF7cDmtaXdp98iCv2",
+            "Ga2gFmA5givTNEKcJBsNWU9wbvndjfZuDySdsKDiDQu3",
+            "9QYWLdsbQD3twA8ycCnrRMbL2Bjpi8h4jAHf9QUxXdLh",
+            "3PFKgvU4P8hcuW1X2VjAgRHNsz1TnA4SLyjEDNfhzLC7",
+            "9TgPKqhuPLVTcH53Ckt9iEj6mH3WnoUux2syP9MLAQmY",
+            "8JJem8moPXfeaUcafffEnGam42CEKvMend6e2CMGWLJB",
+            "DuQ1T5B6tmf5ZfSNpPomVcDntLEzR1mkoB81yHP5rGHG",
+            "8X8kT2k842jX6JGUdkSrsZGZxGycxtJGKQAgWxomKRR5",
+            "kG1c2wcnPYkEhkgqkgM1ainvrDUF1HVyox1XkHgFupA",
+            "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+            "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL",
+            "11111111111111111111111111111111",
+            "SysvarRent111111111111111111111111111111111"
+          ],
+          "logs": [
+            "Program log: Instruction: LaunchStonk",
+            "Program log: Stonk launched. Curve: 9TgPKqhuPLVTcH53Ckt9iEj6mH3WnoUux2syP9MLAQmY, Meme Mint: 9QYWLdsbQD3twA8ycCnrRMbL2Bjpi8h4jAHf9QUxXdLh, Target Equity: 3PFKgvU4P8hcuW1X2VjAgRHNsz1TnA4SLyjEDNfhzLC7",
+            "Program 6ZiovCkRxRJgUaCS9uftFk3eVnGDsbnDXgUV1XHybH52 consumed 61712 of 200000 compute units"
+          ]
+        }
+      ],
+      "explorer": "https://explorer.solana.com/tx/DrvRHchLJiM9fT69ViDc9efmeC3JTeB3H6hs3cdAif4XXPBcxJ2n3mxmkPnL7ZBuks2eb3yQX7ReLcC7Wiqik8V?cluster=devnet"
+    },
+    {
+      "signature": "63nBcr7fQosVeNHvwkFvF4x3P3g3g9Vaw3nG2mZUMfJ9rS4k2H13gmnf4truKRqErvGSrhGEkjn15n5rPtBwyy5a",
+      "slot": 502968364,
+      "time": "2026-09-23T13:31:10.000Z",
+      "instructions": [
+        {
+          "name": "buyCurve",
+          "accounts": [
+            "EmK3rSJ9SdJfRKrjYKAiCq2Q4rwWs9XqHhLEybLq1zwH",
+            "Ga2gFmA5givTNEKcJBsNWU9wbvndjfZuDySdsKDiDQu3",
+            "9QYWLdsbQD3twA8ycCnrRMbL2Bjpi8h4jAHf9QUxXdLh",
+            "9TgPKqhuPLVTcH53Ckt9iEj6mH3WnoUux2syP9MLAQmY",
+            "8JJem8moPXfeaUcafffEnGam42CEKvMend6e2CMGWLJB",
+            "8X8kT2k842jX6JGUdkSrsZGZxGycxtJGKQAgWxomKRR5",
+            "8VLox5ExFoFbaSuQEawWc3YnB9YwfT6ipSjoXB6ai8Gw",
+            "BLVLnvRm745y43TFTMC9jtLfE4RixmNidkrArQUAoUVH",
+            "Y4z6xpoxgK8siKnVeNKiBzfsghfBv5euaaBUGSNP69b",
+            "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+          ],
+          "logs": [
+            "Program log: Instruction: BuyCurve",
+            "Program log: Buy executed. Spent: 18000000, Received: 636983631722, New Real Quote: 17820000",
+            "Program 6ZiovCkRxRJgUaCS9uftFk3eVnGDsbnDXgUV1XHybH52 consumed 23434 of 200000 compute units"
+          ]
+        }
+      ],
+      "explorer": "https://explorer.solana.com/tx/63nBcr7fQosVeNHvwkFvF4x3P3g3g9Vaw3nG2mZUMfJ9rS4k2H13gmnf4truKRqErvGSrhGEkjn15n5rPtBwyy5a?cluster=devnet"
+    },
+    {
+      "signature": "5xmfP25gAT1tq2UvBZma6tmwPY8EUvYRf7fVb9b1wDEXfXpDotzCQnBeNTeHQin53Zo1xtwsvEAAQySs76Ek9Myw",
+      "slot": 502968416,
+      "time": "2026-09-23T13:31:19.000Z",
+      "instructions": [
+        {
+          "name": "sellCurve",
+          "accounts": [
+            "EmK3rSJ9SdJfRKrjYKAiCq2Q4rwWs9XqHhLEybLq1zwH",
+            "Ga2gFmA5givTNEKcJBsNWU9wbvndjfZuDySdsKDiDQu3",
+            "9QYWLdsbQD3twA8ycCnrRMbL2Bjpi8h4jAHf9QUxXdLh",
+            "9TgPKqhuPLVTcH53Ckt9iEj6mH3WnoUux2syP9MLAQmY",
+            "8JJem8moPXfeaUcafffEnGam42CEKvMend6e2CMGWLJB",
+            "8X8kT2k842jX6JGUdkSrsZGZxGycxtJGKQAgWxomKRR5",
+            "BLVLnvRm745y43TFTMC9jtLfE4RixmNidkrArQUAoUVH",
+            "8VLox5ExFoFbaSuQEawWc3YnB9YwfT6ipSjoXB6ai8Gw",
+            "Y4z6xpoxgK8siKnVeNKiBzfsghfBv5euaaBUGSNP69b",
+            "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+          ],
+          "logs": [
+            "Program log: Instruction: SellCurve",
+            "Program log: Sell executed. Sold: 100000000000, Received Quote: 2770971, New Real Quote: 15021040",
+            "Program 6ZiovCkRxRJgUaCS9uftFk3eVnGDsbnDXgUV1XHybH52 consumed 23438 of 200000 compute units"
+          ]
+        }
+      ],
+      "explorer": "https://explorer.solana.com/tx/5xmfP25gAT1tq2UvBZma6tmwPY8EUvYRf7fVb9b1wDEXfXpDotzCQnBeNTeHQin53Zo1xtwsvEAAQySs76Ek9Myw?cluster=devnet"
+    },
+    {
+      "signature": "KkshprarwdSr6Z8vB2wrMjzRwTQ3SoS9LvjVXp7EbHBT95MtkrdHV8hd9i8te2WJvitusVm73nDZBjAXwSq49i1",
+      "slot": 502968419,
+      "time": "2026-09-23T13:31:19.000Z",
+      "instructions": [
+        {
+          "name": "buyCurve",
+          "accounts": [
+            "EmK3rSJ9SdJfRKrjYKAiCq2Q4rwWs9XqHhLEybLq1zwH",
+            "Ga2gFmA5givTNEKcJBsNWU9wbvndjfZuDySdsKDiDQu3",
+            "9QYWLdsbQD3twA8ycCnrRMbL2Bjpi8h4jAHf9QUxXdLh",
+            "9TgPKqhuPLVTcH53Ckt9iEj6mH3WnoUux2syP9MLAQmY",
+            "8JJem8moPXfeaUcafffEnGam42CEKvMend6e2CMGWLJB",
+            "8X8kT2k842jX6JGUdkSrsZGZxGycxtJGKQAgWxomKRR5",
+            "8VLox5ExFoFbaSuQEawWc3YnB9YwfT6ipSjoXB6ai8Gw",
+            "BLVLnvRm745y43TFTMC9jtLfE4RixmNidkrArQUAoUVH",
+            "Y4z6xpoxgK8siKnVeNKiBzfsghfBv5euaaBUGSNP69b",
+            "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+          ],
+          "logs": [
+            "Program log: Instruction: BuyCurve",
+            "Program log: Buy executed. Spent: 62000000, Received: 2188685403454, New Real Quote: 76401040",
+            "Program 6ZiovCkRxRJgUaCS9uftFk3eVnGDsbnDXgUV1XHybH52 consumed 23443 of 200000 compute units"
+          ]
+        }
+      ],
+      "explorer": "https://explorer.solana.com/tx/KkshprarwdSr6Z8vB2wrMjzRwTQ3SoS9LvjVXp7EbHBT95MtkrdHV8hd9i8te2WJvitusVm73nDZBjAXwSq49i1?cluster=devnet"
+    },
+    {
+      "signature": "beWgTZikWE364qdzJQ5jtRJpkx5wyCMJWSjSsMaFhp7uK1szHHMVZxbjbom4nyDULvGNpq9CcoDQDweYHgsNw63",
+      "slot": 502968456,
+      "time": "2026-09-23T13:31:25.000Z",
+      "instructions": [
+        {
+          "name": "graduateAndExecuteStock",
+          "accounts": [
+            "519jca26LioEQiPhwoHCkC8mNZiCF7cDmtaXdp98iCv2",
+            "Ga2gFmA5givTNEKcJBsNWU9wbvndjfZuDySdsKDiDQu3",
+            "9QYWLdsbQD3twA8ycCnrRMbL2Bjpi8h4jAHf9QUxXdLh",
+            "3PFKgvU4P8hcuW1X2VjAgRHNsz1TnA4SLyjEDNfhzLC7",
+            "9TgPKqhuPLVTcH53Ckt9iEj6mH3WnoUux2syP9MLAQmY",
+            "8JJem8moPXfeaUcafffEnGam42CEKvMend6e2CMGWLJB",
+            "8X8kT2k842jX6JGUdkSrsZGZxGycxtJGKQAgWxomKRR5",
+            "kG1c2wcnPYkEhkgqkgM1ainvrDUF1HVyox1XkHgFupA",
+            "Y4z6xpoxgK8siKnVeNKiBzfsghfBv5euaaBUGSNP69b",
+            "8tQX4hVp34otCsW24oku18eWcGw7Phru3LNpnTpoSFMG",
+            "519jca26LioEQiPhwoHCkC8mNZiCF7cDmtaXdp98iCv2",
+            "D11QmBUfPXky3wZNJw4xzgMG1yZEpg97RtkBo8D6gjSt",
+            "J1kiRgAZLYtcdb7BUkCeDJhuDyrbrt57hNtDK9GubvxA",
+            "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+          ],
+          "logs": [
+            "Program log: Instruction: GraduateAndExecuteStock",
+            "Program log: Curve graduated successfully! Equity locked: 150000000, USDC deployed to AMM: 38200520",
+            "Program 6ZiovCkRxRJgUaCS9uftFk3eVnGDsbnDXgUV1XHybH52 consumed 29562 of 200000 compute units"
+          ]
+        }
+      ],
+      "explorer": "https://explorer.solana.com/tx/beWgTZikWE364qdzJQ5jtRJpkx5wyCMJWSjSsMaFhp7uK1szHHMVZxbjbom4nyDULvGNpq9CcoDQDweYHgsNw63?cluster=devnet"
+    },
+    {
+      "signature": "2YHXyZcfvErNoxfwNoXcAoWxD8iGo9MwjGoJSevPa5sGm61aQ7fY8mxXyBaZsQ75aFCeJozDpbPaL3fabHn5GKpd",
+      "slot": 502968485,
+      "time": "2026-09-23T13:31:30.000Z",
+      "instructions": [
+        {
+          "name": "burnAndRedeem",
+          "accounts": [
+            "EmK3rSJ9SdJfRKrjYKAiCq2Q4rwWs9XqHhLEybLq1zwH",
+            "9QYWLdsbQD3twA8ycCnrRMbL2Bjpi8h4jAHf9QUxXdLh",
+            "3PFKgvU4P8hcuW1X2VjAgRHNsz1TnA4SLyjEDNfhzLC7",
+            "9TgPKqhuPLVTcH53Ckt9iEj6mH3WnoUux2syP9MLAQmY",
+            "kG1c2wcnPYkEhkgqkgM1ainvrDUF1HVyox1XkHgFupA",
+            "BLVLnvRm745y43TFTMC9jtLfE4RixmNidkrArQUAoUVH",
+            "dbaJgZukAfgvXFtkZ1JFi5cyW5BHZbcL42mqMHyHZNV",
+            "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+          ],
+          "logs": [
+            "Program log: Instruction: BurnAndRedeem",
+            "Program log: Burn and redeem completed. Burned: 1000000000000, Redeemed Shares: 150000, Remaining Locked: 149850000",
+            "Program 6ZiovCkRxRJgUaCS9uftFk3eVnGDsbnDXgUV1XHybH52 consumed 15893 of 200000 compute units"
+          ]
+        }
+      ],
+      "explorer": "https://explorer.solana.com/tx/2YHXyZcfvErNoxfwNoXcAoWxD8iGo9MwjGoJSevPa5sGm61aQ7fY8mxXyBaZsQ75aFCeJozDpbPaL3fabHn5GKpd?cluster=devnet"
+    },
+    {
+      "signature": "59atJu66LFH3ArfJN5vVLm5XC6EodpvHSncg4TwngY7a36zpMoLeq4B53C8fZjEjun4Zn41rYKD4jiDsy1oqmt1z",
+      "slot": 502970956,
+      "time": "2026-09-23T13:38:19.000Z",
+      "instructions": [
+        {
+          "name": "launchStonk",
+          "accounts": [
+            "519jca26LioEQiPhwoHCkC8mNZiCF7cDmtaXdp98iCv2",
+            "Ga2gFmA5givTNEKcJBsNWU9wbvndjfZuDySdsKDiDQu3",
+            "GHQnijfucK5SrJZuvhYRipmTLy5CX3wy4mMDXSUNQwry",
+            "3PFKgvU4P8hcuW1X2VjAgRHNsz1TnA4SLyjEDNfhzLC7",
+            "5WEsYJxDeng1eeQVoRdhVEMW6u4zhXk7KuG81iuZwob9",
+            "3P2HQiTaJopgkXmHtpTXttusLdro5MurygopX6po9Uzv",
+            "DuQ1T5B6tmf5ZfSNpPomVcDntLEzR1mkoB81yHP5rGHG",
+            "8rp53ZCwxb72N2kng7LkEunto7WAYUYfweoeF1tYqZHe",
+            "CJU5otbixCpqbnBuSscA69PvR6w8Wz9t1yC6pwcEywnX",
+            "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+            "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL",
+            "11111111111111111111111111111111",
+            "SysvarRent111111111111111111111111111111111"
+          ],
+          "logs": [
+            "Program log: Instruction: LaunchStonk",
+            "Program log: Stonk launched. Curve: 5WEsYJxDeng1eeQVoRdhVEMW6u4zhXk7KuG81iuZwob9, Meme Mint: GHQnijfucK5SrJZuvhYRipmTLy5CX3wy4mMDXSUNQwry, Target Equity: 3PFKgvU4P8hcuW1X2VjAgRHNsz1TnA4SLyjEDNfhzLC7",
+            "Program 6ZiovCkRxRJgUaCS9uftFk3eVnGDsbnDXgUV1XHybH52 consumed 60216 of 200000 compute units"
+          ]
+        }
+      ],
+      "explorer": "https://explorer.solana.com/tx/59atJu66LFH3ArfJN5vVLm5XC6EodpvHSncg4TwngY7a36zpMoLeq4B53C8fZjEjun4Zn41rYKD4jiDsy1oqmt1z?cluster=devnet"
+    },
+    {
+      "signature": "4PHcM8KuhPF88fmThbSyVNT9qVwHLbphRbwvw1rWWWS3MbADVPd8iEmmFJXQFYorjhZv17uFhcpCU9Uh4HS1Bz6s",
+      "slot": 502974538,
+      "time": "2026-09-23T13:48:13.000Z",
+      "instructions": [
+        {
+          "name": "graduateAndExecuteStock",
+          "accounts": [
+            "519jca26LioEQiPhwoHCkC8mNZiCF7cDmtaXdp98iCv2",
+            "Ga2gFmA5givTNEKcJBsNWU9wbvndjfZuDySdsKDiDQu3",
+            "36Xb9SQ3tLrpZCXdXt6kdSAHNhZnfr6VnvqdrQudMd76",
+            "3PFKgvU4P8hcuW1X2VjAgRHNsz1TnA4SLyjEDNfhzLC7",
+            "5Y77dXJyvcC93WVdnBkpamzG1WjVoCSqC7FwBgg9naFw",
+            "CbecKCezFkLZwrZPX7gqDtdzFYThWBzcKLL9A8FXdESa",
+            "pt5YBAd8V8tDZdqDcQtQGJzkq4MSyYnwsKncZ93egTV",
+            "BHghp45LPwGj6m39GbFTDvsA7a9QSApHakge3BVYx4sE",
+            "Y4z6xpoxgK8siKnVeNKiBzfsghfBv5euaaBUGSNP69b",
+            "8tQX4hVp34otCsW24oku18eWcGw7Phru3LNpnTpoSFMG",
+            "519jca26LioEQiPhwoHCkC8mNZiCF7cDmtaXdp98iCv2",
+            "5oagG5kXSPEQqdnQiRy5gRkA3cNXJCQ2BbC47hNe8BcS",
+            "AYsF28F89LrLSP2Bm2fjjuXXcUreZaa9hXnvmA8gJbUu",
+            "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+          ],
+          "logs": [
+            "Program log: Instruction: GraduateAndExecuteStock",
+            "Program log: Curve graduated successfully! Equity locked: 100000000, USDC deployed to AMM: 38200520",
+            "Program 6ZiovCkRxRJgUaCS9uftFk3eVnGDsbnDXgUV1XHybH52 consumed 29562 of 200000 compute units"
+          ]
+        }
+      ],
+      "explorer": "https://explorer.solana.com/tx/4PHcM8KuhPF88fmThbSyVNT9qVwHLbphRbwvw1rWWWS3MbADVPd8iEmmFJXQFYorjhZv17uFhcpCU9Uh4HS1Bz6s?cluster=devnet"
+    },
+    {
+      "signature": "JY3mggxXv4xmCUdmefdMfYuiz68HfFSdY6hZRbmAbrkRFQpESWcNzXGMetEhQP4J5gvwin74jrQopW9DJCeHdTe",
+      "slot": 502974588,
+      "time": "2026-09-23T13:48:21.000Z",
+      "instructions": [
+        {
+          "name": "graduateAndExecuteStock",
+          "accounts": [
+            "519jca26LioEQiPhwoHCkC8mNZiCF7cDmtaXdp98iCv2",
+            "Ga2gFmA5givTNEKcJBsNWU9wbvndjfZuDySdsKDiDQu3",
+            "7UR1AXhvitB3PK4Kikxmov6iSTJZzu7UYWGaARnE2ktJ",
+            "3PFKgvU4P8hcuW1X2VjAgRHNsz1TnA4SLyjEDNfhzLC7",
+            "E8bjsf7ThTSect6kaANgVgU9H3mqmUCMhhqtAEQcCekL",
+            "EHtKm1zNXEXi8KV8KLhMMvNamYietJEkMTcTQDw3HLBv",
+            "3tmrxaPfs3KGTzBUvSifpzrF9fKaxpeF7NMuNMpvr864",
+            "HEM3fqEzLJzMrNNtymd6pWJhexmZSvpaNsLm5vHCuwpy",
+            "Y4z6xpoxgK8siKnVeNKiBzfsghfBv5euaaBUGSNP69b",
+            "8tQX4hVp34otCsW24oku18eWcGw7Phru3LNpnTpoSFMG",
+            "519jca26LioEQiPhwoHCkC8mNZiCF7cDmtaXdp98iCv2",
+            "2RomryXhmfxzukRSgwhwtFZpbYZrZAjKswGa1298kC3m",
+            "AQATs4129dFsZ4ASZWASKBU5KqZ6RhSkkc7LeWhVME7Q",
+            "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+          ],
+          "logs": [
+            "Program log: Instruction: GraduateAndExecuteStock",
+            "Program log: Curve graduated successfully! Equity locked: 100000000, USDC deployed to AMM: 38200520",
+            "Program 6ZiovCkRxRJgUaCS9uftFk3eVnGDsbnDXgUV1XHybH52 consumed 29562 of 200000 compute units"
+          ]
+        }
+      ],
+      "explorer": "https://explorer.solana.com/tx/JY3mggxXv4xmCUdmefdMfYuiz68HfFSdY6hZRbmAbrkRFQpESWcNzXGMetEhQP4J5gvwin74jrQopW9DJCeHdTe?cluster=devnet"
+    },
+    {
+      "signature": "3EBZEvWAVNGKrtj9JE7bVfXiYVHKMgbwam7qhgmLNVPSbeJRehyrNS45MiAcJUY9RgNgrQ9Xz7AYr4K7WMwBQomV",
+      "slot": 503009263,
+      "time": "2026-09-23T15:24:09.000Z",
+      "instructions": [
+        {
+          "name": "buyCurve",
+          "accounts": [
+            "519jca26LioEQiPhwoHCkC8mNZiCF7cDmtaXdp98iCv2",
+            "Ga2gFmA5givTNEKcJBsNWU9wbvndjfZuDySdsKDiDQu3",
+            "Ax6GBX7HUfXuoKaNzw8xEyrKkaDrMWdxvWzhVVXpAzQY",
+            "GFovMp9hFeFUjt6ksMGm6XBPtYVAgvvdZKQynAi3fG4y",
+            "J4ReYY2Fc9iCsu5YrFX3WdVp3X697C2ohTrEB8jDYZNv",
+            "4HMMr6TngscYmvQ9V6F3Vuq99SEfekpntaTH1LC8Ezcr",
+            "Y4z6xpoxgK8siKnVeNKiBzfsghfBv5euaaBUGSNP69b",
+            "8hbmqqqdN9RLoCv3RYwEZZvsUurrUN1jinNm76tZ8vFG",
+            "Y4z6xpoxgK8siKnVeNKiBzfsghfBv5euaaBUGSNP69b",
+            "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+          ],
+          "logs": [
+            "Program log: Instruction: BuyCurve",
+            "Program log: Buy executed. Spent: 10000000, Received: 353506483321, New Real Quote: 29700000",
+            "Program 6ZiovCkRxRJgUaCS9uftFk3eVnGDsbnDXgUV1XHybH52 consumed 23273 of 200000 compute units"
+          ]
+        }
+      ],
+      "explorer": "https://explorer.solana.com/tx/3EBZEvWAVNGKrtj9JE7bVfXiYVHKMgbwam7qhgmLNVPSbeJRehyrNS45MiAcJUY9RgNgrQ9Xz7AYr4K7WMwBQomV?cluster=devnet"
+    }
+  ],
+  "reconciliation": [
+    {
+      "signature": "jMc1FtdWsGLLRgpx3t2YPPud8y9kxKvSM3Y1akyYTtxwMZaCANyStRvpZTwJajU3EmqfeSPPyMYoGm6iur47fLh",
+      "error": "No supported market event."
+    },
+    {
+      "signature": "4RLxxxMXkUzQq2eQrt3DhBzuUtkWdR5P5iiLWazvgaKpTdSxETqDt9uqqDRw9BmJ7i6XzPRKFJGnvUKJchVf5Ge",
+      "error": "No supported market event."
+    },
+    {
+      "signature": "3RbedqvFcbP8yuotXhpRyE2u9KTA2cuLLDv6YLRQ6gGaJpwZ2qveVJZ1gPjW3GtJQ33rv6jBLKdvCaouVUZyzont",
+      "indexed": 1
+    },
+    {
+      "signature": "4MmE6CCMhTSC1qg5DWcxDSqQhJjTq8qP3WdXMr3CJ4bkz3bxKWWZC4HPypDHwDPiYiK477BrvWxxE3toEEih9pUk",
+      "indexed": 1
+    },
+    {
+      "signature": "3foiP2Q57posP5XVyaEGCMjt5c3Yv3XekNeF46zNvu1dCt3rXESmx4czng1dCHW2DHHzBEVcfMgAnazpCJhw3mQs",
+      "indexed": 1
+    },
+    {
+      "signature": "2vTxBtmuwd4yMwqxiaXopQy9Pt3HCQcqQ5GFEVj3xwNcFs7diyHBDpNm9igUCQFAU4zEKP6A6rH2S88NTa5m3Gzn",
+      "indexed": 1
+    },
+    {
+      "signature": "4zstXWpRoXKGqQAXpER3KP9g1iYczp2a7gzfV4xCYv2U5sbQBE9Cb6VvZ78TaGkhRLtLCHxRBuxmUMZURGLKG85D",
+      "indexed": 1
+    },
+    {
+      "signature": "qGdrzYcUzF8uXCaVuNCKyAUC5JYbSkfbR92he6snirh2x6eagQiMCdYET9jchjSmiWfbsrMvtVdpGwfmUnHtZb4",
+      "indexed": 1
+    },
+    {
+      "signature": "4V4zdSWcYKo8ibw7a2jyWPGN6TZjpmTDHaPXf8iinu2m5g5d9sYwpnsJWjiVZG5wgbfdjdqvBHCDp8JJ4vCiddhU",
+      "indexed": 1
+    },
+    {
+      "signature": "UkASgEiSNoQsxmEhYTwpdc98JsfzFacbYBjjdHHZCszyrC2GNYPS6QiCoKeXqo1oeKkfwWdYMqrP3AHVhTqCqZ9",
+      "indexed": 1
+    },
+    {
+      "signature": "5GN5ViwLiiAmxE1X1bWvkT44k31WAfBQD9xwpotJgZhkKxQGmhLjpZwyeMaeAMcFz85n3qk8J3vDjDZyhw74r9bZ",
+      "indexed": 1
+    },
+    {
+      "signature": "22S3E4MVa8kizkMYbqRcvhMCVmeEuTUyLepDQnt3cpvRnV37bb5S4V7GKmuBSiVvgpqZ4VB4RWH4JBF96GMr4wEo",
+      "indexed": 1
+    },
+    {
+      "signature": "4fRPWbZGHkZbrR8YYCmvoFobUgYZ8kwdg1C1vrTysW89M31ytg15UVFYzyJNH4jnP6DNitSoSTyDKJggCraPkTJG",
+      "indexed": 1
+    },
+    {
+      "signature": "3KKoaNwFDxNGwLpE91qyNmmxjppZatsom8pQHfMrNVoUYAMA3Bbci74TwMPpXQKaPHjCAZun6oCdbY3xnBdYdJM5",
+      "indexed": 1
+    },
+    {
+      "signature": "5DBWLcDCJU2NizBqMhUJG3wsJHc5qrmfnAgrD6M5nwuCxrWjKT4VJodWQ23N6KZrVHCq35QYgHT19sZwayZ5Jkey",
+      "indexed": 1
+    },
+    {
+      "signature": "2zLiQWf8PqwL7VLuq2PBVbVR6EakhyFsWwgGfZwpqDLVA9KiAqvX8uDSf7Ej9Poht7iEUSi6u2dNrKkUVinkDiZJ",
+      "indexed": 1
+    },
+    {
+      "signature": "5oSpKjxyqkdaZB95zuRnfVTY3MyjCYx7i9zCbbp3Uv7xQKER3RcF1upscVKMzGmnLUW8MXve9mEXtoyW1cDBre2M",
+      "indexed": 1
+    },
+    {
+      "signature": "5wuCCjsJz5xADVnXsB7Wq2WJKKkm1HTLEcaRRjao7ubiHvkk4Kw7AnekeWBbPBuwiGjU2TFSEhxVBtuSQRwCDCjc",
+      "indexed": 1
+    },
+    {
+      "signature": "5uQb23cCicpNwYigAW1BnQ18yZamrYi29C4MMn66kUhwXdLoHCmyMEm5Hk3fhoR3ybKgfSwQAXnJUHHNL1BUS1b1",
+      "indexed": 1
+    },
+    {
+      "signature": "qunVekw61yRrfmSqVFkSqu1Mm5h3pqmuVQ5rEpz1X3ht1Hhki7bvcPtquEr7WMRuzoSQtFFy4AftfHXyTLuYi4Q",
+      "indexed": 1
+    },
+    {
+      "signature": "k87ESWCzCE9bnHNVv1nLS9ZJHJQQZ7nSbD3nwTLbFbskHKKNwJGHegbaqHBMWqHiqN8SKTRA3p3SxQXDFuU38PN",
+      "indexed": 1
+    },
+    {
+      "signature": "4zkCkm6331wj4vQ2edceA9KxSrLqzwnPW4EsjyrszL41piybmiG2b1Y1faGt9P7ZTwidKcL5hG4ts2pYzXQViwXZ",
+      "indexed": 1
+    },
+    {
+      "signature": "4mnoLtGAQZ2QQCkv1dJvEU5kEaXZDYjwS1t6no4AZt4QVYZGTcV2xDAbeMUoX7ty4kaSsC7vFv1cWSaqevFnbQAU",
+      "indexed": 1
+    },
+    {
+      "signature": "mhZWapXpCRdEfGNZQtXdDQPQo39aGzYyDWpPxjDwwwpowF3ApdjuyoRCffcTtpSgYGSTaQUwvE5iW1Ezwaim43U",
+      "indexed": 1
+    },
+    {
+      "signature": "DrvRHchLJiM9fT69ViDc9efmeC3JTeB3H6hs3cdAif4XXPBcxJ2n3mxmkPnL7ZBuks2eb3yQX7ReLcC7Wiqik8V",
+      "indexed": 1
+    },
+    {
+      "signature": "63nBcr7fQosVeNHvwkFvF4x3P3g3g9Vaw3nG2mZUMfJ9rS4k2H13gmnf4truKRqErvGSrhGEkjn15n5rPtBwyy5a",
+      "indexed": 1
+    },
+    {
+      "signature": "5xmfP25gAT1tq2UvBZma6tmwPY8EUvYRf7fVb9b1wDEXfXpDotzCQnBeNTeHQin53Zo1xtwsvEAAQySs76Ek9Myw",
+      "indexed": 1
+    },
+    {
+      "signature": "KkshprarwdSr6Z8vB2wrMjzRwTQ3SoS9LvjVXp7EbHBT95MtkrdHV8hd9i8te2WJvitusVm73nDZBjAXwSq49i1",
+      "indexed": 1
+    },
+    {
+      "signature": "beWgTZikWE364qdzJQ5jtRJpkx5wyCMJWSjSsMaFhp7uK1szHHMVZxbjbom4nyDULvGNpq9CcoDQDweYHgsNw63",
+      "indexed": 1
+    },
+    {
+      "signature": "2YHXyZcfvErNoxfwNoXcAoWxD8iGo9MwjGoJSevPa5sGm61aQ7fY8mxXyBaZsQ75aFCeJozDpbPaL3fabHn5GKpd",
+      "error": "Could not persist confirmed trade: Could not find the 'equity_amount' column of 'trades' in the schema cache"
+    },
+    {
+      "signature": "59atJu66LFH3ArfJN5vVLm5XC6EodpvHSncg4TwngY7a36zpMoLeq4B53C8fZjEjun4Zn41rYKD4jiDsy1oqmt1z",
+      "indexed": 1
+    },
+    {
+      "signature": "4PHcM8KuhPF88fmThbSyVNT9qVwHLbphRbwvw1rWWWS3MbADVPd8iEmmFJXQFYorjhZv17uFhcpCU9Uh4HS1Bz6s",
+      "indexed": 1
+    },
+    {
+      "signature": "JY3mggxXv4xmCUdmefdMfYuiz68HfFSdY6hZRbmAbrkRFQpESWcNzXGMetEhQP4J5gvwin74jrQopW9DJCeHdTe",
+      "indexed": 1
+    },
+    {
+      "signature": "3EBZEvWAVNGKrtj9JE7bVfXiYVHKMgbwam7qhgmLNVPSbeJRehyrNS45MiAcJUY9RgNgrQ9Xz7AYr4K7WMwBQomV",
+      "indexed": 1
+    }
+  ],
+  "assets": [
+    {
+      "symbol": "T-OpenAI",
+      "ticker": "tOpenAI",
+      "name": "T-OpenAI",
+      "mintAddress": "oPAiAikWTaFj9RYoRFD35ccfwhnMcB3ThgBZRHSkjTZ",
+      "currentStockPriceUsd": 812.79,
+      "issuer": "Tessera",
+      "custodian": "See Tessera issuer disclosures",
+      "legalFramework": "Loan participation right; not company shares",
+      "proofOfReserve": "",
+      "meteoraPoolAddress": "",
+      "logoUrl": "/generated/streetfun-logo.png",
+      "isPreIpo": true,
+      "priceSource": "tessera-mark",
+      "fetchedAt": "2026-09-24T09:45:33.787Z",
+      "network": "mainnet-beta",
+      "existsOnConfiguredNetwork": false,
+      "tokenProgram": null,
+      "decimals": null,
+      "launchEnabled": false,
+      "unavailableReason": "Tessera has no verified asset deployment on the configured network."
+    },
+    {
+      "symbol": "T-Kalshi",
+      "ticker": "tKalshi",
+      "name": "T-Kalshi",
+      "mintAddress": "TKLSidmLVt3cqGaaodG8tyRzoANfQwoh67AccjmubeZ",
+      "currentStockPriceUsd": 413.8,
+      "issuer": "Tessera",
+      "custodian": "See Tessera issuer disclosures",
+      "legalFramework": "Loan participation right; not company shares",
+      "proofOfReserve": "",
+      "meteoraPoolAddress": "",
+      "logoUrl": "/generated/streetfun-logo.png",
+      "isPreIpo": true,
+      "priceSource": "tessera-mark",
+      "fetchedAt": "2026-09-24T09:45:33.787Z",
+      "network": "mainnet-beta",
+      "existsOnConfiguredNetwork": false,
+      "tokenProgram": null,
+      "decimals": null,
+      "launchEnabled": false,
+      "unavailableReason": "Tessera has no verified asset deployment on the configured network."
+    },
+    {
+      "symbol": "T-SpaceX",
+      "ticker": "tSpaceX",
+      "name": "T-SpaceX",
+      "mintAddress": "TSPXcLV76s6V2zDiZQ18kBfcbnjaE2ZzNT3ga2Pd99v",
+      "currentStockPriceUsd": 423,
+      "issuer": "Tessera",
+      "custodian": "See Tessera issuer disclosures",
+      "legalFramework": "Loan participation right; not company shares",
+      "proofOfReserve": "",
+      "meteoraPoolAddress": "",
+      "logoUrl": "/generated/streetfun-logo.png",
+      "isPreIpo": true,
+      "priceSource": "tessera-mark",
+      "fetchedAt": "2026-09-24T09:45:33.787Z",
+      "network": "mainnet-beta",
+      "existsOnConfiguredNetwork": false,
+      "tokenProgram": null,
+      "decimals": null,
+      "launchEnabled": false,
+      "unavailableReason": "Tessera has no verified asset deployment on the configured network."
+    }
+  ],
+  "tokens": [
+    {
+      "mint": "Ax6GBX7HUfXuoKaNzw8xEyrKkaDrMWdxvWzhVVXpAzQY",
+      "name": "OpenAI Singularity",
+      "symbol": "SINGULAR",
+      "description": "Live Devnet test coin backed by tokenized OpenAI equity.",
+      "avatarUrl": "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=160&q=80",
+      "creator": "519jca26LioEQiPhwoHCkC8mNZiCF7cDmtaXdp98iCv2",
+      "createdAt": "2026-09-23T12:53:16+00:00",
+      "totalSupply": 1000000000,
+      "priceUsd": 0.000028014379685927277,
+      "marketCapUsd": 28014.379685927277,
+      "priceChange24h": 0,
+      "priceChange24hAvailable": false,
+      "volume24hUsd": 30,
+      "volume24hAvailable": true,
+      "targetEquity": {
+        "symbol": "UNVERIFIED",
+        "name": "Unverified collateral token",
+        "mintAddress": "3PFKgvU4P8hcuW1X2VjAgRHNsz1TnA4SLyjEDNfhzLC7",
+        "custodian": "Unverified",
+        "legalFramework": "Unverified",
+        "logoUrl": "/generated/streetfun-logo.png",
+        "stockPriceUsd": 0,
+        "isPreIpo": false,
+        "decimals": 6,
+        "verifiedTessera": false
+      },
+      "bondingCurve": {
+        "realQuoteReservesUsd": 29.7,
+        "graduationThresholdUsd": 60,
+        "progressPct": 49.5,
+        "virtualQuoteReserves": "30029700000",
+        "virtualTokenReserves": "1071938780607200",
+        "realTokenReserves": "798938780607200",
+        "quoteMint": "DuQ1T5B6tmf5ZfSNpPomVcDntLEzR1mkoB81yHP5rGHG",
+        "isGraduated": false,
+        "dynamicFeeBps": 100,
+        "equityPurchaseBudgetUsd": 30,
+        "ammLiquidityBudgetUsd": 30
+      },
+      "treasury": {
+        "totalEquityLocked": 0,
+        "totalEquityValueUsd": 0,
+        "vaultPda": "8sk97tDDtHevwC6vpFfuAMcRtU9ahTq7n512jRwe3tFj",
+        "proofOfReserveVerified": false,
+        "valuationAvailable": false
+      },
+      "dataSource": "onchain",
+      "lastUpdatedAt": "2026-09-24T09:45:57.790Z",
+      "observedSlot": 503408250
+    },
+    {
+      "mint": "7TUcDnopkaCxUfr8D7LDT6imx9aMMZUGqmfKj4UgZyFU",
+      "name": "OpenAI Autonomous Intelligence",
+      "symbol": "TOPAI",
+      "description": "On-chain StreetFun market.",
+      "avatarUrl": "/generated/streetfun-logo.png",
+      "creator": "519jca26LioEQiPhwoHCkC8mNZiCF7cDmtaXdp98iCv2",
+      "createdAt": "2026-09-23T12:34:25+00:00",
+      "totalSupply": 1000000000,
+      "priceUsd": 0,
+      "marketCapUsd": 0,
+      "priceChange24h": 0,
+      "priceChange24hAvailable": false,
+      "volume24hUsd": 61,
+      "volume24hAvailable": true,
+      "targetEquity": {
+        "symbol": "UNVERIFIED",
+        "name": "Unverified collateral token",
+        "mintAddress": "3PFKgvU4P8hcuW1X2VjAgRHNsz1TnA4SLyjEDNfhzLC7",
+        "custodian": "Unverified",
+        "legalFramework": "Unverified",
+        "logoUrl": "/generated/streetfun-logo.png",
+        "stockPriceUsd": 0,
+        "isPreIpo": false,
+        "decimals": 6,
+        "verifiedTessera": false
+      },
+      "bondingCurve": {
+        "realQuoteReservesUsd": 0,
+        "graduationThresholdUsd": 60,
+        "progressPct": 100,
+        "virtualQuoteReserves": "30060390000",
+        "virtualTokenReserves": "1070844390242442",
+        "realTokenReserves": "0",
+        "quoteMint": "DuQ1T5B6tmf5ZfSNpPomVcDntLEzR1mkoB81yHP5rGHG",
+        "isGraduated": true,
+        "graduatedAt": "2026-09-23T12:34:43.000Z",
+        "dynamicFeeBps": 100,
+        "equityPurchaseBudgetUsd": 30,
+        "ammLiquidityBudgetUsd": 30
+      },
+      "treasury": {
+        "totalEquityLocked": 0.000001,
+        "totalEquityValueUsd": 0,
+        "vaultPda": "HzNi2C3bjiBxrdD13i4fUUU4rYs6rr6TtivBVespb852",
+        "proofOfReserveVerified": false,
+        "valuationAvailable": false
+      },
+      "dataSource": "onchain",
+      "lastUpdatedAt": "2026-09-24T09:45:57.789Z",
+      "observedSlot": 503408250
+    },
+    {
+      "mint": "GHQnijfucK5SrJZuvhYRipmTLy5CX3wy4mMDXSUNQwry",
+      "name": "Neural Singularity",
+      "symbol": "SING",
+      "description": "Autonomous AI culture currency backed by OpenAI Pre-IPO equity on Solana.",
+      "avatarUrl": "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=160&q=80",
+      "creator": "519jca26LioEQiPhwoHCkC8mNZiCF7cDmtaXdp98iCv2",
+      "createdAt": "2026-09-23T13:38:19+00:00",
+      "totalSupply": 1000000000,
+      "priceUsd": 0.000027958993476234854,
+      "marketCapUsd": 27958.993476234853,
+      "priceChange24h": 0,
+      "priceChange24hAvailable": false,
+      "volume24hUsd": 0,
+      "volume24hAvailable": true,
+      "targetEquity": {
+        "symbol": "UNVERIFIED",
+        "name": "Unverified collateral token",
+        "mintAddress": "3PFKgvU4P8hcuW1X2VjAgRHNsz1TnA4SLyjEDNfhzLC7",
+        "custodian": "Unverified",
+        "legalFramework": "Unverified",
+        "logoUrl": "/generated/streetfun-logo.png",
+        "stockPriceUsd": 0,
+        "isPreIpo": false,
+        "decimals": 6,
+        "verifiedTessera": false
+      },
+      "bondingCurve": {
+        "realQuoteReservesUsd": 0,
+        "graduationThresholdUsd": 60,
+        "progressPct": 0,
+        "virtualQuoteReserves": "30000000000",
+        "virtualTokenReserves": "1073000000000000",
+        "realTokenReserves": "800000000000000",
+        "quoteMint": "DuQ1T5B6tmf5ZfSNpPomVcDntLEzR1mkoB81yHP5rGHG",
+        "isGraduated": false,
+        "dynamicFeeBps": 100,
+        "equityPurchaseBudgetUsd": 30,
+        "ammLiquidityBudgetUsd": 30
+      },
+      "treasury": {
+        "totalEquityLocked": 0,
+        "totalEquityValueUsd": 0,
+        "vaultPda": "CJU5otbixCpqbnBuSscA69PvR6w8Wz9t1yC6pwcEywnX",
+        "proofOfReserveVerified": false,
+        "valuationAvailable": false
+      },
+      "dataSource": "onchain",
+      "lastUpdatedAt": "2026-09-24T09:45:57.789Z",
+      "observedSlot": 503408250
+    },
+    {
+      "mint": "36Xb9SQ3tLrpZCXdXt6kdSAHNhZnfr6VnvqdrQudMd76",
+      "name": "Neural Singularity",
+      "symbol": "SING",
+      "description": "On-chain StreetFun market.",
+      "avatarUrl": "/generated/streetfun-logo.png",
+      "creator": "519jca26LioEQiPhwoHCkC8mNZiCF7cDmtaXdp98iCv2",
+      "createdAt": "2026-09-23T13:20:34+00:00",
+      "totalSupply": 1000000000,
+      "priceUsd": 0,
+      "marketCapUsd": 0,
+      "priceChange24h": 0,
+      "priceChange24hAvailable": false,
+      "volume24hUsd": 82.770971,
+      "volume24hAvailable": true,
+      "targetEquity": {
+        "symbol": "UNVERIFIED",
+        "name": "Unverified collateral token",
+        "mintAddress": "3PFKgvU4P8hcuW1X2VjAgRHNsz1TnA4SLyjEDNfhzLC7",
+        "custodian": "Unverified",
+        "legalFramework": "Unverified",
+        "logoUrl": "/generated/streetfun-logo.png",
+        "stockPriceUsd": 0,
+        "isPreIpo": false,
+        "decimals": 6,
+        "verifiedTessera": false
+      },
+      "bondingCurve": {
+        "realQuoteReservesUsd": 0,
+        "graduationThresholdUsd": 60,
+        "progressPct": 100,
+        "virtualQuoteReserves": "30076401040",
+        "virtualTokenReserves": "1070274330964824",
+        "realTokenReserves": "0",
+        "quoteMint": "DuQ1T5B6tmf5ZfSNpPomVcDntLEzR1mkoB81yHP5rGHG",
+        "isGraduated": true,
+        "graduatedAt": "2026-09-23T13:48:13.000Z",
+        "dynamicFeeBps": 100,
+        "equityPurchaseBudgetUsd": 30,
+        "ammLiquidityBudgetUsd": 30
+      },
+      "treasury": {
+        "totalEquityLocked": 100,
+        "totalEquityValueUsd": 0,
+        "vaultPda": "BHghp45LPwGj6m39GbFTDvsA7a9QSApHakge3BVYx4sE",
+        "proofOfReserveVerified": false,
+        "valuationAvailable": false
+      },
+      "dataSource": "onchain",
+      "lastUpdatedAt": "2026-09-24T09:45:57.790Z",
+      "observedSlot": 503408250
+    },
+    {
+      "mint": "6Gzc8cMvaQsaGJAfzZosCePJ8Hx7tLV7A7x58oGerggb",
+      "name": "Neural Singularity",
+      "symbol": "SING",
+      "description": "On-chain StreetFun market.",
+      "avatarUrl": "/generated/streetfun-logo.png",
+      "creator": "519jca26LioEQiPhwoHCkC8mNZiCF7cDmtaXdp98iCv2",
+      "createdAt": "2026-09-23T13:15:34+00:00",
+      "totalSupply": 1000000000,
+      "priceUsd": 0,
+      "marketCapUsd": 0,
+      "priceChange24h": 0,
+      "priceChange24hAvailable": false,
+      "volume24hUsd": 82.770971,
+      "volume24hAvailable": true,
+      "targetEquity": {
+        "symbol": "UNVERIFIED",
+        "name": "Unverified collateral token",
+        "mintAddress": "3PFKgvU4P8hcuW1X2VjAgRHNsz1TnA4SLyjEDNfhzLC7",
+        "custodian": "Unverified",
+        "legalFramework": "Unverified",
+        "logoUrl": "/generated/streetfun-logo.png",
+        "stockPriceUsd": 0,
+        "isPreIpo": false,
+        "decimals": 6,
+        "verifiedTessera": false
+      },
+      "bondingCurve": {
+        "realQuoteReservesUsd": 0,
+        "graduationThresholdUsd": 60,
+        "progressPct": 100,
+        "virtualQuoteReserves": "30076401040",
+        "virtualTokenReserves": "1070274330964824",
+        "realTokenReserves": "0",
+        "quoteMint": "DuQ1T5B6tmf5ZfSNpPomVcDntLEzR1mkoB81yHP5rGHG",
+        "isGraduated": true,
+        "graduatedAt": "2026-09-23T13:15:53.000Z",
+        "dynamicFeeBps": 100,
+        "equityPurchaseBudgetUsd": 30,
+        "ammLiquidityBudgetUsd": 30
+      },
+      "treasury": {
+        "totalEquityLocked": 150,
+        "totalEquityValueUsd": 0,
+        "vaultPda": "6EvPjfooXbTCD4pDQPa6orNyVcqPYV9vbYyt91c73JS3",
+        "proofOfReserveVerified": false,
+        "valuationAvailable": false
+      },
+      "dataSource": "onchain",
+      "lastUpdatedAt": "2026-09-24T09:45:57.790Z",
+      "observedSlot": 503408250
+    },
+    {
+      "mint": "9QYWLdsbQD3twA8ycCnrRMbL2Bjpi8h4jAHf9QUxXdLh",
+      "name": "Neural Singularity",
+      "symbol": "SING",
+      "description": "On-chain StreetFun market.",
+      "avatarUrl": "/generated/streetfun-logo.png",
+      "creator": "519jca26LioEQiPhwoHCkC8mNZiCF7cDmtaXdp98iCv2",
+      "createdAt": "2026-09-23T13:31:08+00:00",
+      "totalSupply": 999000000,
+      "priceUsd": 0,
+      "marketCapUsd": 0,
+      "priceChange24h": 0,
+      "priceChange24hAvailable": false,
+      "volume24hUsd": 82.770971,
+      "volume24hAvailable": true,
+      "targetEquity": {
+        "symbol": "UNVERIFIED",
+        "name": "Unverified collateral token",
+        "mintAddress": "3PFKgvU4P8hcuW1X2VjAgRHNsz1TnA4SLyjEDNfhzLC7",
+        "custodian": "Unverified",
+        "legalFramework": "Unverified",
+        "logoUrl": "/generated/streetfun-logo.png",
+        "stockPriceUsd": 0,
+        "isPreIpo": false,
+        "decimals": 6,
+        "verifiedTessera": false
+      },
+      "bondingCurve": {
+        "realQuoteReservesUsd": 0,
+        "graduationThresholdUsd": 60,
+        "progressPct": 100,
+        "virtualQuoteReserves": "30076401040",
+        "virtualTokenReserves": "1070274330964824",
+        "realTokenReserves": "0",
+        "quoteMint": "DuQ1T5B6tmf5ZfSNpPomVcDntLEzR1mkoB81yHP5rGHG",
+        "isGraduated": true,
+        "graduatedAt": "2026-09-23T13:31:25.000Z",
+        "dynamicFeeBps": 100,
+        "equityPurchaseBudgetUsd": 30,
+        "ammLiquidityBudgetUsd": 30
+      },
+      "treasury": {
+        "totalEquityLocked": 149.85,
+        "totalEquityValueUsd": 0,
+        "vaultPda": "kG1c2wcnPYkEhkgqkgM1ainvrDUF1HVyox1XkHgFupA",
+        "proofOfReserveVerified": false,
+        "valuationAvailable": false
+      },
+      "dataSource": "onchain",
+      "lastUpdatedAt": "2026-09-24T09:45:57.790Z",
+      "observedSlot": 503408250
+    },
+    {
+      "mint": "7UR1AXhvitB3PK4Kikxmov6iSTJZzu7UYWGaARnE2ktJ",
+      "name": "Neural Singularity",
+      "symbol": "SING",
+      "description": "On-chain StreetFun market.",
+      "avatarUrl": "/generated/streetfun-logo.png",
+      "creator": "519jca26LioEQiPhwoHCkC8mNZiCF7cDmtaXdp98iCv2",
+      "createdAt": "2026-09-23T13:30:07+00:00",
+      "totalSupply": 1000000000,
+      "priceUsd": 0,
+      "marketCapUsd": 0,
+      "priceChange24h": 0,
+      "priceChange24hAvailable": false,
+      "volume24hUsd": 82.770971,
+      "volume24hAvailable": true,
+      "targetEquity": {
+        "symbol": "UNVERIFIED",
+        "name": "Unverified collateral token",
+        "mintAddress": "3PFKgvU4P8hcuW1X2VjAgRHNsz1TnA4SLyjEDNfhzLC7",
+        "custodian": "Unverified",
+        "legalFramework": "Unverified",
+        "logoUrl": "/generated/streetfun-logo.png",
+        "stockPriceUsd": 0,
+        "isPreIpo": false,
+        "decimals": 6,
+        "verifiedTessera": false
+      },
+      "bondingCurve": {
+        "realQuoteReservesUsd": 0,
+        "graduationThresholdUsd": 60,
+        "progressPct": 100,
+        "virtualQuoteReserves": "30076401040",
+        "virtualTokenReserves": "1070274330964824",
+        "realTokenReserves": "0",
+        "quoteMint": "DuQ1T5B6tmf5ZfSNpPomVcDntLEzR1mkoB81yHP5rGHG",
+        "isGraduated": true,
+        "graduatedAt": "2026-09-23T13:48:21.000Z",
+        "dynamicFeeBps": 100,
+        "equityPurchaseBudgetUsd": 30,
+        "ammLiquidityBudgetUsd": 30
+      },
+      "treasury": {
+        "totalEquityLocked": 100,
+        "totalEquityValueUsd": 0,
+        "vaultPda": "HEM3fqEzLJzMrNNtymd6pWJhexmZSvpaNsLm5vHCuwpy",
+        "proofOfReserveVerified": false,
+        "valuationAvailable": false
+      },
+      "dataSource": "onchain",
+      "lastUpdatedAt": "2026-09-24T09:45:57.790Z",
+      "observedSlot": 503408250
+    },
+    {
+      "mint": "5gNBrKp3q48r8LT5pgXVqKPVwXEq66DZttdGGdR9v7C",
+      "name": "Neural Singularity",
+      "symbol": "SING",
+      "description": "On-chain StreetFun market.",
+      "avatarUrl": "/generated/streetfun-logo.png",
+      "creator": "519jca26LioEQiPhwoHCkC8mNZiCF7cDmtaXdp98iCv2",
+      "createdAt": "2026-09-23T13:08:00+00:00",
+      "totalSupply": 1000000000,
+      "priceUsd": 0,
+      "marketCapUsd": 0,
+      "priceChange24h": 0,
+      "priceChange24hAvailable": false,
+      "volume24hUsd": 80,
+      "volume24hAvailable": true,
+      "targetEquity": {
+        "symbol": "UNVERIFIED",
+        "name": "Unverified collateral token",
+        "mintAddress": "3PFKgvU4P8hcuW1X2VjAgRHNsz1TnA4SLyjEDNfhzLC7",
+        "custodian": "Unverified",
+        "legalFramework": "Unverified",
+        "logoUrl": "/generated/streetfun-logo.png",
+        "stockPriceUsd": 0,
+        "isPreIpo": false,
+        "decimals": 6,
+        "verifiedTessera": false
+      },
+      "bondingCurve": {
+        "realQuoteReservesUsd": 0,
+        "graduationThresholdUsd": 60,
+        "progressPct": 100,
+        "virtualQuoteReserves": "30079200000",
+        "virtualTokenReserves": "1070174738689860",
+        "realTokenReserves": "0",
+        "quoteMint": "DuQ1T5B6tmf5ZfSNpPomVcDntLEzR1mkoB81yHP5rGHG",
+        "isGraduated": true,
+        "graduatedAt": "2026-09-23T13:08:17.000Z",
+        "dynamicFeeBps": 100,
+        "equityPurchaseBudgetUsd": 30,
+        "ammLiquidityBudgetUsd": 30
+      },
+      "treasury": {
+        "totalEquityLocked": 150,
+        "totalEquityValueUsd": 0,
+        "vaultPda": "CzwGZrw7E9W5m5WLJkrcJnfwYL5RytsJxG4dVAMFcgq9",
+        "proofOfReserveVerified": false,
+        "valuationAvailable": false
+      },
+      "dataSource": "onchain",
+      "lastUpdatedAt": "2026-09-24T09:45:57.790Z",
+      "observedSlot": 503408250
+    }
+  ],
+  "snapshotMs": 533,
+  "cachedSnapshotMs": 0,
+  "persistedTrades": [
+    {
+      "id": 48,
+      "tx_signature": "3EBZEvWAVNGKrtj9JE7bVfXiYVHKMgbwam7qhgmLNVPSbeJRehyrNS45MiAcJUY9RgNgrQ9Xz7AYr4K7WMwBQomV",
+      "mint": "Ax6GBX7HUfXuoKaNzw8xEyrKkaDrMWdxvWzhVVXpAzQY",
+      "trade_type": "BUY",
+      "price_usd": 0.00002829,
+      "tokens_amount": 353506.483321,
+      "quote_amount_usd": 10,
+      "trader": "519jca26LioEQiPhwoHCkC8mNZiCF7cDmtaXdp98iCv2",
+      "slot": 503009263,
+      "created_at": "2026-09-23T15:24:09+00:00"
+    },
+    {
+      "id": 49,
+      "tx_signature": "4MmE6CCMhTSC1qg5DWcxDSqQhJjTq8qP3WdXMr3CJ4bkz3bxKWWZC4HPypDHwDPiYiK477BrvWxxE3toEEih9pUk",
+      "mint": "7TUcDnopkaCxUfr8D7LDT6imx9aMMZUGqmfKj4UgZyFU",
+      "trade_type": "BUY",
+      "price_usd": 0.0000283,
+      "tokens_amount": 2155609.757558,
+      "quote_amount_usd": 61,
+      "trader": "519jca26LioEQiPhwoHCkC8mNZiCF7cDmtaXdp98iCv2",
+      "slot": 502947888,
+      "created_at": "2026-09-23T12:34:41+00:00"
+    },
+    {
+      "id": 50,
+      "tx_signature": "4zstXWpRoXKGqQAXpER3KP9g1iYczp2a7gzfV4xCYv2U5sbQBE9Cb6VvZ78TaGkhRLtLCHxRBuxmUMZURGLKG85D",
+      "mint": "Ax6GBX7HUfXuoKaNzw8xEyrKkaDrMWdxvWzhVVXpAzQY",
+      "trade_type": "BUY",
+      "price_usd": 0.00002826,
+      "tokens_amount": 707712.909479,
+      "quote_amount_usd": 20,
+      "trader": "519jca26LioEQiPhwoHCkC8mNZiCF7cDmtaXdp98iCv2",
+      "slot": 502955387,
+      "created_at": "2026-09-23T12:55:25+00:00"
+    },
+    {
+      "id": 51,
+      "tx_signature": "4V4zdSWcYKo8ibw7a2jyWPGN6TZjpmTDHaPXf8iinu2m5g5d9sYwpnsJWjiVZG5wgbfdjdqvBHCDp8JJ4vCiddhU",
+      "mint": "5gNBrKp3q48r8LT5pgXVqKPVwXEq66DZttdGGdR9v7C",
+      "trade_type": "BUY",
+      "price_usd": 0.00002826,
+      "tokens_amount": 636983.631722,
+      "quote_amount_usd": 18,
+      "trader": "CeDNgzgfSSaNi5AmAZbrcLwjD1hPQocCBhjUxRdY5yba",
+      "slot": 502959949,
+      "created_at": "2026-09-23T13:08:02+00:00"
+    },
+    {
+      "id": 52,
+      "tx_signature": "UkASgEiSNoQsxmEhYTwpdc98JsfzFacbYBjjdHHZCszyrC2GNYPS6QiCoKeXqo1oeKkfwWdYMqrP3AHVhTqCqZ9",
+      "mint": "5gNBrKp3q48r8LT5pgXVqKPVwXEq66DZttdGGdR9v7C",
+      "trade_type": "BUY",
+      "price_usd": 0.00002833,
+      "tokens_amount": 2188277.678418,
+      "quote_amount_usd": 62,
+      "trader": "CeDNgzgfSSaNi5AmAZbrcLwjD1hPQocCBhjUxRdY5yba",
+      "slot": 502960004,
+      "created_at": "2026-09-23T13:08:11+00:00"
+    },
+    {
+      "id": 53,
+      "tx_signature": "4fRPWbZGHkZbrR8YYCmvoFobUgYZ8kwdg1C1vrTysW89M31ytg15UVFYzyJNH4jnP6DNitSoSTyDKJggCraPkTJG",
+      "mint": "6Gzc8cMvaQsaGJAfzZosCePJ8Hx7tLV7A7x58oGerggb",
+      "trade_type": "BUY",
+      "price_usd": 0.00002826,
+      "tokens_amount": 636983.631722,
+      "quote_amount_usd": 18,
+      "trader": "CJ8DAzJEgzxHMPtrtEyjExJE6PrrYpc9mgrLtL9WzseC",
+      "slot": 502962700,
+      "created_at": "2026-09-23T13:15:36+00:00"
+    },
+    {
+      "id": 54,
+      "tx_signature": "3KKoaNwFDxNGwLpE91qyNmmxjppZatsom8pQHfMrNVoUYAMA3Bbci74TwMPpXQKaPHjCAZun6oCdbY3xnBdYdJM5",
+      "mint": "6Gzc8cMvaQsaGJAfzZosCePJ8Hx7tLV7A7x58oGerggb",
+      "trade_type": "SELL",
+      "price_usd": 0.00002771,
+      "tokens_amount": 100000,
+      "quote_amount_usd": 2.770971,
+      "trader": "CJ8DAzJEgzxHMPtrtEyjExJE6PrrYpc9mgrLtL9WzseC",
+      "slot": 502962755,
+      "created_at": "2026-09-23T13:15:46+00:00"
+    },
+    {
+      "id": 55,
+      "tx_signature": "5DBWLcDCJU2NizBqMhUJG3wsJHc5qrmfnAgrD6M5nwuCxrWjKT4VJodWQ23N6KZrVHCq35QYgHT19sZwayZ5Jkey",
+      "mint": "6Gzc8cMvaQsaGJAfzZosCePJ8Hx7tLV7A7x58oGerggb",
+      "trade_type": "BUY",
+      "price_usd": 0.00002833,
+      "tokens_amount": 2188685.403454,
+      "quote_amount_usd": 62,
+      "trader": "CJ8DAzJEgzxHMPtrtEyjExJE6PrrYpc9mgrLtL9WzseC",
+      "slot": 502962761,
+      "created_at": "2026-09-23T13:15:47+00:00"
+    },
+    {
+      "id": 56,
+      "tx_signature": "5wuCCjsJz5xADVnXsB7Wq2WJKKkm1HTLEcaRRjao7ubiHvkk4Kw7AnekeWBbPBuwiGjU2TFSEhxVBtuSQRwCDCjc",
+      "mint": "36Xb9SQ3tLrpZCXdXt6kdSAHNhZnfr6VnvqdrQudMd76",
+      "trade_type": "BUY",
+      "price_usd": 0.00002826,
+      "tokens_amount": 636983.631722,
+      "quote_amount_usd": 18,
+      "trader": "6s7ntThbSvQefvDEb43aTNuDShoCYvi9bqtCm5BcAAMH",
+      "slot": 502964552,
+      "created_at": "2026-09-23T13:20:41+00:00"
+    },
+    {
+      "id": 57,
+      "tx_signature": "5uQb23cCicpNwYigAW1BnQ18yZamrYi29C4MMn66kUhwXdLoHCmyMEm5Hk3fhoR3ybKgfSwQAXnJUHHNL1BUS1b1",
+      "mint": "36Xb9SQ3tLrpZCXdXt6kdSAHNhZnfr6VnvqdrQudMd76",
+      "trade_type": "SELL",
+      "price_usd": 0.00002771,
+      "tokens_amount": 100000,
+      "quote_amount_usd": 2.770971,
+      "trader": "6s7ntThbSvQefvDEb43aTNuDShoCYvi9bqtCm5BcAAMH",
+      "slot": 502964560,
+      "created_at": "2026-09-23T13:20:42+00:00"
+    },
+    {
+      "id": 58,
+      "tx_signature": "qunVekw61yRrfmSqVFkSqu1Mm5h3pqmuVQ5rEpz1X3ht1Hhki7bvcPtquEr7WMRuzoSQtFFy4AftfHXyTLuYi4Q",
+      "mint": "36Xb9SQ3tLrpZCXdXt6kdSAHNhZnfr6VnvqdrQudMd76",
+      "trade_type": "BUY",
+      "price_usd": 0.00002833,
+      "tokens_amount": 2188685.403454,
+      "quote_amount_usd": 62,
+      "trader": "6s7ntThbSvQefvDEb43aTNuDShoCYvi9bqtCm5BcAAMH",
+      "slot": 502964573,
+      "created_at": "2026-09-23T13:20:44+00:00"
+    },
+    {
+      "id": 59,
+      "tx_signature": "4zkCkm6331wj4vQ2edceA9KxSrLqzwnPW4EsjyrszL41piybmiG2b1Y1faGt9P7ZTwidKcL5hG4ts2pYzXQViwXZ",
+      "mint": "7UR1AXhvitB3PK4Kikxmov6iSTJZzu7UYWGaARnE2ktJ",
+      "trade_type": "BUY",
+      "price_usd": 0.00002826,
+      "tokens_amount": 636983.631722,
+      "quote_amount_usd": 18,
+      "trader": "FhzH6VK3ir1qgkHmj1rPQyfRVhXo1BczbUWmKjqgMz4J",
+      "slot": 502967992,
+      "created_at": "2026-09-23T13:30:09+00:00"
+    },
+    {
+      "id": 60,
+      "tx_signature": "4mnoLtGAQZ2QQCkv1dJvEU5kEaXZDYjwS1t6no4AZt4QVYZGTcV2xDAbeMUoX7ty4kaSsC7vFv1cWSaqevFnbQAU",
+      "mint": "7UR1AXhvitB3PK4Kikxmov6iSTJZzu7UYWGaARnE2ktJ",
+      "trade_type": "SELL",
+      "price_usd": 0.00002771,
+      "tokens_amount": 100000,
+      "quote_amount_usd": 2.770971,
+      "trader": "FhzH6VK3ir1qgkHmj1rPQyfRVhXo1BczbUWmKjqgMz4J",
+      "slot": 502968044,
+      "created_at": "2026-09-23T13:30:17+00:00"
+    },
+    {
+      "id": 61,
+      "tx_signature": "mhZWapXpCRdEfGNZQtXdDQPQo39aGzYyDWpPxjDwwwpowF3ApdjuyoRCffcTtpSgYGSTaQUwvE5iW1Ezwaim43U",
+      "mint": "7UR1AXhvitB3PK4Kikxmov6iSTJZzu7UYWGaARnE2ktJ",
+      "trade_type": "BUY",
+      "price_usd": 0.00002833,
+      "tokens_amount": 2188685.403454,
+      "quote_amount_usd": 62,
+      "trader": "FhzH6VK3ir1qgkHmj1rPQyfRVhXo1BczbUWmKjqgMz4J",
+      "slot": 502968051,
+      "created_at": "2026-09-23T13:30:18+00:00"
+    },
+    {
+      "id": 62,
+      "tx_signature": "63nBcr7fQosVeNHvwkFvF4x3P3g3g9Vaw3nG2mZUMfJ9rS4k2H13gmnf4truKRqErvGSrhGEkjn15n5rPtBwyy5a",
+      "mint": "9QYWLdsbQD3twA8ycCnrRMbL2Bjpi8h4jAHf9QUxXdLh",
+      "trade_type": "BUY",
+      "price_usd": 0.00002826,
+      "tokens_amount": 636983.631722,
+      "quote_amount_usd": 18,
+      "trader": "EmK3rSJ9SdJfRKrjYKAiCq2Q4rwWs9XqHhLEybLq1zwH",
+      "slot": 502968364,
+      "created_at": "2026-09-23T13:31:10+00:00"
+    },
+    {
+      "id": 63,
+      "tx_signature": "5xmfP25gAT1tq2UvBZma6tmwPY8EUvYRf7fVb9b1wDEXfXpDotzCQnBeNTeHQin53Zo1xtwsvEAAQySs76Ek9Myw",
+      "mint": "9QYWLdsbQD3twA8ycCnrRMbL2Bjpi8h4jAHf9QUxXdLh",
+      "trade_type": "SELL",
+      "price_usd": 0.00002771,
+      "tokens_amount": 100000,
+      "quote_amount_usd": 2.770971,
+      "trader": "EmK3rSJ9SdJfRKrjYKAiCq2Q4rwWs9XqHhLEybLq1zwH",
+      "slot": 502968416,
+      "created_at": "2026-09-23T13:31:19+00:00"
+    },
+    {
+      "id": 64,
+      "tx_signature": "KkshprarwdSr6Z8vB2wrMjzRwTQ3SoS9LvjVXp7EbHBT95MtkrdHV8hd9i8te2WJvitusVm73nDZBjAXwSq49i1",
+      "mint": "9QYWLdsbQD3twA8ycCnrRMbL2Bjpi8h4jAHf9QUxXdLh",
+      "trade_type": "BUY",
+      "price_usd": 0.00002833,
+      "tokens_amount": 2188685.403454,
+      "quote_amount_usd": 62,
+      "trader": "EmK3rSJ9SdJfRKrjYKAiCq2Q4rwWs9XqHhLEybLq1zwH",
+      "slot": 502968419,
+      "created_at": "2026-09-23T13:31:19+00:00"
+    }
+  ],
+  "databaseError": null
+}

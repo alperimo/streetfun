@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import { X, Rocket, ShieldCheck, Info } from "lucide-react";
-import { VERIFIED_TOKENIZED_EQUITIES } from "@/sdk/constants";
+import type { TesseraPreIpoAsset } from "@/sdk/constants";
+import { DEMO_TOKENIZED_EQUITIES } from "@/lib/demoAssets";
 import { useRouter } from "next/navigation";
 import { TokenMetadata } from "@/lib/types";
 import { useMarket } from "@/context/MarketContext";
@@ -32,16 +33,37 @@ export function LaunchModal({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [launchError, setLaunchError] = useState<string | null>(null);
 
+  const [liveAssets, setLiveAssets] = useState<(TesseraPreIpoAsset & { launchEnabled?: boolean; unavailableReason?: string })[]>([]);
+  const [assetError, setAssetError] = useState<string | null>(null);
+  const assets = isMock ? DEMO_TOKENIZED_EQUITIES : liveAssets;
+  useEffect(() => {
+    if (!isOpen || isMock) return;
+    const controller = new AbortController();
+    setAssetError(null);
+    fetch("/api/assets", { signal: controller.signal }).then(async response => {
+      if (!response.ok) throw new Error("Verified Tessera assets are unavailable.");
+      const data = await response.json();
+      setLiveAssets(data.assets);
+      setSelectedEquitySymbol(data.assets[0]?.symbol || "");
+    }).catch(error => { if (!controller.signal.aborted) setAssetError(error.message); });
+    return () => controller.abort();
+  }, [isOpen, isMock]);
+  useEffect(() => {
+    if (!isOpen) return;
+    const dismiss = (event: KeyboardEvent) => { if (event.key === "Escape") onClose(); };
+    window.addEventListener("keydown", dismiss);
+    return () => window.removeEventListener("keydown", dismiss);
+  }, [isOpen, onClose]);
   if (!isOpen) return null;
 
   const selectedEquity =
-    VERIFIED_TOKENIZED_EQUITIES.find(
+    assets.find(
       (e) => e.symbol === selectedEquitySymbol
-    ) || VERIFIED_TOKENIZED_EQUITIES[0];
+    ) || assets[0];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name || !symbol) return;
+    if (!name || !symbol || !selectedEquity) return;
 
     setIsSubmitting(true);
     setLaunchError(null);
@@ -77,7 +99,7 @@ export function LaunchModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/30 backdrop-blur-[1px] animate-in fade-in duration-150">
+    <div onClick={onClose} role="dialog" aria-modal="true" aria-label="Launch Token" className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/30 backdrop-blur-[1px] animate-in fade-in duration-150">
       <div
         className="w-full max-w-lg rounded-2xl border border-border bg-card p-6 shadow-2xl"
         onClick={(e) => e.stopPropagation()}
@@ -91,7 +113,7 @@ export function LaunchModal({
             <div>
               <h2 className="text-lg font-bold text-foreground">Launch Token</h2>
               <p className="text-xs text-muted">
-                Create an on-chain equity-backed token deployed to Solana Devnet
+                Choose a verified Tessera asset for your token
               </p>
             </div>
           </div>
@@ -105,6 +127,8 @@ export function LaunchModal({
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="mt-5 space-y-4 text-xs">
+          {assetError && <p role="alert" className="text-rose-400">{assetError}</p>}
+          {!isMock && selectedEquity && "unavailableReason" in selectedEquity && <p role="status" className="text-amber-300">{String(selectedEquity.unavailableReason)}</p>}
           {launchError && <p role="alert" className="text-rose-400">{launchError}</p>}
           {/* Token Name & Ticker */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -148,7 +172,7 @@ export function LaunchModal({
               </span>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-              {VERIFIED_TOKENIZED_EQUITIES.map((eq) => {
+              {assets.map((eq) => {
                 const isSelected = selectedEquitySymbol === eq.symbol;
                 return (
                   <button
@@ -183,7 +207,7 @@ export function LaunchModal({
                         {eq.name}
                       </span>
                       <span className="text-[11px] font-mono font-medium text-muted">
-                        ${eq.currentStockPriceUsd}/sh
+                        ${eq.currentStockPriceUsd.toLocaleString()} mark
                       </span>
                     </div>
                   </button>
@@ -245,18 +269,18 @@ export function LaunchModal({
           <div className="rounded-xl border border-border bg-card-subtle p-3 text-[11px] text-muted flex items-start gap-2">
             <Info className="h-4 w-4 text-brand-cyan flex-shrink-0 mt-0.5" />
             <span className="leading-relaxed">
-              <strong className="text-foreground">Graduation Mechanism:</strong> At 60 USDC graduation, 50% ($30) automatically acquires {selectedEquity.symbol} equity shares into the treasury vault, and 50% ($30) funds permanent liquidity.
+              <strong className="text-foreground">Graduation allocation:</strong> The intended split is 50% for Tessera tokens and 50% for liquidity. Live launches are unavailable until settlement and asset support are verified.
             </span>
           </div>
 
           {/* Submit Button */}
           <button
             type="submit"
-            disabled={isSubmitting}
+            disabled={isSubmitting || (!isMock && (!selectedEquity || !("launchEnabled" in selectedEquity) || !selectedEquity.launchEnabled))}
             className="w-full rounded-xl bg-brand-cyan py-3 text-sm font-bold text-slate-950 hover:opacity-90 transition-opacity disabled:opacity-50 shadow-md shadow-brand-cyan/20 flex items-center justify-center gap-2 cursor-pointer"
           >
             {isSubmitting ? (
-              <span>Deploying to Devnet...</span>
+              <span>Preparing launch...</span>
             ) : (
               <>
                 <Rocket className="h-4 w-4 stroke-[2.5]" />

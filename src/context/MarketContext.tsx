@@ -15,9 +15,8 @@ import {
 } from "@/services";
 import { usePathname } from "next/navigation";
 import { INITIAL_TOKENS } from "@/lib/mockData";
-import { useConnection, useWallet } from "@solana/wallet-adapter-react";
+import { useWallet } from "@solana/wallet-adapter-react";
 import { createBrowserSupabaseClient } from "@/lib/supabase";
-import { PROGRAM_ID } from "@/sdk/constants";
 
 import { PublicKey } from "@solana/web3.js";
 
@@ -57,7 +56,6 @@ export function MarketProvider({ children, initialTokens = [] }: MarketProviderP
   const [loading, setLoading] = useState(!isMock && initialTokens.length === 0);
   const [error, setError] = useState<string | null>(null);
   const wallet = useWallet();
-  const { connection } = useConnection();
   const [walletDialogOpen, setWalletDialogOpen] = useState(false);
   const [devWalletConnected, setDevWalletConnected] = useState(false);
   const isFetchingRef = React.useRef(false);
@@ -71,7 +69,7 @@ export function MarketProvider({ children, initialTokens = [] }: MarketProviderP
   const isAlphaOnly =
     process.env.NEXT_PUBLIC_ALPHA_ONLY === "true" ||
     (process.env.NODE_ENV === "production" && process.env.NEXT_PUBLIC_FULL_APP !== "true");
-  const isAlphaRoute = isAlphaOnly || pathname === "/" || pathname?.startsWith("/alpha");
+  const isAlphaRoute = isAlphaOnly || pathname?.startsWith("/alpha");
 
   const connectDevWallet = useCallback(() => {
     setDevWalletConnected(true);
@@ -111,7 +109,7 @@ export function MarketProvider({ children, initialTokens = [] }: MarketProviderP
     const refreshWhenVisible = () => {
       if (document.visibilityState === "visible") refreshTokens();
     };
-    const interval = setInterval(refreshWhenVisible, isMock ? 4_000 : 10_000);
+    const interval = setInterval(refreshWhenVisible, isMock ? 4_000 : 30_000);
     window.addEventListener("focus", refreshWhenVisible);
     document.addEventListener("visibilitychange", refreshWhenVisible);
     return () => {
@@ -124,22 +122,11 @@ export function MarketProvider({ children, initialTokens = [] }: MarketProviderP
   useEffect(() => {
     if (isMock || isAlphaRoute) return;
 
-    let programSubscriptionId: number | null = null;
     let refreshTimer: ReturnType<typeof setTimeout> | null = null;
     const scheduleRefresh = () => {
-      if (refreshTimer) clearTimeout(refreshTimer);
-      refreshTimer = setTimeout(() => refreshTokens(), 150);
+      if (document.visibilityState !== "visible" || refreshTimer) return;
+      refreshTimer = setTimeout(() => { refreshTimer = null; refreshTokens(); }, 350);
     };
-
-    try {
-      programSubscriptionId = connection.onProgramAccountChange(
-        PROGRAM_ID,
-        scheduleRefresh,
-        "confirmed"
-      );
-    } catch (subscriptionError) {
-      console.warn("Could not subscribe to Solana account updates:", subscriptionError);
-    }
 
     const supabase = createBrowserSupabaseClient();
     const channel = supabase
@@ -158,12 +145,9 @@ export function MarketProvider({ children, initialTokens = [] }: MarketProviderP
 
     return () => {
       if (refreshTimer) clearTimeout(refreshTimer);
-      if (programSubscriptionId !== null) {
-        connection.removeProgramAccountChangeListener(programSubscriptionId).catch(() => {});
-      }
       if (supabase && channel) supabase.removeChannel(channel);
     };
-  }, [connection, isMock, refreshTokens]);
+  }, [isMock, isAlphaRoute, refreshTokens]);
 
   const getToken = useCallback(
     (mint: string) => {

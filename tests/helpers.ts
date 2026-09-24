@@ -1,3 +1,4 @@
+import { DEMO_EQUITIES } from "../src/lib/demoAssets";
 import * as anchor from "@coral-xyz/anchor";
 import {
   Connection,
@@ -27,7 +28,6 @@ import {
   QUOTE_VAULT_SEED,
   TREASURY_VAULT_SEED,
   USDC_MINT,
-  VERIFIED_TESSERA_PRE_IPO_ASSETS,
 } from "../src/sdk/constants";
 import {
   getGlobalConfigPda,
@@ -199,7 +199,7 @@ export async function getTestEquityMint(
   symbol = "$TOPAI"
 ): Promise<PublicKey> {
   if (isDevnet) {
-    const asset = VERIFIED_TESSERA_PRE_IPO_ASSETS.find(
+    const asset = DEMO_EQUITIES.find(
       (a) => a.symbol === symbol || a.ticker === symbol
     );
     if (asset) return new PublicKey(asset.mintAddress);

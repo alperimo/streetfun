@@ -1,0 +1,52 @@
+{
+  "checkedAt": "2026-09-24T09:47:41.238Z",
+  "schemaError": null,
+  "statsError": null,
+  "stats": [
+    {
+      "mint": "Ax6GBX7HUfXuoKaNzw8xEyrKkaDrMWdxvWzhVVXpAzQY",
+      "volume_24h": 30,
+      "latest_price": 0.00002829
+    }
+  ],
+  "events": [
+    {
+      "table": "tokens",
+      "eventType": "UPDATE",
+      "mint": "9QYWLdsbQD3twA8ycCnrRMbL2Bjpi8h4jAHf9QUxXdLh"
+    },
+    {
+      "table": "trades",
+      "eventType": "INSERT",
+      "signature": "2YHXyZcfvErNoxfwNoXcAoWxD8iGo9MwjGoJSevPa5sGm61aQ7fY8mxXyBaZsQ75aFCeJozDpbPaL3fabHn5GKpd"
+    }
+  ],
+  "subscription": "SUBSCRIBED",
+  "redemption": {
+    "indexed": 1,
+    "trades": [
+      {
+        "tx_signature": "2YHXyZcfvErNoxfwNoXcAoWxD8iGo9MwjGoJSevPa5sGm61aQ7fY8mxXyBaZsQ75aFCeJozDpbPaL3fabHn5GKpd",
+        "instruction_index": 0,
+        "mint": "9QYWLdsbQD3twA8ycCnrRMbL2Bjpi8h4jAHf9QUxXdLh",
+        "trade_type": "REDEEM",
+        "tokens_amount": 1000000,
+        "equity_amount": 0.15,
+        "price_usd": 0,
+        "quote_amount_usd": 0,
+        "trader": "EmK3rSJ9SdJfRKrjYKAiCq2Q4rwWs9XqHhLEybLq1zwH",
+        "slot": 502968485,
+        "created_at": "2026-09-23T13:31:30.000Z"
+      }
+    ]
+  },
+  "replay": {
+    "before": 1,
+    "after": 1
+  },
+  "alphaPrivate": {
+    "status": 200,
+    "returnedRows": 0,
+    "error": null
+  }
+}

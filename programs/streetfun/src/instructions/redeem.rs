@@ -68,7 +68,7 @@ pub fn handle_burn_and_redeem(
 
     let entitled_shares = calculate_pro_rata_equity(
         params.meme_tokens_to_burn,
-        curve.total_meme_supply,
+        ctx.accounts.meme_mint.supply,
         curve.total_equity_locked,
     )?;
 
@@ -116,8 +116,7 @@ pub fn handle_burn_and_redeem(
     )?;
 
     // 3. Update curve supply and remaining locked equity
-    curve.total_meme_supply = curve
-        .total_meme_supply
+    curve.total_meme_supply = ctx.accounts.meme_mint.supply
         .checked_sub(params.meme_tokens_to_burn)
         .ok_or(StreetfunError::MathOverflow)?;
     curve.total_equity_locked = curve

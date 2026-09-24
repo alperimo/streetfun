@@ -1100,6 +1100,11 @@
       "code": 6014,
       "name": "InvalidFeeBps",
       "msg": "Fee basis points exceed maximum allowed limit."
+    },
+    {
+      "code": 6015,
+      "name": "SettlementUnavailable",
+      "msg": "Verified asset purchase and liquidity settlement are unavailable."
     }
   ],
   "types": [

@@ -16,6 +16,7 @@ export function middleware(request: NextRequest) {
   const isAllowed =
     pathname === "/" ||
     pathname === "/alpha" ||
+    pathname === "/api/webhooks/helius" ||
     pathname.startsWith("/api/alpha") ||
     pathname === "/terms.txt" ||
     pathname === "/robots.txt" ||
@@ -36,6 +37,9 @@ export function middleware(request: NextRequest) {
     pathname.endsWith(".svg");
 
   if (!isAllowed) {
+    if (pathname.startsWith("/api/")) {
+      return NextResponse.json({ error: "This API is unavailable during alpha." }, { status: 503 });
+    }
     // Redirect any unauthorized routes (e.g. /treasury, /token/...) to root alpha page
     return NextResponse.redirect(new URL("/", request.url));
   }

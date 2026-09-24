@@ -81,6 +81,8 @@ pub fn handle_buy_curve(ctx: Context<BuyCurve>, params: BuyCurveParams) -> Resul
         return Err(StreetfunError::CurveAlreadyGraduated.into());
     }
 
+    require!(curve.real_quote_reserves < ctx.accounts.global_config.graduation_threshold, StreetfunError::GraduationThresholdReached);
+
     let result = calculate_buy_tokens_out(
         params.quote_amount_in,
         curve.virtual_quote_reserves,

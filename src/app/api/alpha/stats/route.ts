@@ -1,29 +1,9 @@
 import { NextResponse } from "next/server";
-import { createServerSupabaseClient } from "@/lib/supabase";
-
+import { createServerSupabaseClient } from "@/server/supabase";
 export async function GET() {
-  const MAX_SLOTS = 1000;
-  let totalClaimed = 421; // Base momentum counter
-
-  try {
-    const supabase = createServerSupabaseClient();
-    if (supabase) {
-      const { count, error } = await supabase
-        .from("alpha_passes")
-        .select("*", { count: "exact", head: true });
-
-      if (!error && typeof count === "number") {
-        totalClaimed = Math.max(totalClaimed, count + 380);
-      }
-    }
-  } catch (err) {
-    console.error("[Alpha Stats API] Error:", err);
-  }
-
-  return NextResponse.json({
-    totalClaimed,
-    maxSlots: MAX_SLOTS,
-    remainingSlots: Math.max(0, MAX_SLOTS - totalClaimed),
-    isOpen: totalClaimed < MAX_SLOTS,
-  });
+  const db = createServerSupabaseClient();
+  if (!db) return NextResponse.json({ error: "Alpha statistics unavailable." }, { status: 503 });
+  const { count, error } = await db.from("alpha_passes").select("*", { count: "exact", head: true });
+  if (error || count == null) return NextResponse.json({ error: "Alpha statistics unavailable." }, { status: 503 });
+  return NextResponse.json({ totalClaimed: count, maxSlots: 1000, remainingSlots: Math.max(0, 1000 - count), isOpen: count < 1000 });
 }

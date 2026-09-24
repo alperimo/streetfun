@@ -1,0 +1,145 @@
+> ## Documentation Index
+> Fetch the complete documentation index at: https://docs.meteora.ag/llms.txt
+> Use this file to discover all available pages before exploring further.
+
+# DBC Migration and Liquidity
+
+> Learn how DBC graduates a completed bonding curve into DAMM v2 liquidity, including deprecated DAMM v1 migration, transfer-hook completion, liquidity ownership, locks, vesting, and protocol migration fees.
+
+DBC migration is the handoff from launch trading to long-term Meteora liquidity.
+
+During the bonding curve phase, traders buy and sell against a DBC virtual pool. When the quote reserve reaches the configured migration threshold, normal curve trading stops and the pool becomes eligible to create a DAMM pool.
+
+```text theme={"system"}
+Virtual pool trading -> Curve complete -> Migration steps -> DAMM pool live
+```
+
+For Token 2022 transfer-hook pools, curve completion also revokes the base mint's transfer-hook program id and transfer-hook authority. DBC does this before DAMM v2 migration so the graduated mint can use DAMM v2 without relying on transfer-hook remaining accounts.
+
+## Migration Progress
+
+The program tracks migration as a sequence of states.
+
+| State            | Product Meaning                                                                        |
+| ---------------- | -------------------------------------------------------------------------------------- |
+| PreBondingCurve  | The pool is still trading on the DBC curve.                                            |
+| PostBondingCurve | The curve is complete, and migration can continue.                                     |
+| LockedVesting    | Required vesting or locker setup has been completed, and the DAMM pool can be created. |
+| CreatedPool      | The migrated DAMM pool has been created.                                               |
+
+Some launches move from curve completion directly into the migration-ready state. Others need the locker step first, especially when base-token locked vesting is configured.
+
+## Migration Targets
+
+New DBC configs and new pools must use DAMM v2. DAMM v1 remains available only for existing pools that were already configured with that target.
+
+| Migration Target | Product Behavior                                                                                                                                                             |
+| ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| DAMM v2          | Creates a configurable migrated pool with position NFTs, advanced fee settings, compounding options, and vesting support. This is the required target for new launches.      |
+| DAMM v1          | Existing pools can still create a simpler constant-product DAMM pool and use LP tokens to represent migrated liquidity. New configs and new pools cannot select this target. |
+
+DAMM v2 is the path for Token 2022 launches, transfer-hook launches, and quote mints that needed a DBC token badge.
+
+Transfer-hook launches use DAMM v2. The hook is active only during the DBC bonding-curve phase and is revoked when the curve completes.
+
+A DBC token badge is valid only inside DBC. DAMM v2 configs used by DBC include the `CreatePoolWithoutMintValidation` permission so a quote mint that is not permissionless-supported by DAMM v2 can still migrate. DBC still requires the quote mint transfer fee to be zero at migration time.
+
+<Warning>
+  DAMM v1 migration is deprecated for new configs and new pools. Existing DAMM v1 pools can still graduate. Token 2022 launches must use DAMM v2.
+</Warning>
+
+## What Migrates
+
+At migration, DBC uses:
+
+* The configured quote threshold from the bonding phase.
+* The base token amount allocated for the migrated pool.
+* The migration price discovered by the curve.
+* The configured partner and creator liquidity distribution.
+
+The goal is to start the DAMM pool around the price discovered during the launch, rather than forcing teams to choose a separate post-launch price manually.
+
+## Liquidity Ownership
+
+DBC can split migrated liquidity between partner and creator buckets.
+
+Each bucket can include:
+
+| Liquidity Type               | Product Meaning                                                   |
+| ---------------------------- | ----------------------------------------------------------------- |
+| Unlocked liquidity           | The recipient can manage it according to the migrated pool rules. |
+| Permanently locked liquidity | Liquidity remains locked while still supporting the pool.         |
+| Vesting liquidity            | Liquidity unlocks over time according to the configured schedule. |
+
+The full distribution across partner unlocked liquidity, partner permanent locked liquidity, partner vesting liquidity, creator unlocked liquidity, creator permanent locked liquidity, and creator vesting liquidity must add up to 100%.
+
+<Warning>
+  DBC requires at least 10% of liquidity to remain locked at day 1 after migration. Vesting lock durations are capped at 2 years.
+</Warning>
+
+## DAMM v1 Liquidity
+
+For DAMM v1 migration, liquidity is represented through LP tokens.
+
+After the DAMM v1 pool is created, partner and creator LP-token claims can become available according to the configured distribution. If LP tokens need to be locked, the lock step happens after the migrated pool exists.
+
+This path is simpler, but it is also less configurable than DAMM v2.
+
+## DAMM v2 Liquidity
+
+For DAMM v2 migration, DBC creates position NFTs for the migrated liquidity.
+
+The migration flow:
+
+1. Creates the DAMM v2 pool.
+2. Creates migrated liquidity positions.
+3. Applies configured permanent locks or vesting locks.
+4. Transfers position ownership to the partner or creator owner.
+
+This means DAMM v2 migration is not just a pool creation step. It also finalizes who controls the migrated positions and how much of that liquidity is locked.
+
+## Protocol Liquidity Migration Fee
+
+DBC applies a fixed 0.2% protocol liquidity migration fee during migration.
+
+This fee is tracked as protocol migration base and quote amounts. In product terms, it reduces the amount of base and quote liquidity that enters the migrated pool and becomes part of protocol-claimable balances.
+
+<Note>
+  This protocol liquidity migration fee is separate from the configurable partner and creator migration fee.
+</Note>
+
+## Leftover After Migration
+
+For fixed-supply launches, some base tokens may remain in the virtual pool after migration accounting. Those unused tokens are called leftover and can be withdrawn to the configured leftover receiver after the migrated pool reaches the created state.
+
+Leftover is covered in more detail in [DBC Surplus and Leftover](/core-products/dbc/surplus-and-leftover).
+
+## Mainnet Migration Keepers
+
+Meteora operates migration keepers on mainnet to help eligible DBC pools graduate automatically.
+
+| Keeper                                                                                                                  |
+| ----------------------------------------------------------------------------------------------------------------------- |
+| [Asi5DTGEeiso6k7ya6ndDabEZ7DRCgfTpCBLPH5E3aQs](https://solscan.io/account/Asi5DTGEeiso6k7ya6ndDabEZ7DRCgfTpCBLPH5E3aQs) |
+| [DeQ8dPv6ReZNQ45NfiWwS5CchWpB2BVq1QMyNV8L2uSW](https://solscan.io/account/DeQ8dPv6ReZNQ45NfiWwS5CchWpB2BVq1QMyNV8L2uSW) |
+
+Both keepers migrate eligible pools when the bonding curve is complete and the quote-side threshold matches one of these quote mints:
+
+| Quote token                        | Mint                                           | Threshold     |
+| ---------------------------------- | ---------------------------------------------- | ------------- |
+| Wrapped SOL (SOL)                  | `So11111111111111111111111111111111111111112`  | 10 SOL        |
+| USD Coin (USDC)                    | `EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v` | 750 USDC      |
+| OFFICIAL TRUMP (TRUMP)             | `6p6xgHyF7AeE6TZkSmFsko444wqoP15icUSqi2jfGiPN` | 100 TRUMP     |
+| Jupiter (JUP)                      | `JUPyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN`  | 1500 JUP      |
+| World Liberty Financial USD (USD1) | `USD1ttGY1N17NEEHLmELoaybftRBUSErhqYiQzvEmuB`  | 750 USD1      |
+| Meteora (MET)                      | `METvsvVRapdj9cFLzq4Tr43xK4tAjQfwX76z3n6mWQL`  | 1500 MET      |
+| Jupiter USD (JupUSD)               | `JuprjznTrTSp2UFa3ZBUFgwdAmtZCq4MQCwysN55USD`  | 750 JupUSD    |
+| Virtual Protocol (VIRTUAL)         | `3iQL8BFS2vE7mww4ehAqQHAsbmRNCrPxizWAT2Zfyr9y` | 42000 VIRTUAL |
+
+Both keepers also migrate Stock Token quote pairs when the threshold is at least 750 USD equivalent in the quote token.
+
+Both keepers also migrate a completed pool when the quote token is Jupiter Verified, has a Jupiter Organic Score greater than 50, and the token's notional value is greater than 750 USD.
+
+<Note>
+  Migration keepers run on mainnet. For testing or manual flows, use the [manual migrator](https://migrator.meteora.ag/), which supports mainnet and devnet.
+</Note>

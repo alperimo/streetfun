@@ -7,7 +7,6 @@ import {
 import DLMM from "@meteora-ag/dlmm";
 import {
   USDC_MINT,
-  DEFAULT_GRADUATION_THRESHOLD_USDC,
   EQUITY_SPOT_BUY_RATIO,
   AMM_MIGRATION_RATIO,
 } from "./constants";
@@ -35,11 +34,11 @@ export function getMeteoraDbcClient(connection: Connection): DynamicBondingCurve
  * Builds the curve configuration parameters for a StreetFun token launch on Meteora DBC.
  * Targets a 60,000 USDC migration threshold to DAMM V2 / DLMM.
  */
-export function buildStreetFunDbcCurveConfig() {
+export function buildStreetFunDbcCurveConfig(graduationThresholdUsdc: number) {
   return {
     quoteMint: USDC_MINT,
     migrationOption: MigrationOption.MET_DAMM_V2,
-    migrationQuoteThreshold: DEFAULT_GRADUATION_THRESHOLD_USDC,
+    migrationQuoteThreshold: graduationThresholdUsdc,
     targetPreIpoRatio: EQUITY_SPOT_BUY_RATIO,
     targetAmmRatio: AMM_MIGRATION_RATIO,
     programId: DYNAMIC_BONDING_CURVE_PROGRAM_ID,
@@ -53,48 +52,21 @@ export async function fetchDbcPoolStatus(
   connection: Connection,
   poolAddress: PublicKey
 ): Promise<DbcPoolStatus> {
-  try {
-    const client = getMeteoraDbcClient(connection);
-    const pool = await client.state.getPool(poolAddress);
-
-    if (!pool) {
-      throw new Error(`Meteora DBC pool ${poolAddress.toBase58()} not found`);
-    }
-
-    const realQuoteReservesLamports = pool.poolState.quoteReserve.toNumber();
-    const realQuoteReservesUsdc = realQuoteReservesLamports / 1_000_000;
-    const progressPct = Math.min(
-      100,
-      Math.max(0, Math.round((realQuoteReservesUsdc / DEFAULT_GRADUATION_THRESHOLD_USDC) * 100))
-    );
-
-    const isGraduated = Boolean(pool.poolState.isMigrated) || realQuoteReservesUsdc >= DEFAULT_GRADUATION_THRESHOLD_USDC;
-
-    return {
-      poolAddress: poolAddress.toBase58(),
-      quoteMint: USDC_MINT.toBase58(),
-      baseMint: pool.poolState.baseMint.toBase58(),
-      realQuoteReservesUsdc,
-      graduationThresholdUsdc: DEFAULT_GRADUATION_THRESHOLD_USDC,
-      progressPct,
-      isGraduated,
-      equityPurchaseBudgetUsdc: DEFAULT_GRADUATION_THRESHOLD_USDC * EQUITY_SPOT_BUY_RATIO,
-      ammLiquidityBudgetUsdc: DEFAULT_GRADUATION_THRESHOLD_USDC * AMM_MIGRATION_RATIO,
-    };
-  } catch (_err) {
-    // Fallback simulation status for local devnet/mock tokens
-    return {
-      poolAddress: poolAddress.toBase58(),
-      quoteMint: USDC_MINT.toBase58(),
-      baseMint: poolAddress.toBase58(),
-      realQuoteReservesUsdc: 46_800,
-      graduationThresholdUsdc: DEFAULT_GRADUATION_THRESHOLD_USDC,
-      progressPct: 78,
-      isGraduated: false,
-      equityPurchaseBudgetUsdc: 30_000,
-      ammLiquidityBudgetUsdc: 30_000,
-    };
-  }
+  const client = getMeteoraDbcClient(connection);
+  const pool = await client.state.getPool(poolAddress);
+  if (!pool) throw new Error("Meteora pool not found.");
+  const config = await client.state.getPoolConfig(pool.poolState.config);
+  if (!config || !config.quoteMint.equals(USDC_MINT)) throw new Error("Unsupported Meteora quote asset.");
+  const graduationThresholdUsdc = Number(config.migrationQuoteThreshold.toString()) / 1e6;
+  const realQuoteReservesUsdc = Number(pool.poolState.quoteReserve.toString()) / 1e6;
+  return {
+    poolAddress: poolAddress.toBase58(), quoteMint: config.quoteMint.toBase58(), baseMint: pool.poolState.baseMint.toBase58(),
+    realQuoteReservesUsdc, graduationThresholdUsdc,
+    progressPct: graduationThresholdUsdc > 0 ? Math.min(100, realQuoteReservesUsdc / graduationThresholdUsdc * 100) : 0,
+    isGraduated: Boolean(pool.poolState.isMigrated),
+    equityPurchaseBudgetUsdc: realQuoteReservesUsdc * EQUITY_SPOT_BUY_RATIO,
+    ammLiquidityBudgetUsdc: realQuoteReservesUsdc * AMM_MIGRATION_RATIO,
+  };
 }
 
 /**

@@ -476,10 +476,10 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
           <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-brand-cyan/10 text-brand-cyan">
             <TrendingUp className="h-5 w-5" />
           </div>
-          <h3 className="mt-3 text-sm font-bold text-foreground">Graduated to Meteora AMM</h3>
+          <h3 className="mt-3 text-sm font-bold text-foreground">Curve trading closed</h3>
           <p className="mt-1.5 text-xs text-muted leading-relaxed">
-            This token has graduated from the bonding curve. Liquidity is migrated to the AMM pool.
-            Swap directly on DEX or switch to <strong className="text-amber-300">Redeem Stock</strong> to claim underlying {token.targetEquity.name} shares.
+            This curve is marked graduated, but no verified AMM liquidity is available.
+            Collateral redemption depends on the token balance held in its vault.
           </p>
           <div className="mt-4 flex flex-col sm:flex-row items-center justify-center gap-2">
             <button
@@ -492,12 +492,12 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
               Switch to Redeem Stock NAV
             </button>
             <a
-              href="https://app.meteora.ag/"
+              href={token.bondingCurve.meteoraPoolAddress ? `https://app.meteora.ag/dlmm/${token.bondingCurve.meteoraPoolAddress}` : "https://docs.meteora.ag/"}
               target="_blank"
               rel="noopener noreferrer"
               className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 rounded-lg bg-card-hover border border-border px-3.5 py-2 text-xs font-semibold text-foreground hover:bg-card-hover/80 transition-colors"
             >
-              Trade on Meteora DEX ↗
+              Meteora information ↗
             </a>
           </div>
         </div>

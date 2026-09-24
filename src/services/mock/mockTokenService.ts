@@ -2,7 +2,7 @@ import { toTokenUnits } from "../../sdk/amounts";
 import { simulateBuyTokensOut } from "../../sdk/math";
 import { TokenMetadata } from "@/lib/types";
 import { INITIAL_TOKENS } from "@/lib/mockData";
-import { VERIFIED_TESSERA_PRE_IPO_ASSETS } from "@/sdk/constants";
+import { DEMO_EQUITIES } from "@/lib/demoAssets";
 import { ITokenService, TokenLaunchParams } from "../types";
 import { PublicKey } from "@solana/web3.js";
 
@@ -80,9 +80,9 @@ export class MockTokenService implements ITokenService {
     await new Promise((r) => setTimeout(r, 600));
 
     const selectedEquity =
-      VERIFIED_TESSERA_PRE_IPO_ASSETS.find(
+      DEMO_EQUITIES.find(
         (e) => e.symbol === params.targetEquitySymbol
-      ) || VERIFIED_TESSERA_PRE_IPO_ASSETS[0];
+      ) || DEMO_EQUITIES[0];
 
     const randomSuffix = Math.random().toString(36).substring(2, 8).toUpperCase();
     const cleanSymbol = params.symbol.replace(/^\$/, "").toUpperCase();

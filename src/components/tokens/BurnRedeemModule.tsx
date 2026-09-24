@@ -21,16 +21,17 @@ export function BurnRedeemModule({ token }: BurnRedeemModuleProps) {
   const [txSuccess, setTxSuccess] = useState<string | null>(null);
   const [txError, setTxError] = useState<string | null>(null);
 
-  const totalMemeSupply = 1_000_000_000n * 1_000_000n;
+  const totalMemeSupply = BigInt(Math.floor((token.totalSupply || 0) * 1_000_000));
   const totalEquityLocked = BigInt(
-    Math.floor((token.treasury.totalEquityLocked || 139.27) * 1_000_000)
+    Math.floor((token.treasury.totalEquityLocked || 0) * 1_000_000)
   );
 
-  const numMeme = parseFloat(memeAmount) || 0;
+  const parsedAmount = Number(memeAmount);
+  const numMeme = Number.isFinite(parsedAmount) && parsedAmount > 0 ? parsedAmount : 0;
   const memeInLamports = BigInt(Math.floor(numMeme * 1_000_000));
 
   const entitledStockShares =
-    numMeme > 0
+    numMeme > 0 && totalMemeSupply > 0n && memeInLamports <= totalMemeSupply
       ? Number(calculateEntitledStock(memeInLamports, totalMemeSupply, totalEquityLocked)) / 1_000_000
       : 0;
 
@@ -107,7 +108,7 @@ export function BurnRedeemModule({ token }: BurnRedeemModuleProps) {
       <div className="mt-4">
         <div className="flex items-center justify-between text-xs text-muted mb-1.5">
           <span>Amount to Burn</span>
-          <span className="font-mono">Balance: 50,000 ${token.symbol}</span>
+          <span className="font-mono">Balance: check connected wallet</span>
         </div>
 
         <div className="relative">
@@ -122,7 +123,7 @@ export function BurnRedeemModule({ token }: BurnRedeemModuleProps) {
           />
           <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
             <button
-              onClick={() => setMemeAmount("50000")}
+              disabled
               className="rounded bg-brand-cyan/10 px-2 py-1 text-[10px] font-mono text-brand-cyan border border-brand-cyan/25 hover:bg-brand-cyan/20"
             >
               MAX
@@ -155,7 +156,7 @@ export function BurnRedeemModule({ token }: BurnRedeemModuleProps) {
           </span>
           <span className="flex items-center gap-1 text-slate-300 font-mono font-medium">
             <ShieldCheck className="h-3.5 w-3.5 text-slate-400" />
-            Pyth / On-Chain Verified (100% Backed)
+            {token.treasury.proofOfReserveVerified ? "Reserve verified" : "Reserve verification unavailable"}
           </span>
         </div>
       </div>
@@ -179,7 +180,7 @@ export function BurnRedeemModule({ token }: BurnRedeemModuleProps) {
         <button
           onClick={() => {
             setRedeemMode("stock");
-            handleExecuteRedeem();
+            handleExecuteRedeem("stock");
           }}
           disabled={!numMeme || isProcessing}
           className="flex flex-col items-center justify-center gap-1 rounded-xl border border-amber-500/40 bg-amber-500/15 py-3 px-4 text-xs font-bold text-amber-300 hover:bg-amber-500/25 transition-colors disabled:opacity-50 shadow-sm"
@@ -198,7 +199,7 @@ export function BurnRedeemModule({ token }: BurnRedeemModuleProps) {
         <button
           onClick={() => {
             setRedeemMode("usdc");
-            handleExecuteRedeem();
+            handleExecuteRedeem("usdc");
           }}
           disabled={!numMeme || isProcessing}
           className="flex flex-col items-center justify-center gap-1 rounded-xl border border-emerald-500/40 bg-emerald-500/10 py-3 px-4 text-xs font-bold text-emerald-400 hover:bg-emerald-500/20 transition-colors disabled:opacity-50 shadow-sm"

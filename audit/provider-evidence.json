@@ -1,0 +1,533 @@
+{
+  "checkedAt": "2026-09-24T09:26:43.877Z",
+  "config": {
+    "NEXT_PUBLIC_USE_MOCK_DATA": "false",
+    "NEXT_PUBLIC_FULL_APP": "true",
+    "NEXT_PUBLIC_ALPHA_ONLY": "false",
+    "NEXT_PUBLIC_SOLANA_NETWORK": "devnet",
+    "NEXT_PUBLIC_PROGRAM_ID": "6ZiovCkRxRJgUaCS9uftFk3eVnGDsbnDXgUV1XHybH52",
+    "NEXT_PUBLIC_USDC_MINT": "DuQ1T5B6tmf5ZfSNpPomVcDntLEzR1mkoB81yHP5rGHG"
+  },
+  "explicitRpc": false,
+  "tessera": {
+    "status": 200,
+    "body": [
+      {
+        "id": "T-OpenAI",
+        "name": "T-OpenAI",
+        "symbol": "T-OpenAI",
+        "code": "tOpenAI",
+        "sector": "Artificial Intelligence",
+        "mint": "oPAiAikWTaFj9RYoRFD35ccfwhnMcB3ThgBZRHSkjTZ",
+        "markPrice": 812.79,
+        "holders": 8746,
+        "markValuation": 950000000000
+      },
+      {
+        "id": "T-Kalshi",
+        "name": "T-Kalshi",
+        "symbol": "T-Kalshi",
+        "code": "tKalshi",
+        "sector": "Prediction Markets",
+        "mint": "TKLSidmLVt3cqGaaodG8tyRzoANfQwoh67AccjmubeZ",
+        "markPrice": 413.8,
+        "holders": 2793,
+        "markValuation": 14000000000
+      },
+      {
+        "id": "T-SpaceX",
+        "name": "T-SpaceX",
+        "symbol": "T-SpaceX",
+        "code": "tSpaceX",
+        "sector": "Aerospace",
+        "mint": "TSPXcLV76s6V2zDiZQ18kBfcbnjaE2ZzNT3ga2Pd99v",
+        "markPrice": 423,
+        "holders": 1245,
+        "markValuation": 800000000000
+      }
+    ]
+  },
+  "heliusWebhooks": {
+    "status": 200,
+    "body": [
+      {
+        "webhookID": "57a570de-02c8-47f4-8ca6-9762d86cd07e",
+        "project": "d80a6ecf-fe84-4aef-86ca-3669a281b2d1",
+        "webhookURL": "https://streetfun.xyz/api/webhooks/helius",
+        "transactionTypes": [
+          "ANY"
+        ],
+        "webhookType": "enhancedDevnet",
+        "active": false,
+        "disabledReason": "auto-disabled: 97.3% failure rate over 24h",
+        "disabledAt": "2026-09-24T00:00:35.314Z",
+        "hasAuthHeader": true,
+        "authMatches": true
+      }
+    ]
+  },
+  "heliusDevnet": {
+    "version": {
+      "feature-set": 3383571666,
+      "solana-core": "4.3.0-rc.1"
+    },
+    "genesisHash": "EtWTRABZaYq6iMfeYKouRu166VU2xqa1wcaWoxPkrZBG",
+    "slot": 503401293,
+    "accounts": [
+      {
+        "address": "6ZiovCkRxRJgUaCS9uftFk3eVnGDsbnDXgUV1XHybH52",
+        "exists": true,
+        "owner": "BPFLoaderUpgradeab1e11111111111111111111111",
+        "executable": true,
+        "size": 36
+      },
+      {
+        "address": "DuQ1T5B6tmf5ZfSNpPomVcDntLEzR1mkoB81yHP5rGHG",
+        "exists": true,
+        "owner": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+        "executable": false,
+        "size": 82
+      },
+      {
+        "address": "DiKVjAz8vGALzLwoZz7PPxUTnDsTVyF7GNx9F3BxVYEs",
+        "exists": true,
+        "owner": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+        "executable": false,
+        "size": 82
+      },
+      {
+        "address": "3PFKgvU4P8hcuW1X2VjAgRHNsz1TnA4SLyjEDNfhzLC7",
+        "exists": true,
+        "owner": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+        "executable": false,
+        "size": 82
+      }
+    ]
+  },
+  "supabase": {
+    "tokens": {
+      "error": null,
+      "count": 15,
+      "rows": [
+        {
+          "mint": "MARS99999999999999999999999999999999999999",
+          "name": "Mars Autonomous Colony",
+          "symbol": "MARS",
+          "target_equity_symbol": "$TSPACEX",
+          "target_equity_mint": "TSPX111111111111111111111111111111111111111",
+          "creator": "519jca26LioEQiPhwoHCkC8mNZiCF7cDmtaXdp98iCv2",
+          "description": null,
+          "avatar_url": "https://images.unsplash.com/photo-1614728894747-a83421e2b9c9?w=160&q=80",
+          "is_graduated": true,
+          "meteora_pool": "METdbcMarsPool1111111111111111111111111111",
+          "created_at": "2026-09-18T13:14:44.583923+00:00",
+          "updated_at": "2026-09-18T13:14:44.583923+00:00"
+        },
+        {
+          "mint": "NVDU99999999999999999999999999999999999999",
+          "name": "Nvidia Degen Unit",
+          "symbol": "NVDU",
+          "target_equity_symbol": "$NVDA",
+          "target_equity_mint": "NVDA111111111111111111111111111111111111111",
+          "creator": "p4FWr2oGZYuz3MrM8DJP3wEXJM3kUZmyLA2fu4grvSzR",
+          "description": null,
+          "avatar_url": "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=160&q=80",
+          "is_graduated": false,
+          "meteora_pool": "METdbcNvduPool11111111111111111111111111",
+          "created_at": "2026-09-18T13:25:51.570182+00:00",
+          "updated_at": "2026-09-18T13:25:51.570182+00:00"
+        },
+        {
+          "mint": "DIVI99999999999999999999999999999999999999",
+          "name": "Open Intelligence",
+          "symbol": "AIX",
+          "target_equity_symbol": "$TOPAI",
+          "target_equity_mint": "TOPAI111111111111111111111111111111111111111",
+          "creator": "umG1GrVrCCHthW82j8hpePE6Gh2eaCFNuwbsd8UpXo21",
+          "description": null,
+          "avatar_url": "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=160&q=80",
+          "is_graduated": false,
+          "meteora_pool": "METdbcAixPool1111111111111111111111111111",
+          "created_at": "2026-09-18T13:25:54.982885+00:00",
+          "updated_at": "2026-09-18T13:25:54.982885+00:00"
+        },
+        {
+          "mint": "FLASH9999999999999999999999999999999999999",
+          "name": "Stripe Flow",
+          "symbol": "STRIP",
+          "target_equity_symbol": "$TSTRIPE",
+          "target_equity_mint": "TSTRP111111111111111111111111111111111111111",
+          "creator": "UryWZxk4gLimYQWNJDoNLaasx3xgo7vZGaSEoCekrq7G",
+          "description": null,
+          "avatar_url": "https://images.unsplash.com/photo-1597733336794-12d05021d510?w=160&q=80",
+          "is_graduated": true,
+          "meteora_pool": "METdbcStripPool11111111111111111111111111",
+          "created_at": "2026-09-18T13:25:55.189751+00:00",
+          "updated_at": "2026-09-18T13:25:55.189751+00:00"
+        }
+      ]
+    },
+    "trades": {
+      "error": null,
+      "count": 47,
+      "rows": [
+        {
+          "id": 2,
+          "tx_signature": "sim_1789737283628_ot71nf1",
+          "mint": "MARS99999999999999999999999999999999999999",
+          "trade_type": "BUY",
+          "price_usd": 0.00003,
+          "tokens_amount": 10000,
+          "quote_amount_usd": 10,
+          "trader": "519jca26LioEQiPhwoHCkC8mNZiCF7cDmtaXdp98iCv2",
+          "slot": 128450,
+          "created_at": "2026-09-18T13:14:43+00:00"
+        },
+        {
+          "id": 3,
+          "tx_signature": "sim_1789737309047_en7ak4v",
+          "mint": "MARS99999999999999999999999999999999999999",
+          "trade_type": "BUY",
+          "price_usd": 0.03333333,
+          "tokens_amount": 45000,
+          "quote_amount_usd": 1500,
+          "trader": "519jca26LioEQiPhwoHCkC8mNZiCF7cDmtaXdp98iCv2",
+          "slot": 128450,
+          "created_at": "2026-09-18T13:15:09+00:00"
+        },
+        {
+          "id": 4,
+          "tx_signature": "sim_buy_1789737949769_wl7vc6",
+          "mint": "NVDU99999999999999999999999999999999999999",
+          "trade_type": "BUY",
+          "price_usd": 0.0330033,
+          "tokens_amount": 7575,
+          "quote_amount_usd": 250,
+          "trader": "p4FWr2oGZYuz3MrM8DJP3wEXJM3kUZmyLA2fu4grvSzR",
+          "slot": 129118,
+          "created_at": "2026-09-18T13:25:49+00:00"
+        },
+        {
+          "id": 5,
+          "tx_signature": "sim_sell_1789737954180_0hnd7v",
+          "mint": "MARS99999999999999999999999999999999999999",
+          "trade_type": "SELL",
+          "price_usd": 0.03300539,
+          "tokens_amount": 2226,
+          "quote_amount_usd": 73.47,
+          "trader": "tvaBfAhZD9dwpAoKkzEsxdivkqLSrSrXh8xCuWdcZL4U",
+          "slot": 129260,
+          "created_at": "2026-09-18T13:25:54+00:00"
+        }
+      ]
+    }
+  },
+  "devnetTessera": [
+    {
+      "mint": "oPAiAikWTaFj9RYoRFD35ccfwhnMcB3ThgBZRHSkjTZ",
+      "exists": false
+    },
+    {
+      "mint": "TKLSidmLVt3cqGaaodG8tyRzoANfQwoh67AccjmubeZ",
+      "exists": false
+    },
+    {
+      "mint": "TSPXcLV76s6V2zDiZQ18kBfcbnjaE2ZzNT3ga2Pd99v",
+      "exists": false
+    }
+  ],
+  "curves": [
+    {
+      "address": "45kaKwshoPeG7XcDXmFVSXMF8yTtZStwkLskDuXR5t2t",
+      "creator": "519jca26LioEQiPhwoHCkC8mNZiCF7cDmtaXdp98iCv2",
+      "memeMint": "7TUcDnopkaCxUfr8D7LDT6imx9aMMZUGqmfKj4UgZyFU",
+      "targetEquityMint": "3PFKgvU4P8hcuW1X2VjAgRHNsz1TnA4SLyjEDNfhzLC7",
+      "meteoraDbcPool": "11111111111111111111111111111111",
+      "virtualQuoteReserves": "06ffbd2670",
+      "virtualTokenReserves": "03cded637d788a",
+      "realQuoteReserves": "00",
+      "realTokenReserves": "00",
+      "totalMemeSupply": "038d7ea4c68000",
+      "totalEquityLocked": "01",
+      "isGraduated": true,
+      "graduatedAt": "6ab3c763",
+      "curveBump": 255,
+      "tokenVaultBump": 254,
+      "quoteVaultBump": 255,
+      "treasuryVaultBump": 255
+    },
+    {
+      "address": "5WEsYJxDeng1eeQVoRdhVEMW6u4zhXk7KuG81iuZwob9",
+      "creator": "519jca26LioEQiPhwoHCkC8mNZiCF7cDmtaXdp98iCv2",
+      "memeMint": "GHQnijfucK5SrJZuvhYRipmTLy5CX3wy4mMDXSUNQwry",
+      "targetEquityMint": "3PFKgvU4P8hcuW1X2VjAgRHNsz1TnA4SLyjEDNfhzLC7",
+      "meteoraDbcPool": "11111111111111111111111111111111",
+      "virtualQuoteReserves": "06fc23ac00",
+      "virtualTokenReserves": "03cfe347d81000",
+      "realQuoteReserves": "00",
+      "realTokenReserves": "02d79883d20000",
+      "totalMemeSupply": "038d7ea4c68000",
+      "totalEquityLocked": "00",
+      "isGraduated": false,
+      "graduatedAt": "00",
+      "curveBump": 255,
+      "tokenVaultBump": 254,
+      "quoteVaultBump": 255,
+      "treasuryVaultBump": 253
+    },
+    {
+      "address": "5Y77dXJyvcC93WVdnBkpamzG1WjVoCSqC7FwBgg9naFw",
+      "creator": "519jca26LioEQiPhwoHCkC8mNZiCF7cDmtaXdp98iCv2",
+      "memeMint": "36Xb9SQ3tLrpZCXdXt6kdSAHNhZnfr6VnvqdrQudMd76",
+      "targetEquityMint": "3PFKgvU4P8hcuW1X2VjAgRHNsz1TnA4SLyjEDNfhzLC7",
+      "meteoraDbcPool": "11111111111111111111111111111111",
+      "virtualQuoteReserves": "0700b17590",
+      "virtualTokenReserves": "03cd68a94f3358",
+      "realQuoteReserves": "00",
+      "realTokenReserves": "00",
+      "totalMemeSupply": "038d7ea4c68000",
+      "totalEquityLocked": "05f5e100",
+      "isGraduated": true,
+      "graduatedAt": "6ab3d89d",
+      "curveBump": 254,
+      "tokenVaultBump": 253,
+      "quoteVaultBump": 255,
+      "treasuryVaultBump": 255
+    },
+    {
+      "address": "86nEDJBsLi23fQm2g1GAyrE3m1aHUtEk1iP8EKEif5ar",
+      "creator": "519jca26LioEQiPhwoHCkC8mNZiCF7cDmtaXdp98iCv2",
+      "memeMint": "6Gzc8cMvaQsaGJAfzZosCePJ8Hx7tLV7A7x58oGerggb",
+      "targetEquityMint": "3PFKgvU4P8hcuW1X2VjAgRHNsz1TnA4SLyjEDNfhzLC7",
+      "meteoraDbcPool": "11111111111111111111111111111111",
+      "virtualQuoteReserves": "0700b17590",
+      "virtualTokenReserves": "03cd68a94f3358",
+      "realQuoteReserves": "00",
+      "realTokenReserves": "00",
+      "totalMemeSupply": "038d7ea4c68000",
+      "totalEquityLocked": "08f0d180",
+      "isGraduated": true,
+      "graduatedAt": "6ab3d109",
+      "curveBump": 253,
+      "tokenVaultBump": 255,
+      "quoteVaultBump": 254,
+      "treasuryVaultBump": 255
+    },
+    {
+      "address": "9TgPKqhuPLVTcH53Ckt9iEj6mH3WnoUux2syP9MLAQmY",
+      "creator": "519jca26LioEQiPhwoHCkC8mNZiCF7cDmtaXdp98iCv2",
+      "memeMint": "9QYWLdsbQD3twA8ycCnrRMbL2Bjpi8h4jAHf9QUxXdLh",
+      "targetEquityMint": "3PFKgvU4P8hcuW1X2VjAgRHNsz1TnA4SLyjEDNfhzLC7",
+      "meteoraDbcPool": "11111111111111111111111111111111",
+      "virtualQuoteReserves": "0700b17590",
+      "virtualTokenReserves": "03cd68a94f3358",
+      "realQuoteReserves": "00",
+      "realTokenReserves": "00",
+      "totalMemeSupply": "038c95d0217000",
+      "totalEquityLocked": "08ee8790",
+      "isGraduated": true,
+      "graduatedAt": "6ab3d4ad",
+      "curveBump": 253,
+      "tokenVaultBump": 254,
+      "quoteVaultBump": 254,
+      "treasuryVaultBump": 255
+    },
+    {
+      "address": "E8bjsf7ThTSect6kaANgVgU9H3mqmUCMhhqtAEQcCekL",
+      "creator": "519jca26LioEQiPhwoHCkC8mNZiCF7cDmtaXdp98iCv2",
+      "memeMint": "7UR1AXhvitB3PK4Kikxmov6iSTJZzu7UYWGaARnE2ktJ",
+      "targetEquityMint": "3PFKgvU4P8hcuW1X2VjAgRHNsz1TnA4SLyjEDNfhzLC7",
+      "meteoraDbcPool": "11111111111111111111111111111111",
+      "virtualQuoteReserves": "0700b17590",
+      "virtualTokenReserves": "03cd68a94f3358",
+      "realQuoteReserves": "00",
+      "realTokenReserves": "00",
+      "totalMemeSupply": "038d7ea4c68000",
+      "totalEquityLocked": "05f5e100",
+      "isGraduated": true,
+      "graduatedAt": "6ab3d8a5",
+      "curveBump": 255,
+      "tokenVaultBump": 251,
+      "quoteVaultBump": 255,
+      "treasuryVaultBump": 255
+    },
+    {
+      "address": "F2wqrL1EgGCPmdgfzgtmZ91NeGFReEs9rErUEeuNdPvK",
+      "creator": "519jca26LioEQiPhwoHCkC8mNZiCF7cDmtaXdp98iCv2",
+      "memeMint": "5gNBrKp3q48r8LT5pgXVqKPVwXEq66DZttdGGdR9v7C",
+      "targetEquityMint": "3PFKgvU4P8hcuW1X2VjAgRHNsz1TnA4SLyjEDNfhzLC7",
+      "meteoraDbcPool": "11111111111111111111111111111111",
+      "virtualQuoteReserves": "0700dc2b00",
+      "virtualTokenReserves": "03cd517925af44",
+      "realQuoteReserves": "00",
+      "realTokenReserves": "00",
+      "totalMemeSupply": "038d7ea4c68000",
+      "totalEquityLocked": "08f0d180",
+      "isGraduated": true,
+      "graduatedAt": "6ab3cf41",
+      "curveBump": 254,
+      "tokenVaultBump": 254,
+      "quoteVaultBump": 255,
+      "treasuryVaultBump": 255
+    },
+    {
+      "address": "GFovMp9hFeFUjt6ksMGm6XBPtYVAgvvdZKQynAi3fG4y",
+      "creator": "519jca26LioEQiPhwoHCkC8mNZiCF7cDmtaXdp98iCv2",
+      "memeMint": "Ax6GBX7HUfXuoKaNzw8xEyrKkaDrMWdxvWzhVVXpAzQY",
+      "targetEquityMint": "3PFKgvU4P8hcuW1X2VjAgRHNsz1TnA4SLyjEDNfhzLC7",
+      "meteoraDbcPool": "11111111111111111111111111111111",
+      "virtualQuoteReserves": "06fde8dba0",
+      "virtualTokenReserves": "03ceec323d32e0",
+      "realQuoteReserves": "01c52fa0",
+      "realTokenReserves": "02d6a16e3722e0",
+      "totalMemeSupply": "038d7ea4c68000",
+      "totalEquityLocked": "00",
+      "isGraduated": false,
+      "graduatedAt": "00",
+      "curveBump": 254,
+      "tokenVaultBump": 255,
+      "quoteVaultBump": 254,
+      "treasuryVaultBump": 255
+    }
+  ],
+  "recentTransactions": [
+    {
+      "signature": "3EBZEvWAVNGKrtj9JE7bVfXiYVHKMgbwam7qhgmLNVPSbeJRehyrNS45MiAcJUY9RgNgrQ9Xz7AYr4K7WMwBQomV",
+      "slot": 503009263,
+      "err": null,
+      "memo": null,
+      "blockTime": 1790177049,
+      "confirmationStatus": "finalized",
+      "transactionIndex": 3
+    },
+    {
+      "signature": "JY3mggxXv4xmCUdmefdMfYuiz68HfFSdY6hZRbmAbrkRFQpESWcNzXGMetEhQP4J5gvwin74jrQopW9DJCeHdTe",
+      "slot": 502974588,
+      "err": null,
+      "memo": null,
+      "blockTime": 1790171301,
+      "confirmationStatus": "finalized",
+      "transactionIndex": 44
+    },
+    {
+      "signature": "4PHcM8KuhPF88fmThbSyVNT9qVwHLbphRbwvw1rWWWS3MbADVPd8iEmmFJXQFYorjhZv17uFhcpCU9Uh4HS1Bz6s",
+      "slot": 502974538,
+      "err": null,
+      "memo": null,
+      "blockTime": 1790171293,
+      "confirmationStatus": "finalized",
+      "transactionIndex": 9
+    },
+    {
+      "signature": "59atJu66LFH3ArfJN5vVLm5XC6EodpvHSncg4TwngY7a36zpMoLeq4B53C8fZjEjun4Zn41rYKD4jiDsy1oqmt1z",
+      "slot": 502970956,
+      "err": null,
+      "memo": null,
+      "blockTime": 1790170699,
+      "confirmationStatus": "finalized",
+      "transactionIndex": 15
+    },
+    {
+      "signature": "2YHXyZcfvErNoxfwNoXcAoWxD8iGo9MwjGoJSevPa5sGm61aQ7fY8mxXyBaZsQ75aFCeJozDpbPaL3fabHn5GKpd",
+      "slot": 502968485,
+      "err": null,
+      "memo": null,
+      "blockTime": 1790170290,
+      "confirmationStatus": "finalized",
+      "transactionIndex": 10
+    },
+    {
+      "signature": "beWgTZikWE364qdzJQ5jtRJpkx5wyCMJWSjSsMaFhp7uK1szHHMVZxbjbom4nyDULvGNpq9CcoDQDweYHgsNw63",
+      "slot": 502968456,
+      "err": null,
+      "memo": null,
+      "blockTime": 1790170285,
+      "confirmationStatus": "finalized",
+      "transactionIndex": 22
+    },
+    {
+      "signature": "KkshprarwdSr6Z8vB2wrMjzRwTQ3SoS9LvjVXp7EbHBT95MtkrdHV8hd9i8te2WJvitusVm73nDZBjAXwSq49i1",
+      "slot": 502968419,
+      "err": null,
+      "memo": null,
+      "blockTime": 1790170279,
+      "confirmationStatus": "finalized",
+      "transactionIndex": 30
+    },
+    {
+      "signature": "5xmfP25gAT1tq2UvBZma6tmwPY8EUvYRf7fVb9b1wDEXfXpDotzCQnBeNTeHQin53Zo1xtwsvEAAQySs76Ek9Myw",
+      "slot": 502968416,
+      "err": null,
+      "memo": null,
+      "blockTime": 1790170279,
+      "confirmationStatus": "finalized",
+      "transactionIndex": 96
+    },
+    {
+      "signature": "63nBcr7fQosVeNHvwkFvF4x3P3g3g9Vaw3nG2mZUMfJ9rS4k2H13gmnf4truKRqErvGSrhGEkjn15n5rPtBwyy5a",
+      "slot": 502968364,
+      "err": null,
+      "memo": null,
+      "blockTime": 1790170270,
+      "confirmationStatus": "finalized",
+      "transactionIndex": 2
+    },
+    {
+      "signature": "DrvRHchLJiM9fT69ViDc9efmeC3JTeB3H6hs3cdAif4XXPBcxJ2n3mxmkPnL7ZBuks2eb3yQX7ReLcC7Wiqik8V",
+      "slot": 502968348,
+      "err": null,
+      "memo": null,
+      "blockTime": 1790170268,
+      "confirmationStatus": "finalized",
+      "transactionIndex": 13
+    },
+    {
+      "signature": "mhZWapXpCRdEfGNZQtXdDQPQo39aGzYyDWpPxjDwwwpowF3ApdjuyoRCffcTtpSgYGSTaQUwvE5iW1Ezwaim43U",
+      "slot": 502968051,
+      "err": null,
+      "memo": null,
+      "blockTime": 1790170218,
+      "confirmationStatus": "finalized",
+      "transactionIndex": 4
+    },
+    {
+      "signature": "4mnoLtGAQZ2QQCkv1dJvEU5kEaXZDYjwS1t6no4AZt4QVYZGTcV2xDAbeMUoX7ty4kaSsC7vFv1cWSaqevFnbQAU",
+      "slot": 502968044,
+      "err": null,
+      "memo": null,
+      "blockTime": 1790170217,
+      "confirmationStatus": "finalized",
+      "transactionIndex": 22
+    }
+  ],
+  "testWallet": {
+    "address": "YJ21JC4S4k1FEbScEueB1B2Y9p3Ro1pbyZXciqQ6qUG",
+    "devnetLamports": 0
+  },
+  "mainnetTessera": [
+    {
+      "mint": "oPAiAikWTaFj9RYoRFD35ccfwhnMcB3ThgBZRHSkjTZ",
+      "exists": true,
+      "owner": "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb",
+      "size": 492
+    },
+    {
+      "mint": "TKLSidmLVt3cqGaaodG8tyRzoANfQwoh67AccjmubeZ",
+      "exists": true,
+      "owner": "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb",
+      "size": 492
+    },
+    {
+      "mint": "TSPXcLV76s6V2zDiZQ18kBfcbnjaE2ZzNT3ga2Pd99v",
+      "exists": true,
+      "owner": "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb",
+      "size": 492
+    }
+  ],
+  "deployedWebhook": {
+    "status": 308,
+    "location": "https://www.streetfun.xyz/api/webhooks/helius",
+    "contentType": "text/plain",
+    "body": "Redirecting...\n"
+  }
+}

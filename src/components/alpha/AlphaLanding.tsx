@@ -1,4 +1,5 @@
 "use client";
+import { alphaClaimMessage } from "@/lib/alphaClaim";
 
 import React, { useState, useEffect } from "react";
 import { useWallet } from "@solana/wallet-adapter-react";
@@ -30,7 +31,7 @@ export function AlphaLanding() {
   useEffect(() => {
     if (typeof window !== "undefined") {
       const params = new URLSearchParams(window.location.search);
-      if (params.get("demo_pass") === "true") {
+      if (process.env.NODE_ENV !== "production" && process.env.NEXT_PUBLIC_USE_MOCK_DATA === "true" && params.get("demo_pass") === "true") {
         setPassData({
           passNumber: 421,
           walletAddress: "7xKpQvD9mZaN8bK3YwE5cF2rL4pG1sT6vU8xW9zB2n",
@@ -73,10 +74,10 @@ export function AlphaLanding() {
 
     try {
       const walletAddress = publicKey.toBase58();
-      const nonce = Math.random().toString(36).substring(2, 10);
+      const nonce = crypto.randomUUID();
       const timestamp = new Date().toISOString();
 
-      const messageText = `streetfun.fun wants you to sign in with your Solana account:\n${walletAddress}\n\nI accept the StreetFun Terms of Service and claim my StreetFun Alpha Pass.\n\nNonce: ${nonce}\nIssued At: ${timestamp}`;
+      const messageText = alphaClaimMessage(walletAddress, "", nonce, timestamp);
 
       const messageBytes = new TextEncoder().encode(messageText);
       const signatureBytes = await signMessage(messageBytes);

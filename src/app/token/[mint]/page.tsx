@@ -83,7 +83,7 @@ export default function TokenDetailPage({ params }: PageProps) {
         .on(
           "postgres_changes",
           {
-            event: "INSERT",
+            event: "*",
             schema: "public",
             table: "trades",
             filter: `mint=eq.${targetMint}`,

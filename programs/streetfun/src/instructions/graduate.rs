@@ -4,7 +4,7 @@ use crate::state::{
     TOKEN_VAULT_SEED, TREASURY_VAULT_SEED,
 };
 use anchor_lang::prelude::*;
-use anchor_spl::token::{self, Mint, Token, TokenAccount, Transfer};
+use anchor_spl::token::{Mint, Token, TokenAccount};
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy)]
 pub struct GraduateParams {
@@ -100,153 +100,11 @@ pub struct GraduateAndExecuteStock<'info> {
 }
 
 pub fn handle_graduate_and_execute_stock(
-    ctx: Context<GraduateAndExecuteStock>,
-    params: GraduateParams,
+    _ctx: Context<GraduateAndExecuteStock>,
+    _params: GraduateParams,
 ) -> Result<()> {
-    // Destinations and the equity quote are supplied by the operator until a
-    // verified swap/pool CPI is implemented. Only the configured admin may settle.
-    validate_settlement(
-        ctx.accounts.caller.key(),
-        ctx.accounts.global_config.admin,
-        params.min_equity_tokens_expected,
-    )?;
-    let curve = &mut ctx.accounts.curve;
-
-    if curve.is_graduated {
-        return Err(StreetfunError::CurveAlreadyGraduated.into());
-    }
-
-    if curve.real_quote_reserves < ctx.accounts.global_config.graduation_threshold {
-        return Err(StreetfunError::GraduationThresholdNotReached.into());
-    }
-
-    let total_reserves = curve.real_quote_reserves;
-    let quote_for_equity = total_reserves
-        .checked_div(2)
-        .ok_or(StreetfunError::MathOverflow)?;
-    let quote_for_liquidity = total_reserves
-        .checked_sub(quote_for_equity)
-        .ok_or(StreetfunError::MathOverflow)?;
-
-    let meme_mint_key = ctx.accounts.meme_mint.key();
-    let curve_seeds: &[&[u8]] = &[
-        CURVE_SEED,
-        meme_mint_key.as_ref(),
-        &[curve.curve_bump],
-    ];
-    let signer_seeds = &[curve_seeds];
-
-    // 1. Transfer 50% USDC for equity purchase
-    token::transfer(
-        CpiContext::new_with_signer(
-            ctx.accounts.token_program.to_account_info(),
-            Transfer {
-                from: ctx.accounts.quote_vault.to_account_info(),
-                to: ctx.accounts.equity_purchase_account.to_account_info(),
-                authority: curve.to_account_info(),
-            },
-            signer_seeds,
-        ),
-        quote_for_equity,
-    )?;
-
-    // 2. Transfer tokenized equity into the immutable Treasury Vault
-    let treasury_balance_before = ctx.accounts.treasury_vault.amount;
-    token::transfer(
-        CpiContext::new(
-            ctx.accounts.token_program.to_account_info(),
-            Transfer {
-                from: ctx.accounts.equity_source_account.to_account_info(),
-                to: ctx.accounts.treasury_vault.to_account_info(),
-                authority: ctx.accounts.equity_source_authority.to_account_info(),
-            },
-        ),
-        params.min_equity_tokens_expected,
-    )?;
-
-    ctx.accounts.treasury_vault.reload()?;
-    let treasury_balance_after = ctx.accounts.treasury_vault.amount;
-    let equity_deposited = treasury_balance_after
-        .checked_sub(treasury_balance_before)
-        .ok_or(StreetfunError::MathOverflow)?;
-
-    if equity_deposited < params.min_equity_tokens_expected {
-        return Err(StreetfunError::SlippageExceeded.into());
-    }
-
-    // 3. Transfer remaining 50% USDC for AMM pool creation
-    token::transfer(
-        CpiContext::new_with_signer(
-            ctx.accounts.token_program.to_account_info(),
-            Transfer {
-                from: ctx.accounts.quote_vault.to_account_info(),
-                to: ctx.accounts.amm_quote_destination.to_account_info(),
-                authority: curve.to_account_info(),
-            },
-            signer_seeds,
-        ),
-        quote_for_liquidity,
-    )?;
-
-    // 4. Transfer remaining meme tokens in vault for AMM pool liquidity
-    let remaining_tokens = ctx.accounts.token_vault.amount;
-    if remaining_tokens > 0 {
-        token::transfer(
-            CpiContext::new_with_signer(
-                ctx.accounts.token_program.to_account_info(),
-                Transfer {
-                    from: ctx.accounts.token_vault.to_account_info(),
-                    to: ctx.accounts.amm_token_destination.to_account_info(),
-                    authority: curve.to_account_info(),
-                },
-                signer_seeds,
-            ),
-            remaining_tokens,
-        )?;
-    }
-
-    // 5. Update curve state and global statistics
-    curve.is_graduated = true;
-    curve.total_equity_locked = equity_deposited;
-    curve.real_quote_reserves = 0;
-    curve.real_token_reserves = 0;
-    curve.graduated_at = Clock::get()?.unix_timestamp;
-
-    let config = &mut ctx.accounts.global_config;
-    config.total_graduated_tokens = config
-        .total_graduated_tokens
-        .checked_add(1)
-        .ok_or(StreetfunError::MathOverflow)?;
-    config.total_equity_purchased = config
-        .total_equity_purchased
-        .checked_add(equity_deposited)
-        .ok_or(StreetfunError::MathOverflow)?;
-
-    msg!(
-        "Curve graduated successfully! Equity locked: {}, USDC deployed to AMM: {}",
-        equity_deposited,
-        quote_for_liquidity
-    );
-
-    Ok(())
-}
-
-fn validate_settlement(caller: Pubkey, admin: Pubkey, equity_amount: u64) -> Result<()> {
-    require_keys_eq!(caller, admin, StreetfunError::Unauthorized);
-    require!(equity_amount > 0, StreetfunError::ZeroAmount);
-    Ok(())
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn settlement_requires_admin_and_nonzero_equity() {
-        let admin = Pubkey::new_unique();
-        assert!(validate_settlement(Pubkey::new_unique(), admin, 1).is_err());
-        assert!(validate_settlement(Pubkey::new_unique(), admin, 0).is_err());
-        assert!(validate_settlement(admin, admin, 0).is_err());
-        assert!(validate_settlement(admin, admin, 1).is_ok());
-    }
+    // The previous implementation transferred reserves to caller-provided accounts
+    // without executing a purchase or creating a pool. No settlement is valid
+    // until those operations and destination/LP ownership checks are atomic CPIs.
+    err!(StreetfunError::SettlementUnavailable)
 }

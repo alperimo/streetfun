@@ -1,195 +1,37 @@
 import { NextRequest, NextResponse } from "next/server";
-import { Connection } from "@solana/web3.js";
-import bs58 from "bs58";
-import { TradeStoreService } from "@/services/indexer/tradeStore";
-import {
-  readConfirmedCurveTrade,
-  InvalidCurveTradeError,
-  PendingCurveTradeError,
-} from "@/services/indexer/confirmedTrade";
-import { createServerSupabaseClient } from "@/lib/supabase";
-import { solanaTokenService } from "@/services/solana/solanaTokenService";
-import { VERIFIED_TESSERA_PRE_IPO_ASSETS } from "@/sdk/constants";
+import { timingSafeEqual } from "node:crypto";
+import { getServerConnection, assertConfiguredCluster } from "@/server/rpc";
+import { indexConfirmedTransaction } from "@/server/indexTransaction";
+import { InvalidCurveTradeError } from "@/services/indexer/parseCurveTrade";
 
+export const maxDuration = 60;
 export async function POST(req: NextRequest) {
   const secret = process.env.HELIUS_WEBHOOK_SECRET;
-  const authorization = req.headers.get("authorization");
-  if (!secret || (authorization !== secret && authorization !== `Bearer ${secret}`)) {
+  const supplied = (req.headers.get("authorization") || "").replace(/^Bearer /, "");
+  if (!secret || Buffer.byteLength(supplied) !== Buffer.byteLength(secret) || !timingSafeEqual(Buffer.from(supplied), Buffer.from(secret))) {
     return NextResponse.json({ error: "Unauthorized webhook caller" }, { status: 401 });
   }
-
-  try {
-    const payload = await req.json();
-    if (!Array.isArray(payload)) {
-      return NextResponse.json({ error: "Expected an array of transactions" }, { status: 400 });
-    }
-
-    const rpcUrl =
-      process.env.NEXT_PUBLIC_SOLANA_RPC ||
-      (process.env.HELIUS_API_KEY
-        ? `https://devnet.helius-rpc.com/?api-key=${process.env.HELIUS_API_KEY}`
-        : "https://api.devnet.solana.com");
-    const connection = new Connection(rpcUrl, "confirmed");
-    const tradeStore = TradeStoreService.getInstance();
-    const supabase = createServerSupabaseClient();
-    let processedCount = 0;
-    let skippedCount = 0;
-    let retryCount = 0;
-
-    for (const event of payload) {
-      const signature = event?.signature;
-      if (!signature) {
-        skippedCount += 1;
-        continue;
-      }
-
-      try {
-        // 1. Check if it's a Buy or Sell curve trade
-        let trade: any = null;
-        try {
-          trade = await readConfirmedCurveTrade(connection, signature);
-        } catch (tradeError) {
-          if (tradeError instanceof PendingCurveTradeError) {
-            throw tradeError;
-          }
-          if (!(tradeError instanceof InvalidCurveTradeError)) {
-            throw tradeError;
-          }
-
-          // If signature is permanently malformed or invalid base58 length, skip immediately
-          try {
-            if (typeof signature !== "string" || bs58.decode(signature).length !== 64) {
-              skippedCount += 1;
-              continue;
-            }
-          } catch {
-            skippedCount += 1;
-            continue;
-          }
-        }
-
-        if (trade) {
-          if (event?.slot && Number(event.slot) !== trade.slot) {
-            throw new InvalidCurveTradeError("Webhook slot does not match the confirmed transaction.");
-          }
-          await tradeStore.recordTrade(trade);
-          processedCount += 1;
-          continue;
-        }
-
-        // 2. If not a buy/sell trade, check if it's Launch, Graduation, or Redemption
-        const tx = await connection.getParsedTransaction(signature, {
-          commitment: "confirmed",
-          maxSupportedTransactionVersion: 0,
-        });
-
-        if (!tx || !tx.meta) {
-          skippedCount += 1;
-          continue;
-        }
-
-        const logs = tx.meta.logMessages || [];
-        const logsText = logs.join(" ");
-
-        // Case A: Launch Stonk
-        if (logsText.includes("Instruction: LaunchStonk") || logsText.includes("launch_stonk")) {
-          const keys = tx.transaction.message.accountKeys;
-          const creator = keys[0]?.pubkey?.toBase58();
-          const memeMint = keys[2]?.pubkey?.toBase58();
-          const targetEquityMint = keys[3]?.pubkey?.toBase58();
-
-          if (memeMint && supabase) {
-            const knownAsset = VERIFIED_TESSERA_PRE_IPO_ASSETS.find(
-              (a) => a.mintAddress === targetEquityMint
-            );
-            await supabase.from("tokens").upsert(
-              {
-                mint: memeMint,
-                name: `StreetFun ${memeMint.slice(0, 4)}`,
-                symbol: memeMint.slice(0, 5).toUpperCase(),
-                target_equity_symbol: knownAsset?.symbol || "UNKNOWN",
-                target_equity_mint: targetEquityMint || "",
-                creator: creator || "",
-                is_graduated: false,
-                created_at: tx.blockTime
-                  ? new Date(tx.blockTime * 1000).toISOString()
-                  : new Date().toISOString(),
-              },
-              { onConflict: "mint" }
-            );
-            processedCount += 1;
-            console.log(`[Helius Webhook] Indexed new launch: ${memeMint}`);
-            continue;
-          }
-        }
-
-        // Case B: Graduation & 50/50 Split
-        if (
-          logsText.includes("Curve graduated successfully!") ||
-          logsText.includes("Instruction: GraduateAndExecuteStock")
-        ) {
-          const keys = tx.transaction.message.accountKeys;
-          const memeMint = keys[2]?.pubkey?.toBase58();
-
-          if (memeMint && supabase) {
-            await supabase
-              .from("tokens")
-              .update({
-                is_graduated: true,
-                updated_at: new Date().toISOString(),
-              })
-              .eq("mint", memeMint);
-            processedCount += 1;
-            console.log(`[Helius Webhook] Indexed graduation for ${memeMint}`);
-            continue;
-          }
-        }
-
-        // Case C: Burn & Redeem Stock
-        const redeemMatch = logsText.match(/Burn and redeem completed\. Burned: (\d+), Redeemed Shares: (\d+)/);
-        if (redeemMatch || logsText.includes("Instruction: BurnAndRedeem")) {
-          const keys = tx.transaction.message.accountKeys;
-          const redeemer = keys[0]?.pubkey?.toBase58();
-          const memeMint = keys[1]?.pubkey?.toBase58();
-          const burnedTokens = redeemMatch ? Number(redeemMatch[1]) / 1_000_000 : 0;
-
-          if (memeMint) {
-            await tradeStore.recordTrade({
-              tx_signature: signature,
-              mint: memeMint,
-              trade_type: "REDEEM",
-              price_usd: 0,
-              tokens_amount: burnedTokens,
-              quote_amount_usd: 0,
-              trader: redeemer || "unknown",
-              slot: tx.slot,
-              created_at: tx.blockTime
-                ? new Date(tx.blockTime * 1000).toISOString()
-                : new Date().toISOString(),
-            });
-            processedCount += 1;
-            console.log(`[Helius Webhook] Indexed redemption for ${memeMint}`);
-            continue;
-          }
-        }
-
-        skippedCount += 1;
-      } catch (error) {
-        retryCount += 1;
-        console.warn("[Helius Webhook] Transaction processing note:", error);
-      }
-    }
-
-    // Invalidate cache so users immediately get updated prices and states
-    if (processedCount > 0) {
-      solanaTokenService.invalidateCache();
-    }
-
-    return NextResponse.json(
-      { success: retryCount === 0, processedCount, skippedCount, retryCount },
-      { status: retryCount > 0 ? 503 : 200 }
-    );
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 400 });
+  let payload;
+  try { payload = await req.json(); } catch { return NextResponse.json({ error: "Invalid JSON" }, { status: 400 }); }
+  if (!Array.isArray(payload) || payload.length > 100) return NextResponse.json({ error: "Expected up to 100 transactions" }, { status: 400 });
+  const connection = getServerConnection();
+  let processedCount = 0, skippedCount = 0, retryCount = 0;
+  if (payload.length) {
+    try { await assertConfiguredCluster(connection); }
+    catch { return NextResponse.json({ error: "RPC cluster unavailable" }, { status: 503 }); }
   }
+  // Helius raw and enhanced payloads have different signature locations.
+  for (let offset = 0; offset < payload.length; offset += 4) {
+    await Promise.all(payload.slice(offset, offset + 4).map(async event => {
+      const signature = event?.signature ?? event?.transaction?.signatures?.[0];
+      try {
+        await indexConfirmedTransaction(connection, signature, event?.slot);
+        processedCount++;
+      } catch (error) {
+        if (error instanceof InvalidCurveTradeError) skippedCount++;
+        else { retryCount++; console.warn("[Helius] Delivery needs retry:", error instanceof Error ? error.name : "Index error"); }
+      }
+    }));
+  }
+  return NextResponse.json({ success: retryCount === 0, processedCount, skippedCount, retryCount }, { status: retryCount ? 503 : 200 });
 }

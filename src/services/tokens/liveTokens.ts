@@ -1,10 +1,10 @@
 import { TokenMetadata } from "@/lib/types";
-import { getTokenService } from "@/services";
+import { solanaTokenService } from "@/server/tokenData";
 
-/** One server-side source of truth for SSR and the market API.
- * The API must use the same mock/live selector as the browser provider;
- * otherwise demo mode still attempts to contact a local validator.
- */
 export async function getLiveTokens(): Promise<TokenMetadata[]> {
-  return getTokenService().getTokens();
+  if (process.env.NEXT_PUBLIC_USE_MOCK_DATA === "true" && process.env.NODE_ENV !== "production") {
+    const { mockTokenService } = await import("../mock/mockTokenService");
+    return mockTokenService.getTokens();
+  }
+  return solanaTokenService.getTokens();
 }

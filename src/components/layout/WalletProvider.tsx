@@ -6,7 +6,7 @@ import {
   WalletProvider as SolanaWalletProvider,
 } from "@solana/wallet-adapter-react";
 import { WalletModalProvider } from "@solana/wallet-adapter-react-ui";
-import { clusterApiUrl } from "@solana/web3.js";
+import { getBrowserRpcUrl } from "@/sdk/network";
 
 import { LocalnetWalletAdapter } from "./LocalnetWalletAdapter";
 
@@ -51,10 +51,10 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
         ) {
           return configuredRpc;
         }
-        return clusterApiUrl("devnet");
+        return getBrowserRpcUrl();
       }
     }
-    return process.env.NEXT_PUBLIC_SOLANA_RPC || clusterApiUrl("devnet");
+    return process.env.NEXT_PUBLIC_SOLANA_RPC || getBrowserRpcUrl();
   }, []);
 
   // Wallet Standard discovers browser extensions; the disposable signer is only

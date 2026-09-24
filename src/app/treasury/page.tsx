@@ -10,7 +10,6 @@ import { LaunchModal } from "@/components/modals/LaunchModal";
 import { INITIAL_TREASURY_STATS } from "@/lib/mockData";
 import { TokenMetadata } from "@/lib/types";
 import { useMarket } from "@/context/MarketContext";
-import { VERIFIED_TESSERA_PRE_IPO_ASSETS } from "@/sdk/constants";
 
 export default function TreasuryPage() {
   const { tokens, isMock } = useMarket();
@@ -55,10 +54,10 @@ export default function TreasuryPage() {
     const uniqueRedeemers = new Set(redemptions.map((r) => r.trader)).size;
 
     // Asset Breakdown by Supported Pre-IPO assets
-    const assetBreakdown = VERIFIED_TESSERA_PRE_IPO_ASSETS.map((asset) => {
+    const assetBreakdown = Array.from(new Map(tokens.map(token => [token.targetEquity.mintAddress, token.targetEquity])).values()).map((asset) => {
       const assetTokens = tokens.filter(
         (t) =>
-          t.targetEquity.symbol.toLowerCase() === asset.symbol.toLowerCase() &&
+          t.targetEquity.mintAddress === asset.mintAddress &&
           t.bondingCurve.isGraduated
       );
       const sharesLocked = assetTokens.reduce(
@@ -105,12 +104,9 @@ export default function TreasuryPage() {
         id: String(rdm.id || idx),
         timestamp: timeAgo,
         tokenSymbol: matchedToken?.symbol || "TOKEN",
-        equitySymbol: matchedToken?.targetEquity.symbol || "$TSPACEX",
+        equitySymbol: matchedToken?.targetEquity.symbol || "UNVERIFIED",
         burnedMemeAmount: `${Number(rdm.tokens_amount).toLocaleString("en-US", { maximumFractionDigits: 2 })} $${matchedToken?.symbol || "TOKEN"}`,
-        sharesRedeemed:
-          matchedToken?.targetEquity.stockPriceUsd && rdm.quote_amount_usd
-            ? Number((rdm.quote_amount_usd / matchedToken.targetEquity.stockPriceUsd).toFixed(2))
-            : 0,
+        sharesRedeemed: Number(rdm.equity_amount || 0),
         redeemerAddress: rdm.trader
           ? `${rdm.trader.slice(0, 4)}...${rdm.trader.slice(-4)}`
           : "Trader",
@@ -277,7 +273,7 @@ export default function TreasuryPage() {
                   </div>
                   <span className="text-xs font-semibold text-foreground">No Redemptions Recorded Yet</span>
                   <span className="text-[11px] text-muted max-w-xs leading-relaxed">
-                    Redemptions unlock on-chain when tokens graduate at $60,000 USDC and holders burn meme tokens to claim physical Pre-IPO stock.
+                    After verified graduation, holders can burn tokens to redeem the vault’s collateral tokens. Tessera tokens represent loan participation rights, not physical company shares.
                   </span>
                 </div>
               ) : (

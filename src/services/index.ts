@@ -17,6 +17,7 @@ export * from "./types";
 export function isMockMode(): boolean {
   return (
     typeof process !== "undefined" &&
+    process.env.NODE_ENV !== "production" &&
     process.env?.NEXT_PUBLIC_USE_MOCK_DATA === "true"
   );
 }

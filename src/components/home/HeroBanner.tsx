@@ -11,6 +11,7 @@ export function HeroBanner() {
 
   const totalVolume = tokens.reduce((sum, t) => sum + (t.volume24hUsd || 0), 0);
   const volumeAvailable = tokens.every((token) => token.volume24hAvailable !== false);
+  const equityValuationAvailable = tokens.every(t => t.treasury.totalEquityLocked === 0 || t.treasury.valuationAvailable === true);
   const totalEquityTvl = tokens.reduce((sum, t) => sum + (t.treasury?.totalEquityValueUsd || 0), 0);
   const graduatedCount = tokens.filter((t) => t.bondingCurve?.isGraduated).length;
 
@@ -29,8 +30,8 @@ export function HeroBanner() {
     },
     {
       label: "Equity TVL",
-      value: isMock ? "$40.7M" : !error && !loading ? formatUsd(totalEquityTvl) : "—",
-      change: isMock ? "+28.1%" : error ? "Unavailable" : "On-chain",
+      value: isMock ? "$40.7M" : !error && !loading && equityValuationAvailable ? formatUsd(totalEquityTvl) : "—",
+      change: isMock ? "+28.1%" : error || !equityValuationAvailable ? "Valuation unavailable" : "Tessera mark value",
     },
     {
       label: "Graduated",

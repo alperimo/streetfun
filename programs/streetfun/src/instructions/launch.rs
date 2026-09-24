@@ -38,8 +38,8 @@ pub struct LaunchStonk<'info> {
     )]
     pub meme_mint: Account<'info, Mint>,
 
-    /// CHECK: SPL Token mint of the target equity (e.g., $SPCX, $NVDA, $GRND)
-    pub target_equity_mint: AccountInfo<'info>,
+    /// Only legacy SPL collateral is supported by this version.
+    pub target_equity_mint: Account<'info, Mint>,
 
     #[account(
         init,
@@ -93,6 +93,9 @@ pub fn handle_launch_stonk(
     ctx: Context<LaunchStonk>,
     params: LaunchStonkParams,
 ) -> Result<()> {
+    require!(ctx.accounts.quote_mint.decimals == 6, crate::errors::StreetfunError::CalculationError);
+    require!(params.name.len() <= 64 && params.symbol.len() <= 16 && params.uri.len() <= 256, crate::errors::StreetfunError::CalculationError);
+    require!(params.meteora_dbc_pool.is_none(), crate::errors::StreetfunError::SettlementUnavailable);
     let curve_key = ctx.accounts.curve.key();
     let meme_mint_key = ctx.accounts.meme_mint.key();
     let curve_seeds: &[&[u8]] = &[

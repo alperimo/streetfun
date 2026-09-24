@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { TradeStoreService } from "@/services/indexer/tradeStore";
-import { solanaTokenService } from "@/services/solana/solanaTokenService";
+import { solanaTokenService } from "@/server/tokenData";
 
 export const dynamic = "force-dynamic";
 

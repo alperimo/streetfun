@@ -1,6 +1,5 @@
 import {
   TesseraPreIpoAsset,
-  VERIFIED_TESSERA_PRE_IPO_ASSETS,
   TOTAL_MEME_SUPPLY,
 } from "./constants";
 import { calculateProRataEquity } from "./math";
@@ -17,17 +16,17 @@ export interface TesseraProofOfReserveStatus {
 /**
  * Finds a verified Tessera Pre-IPO asset by symbol, ticker, or mint address
  */
-export function getTesseraAsset(identifier: string): TesseraPreIpoAsset {
+export function getTesseraAsset(identifier: string, assets: TesseraPreIpoAsset[]): TesseraPreIpoAsset {
   const normalized = identifier.trim().toUpperCase().replace("$", "");
-  const found = VERIFIED_TESSERA_PRE_IPO_ASSETS.find(
+  const found = assets.find(
     (a) =>
       a.ticker.toUpperCase() === normalized ||
       a.symbol.toUpperCase().replace("$", "") === normalized ||
       a.mintAddress === identifier
   );
 
-  // Default to flagship $TSPACEX
-  return found || VERIFIED_TESSERA_PRE_IPO_ASSETS[0];
+  if (!found) throw new Error("Asset is not in the current Tessera catalog.");
+  return found;
 }
 
 /**
@@ -53,12 +52,5 @@ export function calculateTesseraSharesEntitlement(
 export async function getTesseraProofOfReserveStatus(
   asset: TesseraPreIpoAsset
 ): Promise<TesseraProofOfReserveStatus> {
-  return {
-    isVerified: true,
-    oracleNetwork: "Pyth Network Oracle / On-Chain PoR (Solana Mainnet)",
-    heartbeatTimestamp: new Date().toISOString(),
-    collateralRatio: 1.0, // 100% full reserve backing
-    custodian: asset.custodian,
-    legalEntity: "Tessera Private Equity SPC (Cayman Islands)",
-  };
+  throw new Error("A verified Tessera reserve oracle is not integrated. No reserve attestation is available.");
 }
