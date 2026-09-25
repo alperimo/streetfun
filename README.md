@@ -9,12 +9,6 @@ DBC graduation has two verified outcomes. The launch creator signs the migration
 
 Meteora's separate 0.2% protocol migration fee applies during DBC-to-DAMM v2 migration. It is separate from StreetFun's configured partner allocation. See Meteora's [migration and liquidity guide](https://docs.meteora.ag/core-products/dbc/migration-and-liquidity) and [TypeScript SDK examples](https://docs.meteora.ag/developer-guides/dbc/typescript-sdk/examples).
 
-## Contest Requirement: Meteora DBC
-
-Contest launches must use Meteora's Dynamic Bonding Curve (DBC) for token launch, price discovery, and bonding-curve buys and sells, with graduation targeting Meteora DAMM v2. DLMM is not an acceptable migration target for this contest.
-
-**Implementation status:** new launch preparation, launch registration, live quotes, buys/sells, market reads, trade indexing, manual DBC migration, equity settlement, and redemption are implemented through Meteora DBC and DAMM v2. Existing legacy tokens remain supported. Each cluster still needs a deployed StreetFun program with the current DBC instructions and a verified DBC config address before new DBC launches can run there; a local build alone is not Devnet transaction proof.
-
 ---
 
 ## 1. Core Architecture & Protocol Features
