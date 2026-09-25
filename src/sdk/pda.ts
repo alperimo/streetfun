@@ -2,6 +2,7 @@ import { PublicKey } from "@solana/web3.js";
 import {
   PROGRAM_ID,
   GLOBAL_CONFIG_SEED,
+  DBC_LAUNCH_SEED,
   CURVE_SEED,
   TOKEN_VAULT_SEED,
   QUOTE_VAULT_SEED,
@@ -10,6 +11,13 @@ import {
 
 export function getGlobalConfigPda(programId: PublicKey = PROGRAM_ID): [PublicKey, number] {
   return PublicKey.findProgramAddressSync([GLOBAL_CONFIG_SEED], programId);
+}
+
+export function getDbcLaunchPda(
+  memeMint: PublicKey,
+  programId: PublicKey = PROGRAM_ID,
+): [PublicKey, number] {
+  return PublicKey.findProgramAddressSync([DBC_LAUNCH_SEED, memeMint.toBuffer()], programId);
 }
 
 export function getCurvePda(

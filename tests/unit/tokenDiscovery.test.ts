@@ -42,6 +42,7 @@ describe("Live token discovery", () => {
     } as any) as any;
     service.getProgram = () => ({ account: {
       curveAccount: { all: async () => { scans++; return curves; } },
+      dbcLaunchAccount: { all: async () => [] },
       globalConfig: { fetch: async () => ({ graduationThreshold: 60_000_000_000n, protocolFeeBps: 100 }) },
     }, coder: { accounts: { decode: (_name, data) => curves[data[0]].account } } });
     service.getIndexedMetadata = async () => new Map();
@@ -63,7 +64,9 @@ describe("Live token discovery", () => {
     const [token] = await service.getTokens(); expect(token.priceUsd).to.equal(0); expect(token.bondingCurve.progressPct).to.equal(100);
   });
   it("never promotes database-only rows to live chain markets", async () => {
-    const { service } = fixture(); service.getProgram = () => ({ account: { curveAccount: { all: async () => [] } } });
+    const { service } = fixture(); service.getProgram = () => ({ account: {
+      curveAccount: { all: async () => [] }, dbcLaunchAccount: { all: async () => [] },
+    } });
     service.getIndexedMetadata = async () => { throw new Error("must not read fabricated rows"); };
     expect(await service.getTokens()).to.deep.equal([]);
   });

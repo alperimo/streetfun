@@ -1,6 +1,8 @@
 use crate::errors::StreetfunError;
 use crate::math::calculate_pro_rata_equity;
-use crate::state::{CurveAccount, CURVE_SEED, TREASURY_VAULT_SEED};
+use crate::state::{
+    CurveAccount, DbcLaunchAccount, CURVE_SEED, DBC_LAUNCH_SEED, TREASURY_VAULT_SEED,
+};
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Burn, Mint, Token, TokenAccount};
 use anchor_spl::token_interface::{
@@ -153,5 +155,132 @@ pub fn handle_burn_and_redeem<'a, 'b, 'c, 'info>(
         curve.total_equity_locked
     );
 
+    Ok(())
+}
+
+#[derive(Accounts)]
+pub struct BurnAndRedeemDbc<'info> {
+    #[account(mut)]
+    pub redeemer: Signer<'info>,
+
+    #[account(mut)]
+    pub meme_mint: Account<'info, Mint>,
+
+    pub target_equity_mint: InterfaceAccount<'info, InterfaceMint>,
+
+    #[account(
+        mut,
+        seeds = [DBC_LAUNCH_SEED, meme_mint.key().as_ref()],
+        bump = dbc_launch.bump,
+        constraint = dbc_launch.is_graduated @ StreetfunError::CurveNotGraduated,
+        constraint = dbc_launch.meme_mint == meme_mint.key() @ StreetfunError::InvalidDammV2Pool,
+        constraint = dbc_launch.target_equity_mint == target_equity_mint.key() @ StreetfunError::InvalidEquityMint,
+    )]
+    pub dbc_launch: Account<'info, DbcLaunchAccount>,
+
+    #[account(
+        mut,
+        associated_token::mint = target_equity_mint,
+        associated_token::authority = dbc_launch,
+        associated_token::token_program = equity_token_program,
+    )]
+    pub treasury_vault: InterfaceAccount<'info, InterfaceTokenAccount>,
+
+    #[account(
+        mut,
+        token::mint = meme_mint,
+        token::authority = redeemer,
+    )]
+    pub redeemer_token_account: Account<'info, TokenAccount>,
+
+    #[account(
+        mut,
+        token::mint = target_equity_mint,
+        token::authority = redeemer,
+        token::token_program = equity_token_program,
+    )]
+    pub redeemer_equity_account: InterfaceAccount<'info, InterfaceTokenAccount>,
+
+    pub token_program: Program<'info, Token>,
+    pub equity_token_program: Interface<'info, TokenInterface>,
+}
+
+pub fn handle_burn_and_redeem_dbc(
+    ctx: Context<BurnAndRedeemDbc>,
+    params: BurnAndRedeemParams,
+) -> Result<()> {
+    require!(params.meme_tokens_to_burn > 0, StreetfunError::ZeroAmount);
+    require!(
+        ctx.accounts.meme_mint.supply > 0,
+        StreetfunError::InsufficientLiquidity
+    );
+
+    let launch = &mut ctx.accounts.dbc_launch;
+    let entitled_shares = calculate_pro_rata_equity(
+        params.meme_tokens_to_burn,
+        ctx.accounts.meme_mint.supply,
+        launch.total_equity_locked,
+    )?;
+    require!(entitled_shares > 0, StreetfunError::InsufficientLiquidity);
+    require!(
+        entitled_shares <= ctx.accounts.treasury_vault.amount,
+        StreetfunError::InsufficientLiquidity
+    );
+
+    let equity_before = ctx.accounts.redeemer_equity_account.amount;
+    anchor_spl::token::burn(
+        CpiContext::new(
+            ctx.accounts.token_program.to_account_info(),
+            Burn {
+                mint: ctx.accounts.meme_mint.to_account_info(),
+                from: ctx.accounts.redeemer_token_account.to_account_info(),
+                authority: ctx.accounts.redeemer.to_account_info(),
+            },
+        ),
+        params.meme_tokens_to_burn,
+    )?;
+
+    let meme_mint_key = ctx.accounts.meme_mint.key();
+    let bump = [launch.bump];
+    let signer_seeds: &[&[&[u8]]] = &[&[DBC_LAUNCH_SEED, meme_mint_key.as_ref(), &bump]];
+    token_interface::transfer_checked(
+        CpiContext::new_with_signer(
+            ctx.accounts.equity_token_program.to_account_info(),
+            TransferChecked {
+                from: ctx.accounts.treasury_vault.to_account_info(),
+                mint: ctx.accounts.target_equity_mint.to_account_info(),
+                to: ctx.accounts.redeemer_equity_account.to_account_info(),
+                authority: launch.to_account_info(),
+            },
+            signer_seeds,
+        ),
+        entitled_shares,
+        ctx.accounts.target_equity_mint.decimals,
+    )?;
+    ctx.accounts.redeemer_equity_account.reload()?;
+    let equity_received = ctx
+        .accounts
+        .redeemer_equity_account
+        .amount
+        .checked_sub(equity_before)
+        .ok_or(StreetfunError::SettlementAmountsMismatch)?;
+    require!(
+        equity_received >= params.min_equity_tokens_out,
+        StreetfunError::SlippageExceeded
+    );
+    launch.total_equity_locked = launch
+        .total_equity_locked
+        .checked_sub(entitled_shares)
+        .ok_or(StreetfunError::MathOverflow)?;
+
+    emit!(crate::RedeemedEvent {
+        redeemer: ctx.accounts.redeemer.key(),
+        meme_mint: meme_mint_key,
+        target_equity_mint: ctx.accounts.target_equity_mint.key(),
+        meme_burned: params.meme_tokens_to_burn,
+        equity_redeemed: equity_received,
+        remaining_equity: launch.total_equity_locked,
+        timestamp: Clock::get()?.unix_timestamp,
+    });
     Ok(())
 }

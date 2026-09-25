@@ -5,6 +5,7 @@
   "description": "Streetfun - The World's First Equity-Backed Memecoin Engine on Solana",
   "scripts": {
     "dev": "next dev",
+    "setup:meteora-dbc": "node scripts/setup_meteora_dbc_config.cjs",
     "build": "next build",
     "start": "next start",
     "lint": "tsc --noEmit",

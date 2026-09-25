@@ -12,7 +12,13 @@ export const USDC_MINT = new PublicKey(
   process.env.NEXT_PUBLIC_USDC_MINT || "DuQ1T5B6tmf5ZfSNpPomVcDntLEzR1mkoB81yHP5rGHG"
 );
 
+// Published by Meteora for DBC migrations using MigrationFeeOption.Customizable.
+export const METEORA_DAMM_V2_MIGRATION_CONFIG = new PublicKey(
+  "A8gMrEPJkacWkcb3DGwtJwTe16HktSEfvwtuDh2MCtck"
+);
+
 export const GLOBAL_CONFIG_SEED = Buffer.from("global-config");
+export const DBC_LAUNCH_SEED = Buffer.from("dbc-launch");
 export const CURVE_SEED = Buffer.from("curve");
 export const TOKEN_VAULT_SEED = Buffer.from("token-vault");
 export const QUOTE_VAULT_SEED = Buffer.from("quote-vault");

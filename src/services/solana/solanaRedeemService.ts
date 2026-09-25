@@ -4,7 +4,7 @@ import { TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID, getEpochFee, getAccount, getMi
 import { IRedeemService, RedeemParams, RedeemResult, WalletIdentity } from "../types";
 import { PROGRAM_ID } from "@/sdk/constants";
 import { getBrowserRpcUrl } from "@/sdk/network";
-import { getCurvePda, getTreasuryVaultPda } from "@/sdk/pda";
+import { getCurvePda, getDbcLaunchPda, getTreasuryVaultPda } from "@/sdk/pda";
 import { toTokenUnits } from "@/sdk/amounts";
 import { netAfterTransferFee } from "@/sdk/transferFee";
 import { confirmSubmittedTransaction, pendingTradeKey, savePendingTrade, SubmittedTransactionError } from "./transactionConfirmation";
@@ -20,6 +20,9 @@ export class SolanaRedeemService implements IRedeemService {
     const provider = new AnchorProvider(connection, { publicKey: wallet.publicKey } as any, { commitment: "confirmed" });
     const program = new Program({ ...idl, address: PROGRAM_ID.toBase58() } as any, provider);
     const memeMint = new PublicKey(params.token.mint);
+    if (params.token.bondingCurve.protocol === "meteora-dbc") {
+      return this.executeDbcRedeem(params, wallet, connection, program, memeMint, amount);
+    }
     const [curvePda] = getCurvePda(memeMint, PROGRAM_ID);
     const [treasuryVault] = getTreasuryVaultPda(curvePda, PROGRAM_ID);
     const curve = await (program.account as any).curveAccount.fetch(curvePda);
@@ -72,6 +75,81 @@ export class SolanaRedeemService implements IRedeemService {
     return { success: true, txSignature: signature, entitledShares, usdcValue: 0,
       message: entitledShares > 0 ? `Redeemed ${entitledShares.toLocaleString()} collateral tokens to your wallet.` : `Transaction ${signature} confirmed. Exact receipt is pending verification; do not resubmit.`,
       updatedToken: (await solanaTokenService.getToken(params.token.mint).catch(() => null)) || params.token };
+  }
+
+  private async executeDbcRedeem(
+    params: RedeemParams,
+    wallet: WalletIdentity & { publicKey: PublicKey; sendTransaction: Function },
+    connection: Connection,
+    program: Program<any>,
+    memeMint: PublicKey,
+    amount: bigint,
+  ): Promise<RedeemResult> {
+    const [launchAddress] = getDbcLaunchPda(memeMint, PROGRAM_ID);
+    const launch: any = await (program.account as any).dbcLaunchAccount.fetch(launchAddress);
+    if (!launch.isGraduated) throw new Error("Collateral redemption is available after DBC settlement is verified.");
+    const equityMint = launch.targetEquityMint as PublicKey;
+    const equityMintInfo = await connection.getAccountInfo(equityMint, "confirmed");
+    const equityTokenProgram = equityMintInfo?.owner;
+    if (!equityTokenProgram || (!equityTokenProgram.equals(TOKEN_PROGRAM_ID) && !equityTokenProgram.equals(TOKEN_2022_PROGRAM_ID))) {
+      throw new Error("The collateral mint has an unsupported token program.");
+    }
+    const treasuryVault = await getAssociatedTokenAddress(equityMint, launchAddress, true, equityTokenProgram);
+    const [equityMintState, vault] = await Promise.all([
+      getMint(connection, equityMint, "confirmed", equityTokenProgram),
+      getAccount(connection, treasuryVault, "confirmed", equityTokenProgram),
+    ]);
+    const [memeMintState, userToken] = await Promise.all([
+      getMint(connection, memeMint, "confirmed", TOKEN_PROGRAM_ID),
+      getAccount(connection, await getAssociatedTokenAddress(memeMint, wallet.publicKey), "confirmed", TOKEN_PROGRAM_ID),
+    ]);
+    const supply = BigInt(memeMintState.supply.toString());
+    const collateral = BigInt(launch.totalEquityLocked.toString());
+    if (supply <= 0n || amount > userToken.amount || amount > supply) throw new Error("Burn amount exceeds the live token supply or wallet balance.");
+    const expectedGross = amount * collateral / supply;
+    const transferFeeConfig = getTransferFeeConfig(equityMintState);
+    const epoch = await connection.getEpochInfo("confirmed");
+    const activeTransferFee = transferFeeConfig
+      ? getEpochFee(transferFeeConfig, BigInt(epoch.epoch))
+      : null;
+    const expectedNet = activeTransferFee
+      ? netAfterTransferFee(expectedGross, activeTransferFee.transferFeeBasisPoints, activeTransferFee.maximumFee)
+      : expectedGross;
+    if (expectedGross <= 0n || expectedNet <= 0n || expectedGross > vault.amount) throw new Error("Insufficient redeemable collateral.");
+    const userEquity = await getAssociatedTokenAddress(equityMint, wallet.publicKey, false, equityTokenProgram);
+    const transaction = new Transaction().add(createAssociatedTokenAccountIdempotentInstruction(
+      wallet.publicKey, userEquity, wallet.publicKey, equityMint, equityTokenProgram,
+    ));
+    transaction.add(await (program.methods as any).burnAndRedeemDbc({
+      memeTokensToBurn: new BN(amount.toString()), minEquityTokensOut: new BN(expectedNet.toString()),
+    }).accounts({
+      redeemer: wallet.publicKey, memeMint, targetEquityMint: equityMint, dbcLaunch: launchAddress,
+      treasuryVault, redeemerTokenAccount: userToken.address, redeemerEquityAccount: userEquity,
+      tokenProgram: TOKEN_PROGRAM_ID, equityTokenProgram,
+    }).instruction());
+    const blockhash = await connection.getLatestBlockhash("confirmed");
+    transaction.recentBlockhash = blockhash.blockhash;
+    transaction.feePayer = wallet.publicKey;
+    const signature = await wallet.sendTransaction(transaction, connection, { skipPreflight: false, preflightCommitment: "confirmed" });
+    const key = pendingTradeKey(wallet.publicKey.toBase58(), params.token.mint);
+    savePendingTrade(key, signature);
+    try { await confirmSubmittedTransaction(connection, signature, blockhash); savePendingTrade(key, null); }
+    catch (error) { if (!(error instanceof SubmittedTransactionError)) savePendingTrade(key, null); throw error; }
+    let entitledShares = 0;
+    try {
+      const response = await fetch("/api/redemptions/confirm", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ signature, mint: params.token.mint }),
+      });
+      if (response.ok) entitledShares = Number((await response.json()).trade?.equity_amount || 0);
+    } catch { /* Confirmation succeeded; never repeat a redemption to repair indexing. */ }
+    return {
+      success: true, txSignature: signature, entitledShares, usdcValue: 0,
+      message: entitledShares > 0
+        ? `Redeemed ${entitledShares.toLocaleString()} collateral tokens to your wallet.`
+        : `Transaction ${signature} confirmed. Exact receipt is pending verification; do not resubmit.`,
+      updatedToken: (await solanaTokenService.getToken(params.token.mint).catch(() => null)) || params.token,
+    };
   }
 }
 export const solanaRedeemService = new SolanaRedeemService();

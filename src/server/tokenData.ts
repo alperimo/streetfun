@@ -1,18 +1,20 @@
 import { Connection, PublicKey } from "@solana/web3.js";
 import * as anchor from "@coral-xyz/anchor";
 import { cpAmmCoder, deriveCustomizablePoolAddress, derivePoolAuthority, getPriceFromSqrtPrice } from "@meteora-ag/cp-amm-sdk";
-import { TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID, getEpochFee, getTransferFeeConfig, unpackAccount, unpackMint } from "@solana/spl-token";
+import { deriveDammV2PoolAddress, getPriceFromSqrtPrice as getDbcPriceFromSqrtPrice } from "@meteora-ag/dynamic-bonding-curve-sdk";
+import { TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID, getAssociatedTokenAddressSync, getEpochFee, getTransferFeeConfig, unpackAccount, unpackMint } from "@solana/spl-token";
 import idl from "@/idl/streetfun.json";
 import type { TokenMetadata } from "@/lib/types";
 import { calculateBondingProgress } from "@/lib/marketFormat";
 import { createServerSupabaseClient } from "./supabase";
-import { METEORA_DAMM_V2_PROGRAM_ID, PROGRAM_ID, USDC_MINT } from "@/sdk/constants";
-import { getGlobalConfigPda, getQuoteVaultPda, getTreasuryVaultPda } from "@/sdk/pda";
+import { METEORA_DAMM_V2_PROGRAM_ID, METEORA_DBC_PROGRAM_ID, PROGRAM_ID, USDC_MINT } from "@/sdk/constants";
+import { getDbcLaunchPda, getGlobalConfigPda, getQuoteVaultPda, getTreasuryVaultPda } from "@/sdk/pda";
 import { TradeStoreService } from "@/services/indexer/tradeStore";
 import { assertConfiguredCluster, getServerConnection } from "./rpc";
 import { getTesseraAvailability, getTesseraCatalog } from "./tessera";
 import { getPreStocksAvailability, getPreStocksCatalog } from "./prestocks";
 import { getOfficialEquityLogo } from "@/lib/assetLogos";
+import { getDbcClient, getDbcMigrationDammConfigAddress } from "./meteoraDbc";
 
 /** Server snapshots are coalesced per process and invalidated by verified events. */
 export class SolanaTokenService {
@@ -55,13 +57,40 @@ export class SolanaTokenService {
   private async fetchSnapshot(): Promise<TokenMetadata[]> {
     const program = this.getProgram();
     await assertConfiguredCluster(this.connection);
-    const curves = await (program.account as any).curveAccount.all();
+    const [curves, dbcLaunches] = await Promise.all([
+      (program.account as any).curveAccount.all(),
+      (program.account as any).dbcLaunchAccount.all(),
+    ]);
     // Database records alone never prove that a token exists on this cluster.
-    if (!curves.length) return [];
-    const mints = curves.map((c: any) => c.account.memeMint.toBase58());
+    if (!curves.length && !dbcLaunches.length) return [];
+    const mints = [...new Set([
+      ...curves.map((c: any) => c.account.memeMint.toBase58()),
+      ...dbcLaunches.map((c: any) => c.account.memeMint.toBase58()),
+    ])];
+    const dbcClient = dbcLaunches.length ? getDbcClient(this.connection) : undefined;
+    const dbcConfigMap = new Map<string, PublicKey>();
+    for (const entry of dbcLaunches as any[]) dbcConfigMap.set(entry.account.dbcConfig.toBase58(), entry.account.dbcConfig);
+    const dbcConfigs = [...dbcConfigMap.values()];
+    const dbcPoolsByConfig = dbcClient
+      ? await Promise.all(dbcConfigs.map(configAddress => dbcClient.state.getPoolsByConfig(configAddress)))
+      : [];
+    const dbcPoolByAddress = new Map<string, any>();
+    for (const poolEntries of dbcPoolsByConfig) {
+      for (const poolEntry of poolEntries) dbcPoolByAddress.set(poolEntry.publicKey.toBase58(), poolEntry.account);
+    }
+    const dbcConfigStates = new Map<string, any>();
+    if (dbcClient) {
+      const dbcConfigValues = await Promise.all(dbcConfigs.map(configAddress => dbcClient.state.getPoolConfig(configAddress)));
+      dbcConfigValues.forEach((configState, index) => {
+        if (!configState) throw new Error(`Meteora DBC config ${dbcConfigs[index].toBase58()} is missing.`);
+        dbcConfigStates.set(dbcConfigs[index].toBase58(), configState);
+      });
+    }
     const [metadata, config, prestocksRaw, tesseraRaw, stats, currentEpoch] = await Promise.all([
       this.getIndexedMetadata(mints),
-      (program.account as any).globalConfig.fetch(getGlobalConfigPda(PROGRAM_ID)[0]),
+      curves.length
+        ? (program.account as any).globalConfig.fetch(getGlobalConfigPda(PROGRAM_ID)[0])
+        : Promise.resolve(null),
       getPreStocksCatalog().catch(() => []),
       getTesseraCatalog().catch(() => []),
       TradeStoreService.getInstance().getMarketStats(mints).catch(() => null),
@@ -81,7 +110,7 @@ export class SolanaTokenService {
       assets.set(a.mintAddress, a);
     }
 
-    const records: Array<{ token: TokenMetadata; poolState?: any; poolAddress?: PublicKey }> = [];
+    const records: Array<{ token: TokenMetadata; poolState?: any; poolAddress?: PublicKey; expectedPoolAddress?: PublicKey }> = [];
     // Bounded requests replace one RPC request per token. Re-read each curve and
     // its balances together so price, supply and collateral share the RPC context.
     for (let start = 0; start < curves.length; start += 20) {
@@ -195,7 +224,162 @@ export class SolanaTokenService {
             valuationAvailable: hasProviderMark || equityBalance === 0,
             valuationSource: hasProviderMark ? `${asset.issuer} mark price` : undefined },
           dataSource: "onchain", lastUpdatedAt: new Date().toISOString(), observedSlot: context.slot,
-        }, poolState, poolAddress });
+        }, poolState, poolAddress, expectedPoolAddress: poolAddress ? deriveCustomizablePoolAddress(USDC_MINT, account.memeMint) : undefined });
+      }
+    }
+
+    // DBC virtual pools, quote reserves, and spot prices are the live source
+    // for every new launch. The StreetFun registry only proves asset backing.
+    for (let start = 0; start < dbcLaunches.length; start += 20) {
+      const group = dbcLaunches.slice(start, start + 20);
+      const keys = group.flatMap((entry: any) => {
+        const registry: any = entry.account;
+        const virtualPool = dbcPoolByAddress.get(registry.dbcPool.toBase58());
+        const migrated = Boolean(virtualPool?.poolState?.isMigrated);
+        const dammPool = !registry.meteoraDammV2Pool.equals(PublicKey.default)
+          ? registry.meteoraDammV2Pool
+          : migrated
+            ? deriveDammV2PoolAddress(getDbcMigrationDammConfigAddress(), registry.memeMint, registry.quoteMint)
+            : PublicKey.default;
+        return [entry.publicKey, registry.memeMint, registry.targetEquityMint, registry.dbcPool, dammPool];
+      });
+      const { context, value } = await this.connection.getMultipleAccountsInfoAndContext(keys, "confirmed");
+      const decodedEntries: Array<{
+        entry: any; registry: any; mintState: ReturnType<typeof unpackMint>; equityInfo: any;
+        poolState: any; configState: any; dammPool: PublicKey; dammPoolState?: any;
+        treasuryAddress: PublicKey; treasuryInfo?: import("@solana/web3.js").AccountInfo<Buffer> | null;
+      }> = [];
+      const treasuryAddresses: PublicKey[] = [];
+      for (let i = 0; i < group.length; i++) {
+        const [registryInfo, mintInfo, equityInfo, dbcPoolInfo, dammPoolInfo] = value.slice(i * 5, i * 5 + 5);
+        const entry = group[i];
+        if (!registryInfo?.owner.equals(PROGRAM_ID) || !mintInfo || !equityInfo) continue;
+        const registry: any = program.coder.accounts.decode("dbcLaunchAccount", registryInfo.data);
+        const mint = registry.memeMint as PublicKey;
+        const expectedRegistry = getDbcLaunchPda(mint, PROGRAM_ID)[0];
+        const virtualPool = dbcPoolByAddress.get(registry.dbcPool.toBase58());
+        const configState = dbcConfigStates.get(registry.dbcConfig.toBase58());
+        if (!entry.publicKey.equals(expectedRegistry) || !virtualPool || !dbcPoolInfo?.owner.equals(METEORA_DBC_PROGRAM_ID) || !configState ||
+            !virtualPool.poolState.baseMint.equals(mint) || !virtualPool.poolState.config.equals(registry.dbcConfig) ||
+            !registry.quoteMint.equals(USDC_MINT) || !configState.quoteMint.equals(USDC_MINT)) continue;
+        if (!mintInfo.owner.equals(TOKEN_PROGRAM_ID) ||
+            (!equityInfo.owner.equals(TOKEN_PROGRAM_ID) && !equityInfo.owner.equals(TOKEN_2022_PROGRAM_ID))) continue;
+        const mintState = unpackMint(mint, mintInfo, TOKEN_PROGRAM_ID);
+        if (mintState.decimals !== 6 || BigInt(registry.initialMemeSupply.toString()) !== 1_000_000_000_000_000n ||
+            mintState.supply > BigInt(registry.initialMemeSupply.toString())) continue;
+        const treasuryAddress = getAssociatedTokenAddressSync(registry.targetEquityMint, entry.publicKey, true, equityInfo.owner);
+        const dammPool = !registry.meteoraDammV2Pool.equals(PublicKey.default)
+          ? registry.meteoraDammV2Pool
+          : virtualPool.poolState.isMigrated
+            ? deriveDammV2PoolAddress(getDbcMigrationDammConfigAddress(), mint, registry.quoteMint)
+            : PublicKey.default;
+        let dammPoolState: any;
+        const expectedDammPool = virtualPool.poolState.isMigrated
+          ? deriveDammV2PoolAddress(getDbcMigrationDammConfigAddress(), mint, registry.quoteMint)
+          : undefined;
+        if (expectedDammPool && dammPool.equals(expectedDammPool) && dammPoolInfo?.owner.equals(METEORA_DAMM_V2_PROGRAM_ID)) {
+          try {
+            const decoded = cpAmmCoder.accounts.decode("pool", dammPoolInfo.data);
+            const pairMatches = (decoded.tokenAMint.equals(mint) && decoded.tokenBMint.equals(registry.quoteMint)) ||
+              (decoded.tokenBMint.equals(mint) && decoded.tokenAMint.equals(registry.quoteMint));
+            if (pairMatches) dammPoolState = decoded;
+          } catch { /* Bad pool data cannot become the market price source. */ }
+        }
+        treasuryAddresses.push(treasuryAddress);
+        decodedEntries.push({ entry, registry, mintState, equityInfo, poolState: virtualPool, configState, dammPool, dammPoolState, treasuryAddress });
+      }
+      const treasuryInfos = treasuryAddresses.length
+        ? await this.connection.getMultipleAccountsInfo(treasuryAddresses, "confirmed")
+        : [];
+      for (let i = 0; i < decodedEntries.length; i++) {
+        const { entry, registry, mintState, equityInfo, poolState, configState, dammPool, dammPoolState, treasuryAddress } = decodedEntries[i];
+        const treasuryInfo = treasuryInfos[i];
+        const mint = registry.memeMint.toBase58();
+        const asset = assets.get(registry.targetEquityMint.toBase58());
+        const indexed = metadata.get(mint);
+        let equityBalance = 0;
+        let equityDecimals: number | undefined;
+        let equityTransferFee: TokenMetadata["targetEquity"]["transferFee"] | undefined;
+        let treasuryMatchesRegistry = false;
+        if (treasuryInfo?.owner.equals(equityInfo.owner)) {
+          const equityMint = unpackMint(registry.targetEquityMint, equityInfo, equityInfo.owner);
+          const treasury = unpackAccount(treasuryAddress, treasuryInfo, equityInfo.owner);
+          const accounted = BigInt(registry.totalEquityLocked.toString());
+          if (treasury.mint.equals(registry.targetEquityMint) && treasury.owner.equals(entry.publicKey)) {
+            equityDecimals = equityMint.decimals;
+            treasuryMatchesRegistry = treasury.amount >= accounted;
+            equityBalance = Number(treasury.amount < accounted ? treasury.amount : accounted) / 10 ** equityDecimals;
+          }
+          const transferFeeConfig = getTransferFeeConfig(equityMint);
+          if (!transferFeeConfig) equityTransferFee = null;
+          else if (currentEpoch) {
+            const activeFee = getEpochFee(transferFeeConfig, BigInt(currentEpoch.epoch));
+            equityTransferFee = { basisPoints: activeFee.transferFeeBasisPoints, maximumFeeRaw: activeFee.maximumFee.toString() };
+          }
+        }
+        const dammPoolVerified = Boolean(poolState.poolState.isMigrated && dammPoolState);
+        const isGraduated = Boolean(registry.isGraduated && dammPoolVerified && treasuryMatchesRegistry);
+        const settlementPending = Boolean(poolState.poolState.isMigrated && !isGraduated);
+        const hasProviderMark = Boolean(asset && !asset.testCollateral && asset.currentStockPriceUsd > 0);
+        const equityValue = hasProviderMark ? equityBalance * asset.currentStockPriceUsd : 0;
+        const price = poolState.poolState.isMigrated
+          ? 0
+          : getDbcPriceFromSqrtPrice(poolState.poolState.sqrtPrice, 6, 6).toNumber();
+        const quoteReserveRaw = BigInt(poolState.poolState.quoteReserve.toString());
+        const thresholdRaw = BigInt(configState.migrationQuoteThreshold.toString());
+        const quoteReserveUsd = Number(quoteReserveRaw) / 1e6;
+        const thresholdUsd = Number(thresholdRaw) / 1e6;
+        const supply = Number(mintState.supply) / 1e6;
+        const progressPct = thresholdRaw > 0n
+          ? Math.min(100, Number(quoteReserveRaw * 10_000n / thresholdRaw) / 100)
+          : 0;
+        const graduatedPoolAddress = dammPoolVerified ? dammPool : undefined;
+        records.push({
+          token: {
+            mint, name: indexed?.name || `StreetFun ${mint.slice(0, 4)}`, symbol: indexed?.symbol || mint.slice(0, 5),
+            description: indexed?.description || "On-chain StreetFun market.",
+            avatarUrl: indexed?.avatar_url || "/generated/streetfun-logo.png", creator: registry.creator.toBase58(),
+            createdAt: indexed?.created_at || "", totalSupply: supply,
+            priceUsd: price, marketCapUsd: price > 0 ? price * supply : 0,
+            priceChange24h: 0, priceChange24hAvailable: false,
+            volume24hUsd: stats?.[mint]?.volume24hUsd || 0, volume24hAvailable: stats !== null,
+            targetEquity: {
+              symbol: asset?.symbol || indexed?.target_equity_symbol || "UNVERIFIED",
+              name: asset?.name || "Pre-IPO Collateral", mintAddress: registry.targetEquityMint.toBase58(),
+              issuer: asset?.issuer || "Unverified", custodian: asset?.custodian || "Unverified",
+              legalFramework: asset?.legalFramework || "Collateral identity unverified",
+              logoUrl: getOfficialEquityLogo(asset?.symbol || indexed?.target_equity_symbol || asset?.name),
+              stockPriceUsd: hasProviderMark ? asset.currentStockPriceUsd : 0,
+              isPreIpo: !!asset && !asset.testCollateral, decimals: equityDecimals,
+              verifiedTessera: asset?.provider !== "prestocks" && !!asset && !asset.testCollateral,
+              verifiedPreStocks: asset?.provider === "prestocks" && !asset.testCollateral,
+              isTestCollateral: Boolean(asset?.testCollateral), transferFee: equityTransferFee,
+            },
+            bondingCurve: {
+              protocol: "meteora-dbc", dbcPoolAddress: registry.dbcPool.toBase58(), settlementPending,
+              realQuoteReservesUsd: quoteReserveUsd, graduationThresholdUsd: thresholdUsd,
+              progressPct: isGraduated ? 100 : progressPct,
+              dbcQuoteReserveRaw: poolState.poolState.quoteReserve.toString(),
+              dbcBaseReserveRaw: poolState.poolState.baseReserve.toString(),
+              quoteMint: registry.quoteMint.toBase58(), isGraduated,
+              graduatedAt: isGraduated ? new Date(Number(registry.graduatedAt.toString()) * 1000).toISOString() : undefined,
+              meteoraPoolAddress: graduatedPoolAddress?.toBase58(),
+              equityPurchaseBudgetUsd: isGraduated ? Number(registry.settlementQuoteAmount.toString()) / 1e6 : undefined,
+            },
+            treasury: {
+              totalEquityLocked: equityBalance, totalEquityValueUsd: equityValue,
+              vaultPda: treasuryAddress.toBase58(), proofOfReserveVerified: false,
+              valuationAvailable: hasProviderMark || equityBalance === 0,
+              valuationSource: hasProviderMark ? `${asset.issuer} mark price` : undefined,
+            },
+            dataSource: "onchain", lastUpdatedAt: new Date().toISOString(), observedSlot: context.slot,
+          },
+          poolState: graduatedPoolAddress ? dammPoolState : undefined,
+          poolAddress: graduatedPoolAddress,
+          expectedPoolAddress: graduatedPoolAddress
+            ? deriveDammV2PoolAddress(getDbcMigrationDammConfigAddress(), registry.memeMint, registry.quoteMint)
+            : undefined,
+        });
       }
     }
 
@@ -231,6 +415,9 @@ export class SolanaTokenService {
         const memeIsA = tokenAMint.equals(new PublicKey(token.mint));
         const memeIsB = tokenBMint.equals(new PublicKey(token.mint));
         if (!memeIsA && !memeIsB) continue;
+        if (!poolAddress) continue;
+        const record = records.find(item => item.token === token);
+        if (record?.expectedPoolAddress && !poolAddress.equals(record.expectedPoolAddress)) continue;
         // StreetFun quote and meme mints both use six decimals.
         const tokenBPerTokenA = getPriceFromSqrtPrice(poolState.sqrtPrice, 6, 6).toNumber();
         const marketPrice = memeIsA ? tokenBPerTokenA : 1 / tokenBPerTokenA;
@@ -240,6 +427,16 @@ export class SolanaTokenService {
         token.bondingCurve.meteoraPoolAddress = poolAddress!.toBase58();
       } catch {
         // Do not expose a graduated price until pool ownership and vaults are verified.
+      }
+    }
+    for (const record of records) {
+      if (record.token.bondingCurve.protocol === "meteora-dbc" && record.poolAddress &&
+          (!record.token.bondingCurve.meteoraPoolAddress || record.token.priceUsd <= 0)) {
+        record.token.bondingCurve.isGraduated = false;
+        record.token.bondingCurve.settlementPending = true;
+        record.token.bondingCurve.meteoraPoolAddress = undefined;
+        record.token.priceUsd = 0;
+        record.token.marketCapUsd = 0;
       }
     }
     return records.map((record) => record.token).sort((a, b) => b.bondingCurve.realQuoteReservesUsd - a.bondingCurve.realQuoteReservesUsd);

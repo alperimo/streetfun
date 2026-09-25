@@ -14,7 +14,7 @@ import { useMarket } from "@/context/MarketContext";
 import { TradeReceipt } from "./TradeReceipt";
 import { receiptFromTrade, receiptFromRedemption, receiptPreview, type TradeReceiptData } from "./tradeReceiptModel";
 import { formatBondingProgress, formatTokenPrice, formatUsd } from "@/lib/marketFormat";
-import { graduateToken } from "@/services/solana/solanaGraduationService";
+import { GraduationStepPendingError, graduateToken } from "@/services/solana/solanaGraduationService";
 
 function formatCollateralUnits(value: number, decimals: number): string {
   if (!Number.isFinite(value)) return "—";
@@ -30,15 +30,16 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
   const { connection } = useConnection();
   const { connected: walletAdapterConnected, publicKey, sendTransaction } = useWallet();
   const { isWalletConnected, executeTrade, executeRedeem, isMock, refreshTokens, setWalletDialogOpen } = useMarket();
+  const isDbcCreator = Boolean(publicKey && token.bondingCurve.protocol === "meteora-dbc" && token.creator === publicKey.toBase58());
   const connected = walletAdapterConnected || isWalletConnected;
   const [receipt, setReceipt] = useState<TradeReceiptData | null>(null);
   const [tradeMode, setTradeMode] = useState<"buy" | "sell" | "redeem">(
-    token.bondingCurve.isGraduated ? "redeem" : "buy"
+    token.bondingCurve.isGraduated && token.bondingCurve.protocol !== "meteora-dbc" ? "redeem" : "buy"
   );
   useEffect(() => {
     setReceipt(null);
-    setTradeMode(token.bondingCurve.isGraduated ? "redeem" : "buy");
-  }, [token.mint, token.bondingCurve.isGraduated]);
+    setTradeMode(token.bondingCurve.isGraduated && token.bondingCurve.protocol !== "meteora-dbc" ? "redeem" : "buy");
+  }, [token.mint, token.bondingCurve.isGraduated, token.bondingCurve.protocol]);
   const [amount, setAmount] = useState("");
   const [slippage, setSlippage] = useState<number>(1.0); // 1%
   const [showSettings, setShowSettings] = useState(false);
@@ -47,8 +48,12 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
   const [buyAnimation, setBuyAnimation] = useState<"idle" | "success">("idle");
   const [quoteBalance, setQuoteBalance] = useState<number | null>(null);
   const [tokenBalance, setTokenBalance] = useState<number | null>(null);
+  const [liveQuote, setLiveQuote] = useState<any>(null);
+  const [liveQuoteError, setLiveQuoteError] = useState<string | null>(null);
+  const [liveQuoteLoading, setLiveQuoteLoading] = useState(false);
   const [pendingSignature, setPendingSignature] = useState<string | null>(null);
   const [pendingGraduationSignature, setPendingGraduationSignature] = useState<string | null>(null);
+  const [pendingGraduationStep, setPendingGraduationStep] = useState<"migration" | "settlement">("settlement");
   const orderInFlight = useRef(false);
   const pendingKey = pendingTradeKey(publicKey?.toBase58(), token.mint);
   useEffect(() => {
@@ -56,7 +61,10 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
   }, [pendingKey]);
   const graduationPendingKey = `streetfun:graduation:${publicKey?.toBase58()}:${token.mint}`;
   useEffect(() => {
-    try { setPendingGraduationSignature(sessionStorage.getItem(graduationPendingKey)); } catch {}
+    try {
+      setPendingGraduationSignature(sessionStorage.getItem(graduationPendingKey));
+      setPendingGraduationStep(sessionStorage.getItem(`${graduationPendingKey}:step`) === "migration" ? "migration" : "settlement");
+    } catch {}
   }, [graduationPendingKey]);
   const savePending = (signature: string | null) => {
     setPendingSignature(signature);
@@ -81,7 +89,7 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
           await fetch("/api/trades/confirm", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ signature: pendingSignature, mint: token.mint }),
+            body: JSON.stringify({ signature: pendingSignature, mint: token.mint, protocol: token.bondingCurve.protocol }),
           }).catch(() => null);
         }
         await Promise.all([refreshTokens(), loadBalances()]);
@@ -98,9 +106,41 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
     };
   }, []);
 
-  const virtualQuote = BigInt(token.bondingCurve.virtualQuoteReserves);
-  const virtualTokens = BigInt(token.bondingCurve.virtualTokenReserves);
-  const realTokens = BigInt(token.bondingCurve.realTokenReserves);
+  const virtualQuote = BigInt(token.bondingCurve.virtualQuoteReserves || "0");
+  const virtualTokens = BigInt(token.bondingCurve.virtualTokenReserves || "0");
+  const realTokens = BigInt(token.bondingCurve.realTokenReserves || "0");
+
+  useEffect(() => {
+    if (token.bondingCurve.protocol !== "meteora-dbc" || tradeMode === "redeem" || !amount || Number(amount) <= 0) {
+      setLiveQuote(null);
+      setLiveQuoteError(null);
+      setLiveQuoteLoading(false);
+      return;
+    }
+    const controller = new AbortController();
+    setLiveQuote(null);
+    setLiveQuoteError(null);
+    setLiveQuoteLoading(true);
+    const timer = setTimeout(async () => {
+      try {
+        const response = await fetch("/api/trade/quote", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          cache: "no-store",
+          signal: controller.signal,
+          body: JSON.stringify({ mint: token.mint, direction: tradeMode, amount, slippageBps: Math.round(slippage * 100) }),
+        });
+        const payload = await response.json().catch(() => null);
+        if (!response.ok) throw new Error(payload?.error || "Live Meteora quote is unavailable.");
+        setLiveQuote(payload);
+      } catch (error) {
+        if (!controller.signal.aborted) setLiveQuoteError(error instanceof Error ? error.message : "Live Meteora quote is unavailable.");
+      } finally {
+        if (!controller.signal.aborted) setLiveQuoteLoading(false);
+      }
+    }, 250);
+    return () => { clearTimeout(timer); controller.abort(); };
+  }, [amount, slippage, token.bondingCurve.protocol, token.mint, tradeMode]);
 
   const balanceRequest = useRef(0);
   const loadBalances = useCallback(async () => {
@@ -158,6 +198,20 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
     const numAmount = parseFloat(amount);
     if (!numAmount || numAmount <= 0) return null;
 
+    if (token.bondingCurve.protocol === "meteora-dbc") {
+      if (liveQuoteError) return { error: liveQuoteError };
+      if (!liveQuote) return null;
+      const outputRaw = BigInt(liveQuote.outputAmountRaw);
+      return {
+        type: tradeMode,
+        tokensOut: tradeMode === "buy" ? outputRaw : BigInt(0),
+        netQuoteOut: tradeMode === "sell" ? outputRaw : BigInt(0),
+        effectivePriceUsd: Number(liveQuote.effectivePriceUsd),
+        priceImpactPct: Number(liveQuote.priceImpactPct || 0),
+        feeQuote: BigInt(0),
+      };
+    }
+
     try {
       if (tradeMode === "buy") {
         const quoteIn = toTokenUnits(numAmount);
@@ -188,7 +242,7 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
     } catch (err: any) {
       return { error: err.message };
     }
-  }, [amount, tradeMode, virtualQuote, virtualTokens, realTokens, token.bondingCurve.realQuoteReservesUsd, token.bondingCurve.dynamicFeeBps]);
+  }, [amount, tradeMode, virtualQuote, virtualTokens, realTokens, token.bondingCurve.realQuoteReservesUsd, token.bondingCurve.dynamicFeeBps, token.bondingCurve.protocol, liveQuote, liveQuoteError]);
 
   const handleExecuteTrade = async () => {
     if (!connected) { setWalletDialogOpen(true); return; }
@@ -267,7 +321,9 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
         const status = statuses.value[0];
         if (status?.err) {
           sessionStorage.removeItem(graduationPendingKey);
+          sessionStorage.removeItem(`${graduationPendingKey}:step`);
           setPendingGraduationSignature(null);
+          setPendingGraduationStep("settlement");
           throw new Error("The pending graduation transaction failed on Solana. Review the settlement route and try again.");
         }
         if (!status || (status.confirmationStatus !== "confirmed" && status.confirmationStatus !== "finalized")) {
@@ -275,22 +331,35 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
           return;
         }
         sessionStorage.removeItem(graduationPendingKey);
+        sessionStorage.removeItem(`${graduationPendingKey}:step`);
         setPendingGraduationSignature(null);
+        if (pendingGraduationStep === "migration" && token.bondingCurve.protocol === "meteora-dbc") {
+          const result = await graduateToken(token.mint, { publicKey, sendTransaction }, 100, "meteora-dbc");
+          await refreshTokens();
+          setTradeErrorMsg(`DBC migration and equity settlement confirmed. DAMM v2 pool ${result.poolAddress}; settlement ${result.signature}`);
+          onTradeSuccess?.();
+          return;
+        }
         await refreshTokens();
         setTradeErrorMsg(`Graduation confirmed. DAMM v2 pool: ${token.bondingCurve.meteoraPoolAddress || "refreshing"}`);
         onTradeSuccess?.();
         return;
       }
 
-      const result = await graduateToken(token.mint, { publicKey, sendTransaction });
+      const result = await graduateToken(token.mint, { publicKey, sendTransaction }, 100, token.bondingCurve.protocol);
       await refreshTokens();
-      setTradeErrorMsg(`Graduation confirmed. DAMM v2 pool ${result.poolAddress}; transaction ${result.signature}`);
+      setTradeErrorMsg(`Graduation confirmed. ${result.migrationSignature ? `Meteora migration ${result.migrationSignature}; ` : ""}DAMM v2 pool ${result.poolAddress}; settlement ${result.signature}`);
       onTradeSuccess?.();
     } catch (error) {
       if (error instanceof SubmittedTransactionError) {
         setPendingGraduationSignature(error.signature);
-        try { sessionStorage.setItem(graduationPendingKey, error.signature); } catch {}
-        setTradeErrorMsg(`The settlement was submitted and is awaiting confirmation. Check its status before retrying: ${error.signature}`);
+        const step = error instanceof GraduationStepPendingError ? error.step : "settlement";
+        setPendingGraduationStep(step);
+        try {
+          sessionStorage.setItem(graduationPendingKey, error.signature);
+          sessionStorage.setItem(`${graduationPendingKey}:step`, step);
+        } catch {}
+        setTradeErrorMsg(`The DBC ${step} transaction was submitted and is awaiting confirmation. Check its status before retrying: ${error.signature}`);
       } else {
         setTradeErrorMsg(error instanceof Error ? error.message : "Graduation settlement failed.");
       }
@@ -509,7 +578,7 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
               : `Burn & Withdraw ${formatCollateralUnits(entitledStockShares, token.targetEquity.decimals ?? 6)} ${token.targetEquity.symbol}`}
           </button>
         </div>
-      ) : token.bondingCurve.isGraduated ? (
+      ) : token.bondingCurve.isGraduated && token.bondingCurve.protocol !== "meteora-dbc" ? (
         <div className="mt-4 rounded-xl border border-border/80 bg-card-subtle p-5 text-center">
           <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-brand-cyan/10 text-brand-cyan">
             <TrendingUp className="h-5 w-5" />
@@ -561,9 +630,12 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
             </div>
             <div className="flex items-center justify-between text-[10px] text-muted mt-1.5 font-mono">
               <span>{formatUsd(token.bondingCurve.realQuoteReservesUsd)} / {formatUsd(token.bondingCurve.graduationThresholdUsd)} USDC</span>
-              <span>{token.bondingCurve.progressPct >= 100 ? "Ready to move into Meteora liquidity" : "Settlement starts at the funding threshold"}</span>
+              <span>{token.bondingCurve.isGraduated ? "DAMM v2 market active" : token.bondingCurve.settlementPending ? "Meteora migration complete; equity settlement is pending" : token.bondingCurve.progressPct >= 100 ? "Ready to migrate into Meteora DAMM v2" : "Settlement starts at the funding threshold"}</span>
             </div>
-            {!isMock && token.bondingCurve.progressPct >= 100 && (
+            {!isMock && !token.bondingCurve.isGraduated && token.bondingCurve.progressPct >= 100 && token.bondingCurve.protocol === "meteora-dbc" && !isDbcCreator && (
+              <p className="mt-3 text-center text-[10px] text-muted">Only the launch creator can authorize DBC migration and equity settlement.</p>
+            )}
+            {!isMock && !token.bondingCurve.isGraduated && token.bondingCurve.progressPct >= 100 && (token.bondingCurve.protocol !== "meteora-dbc" || isDbcCreator) && (
               <>
                 <button
                   type="button"

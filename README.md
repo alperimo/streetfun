@@ -1,17 +1,19 @@
 # StreetFun
 
-StreetFun is a Solana token launchpad with an on-chain virtual-reserve bonding curve and third-party collateral tokens. Tessera T-Tokens are loan participation rights; they are not shares or ownership in the referenced company.
+StreetFun is a Solana launchpad. New tokens use Meteora's Dynamic Bonding Curve (DBC) for launch trading and migrate into Meteora DAMM v2. Existing tokens launched on StreetFun's legacy curve keep their legacy trade path. Tessera T-Tokens are loan participation rights; they are not shares or ownership in the referenced company.
 
-Upon reaching graduation, the protocol executes an automated dual-allocation:
-1. **Half of quote reserves** buys the selected collateral token through a live Meteora DAMM v2 market and locks the received tokens in the curve's PDA vault.
-2. **The other half plus remaining meme supply** seeds a new Meteora DAMM v2 pool for secondary-market liquidity.
+DBC graduation has two verified outcomes. The launch creator signs the migration and settlement so an unrelated caller cannot direct the partner allocation into a low-output collateral market:
+1. Meteora migrates the completed DBC pool and its configured liquidity positions into DAMM v2.
+2. StreetFun claims the configured 50% partner migration allocation, buys the selected Tessera/PreStocks collateral in a live DAMM v2 market, and locks the acquired tokens in the launch's treasury PDA. The contract records graduation only after the swap succeeds and the treasury balance increases by at least the quoted minimum.
 3. After graduation, holders can burn meme tokens to redeem their pro-rata portion of the vault-held collateral token, subject to Token-2022 transfer fees and on-chain balances.
+
+Meteora's separate 0.2% protocol migration fee applies during DBC-to-DAMM v2 migration. It is separate from StreetFun's configured partner allocation. See Meteora's [migration and liquidity guide](https://docs.meteora.ag/core-products/dbc/migration-and-liquidity) and [TypeScript SDK examples](https://docs.meteora.ag/developer-guides/dbc/typescript-sdk/examples).
 
 ## Contest Requirement: Meteora DBC
 
 Contest launches must use Meteora's Dynamic Bonding Curve (DBC) for token launch, price discovery, and bonding-curve buys and sells, with graduation targeting Meteora DAMM v2. DLMM is not an acceptable migration target for this contest.
 
-**Implementation status:** the current StreetFun program still launches and trades on its own virtual-reserve curve, then creates a DAMM v2 pool during its custom 50/50 collateral settlement. The repository does not yet route launches or trades through Meteora DBC. DBC integration, including how its graduation and DAMM v2 migration preserve StreetFun's collateral-purchase leg, remains required before this project can be described as contest-ready.
+**Implementation status:** new launch preparation, launch registration, live quotes, buys/sells, market reads, trade indexing, manual DBC migration, equity settlement, and redemption are implemented through Meteora DBC and DAMM v2. Existing legacy tokens remain supported. Each cluster still needs a deployed StreetFun program with the current DBC instructions and a verified DBC config address before new DBC launches can run there; a local build alone is not Devnet transaction proof.
 
 ---
 
@@ -24,11 +26,11 @@ Unlike traditional bonding curve platforms that operate as extractive zero-sum g
    - **PreStocks**: 1:1 SPV-backed pre-IPO equities with audited mark pricing.
    - **Tessera**: T-Tokens that represent loan participation rights, not direct equity or company shares.
 
-2. **StreetFun Bonding Curve**:
-   Trades execute along a constant-product virtual-reserve curve quoted in USDC. Real-time progress indicators track quote accumulation toward graduation. This is StreetFun's curve; launches do not currently use Meteora DBC.
+2. **Meteora DBC**:
+   New launches use Meteora's live virtual pool for price discovery and USDC buys/sells. The server reads the DBC pool state and fixed-supply mint directly from Solana; the database supplies indexed metadata and activity, not the market price or reserve source. Legacy tokens continue to use StreetFun's original curve.
 
-3. **Automated Meteora Liquidity Migration**:
-   On graduation, trading on the curve locks permanently. The contract allocates 50% of accumulated funds to acquire and vault the target equity, while routing the remaining 50% USDC and remaining meme tokens to initialize a Meteora liquidity pool.
+3. **DBC graduation and DAMM v2 settlement**:
+   At the configured DBC quote threshold, curve trading ends. DBC's migration instruction creates the DAMM v2 pool and configured positions. StreetFun then atomically claims its configured partner quote allocation, swaps that amount for the selected collateral through a live DAMM v2 market, validates the received amount, and records the pool and vault balances. DAMM v2 is the migration target; DLMM is not used.
 
 4. **On-Chain Burn & Redeem Module**:
    A post-graduation redemption mechanism allowing holders to burn meme tokens for their pro-rata share of collateral tokens held in the PDA vault. This formula does not guarantee a market price or issuer redemption.
@@ -42,7 +44,11 @@ Unlike traditional bonding curve platforms that operate as extractive zero-sum g
 
 ## 2. Mathematical Model
 
-### Constant Product Bonding Curve with Virtual Reserves
+### Legacy Curve and DBC Launches
+
+The constant-product curve below documents existing StreetFun legacy tokens. New token launches use Meteora DBC's configured curve and SDK quotes instead.
+
+### Legacy Constant Product Curve with Virtual Reserves
 
 The bonding curve utilizes constant-product invariant math with virtual quote and token reserves:
 
@@ -85,16 +91,17 @@ streetfun/
 │       ├── Cargo.toml              # Anchor dependencies
 │       └── src/
 │           ├── lib.rs              # Program entrypoint & event definitions
-│           ├── state.rs            # Account structs (GlobalConfig, CurveAccount)
+│           ├── state.rs            # GlobalConfig, legacy curve and DBC launch state
 │           ├── errors.rs           # Typed error codes
 │           ├── math.rs             # Pure bonding curve & pro-rata math engine
 │           └── instructions/
 │               ├── initialize.rs   # initialize_global_config
-│               ├── launch.rs       # launch_stonk
+│               ├── launch.rs       # Legacy launch_stonk
 │               ├── buy.rs          # buy_curve
 │               ├── sell.rs         # sell_curve
-│               ├── graduate.rs     # graduate_and_execute_stock
-│               └── redeem.rs       # burn_and_redeem
+│               ├── graduate.rs     # Legacy graduate_and_execute_stock
+│               ├── dbc.rs          # DBC registration and DAMM v2 equity settlement
+│               └── redeem.rs       # Legacy and DBC burn/redeem
 ├── src/
 │   ├── app/                        # Next.js 15 App Router pages & API routes
 │   │   ├── page.tsx                # Explore & live curves
@@ -102,6 +109,9 @@ streetfun/
 │   │   ├── token/[mint]/page.tsx   # Token detail, chart, swap & Burn-Redeem
 │   │   └── api/
 │   │       ├── webhooks/helius/    # Helius Webhook transaction listener
+│   │       ├── launch/prepare/      # Meteora DBC pool initialization transaction
+│   │       ├── graduate/dbc/        # DBC migration and collateral-settlement plan
+│   │       ├── trade/quote/         # Live DBC and DAMM v2 quote/transaction builder
 │   │       ├── trades/record/      # Authenticated trade & token indexing endpoint
 │   │       ├── trades/[mint]/      # Live trades query route
 │   │       └── charts/[mint]/      # Real-time OHLCV aggregation route
@@ -112,6 +122,7 @@ streetfun/
 │   │   ├── tokens/                 # TokenCard, TradingViewChart, TradeTerminal, BurnRedeemModule
 │   │   └── modals/                 # SearchModal (Cmd+K), LaunchModal
 │   ├── sdk/                        # TypeScript SDK (PDAs, Math, Constants)
+│   ├── server/meteoraDbc.ts        # DBC config invariants and SDK helpers
 │   ├── services/                   # Service layer
 │   │   ├── indexer/tradeStore.ts   # Supabase trade store & local fallback cache
 │   │   ├── solana/                 # On-chain Solana RPC services
@@ -126,9 +137,10 @@ streetfun/
 │   ├── 02_launch.test.ts           # Token launch & PDA derivation tests
 │   ├── 03_bonding_trade.test.ts    # Buy/sell curve & price discovery tests
 │   ├── 05_burn_redeem.test.ts      # Pre-graduation redemption safety tests
-│   └── 06_e2e_lifecycle.test.ts    # DAMM v2 settlement and redemption with test collateral
+│   └── 06_e2e_lifecycle.test.ts    # Legacy lifecycle test; DBC invariants have focused unit coverage
 └── scripts/
     ├── init_protocol.ts            # Protocol initialization script
+    ├── create_meteora_dbc_config.ts # One-time config creation/verification per cluster
     ├── localnet_demo.ts            # End-to-end localnet live lifecycle runner
     ├── test_webhook.ts             # Dynamic multi-token Helius Webhook simulator
     └── local_helius_indexer.ts     # Localnet Solana log listener daemon
@@ -141,11 +153,13 @@ streetfun/
 | Instruction | Accounts Involved | Description |
 | :--- | :--- | :--- |
 | `initialize_global_config` | Admin, GlobalConfig PDA | Sets protocol fee, graduation threshold, and virtual reserves |
-| `launch_stonk` | Creator, Curve PDA, Token Vault, Quote Vault, Treasury Vault | Mints 1B meme supply to vault, sets target equity mint |
+| `launch_stonk` | Creator, legacy Curve PDA, Token Vault, Quote Vault, Treasury Vault | Creates a legacy StreetFun curve token |
 | `buy_curve` | Buyer, Curve PDA, Token Vault, Quote Vault, Fee Recipient | Swaps USDC for meme tokens along the bonding curve |
 | `sell_curve` | Seller, Curve PDA, Token Vault, Quote Vault, Fee Recipient | Swaps meme tokens back to USDC prior to graduation |
-| `graduate_and_execute_stock` | Caller, Curve PDA, Treasury Vault, DAMM v2 markets and pool accounts | Buys collateral with half the quote reserves; seeds the other half plus remaining meme tokens into DAMM v2 |
-| `burn_and_redeem` | Redeemer, Meme Mint, Treasury Vault, Collateral Mint | Burns meme tokens and transfers the pro-rata collateral-token amount |
+| `graduate_and_execute_stock` | Caller, legacy Curve PDA, Treasury Vault, DAMM v2 markets and pool accounts | Settles an existing legacy token |
+| `register_dbc_launch` | Creator, DBC pool/config, launch registry and treasury vault | Registers a Meteora-created DBC pool and binds its collateral mint |
+| `settle_dbc_graduation` | Launch creator, migrated DBC DAMM v2 pool, partner quote allocation, collateral DAMM v2 market and treasury | Claims the partner allocation, buys collateral, checks the received balance, then records graduation |
+| `burn_and_redeem` / `burn_and_redeem_dbc` | Redeemer, mint, launch state, Treasury Vault and Collateral Mint | Burns meme tokens and transfers the pro-rata collateral-token amount |
 
 ---
 
@@ -161,6 +175,16 @@ streetfun/
 ```bash
 solana-test-validator --reset --quiet
 ```
+
+### Configure Meteora DBC for a cluster
+
+Deploy and initialize the current StreetFun program first. Set `NEXT_PUBLIC_SOLANA_NETWORK`, `NEXT_PUBLIC_USE_MOCK_DATA=false`, and a funded `ANCHOR_WALLET` in `.env.local`. Leave `NEXT_PUBLIC_METEORA_DBC_CONFIG_ADDRESS` unset, then run:
+
+```bash
+npm run setup:meteora-dbc
+```
+
+The script creates and verifies one DBC config on the selected cluster. Copy its printed address into `NEXT_PUBLIC_METEORA_DBC_CONFIG_ADDRESS` and restart the app. Use a separate config address for each cluster. Devnet DBC graduation is manual; Meteora's mainnet keepers do not run on Devnet. Never point a Devnet test token at a Mainnet Tessera mint.
 
 ### 2. Build & Deploy Smart Contracts
 ```bash
@@ -212,7 +236,7 @@ browser session storage and is never suitable for another network.
 StreetFun utilizes a high-throughput hybrid architecture combining on-chain Solana state with an off-chain real-time indexing pipeline powered by **Helius Webhooks** and **Supabase (PostgreSQL)**:
 
 1. **Transaction Capture**:
-   - **Production (Mainnet / Devnet)**: Helius Webhooks monitor the StreetFun Program ID (`6ZiovCkRxRJgUaCS9uftFk3eVnGDsbnDXgUV1XHybH52`). When a `Buy`, `Sell`, or `BurnAndRedeem` transaction confirms, Helius dispatches an authenticated HTTP POST payload to `/api/webhooks/helius`.
+   - Configure the production/Devnet Helius webhook for the same cluster and include the StreetFun program (`6ZiovCkRxRJgUaCS9uftFk3eVnGDsbnDXgUV1XHybH52`), Meteora DBC (`dbcij3LWUppWqq96dh6gJWwBifmcGfLSB5D4DuSMaqN`), and DAMM v2 (`cpamdpZCGKUy5JxQXB4dcpGPiikHawvSWAd6mEn1sGG`) program addresses. The webhook route receives signatures and indexes launches, trades, migrations, graduations, and redemptions from confirmed transaction data.
    - **Local Development**: The web application automatically routes trade executions, token launches, and equity redemptions through `/api/trades/record`, ensuring every action updates Supabase with zero configuration.
 2. **Parsing & Storage**:
    - The webhook processor parses instruction logs (`"Bought ... tokens for ... quote"`), extracts price and volume, verifies the token entity in `tokens`, and records the swap event into `trades`.

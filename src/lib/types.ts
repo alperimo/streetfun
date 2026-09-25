@@ -34,12 +34,20 @@ export interface TokenMetadata {
     isPreIpo?: boolean;
   };
   bondingCurve: {
+    /** New launches use Meteora DBC; old tokens can retain the legacy protocol. */
+    protocol?: "meteora-dbc" | "streetfun-legacy";
+    dbcPoolAddress?: string;
+    settlementPending?: boolean;
     realQuoteReservesUsd: number;
     graduationThresholdUsd: number;
     progressPct: number;
-    virtualQuoteReserves: string;
-    virtualTokenReserves: string;
-    realTokenReserves: string;
+    /** Legacy StreetFun reserves; DBC tokens expose these only when applicable. */
+    virtualQuoteReserves?: string;
+    virtualTokenReserves?: string;
+    realTokenReserves?: string;
+    /** Live DBC virtual-pool reserves in raw token units. */
+    dbcQuoteReserveRaw?: string;
+    dbcBaseReserveRaw?: string;
     quoteMint?: string;
     isGraduated: boolean;
     graduatedAt?: string;

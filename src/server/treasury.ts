@@ -3,11 +3,12 @@ import { Connection, PublicKey } from "@solana/web3.js";
 import {
   TOKEN_2022_PROGRAM_ID,
   TOKEN_PROGRAM_ID,
+  getAssociatedTokenAddressSync,
   unpackAccount,
   unpackMint,
 } from "@solana/spl-token";
 import { PROGRAM_ID } from "@/sdk/constants";
-import { getTreasuryVaultPda } from "@/sdk/pda";
+import { getDbcLaunchPda, getTreasuryVaultPda } from "@/sdk/pda";
 import { PendingCurveTradeError } from "@/services/indexer/parseCurveTrade";
 import idl from "@/idl/streetfun.json";
 import { devnetTestCollateralLabel } from "./tessera";
@@ -83,6 +84,47 @@ export async function persistVaultHoldingSnapshot(
   const amount = vault.amount < accounted ? vault.amount : accounted;
   await persistVaultHoldingAmount(db, {
     mint: curve.memeMint.toBase58(),
+    equityMint: equityMint.toBase58(),
+    equitySymbol: devnetTestCollateralLabel(equityMint.toBase58()) || equitySymbol,
+    equityAmount: rawTokenAmountToDecimal(amount, equity.decimals),
+    observedSlot: context.slot,
+  });
+}
+
+/** Persist the live redeemable balance for a settled DBC-backed launch. */
+export async function persistDbcVaultHoldingSnapshot(
+  connection: Connection,
+  db: any,
+  launchKey: PublicKey,
+  launch: any,
+  minimumSlot: number,
+  equitySymbol: string,
+): Promise<void> {
+  if (!launch.is_graduated) return;
+  const equityMint = launch.target_equity_mint as PublicKey;
+  const mintInfo = await connection.getAccountInfo(equityMint, { commitment: "confirmed", minContextSlot: minimumSlot });
+  if (!mintInfo || (!mintInfo.owner.equals(TOKEN_PROGRAM_ID) && !mintInfo.owner.equals(TOKEN_2022_PROGRAM_ID))) {
+    throw new PendingCurveTradeError("Treasury equity mint account is not available yet.");
+  }
+  const vaultKey = getAssociatedTokenAddressSync(equityMint, launchKey, true, mintInfo.owner);
+  const { context, value } = await connection.getMultipleAccountsInfoAndContext(
+    [launchKey, vaultKey, equityMint],
+    { commitment: "confirmed", minContextSlot: minimumSlot },
+  );
+  const [launchInfo, vaultInfo, currentMintInfo] = value;
+  if (!launchInfo || !vaultInfo || !currentMintInfo) throw new PendingCurveTradeError("DBC treasury vault account data is not available yet.");
+  if (!launchInfo.owner.equals(PROGRAM_ID)) throw new Error("DBC launch registry is owned by an unexpected program.");
+  const current: any = curveCoder.accounts.decode("DbcLaunchAccount", launchInfo.data);
+  if (!current.is_graduated || !current.meme_mint.equals(launch.meme_mint) || !current.target_equity_mint.equals(equityMint)) {
+    throw new PendingCurveTradeError("A consistent settled DBC vault snapshot is not available yet.");
+  }
+  const equity = unpackMint(equityMint, currentMintInfo, currentMintInfo.owner);
+  const vault = unpackAccount(vaultKey, vaultInfo, currentMintInfo.owner);
+  if (!vault.mint.equals(equityMint) || !vault.owner.equals(launchKey)) throw new Error("DBC treasury vault does not match its collateral mint.");
+  const accounted = BigInt(current.total_equity_locked.toString());
+  const amount = vault.amount < accounted ? vault.amount : accounted;
+  await persistVaultHoldingAmount(db, {
+    mint: current.meme_mint.toBase58(),
     equityMint: equityMint.toBase58(),
     equitySymbol: devnetTestCollateralLabel(equityMint.toBase58()) || equitySymbol,
     equityAmount: rawTokenAmountToDecimal(amount, equity.decimals),

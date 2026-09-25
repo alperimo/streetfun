@@ -18,9 +18,9 @@ export class MockTradeService implements ITradeService {
     const curve = { ...token.bondingCurve };
     const treasury = { ...token.treasury };
 
-    const virtualQuote = BigInt(curve.virtualQuoteReserves);
-    const virtualTokens = BigInt(curve.virtualTokenReserves);
-    const realTokens = BigInt(curve.realTokenReserves);
+    const virtualQuote = BigInt(curve.virtualQuoteReserves || "0");
+    const virtualTokens = BigInt(curve.virtualTokenReserves || "0");
+    const realTokens = BigInt(curve.realTokenReserves || "0");
     const realQuote = BigInt(Math.floor(curve.realQuoteReservesUsd * 1_000_000));
 
     if (params.tradeMode === "buy") {

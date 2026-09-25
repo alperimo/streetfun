@@ -71,6 +71,9 @@ export class SolanaTradeService implements ITradeService {
     if (params.amount < 0.000001) {
       throw new Error("The minimum on-chain trade amount is 0.000001.");
     }
+    if (params.token.bondingCurve.protocol === "meteora-dbc") {
+      return this.executeMeteoraTrade(params, wallet);
+    }
     if (params.token.bondingCurve.isGraduated) {
       throw new Error(
         "This token is graduated, but a verified Meteora/Jupiter swap route is not configured. No transaction was submitted."
@@ -277,6 +280,89 @@ export class SolanaTradeService implements ITradeService {
         : params.tradeMode === "buy"
           ? `Confirmed purchase of ${tokensAmount.toLocaleString("en-US", { maximumFractionDigits: 2 })} $${params.token.symbol}.`
           : `Confirmed sale for ${quoteAmount.toFixed(2)} USDC.`,
+      updatedToken,
+    };
+  }
+
+  private async executeMeteoraTrade(
+    params: TradeParams,
+    wallet: WalletTransactionSender,
+  ): Promise<TradeResult> {
+    if (params.tradeMode !== "buy" && params.tradeMode !== "sell") throw new Error("Invalid trade direction.");
+    const response = await fetch("/api/trade/quote", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      cache: "no-store",
+      body: JSON.stringify({
+        mint: params.token.mint,
+        direction: params.tradeMode,
+        amount: params.amount.toString(),
+        slippageBps: Math.round(params.slippagePct * 100),
+        trader: wallet.publicKey.toBase58(),
+      }),
+    });
+    const prepared = await response.json().catch(() => null);
+    if (!response.ok || typeof prepared?.transaction !== "string") {
+      throw new Error(prepared?.error || "A live Meteora trade route is unavailable.");
+    }
+    const transaction = Transaction.from(Buffer.from(prepared.transaction, "base64"));
+    if (!transaction.feePayer?.equals(wallet.publicKey) ||
+        !transaction.signatures.some(signature => signature.publicKey.equals(wallet.publicKey))) {
+      throw new Error("The trade quote is not bound to the connected wallet.");
+    }
+    const blockhash = {
+      blockhash: transaction.recentBlockhash!,
+      lastValidBlockHeight: Number(prepared.lastValidBlockHeight),
+    };
+    const signature = await wallet.sendTransaction(transaction, this.connection, {
+      skipPreflight: false,
+      preflightCommitment: "confirmed",
+    });
+    const pendingKey = pendingTradeKey(wallet.publicKey.toBase58(), params.token.mint);
+    savePendingTrade(pendingKey, signature);
+    try {
+      await confirmSubmittedTransaction(this.connection, signature, blockhash);
+      savePendingTrade(pendingKey, null);
+    } catch (error) {
+      if (!(error instanceof SubmittedTransactionError)) savePendingTrade(pendingKey, null);
+      throw error;
+    }
+
+    let verifiedTrade: { tokens_amount: number; quote_amount_usd: number } | null = null;
+    let indexed = false;
+    try {
+      const confirmation = await fetch("/api/trades/confirm", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ signature, mint: params.token.mint, protocol: "meteora-dbc" }),
+      });
+      if (confirmation.ok) {
+        const result = await confirmation.json();
+        verifiedTrade = result.trade || null;
+        indexed = result.indexed === true;
+      }
+    } catch {
+      // The chain confirmation is final; indexing can catch up through Helius.
+    }
+    const tokensAmount = verifiedTrade?.tokens_amount || 0;
+    const quoteAmount = verifiedTrade?.quote_amount_usd || 0;
+    const effectivePrice = tokensAmount > 0 ? quoteAmount / tokensAmount : 0;
+    const updatedToken = (await solanaTokenService.getToken(params.token.mint).catch(() => null)) || params.token;
+    return {
+      success: true,
+      txSignature: signature,
+      tokensAmount,
+      quoteAmount,
+      effectivePrice,
+      priceImpactPct: Number(prepared.priceImpactPct || 0),
+      isGraduated: updatedToken.bondingCurve.isGraduated,
+      message: !verifiedTrade
+        ? `Transaction ${signature} confirmed on Solana; the exact receipt is still being verified. Do not resubmit.`
+        : !indexed
+          ? `Transaction ${signature} confirmed; the market index is temporarily unavailable.`
+          : params.tradeMode === "buy"
+            ? `Confirmed purchase of ${tokensAmount.toLocaleString("en-US", { maximumFractionDigits: 2 })} $${params.token.symbol}.`
+            : `Confirmed sale for ${quoteAmount.toFixed(2)} USDC.`,
       updatedToken,
     };
   }

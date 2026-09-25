@@ -39,12 +39,14 @@ export async function graduateToken(
   mint: string,
   wallet: WalletTransactionSender,
   slippageBps = 100,
-): Promise<{ signature: string; poolAddress: string }> {
+  protocol?: "meteora-dbc" | "streetfun-legacy",
+): Promise<{ signature: string; poolAddress: string; migrationSignature?: string }> {
   if (!wallet?.publicKey || typeof wallet.sendTransaction !== "function") {
     throw new Error("Connect a wallet that can sign the graduation transaction.");
   }
 
   const connection = new Connection(getBrowserRpcUrl(), "confirmed");
+  if (protocol === "meteora-dbc") return graduateDbcToken(mint, wallet, connection, slippageBps);
   const positionNftMint = Keypair.generate();
   const response = await fetch("/api/graduate", {
     method: "POST",
@@ -122,7 +124,7 @@ export async function graduateToken(
     connection,
     wallet,
     transaction,
-    positionNftMint.publicKey,
+    [positionNftMint.publicKey],
   );
   const blockhash = await connection.getLatestBlockhash("confirmed");
   const versionedMessage = new TransactionMessage({
@@ -156,12 +158,12 @@ async function createSettlementLookupTable(
   connection: Connection,
   wallet: WalletTransactionSender,
   settlement: Transaction,
-  positionNftSigner: PublicKey,
+  additionalSigners: PublicKey[],
 ): Promise<AddressLookupTableAccount> {
   const accountKeys = settlement.compileMessage().accountKeys;
   const addresses = accountKeys
-    .filter(key => !key.equals(wallet.publicKey) && !key.equals(positionNftSigner))
-    .slice(0, 24);
+    .filter(key => !key.equals(wallet.publicKey) && !additionalSigners.some(signer => signer.equals(key)))
+    .slice(0, 28);
   if (addresses.length < 13) throw new Error("The settlement account list could not be compacted safely.");
 
   const recentSlot = await connection.getSlot("confirmed");
@@ -205,4 +207,119 @@ async function createSettlementLookupTable(
     await new Promise(resolve => setTimeout(resolve, 400));
   }
   throw new Error(`Settlement preparation ${setupSignature} confirmed, but Solana has not activated the address table yet. No graduation was submitted.`);
+}
+
+export class GraduationStepPendingError extends SubmittedTransactionError {
+  constructor(signature: string, readonly step: "migration" | "settlement") {
+    super(signature);
+    this.name = "GraduationStepPendingError";
+  }
+}
+
+interface DbcGraduationPlan {
+  action: "migrate" | "settle";
+  networkGenesisHash: string;
+  pool?: { address: string };
+  dammConfig?: string;
+  amounts?: { minEquityTokensExpected: string };
+  accounts?: Record<string, string>;
+}
+
+async function fetchDbcGraduationPlan(
+  mint: string,
+  wallet: WalletTransactionSender,
+  slippageBps: number,
+): Promise<DbcGraduationPlan> {
+  const response = await fetch("/api/graduate/dbc", {
+    method: "POST", headers: { "Content-Type": "application/json" }, cache: "no-store",
+    body: JSON.stringify({ mint, caller: wallet.publicKey.toBase58(), slippageBps }),
+  });
+  const payload = await response.json().catch(() => null);
+  if (!response.ok || (payload?.action !== "migrate" && payload?.action !== "settle")) {
+    throw new Error(payload?.error || "Meteora DBC migration or settlement is not ready.");
+  }
+  return payload as DbcGraduationPlan;
+}
+
+async function graduateDbcToken(
+  mint: string,
+  wallet: WalletTransactionSender,
+  connection: Connection,
+  slippageBps: number,
+): Promise<{ signature: string; poolAddress: string; migrationSignature?: string }> {
+  let plan = await fetchDbcGraduationPlan(mint, wallet, slippageBps);
+  const genesisHash = await connection.getGenesisHash();
+  if (genesisHash !== plan.networkGenesisHash) throw new Error("The wallet RPC and DBC graduation plan point to different Solana clusters.");
+
+  let migrationSignature: string | undefined;
+  if (plan.action === "migrate") {
+    if (!plan.pool?.address || !plan.dammConfig) throw new Error("Meteora did not return a complete migration plan.");
+    const { DynamicBondingCurveClient } = await import("@meteora-ag/dynamic-bonding-curve-sdk");
+    const migration = await DynamicBondingCurveClient.create(connection, "confirmed").migration.migrateToDammV2({
+      payer: wallet.publicKey,
+      pool: new PublicKey(plan.pool.address),
+      dammConfig: new PublicKey(plan.dammConfig),
+    });
+    const transaction = migration.transaction;
+    const blockhash = await connection.getLatestBlockhash("confirmed");
+    transaction.feePayer = wallet.publicKey;
+    transaction.recentBlockhash = blockhash.blockhash;
+    transaction.partialSign(migration.firstPositionNftKeypair, migration.secondPositionNftKeypair);
+    try {
+      migrationSignature = await wallet.sendTransaction(transaction, connection, {
+        skipPreflight: false, preflightCommitment: "confirmed",
+      });
+    } catch (error) {
+      throw new Error(error instanceof Error ? error.message : "Wallet rejected the Meteora DAMM v2 migration.");
+    }
+    try { await confirmSubmittedTransaction(connection, migrationSignature, blockhash); }
+    catch (error) {
+      if (error instanceof SubmittedTransactionError) throw new GraduationStepPendingError(migrationSignature, "migration");
+      throw new Error(`Meteora migration ${migrationSignature} failed: ${error instanceof Error ? error.message : String(error)}`);
+    }
+    plan = await fetchDbcGraduationPlan(mint, wallet, slippageBps);
+    if (plan.action !== "settle") throw new Error(`Meteora migration ${migrationSignature} confirmed, but the DBC pool has not reached settlement-ready state yet.`);
+  }
+
+  if (!plan.accounts || !plan.amounts?.minEquityTokensExpected) throw new Error("StreetFun did not return complete equity settlement accounts.");
+  if (plan.accounts.caller !== wallet.publicKey.toBase58()) throw new Error("The settlement plan does not match the connected wallet.");
+  const readonlyWallet: any = {
+    publicKey: wallet.publicKey,
+    signTransaction: async () => { throw new Error("Use the connected wallet to sign."); },
+    signAllTransactions: async () => { throw new Error("Use the connected wallet to sign."); },
+  };
+  const provider = new anchor.AnchorProvider(connection, readonlyWallet, { commitment: "confirmed", preflightCommitment: "confirmed" });
+  const program = new anchor.Program({ ...idl, address: PROGRAM_ID.toBase58() } as any, provider);
+  const accounts = Object.fromEntries(Object.entries(plan.accounts).map(([name, address]) => [name, new PublicKey(address)]));
+  const settleInstruction = await (program.methods as any)
+    .settleDbcGraduation({ minEquityTokensExpected: new BN(plan.amounts.minEquityTokensExpected) })
+    .accounts(accounts)
+    .instruction();
+  const transaction = new Transaction().add(ComputeBudgetProgram.setComputeUnitLimit({ units: 1_400_000 }), settleInstruction);
+  transaction.feePayer = wallet.publicKey;
+  const lookupTable = await createSettlementLookupTable(connection, wallet, transaction, []);
+  const blockhash = await connection.getLatestBlockhash("confirmed");
+  const message = new TransactionMessage({
+    payerKey: wallet.publicKey,
+    recentBlockhash: blockhash.blockhash,
+    instructions: transaction.instructions,
+  }).compileToV0Message([lookupTable]);
+  let signature: string;
+  try {
+    signature = await wallet.sendTransaction(new VersionedTransaction(message), connection, {
+      skipPreflight: false, preflightCommitment: "confirmed",
+    });
+  } catch (error) {
+    throw new Error(error instanceof Error ? error.message : "Wallet rejected the StreetFun equity settlement.");
+  }
+  try { await confirmSubmittedTransaction(connection, signature, blockhash); }
+  catch (error) {
+    if (error instanceof SubmittedTransactionError) throw new GraduationStepPendingError(signature, "settlement");
+    throw new Error(`StreetFun settlement ${signature} failed: ${error instanceof Error ? error.message : String(error)}`);
+  }
+  await fetch("/api/trades/confirm", {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ signature, mint, protocol: "meteora-dbc", purpose: "graduation" }),
+  }).catch(() => null);
+  return { signature, poolAddress: plan.pool?.address || "", migrationSignature };
 }

@@ -43,6 +43,17 @@ pub mod streetfun {
         instructions::sell::handle_sell_curve(ctx, params)
     }
 
+    pub fn register_dbc_launch(ctx: Context<RegisterDbcLaunch>) -> Result<()> {
+        instructions::dbc::handle_register_dbc_launch(ctx)
+    }
+
+    pub fn settle_dbc_graduation(
+        ctx: Context<SettleDbcGraduation>,
+        params: SettleDbcGraduationParams,
+    ) -> Result<()> {
+        instructions::dbc::handle_settle_dbc_graduation(ctx, params)
+    }
+
     pub fn graduate_and_execute_stock<'a, 'b, 'c, 'info>(
         ctx: Context<'a, 'b, 'c, 'info, GraduateAndExecuteStock<'info>>,
         params: GraduateParams,
@@ -55,6 +66,13 @@ pub mod streetfun {
         params: BurnAndRedeemParams,
     ) -> Result<()> {
         instructions::redeem::handle_burn_and_redeem(ctx, params)
+    }
+
+    pub fn burn_and_redeem_dbc(
+        ctx: Context<BurnAndRedeemDbc>,
+        params: BurnAndRedeemParams,
+    ) -> Result<()> {
+        instructions::redeem::handle_burn_and_redeem_dbc(ctx, params)
     }
 }
 
@@ -100,5 +118,25 @@ pub struct RedeemedEvent {
     pub meme_burned: u64,
     pub equity_redeemed: u64,
     pub remaining_equity: u64,
+    pub timestamp: i64,
+}
+
+#[event]
+pub struct DbcLaunchRegisteredEvent {
+    pub creator: Pubkey,
+    pub meme_mint: Pubkey,
+    pub target_equity_mint: Pubkey,
+    pub quote_mint: Pubkey,
+    pub dbc_config: Pubkey,
+    pub dbc_pool: Pubkey,
+}
+
+#[event]
+pub struct DbcGraduatedEvent {
+    pub meme_mint: Pubkey,
+    pub target_equity_mint: Pubkey,
+    pub quote_spent_for_equity: u64,
+    pub equity_locked: u64,
+    pub meteora_damm_v2_pool: Pubkey,
     pub timestamp: i64,
 }
