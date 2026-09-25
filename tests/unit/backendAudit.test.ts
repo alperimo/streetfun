@@ -5,7 +5,7 @@ import bs58 from "bs58";
 import idl from "../../src/idl/streetfun.json";
 import { PROGRAM_ID } from "../../src/sdk/constants";
 import { decodeStreetfunInstructions } from "../../src/server/indexTransaction";
-import { parseTesseraCatalog } from "../../src/server/tessera";
+import { canLaunchTesseraAsset, parseTesseraCatalog } from "../../src/server/tessera";
 import { getServerRpcUrl } from "../../src/server/rpc";
 import { alphaClaimMessage, validAlphaClaim } from "../../src/lib/alphaClaim";
 import { POST as trade } from "../../src/app/api/trade/route";
@@ -19,6 +19,12 @@ describe("Backend audit regressions", () => {
   it("requires real Tessera mint and finite price data", () => {
     expect(() => parseTesseraCatalog([{ symbol: "OpenAI", name: "OpenAI", mint: "placeholder", markPrice: 185 }])).to.throw();
     expect(() => parseTesseraCatalog([{ symbol: "OpenAI", name: "OpenAI", mint: Keypair.generate().publicKey.toBase58(), markPrice: NaN }])).to.throw();
+  });
+  it("allows only explicitly mapped Devnet test collateral to launch", () => {
+    expect(canLaunchTesseraAsset(true, true, true)).to.equal(true);
+    expect(canLaunchTesseraAsset(false, true, false)).to.equal(false);
+    expect(canLaunchTesseraAsset(true, true, false)).to.equal(false);
+    expect(canLaunchTesseraAsset(true, false, true)).to.equal(false);
   });
   it("uses Helius on the configured cluster without a public API key", () => {
     const keys = ["SOLANA_RPC_URL", "NEXT_PUBLIC_SOLANA_RPC", "HELIUS_API_KEY", "NEXT_PUBLIC_SOLANA_NETWORK"];

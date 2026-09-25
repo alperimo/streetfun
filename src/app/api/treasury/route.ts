@@ -151,10 +151,8 @@ export async function GET() {
     };
   });
 
-  const graduatedVaultCount =
-    summary?.graduated_vault_count != null
-      ? Number(summary.graduated_vault_count)
-      : graduatedLiveTokens.length;
+  // The legacy on-chain graduation flag does not prove Meteora settlement.
+  const graduatedVaultCount = graduatedLiveTokens.length;
 
   const redemptionCount =
     summary?.redemption_count != null

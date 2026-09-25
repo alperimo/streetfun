@@ -115,10 +115,12 @@ export class SolanaTokenService {
             equityBalance = Number(treasury.amount < accounted ? treasury.amount : accounted) / 10 ** equityDecimals;
           }
         }
-        const equityValue = asset ? equityBalance * asset.currentStockPriceUsd : 0;
+        const hasProviderMark = Boolean(asset && !asset.testCollateral && asset.currentStockPriceUsd > 0);
+        const equityValue = hasProviderMark ? equityBalance * asset.currentStockPriceUsd : 0;
 
         const price = !isGraduated && virtualTokens > 0 ? virtualQuote / virtualTokens : 0;
-        const marketCap = price > 0 ? price * supply : (isGraduated && equityValue > 0 ? equityValue : 0);
+        // A collateral NAV is not a traded market price or market capitalization.
+        const marketCap = price > 0 ? price * supply : 0;
 
         tokens.push({
           mint, name: indexed?.name || `StreetFun ${mint.slice(0, 4)}`, symbol: indexed?.symbol || mint.slice(0, 5),
@@ -131,15 +133,16 @@ export class SolanaTokenService {
             symbol: asset?.symbol || indexed?.target_equity_symbol || "UNVERIFIED",
             name: asset?.name || "Pre-IPO Collateral",
             mintAddress: account.targetEquityMint.toBase58(),
-            issuer: asset?.issuer || "PreStocks SPV",
-            custodian: asset?.custodian || "Institutional Custody",
-            legalFramework: asset?.legalFramework || "1:1 SPV Exposure",
+            issuer: asset?.issuer || "Unverified",
+            custodian: asset?.custodian || "Unverified",
+            legalFramework: asset?.legalFramework || "Collateral identity unverified",
             logoUrl: getOfficialEquityLogo(asset?.symbol || indexed?.target_equity_symbol || asset?.name),
-            stockPriceUsd: asset?.currentStockPriceUsd || 0,
-            isPreIpo: !!asset,
+            stockPriceUsd: hasProviderMark ? asset.currentStockPriceUsd : 0,
+            isPreIpo: !!asset && !asset.testCollateral,
             decimals: equityDecimals,
-            verifiedTessera: asset?.provider !== "prestocks" && !!asset,
-            verifiedPreStocks: asset?.provider === "prestocks",
+            verifiedTessera: asset?.provider !== "prestocks" && !!asset && !asset.testCollateral,
+            verifiedPreStocks: asset?.provider === "prestocks" && !asset.testCollateral,
+            isTestCollateral: Boolean(asset?.testCollateral),
           },
           bondingCurve: {
             realQuoteReservesUsd: reserves, graduationThresholdUsd: threshold,
@@ -147,15 +150,16 @@ export class SolanaTokenService {
             virtualQuoteReserves: account.virtualQuoteReserves.toString(), virtualTokenReserves: account.virtualTokenReserves.toString(),
             realTokenReserves: account.realTokenReserves.toString(), quoteMint: quote.mint.toBase58(), isGraduated,
             graduatedAt: isGraduated ? new Date(Number(account.graduatedAt.toString()) * 1000).toISOString() : undefined,
-            meteoraPoolAddress: indexed?.meteora_pool || undefined,
+            // Database metadata is not proof of a funded Meteora pool.
+            meteoraPoolAddress: undefined,
             dynamicFeeBps: Number(config.protocolFeeBps),
             equityPurchaseBudgetUsd: Math.max(reserves, threshold) / 2,
             ammLiquidityBudgetUsd: Math.max(reserves, threshold) / 2,
           },
           treasury: { totalEquityLocked: equityBalance, totalEquityValueUsd: equityValue,
             vaultPda: keys[i * 5 + 3].toBase58(), proofOfReserveVerified: false,
-            valuationAvailable: !!asset || equityBalance === 0,
-            valuationSource: asset ? `${asset.issuer || "PreStocks"} mark price` : undefined },
+            valuationAvailable: hasProviderMark || equityBalance === 0,
+            valuationSource: hasProviderMark ? `${asset.issuer} mark price` : undefined },
           dataSource: "onchain", lastUpdatedAt: new Date().toISOString(), observedSlot: context.slot,
         });
       }

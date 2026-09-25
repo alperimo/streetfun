@@ -2,6 +2,7 @@ import { TokenMetadata } from "@/lib/types";
 import {
   Connection,
   PublicKey,
+  Signer,
   SendOptions,
   Transaction,
   VersionedTransaction,
@@ -12,7 +13,7 @@ export interface WalletTransactionSender {
   sendTransaction: (
     transaction: Transaction | VersionedTransaction,
     connection: Connection,
-    options?: SendOptions
+    options?: SendOptions & { signers?: Signer[] }
   ) => Promise<string>;
 }
 
@@ -75,7 +76,7 @@ export type TimeframeOption = "1m" | "5m" | "15m" | "1h" | "4h" | "1D";
 export interface ITokenService {
   getTokens(): Promise<TokenMetadata[]>;
   getToken(mint: string): Promise<TokenMetadata | null>;
-  launchToken(params: TokenLaunchParams, walletPublicKey?: PublicKey | null): Promise<TokenMetadata>;
+  launchToken(params: TokenLaunchParams, wallet?: WalletIdentity): Promise<TokenMetadata>;
 }
 
 export interface ITradeService {

@@ -10,6 +10,7 @@ import { PROGRAM_ID } from "@/sdk/constants";
 import { getTreasuryVaultPda } from "@/sdk/pda";
 import { PendingCurveTradeError } from "@/services/indexer/parseCurveTrade";
 import idl from "@/idl/streetfun.json";
+import { devnetTestCollateralLabel } from "./tessera";
 
 const curveCoder = new BorshCoder(idl as any);
 
@@ -63,8 +64,8 @@ export async function persistVaultHoldingSnapshot(
     throw new PendingCurveTradeError("Treasury vault account data is not available yet.");
   }
   if (!curveInfo.owner.equals(PROGRAM_ID)) throw new Error("Treasury curve is owned by an unexpected program.");
-  const currentCurve: any = curveCoder.accounts.decode("curveAccount", curveInfo.data);
-  if (!currentCurve.isGraduated || !currentCurve.memeMint.equals(curve.memeMint) || !currentCurve.targetEquityMint.equals(equityMint)) {
+  const currentCurve: any = curveCoder.accounts.decode("CurveAccount", curveInfo.data);
+  if (!currentCurve.is_graduated || !currentCurve.meme_mint.equals(curve.memeMint) || !currentCurve.target_equity_mint.equals(equityMint)) {
     throw new PendingCurveTradeError("A consistent graduated vault snapshot is not available yet.");
   }
   if (!mintInfo.owner.equals(TOKEN_PROGRAM_ID) && !mintInfo.owner.equals(TOKEN_2022_PROGRAM_ID)) {
@@ -78,12 +79,12 @@ export async function persistVaultHoldingSnapshot(
   }
 
   // Only collateral accounted for by the curve is redeemable; exclude donations.
-  const accounted = BigInt(currentCurve.totalEquityLocked.toString());
+  const accounted = BigInt(currentCurve.total_equity_locked.toString());
   const amount = vault.amount < accounted ? vault.amount : accounted;
   await persistVaultHoldingAmount(db, {
     mint: curve.memeMint.toBase58(),
     equityMint: equityMint.toBase58(),
-    equitySymbol,
+    equitySymbol: devnetTestCollateralLabel(equityMint.toBase58()) || equitySymbol,
     equityAmount: rawTokenAmountToDecimal(amount, equity.decimals),
     observedSlot: context.slot,
   });

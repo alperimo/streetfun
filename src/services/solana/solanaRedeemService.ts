@@ -1,6 +1,6 @@
 import { AnchorProvider, Program, BN } from "@coral-xyz/anchor";
 import { Connection, PublicKey, Transaction } from "@solana/web3.js";
-import { TOKEN_PROGRAM_ID, getAccount, getMint, getAssociatedTokenAddress, createAssociatedTokenAccountIdempotentInstruction } from "@solana/spl-token";
+import { TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID, getAccount, getMint, getAssociatedTokenAddress, createAssociatedTokenAccountIdempotentInstruction, getTransferFeeConfig } from "@solana/spl-token";
 import { IRedeemService, RedeemParams, RedeemResult, WalletIdentity } from "../types";
 import { PROGRAM_ID } from "@/sdk/constants";
 import { getBrowserRpcUrl } from "@/sdk/network";
@@ -23,22 +23,33 @@ export class SolanaRedeemService implements IRedeemService {
     const [treasuryVault] = getTreasuryVaultPda(curvePda, PROGRAM_ID);
     const curve = await (program.account as any).curveAccount.fetch(curvePda);
     if (!curve.isGraduated) throw new Error("This token has not graduated.");
-    // The current deployed program accepts legacy SPL collateral only.
-    // getMint fails closed for Token-2022 rather than submitting an invalid burn.
+    const equityMintInfo = await connection.getAccountInfo(curve.targetEquityMint, "confirmed");
+    const equityTokenProgram = equityMintInfo?.owner;
+    if (!equityTokenProgram || (!equityTokenProgram.equals(TOKEN_PROGRAM_ID) && !equityTokenProgram.equals(TOKEN_2022_PROGRAM_ID))) {
+      throw new Error("The collateral mint has an unsupported token program.");
+    }
+    if (equityTokenProgram.equals(TOKEN_2022_PROGRAM_ID) && process.env.NEXT_PUBLIC_TOKEN_2022_COLLATERAL_DEPLOYED !== "true") {
+      throw new Error("Token-2022 redemption requires the audited program upgrade on this network. No tokens were burned.");
+    }
     const [equityMint, vault] = await Promise.all([
-      getMint(connection, curve.targetEquityMint), getAccount(connection, treasuryVault),
+      getMint(connection, curve.targetEquityMint, "confirmed", equityTokenProgram),
+      getAccount(connection, treasuryVault, "confirmed", equityTokenProgram),
     ]);
+    if (getTransferFeeConfig(equityMint)) {
+      throw new Error("This collateral charges Token-2022 transfer fees. Exact net redemption is not supported; no tokens were burned.");
+    }
     const supply = BigInt(curve.totalMemeSupply.toString());
     const collateral = BigInt(curve.totalEquityLocked.toString());
     if (amount > supply || supply === 0n) throw new Error("Burn amount exceeds outstanding supply.");
     const expected = amount * collateral / supply;
     if (expected === 0n || expected > vault.amount) throw new Error("Insufficient redeemable collateral.");
     const userToken = await getAssociatedTokenAddress(memeMint, wallet.publicKey);
-    const userEquity = await getAssociatedTokenAddress(curve.targetEquityMint, wallet.publicKey);
-    const tx = new Transaction().add(createAssociatedTokenAccountIdempotentInstruction(wallet.publicKey, userEquity, wallet.publicKey, curve.targetEquityMint));
+    const userEquity = await getAssociatedTokenAddress(curve.targetEquityMint, wallet.publicKey, false, equityTokenProgram);
+    const tx = new Transaction().add(createAssociatedTokenAccountIdempotentInstruction(wallet.publicKey, userEquity, wallet.publicKey, curve.targetEquityMint, equityTokenProgram));
     tx.add(await (program.methods as any).burnAndRedeem({ memeTokensToBurn: new BN(amount.toString()), minEquityTokensOut: new BN(expected.toString()) }).accounts({
       redeemer: wallet.publicKey, memeMint, targetEquityMint: curve.targetEquityMint, curve: curvePda,
-      treasuryVault, redeemerTokenAccount: userToken, redeemerEquityAccount: userEquity, tokenProgram: TOKEN_PROGRAM_ID,
+      treasuryVault, redeemerTokenAccount: userToken, redeemerEquityAccount: userEquity,
+      tokenProgram: TOKEN_PROGRAM_ID, equityTokenProgram,
     }).instruction());
     const blockhash = await connection.getLatestBlockhash("confirmed");
     tx.recentBlockhash = blockhash.blockhash; tx.feePayer = wallet.publicKey;
