@@ -7,6 +7,12 @@ Upon reaching graduation, the protocol executes an automated dual-allocation:
 2. **The other half plus remaining meme supply** seeds a new Meteora DAMM v2 pool for secondary-market liquidity.
 3. After graduation, holders can burn meme tokens to redeem their pro-rata portion of the vault-held collateral token, subject to Token-2022 transfer fees and on-chain balances.
 
+## Contest Requirement: Meteora DBC
+
+Contest launches must use Meteora's Dynamic Bonding Curve (DBC) for token launch, price discovery, and bonding-curve buys and sells, with graduation targeting Meteora DAMM v2. DLMM is not an acceptable migration target for this contest.
+
+**Implementation status:** the current StreetFun program still launches and trades on its own virtual-reserve curve, then creates a DAMM v2 pool during its custom 50/50 collateral settlement. The repository does not yet route launches or trades through Meteora DBC. DBC integration, including how its graduation and DAMM v2 migration preserve StreetFun's collateral-purchase leg, remains required before this project can be described as contest-ready.
+
 ---
 
 ## 1. Core Architecture & Protocol Features
