@@ -5,6 +5,9 @@ const nextConfig = {
   // runs. Dedicated verification runs can still override this with
   // NEXT_DIST_DIR (for example, .next-verification).
   distDir: process.env.NEXT_DIST_DIR || ".next",
+  outputFileTracingExcludes: {
+    "*": ["./.env*", "./.env.local", "./.env.example"],
+  },
   images: {
     unoptimized: true,
     remotePatterns: [
