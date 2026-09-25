@@ -6,6 +6,7 @@ use anchor_lang::prelude::*;
 use anchor_spl::associated_token::AssociatedToken;
 use anchor_spl::token::spl_token::instruction::AuthorityType;
 use anchor_spl::token::{self, Mint, MintTo, SetAuthority, Token, TokenAccount};
+use anchor_spl::token_interface::{TokenInterface};
 
 pub const TOTAL_MEME_SUPPLY: u64 = 1_000_000_000_000_000; // 1 Billion tokens with 6 decimals
 pub const SALE_SUPPLY: u64 = 800_000_000_000_000; // 800M for bonding curve, 200M reserved for Meteora DLMM liquidity
@@ -80,14 +81,15 @@ pub struct LaunchStonk<'info> {
         bump,
         token::mint = target_equity_mint,
         token::authority = curve,
-        token::token_program = token_program,
+        token::token_program = equity_token_program,
     )]
     pub treasury_vault: InterfaceAccount<'info, anchor_spl::token_interface::TokenAccount>,
 
-    pub token_program: Interface<'info, anchor_spl::token_interface::TokenInterface>,
+    pub token_program: Program<'info, Token>,
     pub associated_token_program: Program<'info, AssociatedToken>,
     pub system_program: Program<'info, System>,
     pub rent: Sysvar<'info, Rent>,
+    pub equity_token_program: Interface<'info, TokenInterface>,
 }
 
 pub fn handle_launch_stonk(

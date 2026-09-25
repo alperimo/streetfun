@@ -19,8 +19,9 @@ import {
   BN,
 } from "./helpers";
 import { getOrCreateAssociatedTokenAccount } from "@solana/spl-token";
+import { burn } from "@solana/spl-token";
 
-describe("04 - StreetFun Protocol: Graduation & Treasury Stock Purchase", () => {
+describe("04 - StreetFun Protocol: Graduation Settlement Safety (test mints)", () => {
   const creator = Keypair.generate();
   const traderBob = Keypair.generate();
   const stockProvider = Keypair.generate(); // Simulates custodian / broker / Jupiter CPI
@@ -43,7 +44,7 @@ describe("04 - StreetFun Protocol: Graduation & Treasury Stock Purchase", () => 
   let bobQuoteAta: any;
   let bobTokenAta: any;
 
-  const stockSharesToDeposit = 150 * 1_000_000; // 150 shares ($SPCX)
+  const stockSharesToDeposit = 150 * 1_000_000; // 150 test-equity units
 
   before(async () => {
     await airdropSol(provider.connection, creator.publicKey, 10);
@@ -81,6 +82,7 @@ describe("04 - StreetFun Protocol: Graduation & Treasury Stock Purchase", () => 
         quoteVault: quoteVaultPda,
         treasuryVault: treasuryVaultPda,
         tokenProgram: TOKEN_PROGRAM_ID,
+        equityTokenProgram: TOKEN_PROGRAM_ID,
         associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
         systemProgram: SystemProgram.programId,
         rent: SYSVAR_RENT_PUBKEY,
@@ -98,7 +100,7 @@ describe("04 - StreetFun Protocol: Graduation & Treasury Stock Purchase", () => 
     );
     protocolFeeAccount = feeRecipientAta.address;
 
-    // Bob gets 70,000 USDC to push curve across graduation threshold (60,000 USDC)
+    // Bob gets 70,000 units of a test-only quote mint to cross the test threshold.
     bobQuoteAta = await mintToAta(
       provider.connection,
       creator,
@@ -116,7 +118,7 @@ describe("04 - StreetFun Protocol: Graduation & Treasury Stock Purchase", () => 
     bobTokenAta = tokenAta.address;
   });
 
-  it("Graduation fails before threshold is reached", async () => {
+  it("Graduation fails before the test quote threshold is reached", async () => {
     const stockProviderEquityAta = await getOrCreateAssociatedTokenAccount(
       provider.connection,
       stockProvider,
@@ -161,12 +163,12 @@ describe("04 - StreetFun Protocol: Graduation & Treasury Stock Purchase", () => 
           treasuryVault: treasuryVaultPda,
           equityPurchaseAccount: equityPurchaseQuoteAta.address,
           equitySourceAccount: stockProviderEquityAta.address,
-          equitySourceAuthority: stockProvider.publicKey,
           ammQuoteDestination: ammQuoteAta.address,
           ammTokenDestination: ammTokenAta.address,
           tokenProgram: TOKEN_PROGRAM_ID,
+          equityTokenProgram: TOKEN_PROGRAM_ID,
         })
-        .signers([protocolAdmin, stockProvider])
+        .signers([protocolAdmin])
         .rpc();
       expect.fail("Should have failed GraduationThresholdNotReached");
     } catch (err: any) {
@@ -202,8 +204,8 @@ describe("04 - StreetFun Protocol: Graduation & Treasury Stock Purchase", () => 
     expect(curveAccount.realQuoteReserves.toNumber()).to.be.greaterThanOrEqual(60_000 * 1_000_000);
   });
 
-  it("Graduation executes successfully: 50% stock purchase to Treasury PDA + 50% AMM liquidity", async () => {
-    // Stock provider mints 150 shares ($SPCX)
+  it("A non-admin may request graduation, but unverified settlement remains closed", async () => {
+    // Stock provider mints 150 units of the test-only equity mint.
     const stockProviderEquityAta = await mintToAta(
       provider.connection,
       stockProvider,
@@ -234,61 +236,111 @@ describe("04 - StreetFun Protocol: Graduation & Treasury Stock Purchase", () => 
       ammTokenDest.publicKey
     );
 
-    const tx = await program.methods
-      .graduateAndExecuteStock({
-        minEquityTokensExpected: new BN(stockSharesToDeposit),
-      })
-      .accounts({
-        caller: protocolAdmin.publicKey,
-        globalConfig: globalConfigPda,
-        memeMint: memeMintKeypair.publicKey,
-        targetEquityMint: equityMint,
-        curve: curvePda,
-        tokenVault: tokenVaultPda,
-        quoteVault: quoteVaultPda,
-        treasuryVault: treasuryVaultPda,
-        equityPurchaseAccount: equityPurchaseQuoteAta.address,
-        equitySourceAccount: stockProviderEquityAta.address,
-        equitySourceAuthority: stockProvider.publicKey,
-        ammQuoteDestination: ammQuoteAta.address,
-        ammTokenDestination: ammTokenAta.address,
-        tokenProgram: TOKEN_PROGRAM_ID,
-      })
-      .signers([protocolAdmin, stockProvider])
-      .rpc();
+    const curveBefore = await program.account.curveAccount.fetch(curvePda);
+    const quoteVaultBefore = await provider.connection.getTokenAccountBalance(quoteVaultPda);
+    const treasuryBefore = await provider.connection.getTokenAccountBalance(treasuryVaultPda);
 
-    expect(tx).to.be.a("string");
+    try {
+      await program.methods
+        .graduateAndExecuteStock({
+          minEquityTokensExpected: new BN(stockSharesToDeposit),
+        })
+        .accounts({
+          // This wallet is not the configured admin. Finalization is permissionless.
+          caller: traderBob.publicKey,
+          globalConfig: globalConfigPda,
+          memeMint: memeMintKeypair.publicKey,
+          targetEquityMint: equityMint,
+          curve: curvePda,
+          tokenVault: tokenVaultPda,
+          quoteVault: quoteVaultPda,
+          treasuryVault: treasuryVaultPda,
+          equityPurchaseAccount: equityPurchaseQuoteAta.address,
+          equitySourceAccount: stockProviderEquityAta.address,
+          ammQuoteDestination: ammQuoteAta.address,
+          ammTokenDestination: ammTokenAta.address,
+          tokenProgram: TOKEN_PROGRAM_ID,
+          equityTokenProgram: TOKEN_PROGRAM_ID,
+        })
+        .signers([traderBob])
+        .rpc();
+      expect.fail("Settlement must remain closed until both external outcomes are verifiable");
+    } catch (err: any) {
+      expect(err.toString()).to.include("SettlementUnavailable");
+    }
 
-    const curveAccount = await program.account.curveAccount.fetch(curvePda);
-    expect(curveAccount.isGraduated).to.be.true;
-    expect(curveAccount.totalEquityLocked.toNumber()).to.equal(stockSharesToDeposit);
-    expect(curveAccount.realQuoteReserves.toNumber()).to.equal(0);
-    expect(curveAccount.realTokenReserves.toNumber()).to.equal(0);
-
-    // Verify Treasury Vault PDA received the 150 $SPCX shares
-    const treasuryBalance = await provider.connection.getTokenAccountBalance(treasuryVaultPda);
-    expect(Number(treasuryBalance.value.amount)).to.equal(stockSharesToDeposit);
-
-    // Verify Equity Purchase destination received 50% USDC (~$30,195)
-    const equityPurchaseBalance = await provider.connection.getTokenAccountBalance(
-      equityPurchaseQuoteAta.address
-    );
-    expect(Number(equityPurchaseBalance.value.amount)).to.be.greaterThan(30_000 * 1_000_000);
-
-    // Verify AMM Quote destination received 50% USDC (~$30,195)
-    const ammQuoteBalance = await provider.connection.getTokenAccountBalance(ammQuoteAta.address);
-    expect(Number(ammQuoteBalance.value.amount)).to.be.greaterThan(30_000 * 1_000_000);
-
-    // Verify AMM Token destination received leftover meme tokens for pool seeding
-    const ammTokenBalance = await provider.connection.getTokenAccountBalance(ammTokenAta.address);
-    expect(Number(ammTokenBalance.value.amount)).to.be.greaterThan(0);
-
-    // Verify GlobalConfig total_graduated_tokens count incremented
-    const config = await program.account.globalConfig.fetch(globalConfigPda);
-    expect(config.totalGraduatedTokens.toNumber()).to.be.greaterThanOrEqual(1);
+    const curveAfter = await program.account.curveAccount.fetch(curvePda);
+    const quoteVaultAfter = await provider.connection.getTokenAccountBalance(quoteVaultPda);
+    const treasuryAfter = await provider.connection.getTokenAccountBalance(treasuryVaultPda);
+    expect(curveAfter.isGraduated).to.be.false;
+    expect(curveAfter.realQuoteReserves.toString()).to.equal(curveBefore.realQuoteReserves.toString());
+    expect(quoteVaultAfter.value.amount).to.equal(quoteVaultBefore.value.amount);
+    expect(treasuryAfter.value.amount).to.equal(treasuryBefore.value.amount);
   });
 
-  it("Buying or selling after graduation is prohibited", async () => {
+  it("Rejects a live mint supply mismatch before any settlement", async () => {
+    await burn(
+      provider.connection,
+      traderBob,
+      bobTokenAta,
+      memeMintKeypair.publicKey,
+      traderBob,
+      1
+    );
+
+    const stockProviderEquityAta = await getOrCreateAssociatedTokenAccount(
+      provider.connection,
+      stockProvider,
+      equityMint,
+      stockProvider.publicKey
+    );
+    const equityPurchaseQuoteAta = await getOrCreateAssociatedTokenAccount(
+      provider.connection,
+      stockProvider,
+      quoteMint,
+      stockProvider.publicKey
+    );
+    const ammQuoteAta = await getOrCreateAssociatedTokenAccount(
+      provider.connection,
+      ammQuoteDest,
+      quoteMint,
+      ammQuoteDest.publicKey
+    );
+    const ammTokenAta = await getOrCreateAssociatedTokenAccount(
+      provider.connection,
+      ammTokenDest,
+      memeMintKeypair.publicKey,
+      ammTokenDest.publicKey
+    );
+
+    try {
+      await program.methods
+        .graduateAndExecuteStock({ minEquityTokensExpected: new BN(stockSharesToDeposit) })
+        .accounts({
+          caller: traderBob.publicKey,
+          globalConfig: globalConfigPda,
+          memeMint: memeMintKeypair.publicKey,
+          targetEquityMint: equityMint,
+          curve: curvePda,
+          tokenVault: tokenVaultPda,
+          quoteVault: quoteVaultPda,
+          treasuryVault: treasuryVaultPda,
+          equityPurchaseAccount: equityPurchaseQuoteAta.address,
+          equitySourceAccount: stockProviderEquityAta.address,
+          ammQuoteDestination: ammQuoteAta.address,
+          ammTokenDestination: ammTokenAta.address,
+          tokenProgram: TOKEN_PROGRAM_ID,
+          equityTokenProgram: TOKEN_PROGRAM_ID,
+        })
+        .signers([traderBob])
+        .rpc();
+      expect.fail("A supply mismatch must reject graduation");
+    } catch (err: any) {
+      expect(err.toString()).to.include("SupplyInvariantViolation");
+    }
+  });
+
+  it("Keeps curve buys closed at threshold while settlement is unavailable", async () => {
     try {
       await program.methods
         .buyCurve({
@@ -309,9 +361,11 @@ describe("04 - StreetFun Protocol: Graduation & Treasury Stock Purchase", () => 
         })
         .signers([traderBob])
         .rpc();
-      expect.fail("Should have thrown CurveAlreadyGraduated");
+      expect.fail("A curve buy cannot proceed beyond the graduation threshold");
     } catch (err: any) {
-      expect(err.toString()).to.include("CurveAlreadyGraduated");
+      expect(err.toString()).to.include("GraduationThresholdReached");
     }
+    const curveAccount = await program.account.curveAccount.fetch(curvePda);
+    expect(curveAccount.isGraduated).to.be.false;
   });
 });

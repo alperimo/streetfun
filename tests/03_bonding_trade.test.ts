@@ -71,6 +71,7 @@ describe("03 - StreetFun Protocol: Bonding Curve Trading (Buy & Sell)", () => {
         quoteVault: quoteVaultPda,
         treasuryVault: treasuryVaultPda,
         tokenProgram: TOKEN_PROGRAM_ID,
+        equityTokenProgram: TOKEN_PROGRAM_ID,
         associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
         systemProgram: SystemProgram.programId,
         rent: SYSVAR_RENT_PUBKEY,

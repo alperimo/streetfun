@@ -1,5 +1,6 @@
 import { expect } from "chai";
 import { Keypair, PublicKey } from "@solana/web3.js";
+import { getMint } from "@solana/spl-token";
 import {
   createProvider,
   protocolAdmin,
@@ -26,7 +27,7 @@ import {
 import * as fs from "fs";
 import * as path from "path";
 
-describe("06 - StreetFun Protocol: Complete E2E Lifecycle ($SING - Neural Singularity)", () => {
+describe("06 - StreetFun Protocol: Lifecycle Safety (test collateral)", () => {
   // Participants: On devnet, admin acts as creator and stock provider to leverage funded keys
   const creator = isDevnet ? protocolAdmin : Keypair.generate();
   const traderAlice = Keypair.generate();
@@ -52,9 +53,9 @@ describe("06 - StreetFun Protocol: Complete E2E Lifecycle ($SING - Neural Singul
   let aliceTokenAta: any;
   let aliceEquityAta: any;
   let feeRecipientAta: any;
-  let graduationThresholdUsdc: number;
+  let graduationThresholdQuote: number;
 
-  const totalStockDeposited = 150 * 1_000_000; // 150 shares ($TOPAI OpenAI Pre-IPO)
+  const totalStockDeposited = 150 * 1_000_000; // 150 test-equity units
   const txReceipts: Record<string, any> = {};
 
   before(async () => {
@@ -67,7 +68,7 @@ describe("06 - StreetFun Protocol: Complete E2E Lifecycle ($SING - Neural Singul
 
     // Dynamic Mints (re-uses existing on devnet, generates fresh on localnet)
     quoteMint = await getTestQuoteMint(provider.connection, creator);
-    equityMint = await getTestEquityMint(provider.connection, stockProvider, "$TOPAI");
+    equityMint = await getTestEquityMint(provider.connection, stockProvider);
     memeMintKeypair = Keypair.generate();
     memeMint = memeMintKeypair.publicKey;
 
@@ -78,7 +79,7 @@ describe("06 - StreetFun Protocol: Complete E2E Lifecycle ($SING - Neural Singul
 
     // Ensure fee recipient ATA exists
     const config = await program.account.globalConfig.fetch(globalConfigPda);
-    graduationThresholdUsdc = Number(config.graduationThreshold.toString()) / 1_000_000;
+    graduationThresholdQuote = Number(config.graduationThreshold.toString()) / 1_000_000;
 
     feeRecipientAta = await safeGetOrCreateAta(
       provider.connection,
@@ -88,7 +89,7 @@ describe("06 - StreetFun Protocol: Complete E2E Lifecycle ($SING - Neural Singul
     );
   });
 
-  it("Step 1: Launches new token $SING (Neural Singularity) backed by OpenAI ($TOPAI)", async () => {
+  it("Step 1: Launches new token $SING (Neural Singularity) backed by the test equity mint", async () => {
     const tx = await (program.methods as any)
       .launchStonk({
         name: "Neural Singularity",
@@ -107,6 +108,7 @@ describe("06 - StreetFun Protocol: Complete E2E Lifecycle ($SING - Neural Singul
         quoteVault: quoteVaultPda,
         treasuryVault: treasuryVaultPda,
         tokenProgram: TOKEN_PROGRAM_ID,
+        equityTokenProgram: TOKEN_PROGRAM_ID,
         associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
         systemProgram: SystemProgram.programId,
         rent: SYSVAR_RENT_PUBKEY,
@@ -121,7 +123,7 @@ describe("06 - StreetFun Protocol: Complete E2E Lifecycle ($SING - Neural Singul
       curvePda: curvePda.toBase58(),
       tokenName: "Neural Singularity",
       symbol: "SING",
-      backingEquity: "OpenAI ($TOPAI)",
+      backingEquity: "Test equity fixture mint",
     };
 
     const curveAcc = await (program.account as any).curveAccount.fetch(curvePda);
@@ -132,8 +134,8 @@ describe("06 - StreetFun Protocol: Complete E2E Lifecycle ($SING - Neural Singul
   });
 
   it("Step 2: Trader Alice executes a Buy on $SING bonding curve", async () => {
-    // Fund Alice with quote tokens (USDC)
-    const quoteNeeded = (graduationThresholdUsdc * 2 + 50) * 1_000_000;
+    // Fund Alice with the test-owned quote mint. This is not real USDC.
+    const quoteNeeded = (graduationThresholdQuote * 2 + 50) * 1_000_000;
     aliceQuoteAta = await mintToAta(
       provider.connection,
       creator,
@@ -150,8 +152,8 @@ describe("06 - StreetFun Protocol: Complete E2E Lifecycle ($SING - Neural Singul
       traderAlice.publicKey
     );
 
-    const initialBuyUsdc = Math.min(20, Math.floor(graduationThresholdUsdc * 0.3));
-    const buyAmount = new BN(initialBuyUsdc * 1_000_000);
+    const initialBuyQuote = Math.min(20, Math.floor(graduationThresholdQuote * 0.3));
+    const buyAmount = new BN(initialBuyQuote * 1_000_000);
 
     const tx = await (program.methods as any)
       .buyCurve({
@@ -180,7 +182,7 @@ describe("06 - StreetFun Protocol: Complete E2E Lifecycle ($SING - Neural Singul
       action: "BONDING_BUY",
       txSignature: tx,
       trader: traderAlice.publicKey.toBase58(),
-      quoteInUsdc: initialBuyUsdc,
+      quoteInTestUnits: initialBuyQuote,
       tokensReceived,
     };
 
@@ -222,7 +224,7 @@ describe("06 - StreetFun Protocol: Complete E2E Lifecycle ($SING - Neural Singul
     console.log("✅ Step 3 Verified: Alice sold 100k $SING with tx:", tx);
   });
 
-  it("Step 4: Pushes bonding curve to graduation threshold and verifies Graduation", async () => {
+  it("Step 4: Reaches the threshold but refuses unverified graduation settlement", async () => {
     // Buy the remaining net quote reserve needed to clear the threshold, including fees.
     const [config, curveBeforeGraduation] = await Promise.all([
       (program.account as any).globalConfig.fetch(globalConfigPda),
@@ -258,7 +260,7 @@ describe("06 - StreetFun Protocol: Complete E2E Lifecycle ($SING - Neural Singul
       .signers([traderAlice])
       .rpc();
 
-    // Custodian stock provider deposits 150 shares of $TOPAI
+    // Test equity provider deposits 150 shares of the test-only mint.
     const stockProviderEquityAta = await mintToAta(
       provider.connection,
       creator,
@@ -291,62 +293,73 @@ describe("06 - StreetFun Protocol: Complete E2E Lifecycle ($SING - Neural Singul
 
     const stockProvBefore = await safeGetAccount(provider.connection, stockProviderQuoteAta.address);
     const ammQuoteBefore = await safeGetAccount(provider.connection, ammQuoteAta.address);
+    const curveAtThreshold = await (program.account as any).curveAccount.fetch(curvePda);
+    expect(BigInt(curveAtThreshold.realQuoteReserves.toString()) >= thresholdUnits).to.equal(true);
+    const treasuryBefore = await safeGetAccount(provider.connection, treasuryVaultPda);
+    const ammTokenBefore = await safeGetAccount(provider.connection, ammTokenAta.address);
 
-    // Execute graduation via graduateAndExecuteStock
-    const tx = await (program.methods as any)
-      .graduateAndExecuteStock({
-        minEquityTokensExpected: new BN(totalStockDeposited),
-      })
-      .accounts({
-        caller: protocolAdmin.publicKey,
-        globalConfig: globalConfigPda,
-        memeMint: memeMint,
-        targetEquityMint: equityMint,
-        curve: curvePda,
-        tokenVault: tokenVaultPda,
-        quoteVault: quoteVaultPda,
-        treasuryVault: treasuryVaultPda,
-        equityPurchaseAccount: stockProviderQuoteAta.address,
-        equitySourceAccount: stockProviderEquityAta.address,
-        equitySourceAuthority: stockProvider.publicKey,
-        ammQuoteDestination: ammQuoteAta.address,
-        ammTokenDestination: ammTokenAta.address,
-        tokenProgram: TOKEN_PROGRAM_ID,
-      })
-      .signers(isDevnet ? [protocolAdmin] : [protocolAdmin, stockProvider])
-      .rpc();
-
-    const expectedHalf = graduationThresholdUsdc / 2;
-
-    txReceipts["04_graduation"] = {
-      action: "GRADUATION_AND_50_50_SPLIT",
-      txSignature: tx,
-      graduationThresholdUsdc,
-      stockCollateralLockedShares: 150,
-      stockCollateralValueUsdc: expectedHalf,
-      ammLiquidityBudgetUsdc: expectedHalf,
-      treasuryVaultPda: treasuryVaultPda.toBase58(),
-    };
+    // The finalizer is permissionless, but graduation stays closed until the
+    // Tessera acquisition and real Meteora DLMM settlement can be verified.
+    let graduationAttemptSignature: string | null = null;
+    try {
+      await (program.methods as any)
+        .graduateAndExecuteStock({ minEquityTokensExpected: new BN(totalStockDeposited) })
+        .accounts({
+          caller: traderAlice.publicKey,
+          globalConfig: globalConfigPda,
+          memeMint,
+          targetEquityMint: equityMint,
+          curve: curvePda,
+          tokenVault: tokenVaultPda,
+          quoteVault: quoteVaultPda,
+          treasuryVault: treasuryVaultPda,
+          equityPurchaseAccount: stockProviderQuoteAta.address,
+          equitySourceAccount: stockProviderEquityAta.address,
+          ammQuoteDestination: ammQuoteAta.address,
+          ammTokenDestination: ammTokenAta.address,
+          tokenProgram: TOKEN_PROGRAM_ID,
+          equityTokenProgram: TOKEN_PROGRAM_ID,
+        })
+        .signers([traderAlice])
+        .rpc();
+      expect.fail("Graduation must fail closed until both settlement legs are verified");
+    } catch (err: any) {
+      graduationAttemptSignature =
+        typeof err?.signature === "string"
+          ? err.signature
+          : typeof err?.transactionSignature === "string"
+            ? err.transactionSignature
+            : null;
+      expect(err.toString()).to.include("SettlementUnavailable");
+    }
 
     const curveAfterGrad = await (program.account as any).curveAccount.fetch(curvePda);
-    expect(curveAfterGrad.isGraduated).to.be.true;
-    expect(curveAfterGrad.totalEquityLocked.toNumber()).to.equal(totalStockDeposited);
-
-    // Verify 50% USDC transferred to stock provider and 50% to AMM (Exact 50/50 split)
     const stockProvAfter = await safeGetAccount(provider.connection, stockProviderQuoteAta.address);
     const ammQuoteAfter = await safeGetAccount(provider.connection, ammQuoteAta.address);
-    const stockDelta = (Number(stockProvAfter.amount) - Number(stockProvBefore.amount)) / 1_000_000;
-    const ammDelta = (Number(ammQuoteAfter.amount) - Number(ammQuoteBefore.amount)) / 1_000_000;
+    const treasuryAfter = await safeGetAccount(provider.connection, treasuryVaultPda);
+    const ammTokenAfter = await safeGetAccount(provider.connection, ammTokenAta.address);
+    expect(curveAfterGrad.isGraduated).to.be.false;
+    expect(curveAfterGrad.realQuoteReserves.toString()).to.equal(curveAtThreshold.realQuoteReserves.toString());
+    expect(stockProvAfter.amount.toString()).to.equal(stockProvBefore.amount.toString());
+    expect(ammQuoteAfter.amount.toString()).to.equal(ammQuoteBefore.amount.toString());
+    expect(treasuryAfter.amount.toString()).to.equal(treasuryBefore.amount.toString());
+    expect(ammTokenAfter.amount.toString()).to.equal(ammTokenBefore.amount.toString());
 
-    expect(stockDelta).to.be.greaterThanOrEqual(graduationThresholdUsdc / 2);
-    expect(ammDelta).to.be.greaterThanOrEqual(graduationThresholdUsdc / 2);
-    expect(stockDelta).to.be.closeTo(ammDelta, 0.01); // Mathematical 50/50 parity
-
-    console.log("✅ Step 4 Verified: Curve Graduated with exact 50/50 split! Stock:", stockDelta, "USDC | AMM:", ammDelta, "USDC | Tx:", tx);
+    const memeMintAtThreshold = await getMint(provider.connection, memeMint);
+    expect(curveAfterGrad.totalMemeSupply.toString()).to.equal(TOTAL_MEME_SUPPLY.toString());
+    expect(memeMintAtThreshold.supply.toString()).to.equal(TOTAL_MEME_SUPPLY.toString());
+    txReceipts["04_graduation"] = {
+      action: "GRADUATION_BLOCKED_UNVERIFIED_SETTLEMENT",
+      txSignature: graduationAttemptSignature,
+      status: "not_graduated",
+      graduationThresholdQuote,
+      reason: "SettlementUnavailable",
+      memeSupplyRaw: memeMintAtThreshold.supply.toString(),
+    };
+    console.log("✅ Step 4 Verified: Settlement was rejected and all balances remained unchanged.");
   });
 
-  it("Step 5: Trader Alice redeems pro-rata OpenAI Pre-IPO stock by burning $SING", async () => {
-    await new Promise((r) => setTimeout(r, 1500));
+  it("Step 5: Rejects redemption while the token has not graduated", async () => {
     aliceEquityAta = await safeGetOrCreateAta(
       provider.connection,
       creator,
@@ -354,44 +367,52 @@ describe("06 - StreetFun Protocol: Complete E2E Lifecycle ($SING - Neural Singul
       traderAlice.publicKey
     );
 
-    // Alice burns 1,000,000 tokens (0.1% of 1B supply)
-    // Entitled stock = 0.1% * 150 shares = 0.15 shares (150,000 units)
+    // The test verifies the redemption gate only; it must not burn or transfer assets.
     const memeToBurn = new BN(1_000_000 * 1_000_000);
     const expectedEquityShares = 150_000;
 
-    const tx = await (program.methods as any)
-      .burnAndRedeem({
-        memeTokensToBurn: memeToBurn,
-        minEquityTokensOut: new BN(expectedEquityShares),
-      })
-      .accounts({
-        redeemer: traderAlice.publicKey,
-        memeMint: memeMint,
-        targetEquityMint: equityMint,
-        curve: curvePda,
-        treasuryVault: treasuryVaultPda,
-        redeemerTokenAccount: aliceTokenAta.address,
-        redeemerEquityAccount: aliceEquityAta.address,
-        tokenProgram: TOKEN_PROGRAM_ID,
-      })
-      .signers([traderAlice])
-      .rpc();
+    let redemptionAttemptSignature: string | null = null;
+    try {
+      await (program.methods as any)
+        .burnAndRedeem({
+          memeTokensToBurn: memeToBurn,
+          minEquityTokensOut: new BN(expectedEquityShares),
+        })
+        .accounts({
+          redeemer: traderAlice.publicKey,
+          memeMint,
+          targetEquityMint: equityMint,
+          curve: curvePda,
+          treasuryVault: treasuryVaultPda,
+          redeemerTokenAccount: aliceTokenAta.address,
+          redeemerEquityAccount: aliceEquityAta.address,
+          tokenProgram: TOKEN_PROGRAM_ID,
+          equityTokenProgram: TOKEN_PROGRAM_ID,
+        })
+        .signers([traderAlice])
+        .rpc();
+      expect.fail("Redemption must be unavailable before graduation");
+    } catch (err: any) {
+      redemptionAttemptSignature =
+        typeof err?.signature === "string"
+          ? err.signature
+          : typeof err?.transactionSignature === "string"
+            ? err.transactionSignature
+            : null;
+      expect(err.toString()).to.include("CurveNotGraduated");
+    }
 
     txReceipts["05_redeem"] = {
-      action: "BURN_AND_REDEEM_STOCK",
-      txSignature: tx,
-      trader: traderAlice.publicKey.toBase58(),
-      memeBurned: 1_000_000,
-      sharesRedeemed: 0.15,
-      redeemerEquityAta: aliceEquityAta.address.toBase58(),
+      action: "REDEMPTION_BLOCKED_BEFORE_GRADUATION",
+      txSignature: redemptionAttemptSignature,
+      status: "not_redeemed",
+      reason: "CurveNotGraduated",
     };
 
-    await new Promise((r) => setTimeout(r, 1500));
     const aliceEquityAcc = await safeGetAccount(provider.connection, aliceEquityAta.address);
-    const sharesReceived = Number(aliceEquityAcc.amount) / 1_000_000;
-    expect(sharesReceived).to.be.closeTo(0.15, 0.01);
+    expect(aliceEquityAcc.amount).to.equal(0n);
 
-    console.log("✅ Step 5 Verified: Alice burned 1M $SING and redeemed", sharesReceived, "OpenAI Pre-IPO shares! Tx:", tx);
+    console.log("✅ Step 5 Verified: Pre-graduation redemption was rejected without a burn or asset transfer.");
 
     const artifactPath = path.resolve(
       process.cwd(),

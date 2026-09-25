@@ -1,5 +1,5 @@
-const { expect } = require("chai");
-const { receiptFromTrade, receiptFromRedemption, receiptPreview, receiptSvg, receiptLabel } = require("../src/components/tokens/tradeReceiptModel");
+import { expect } from "chai";
+import { receiptFromTrade, receiptFromRedemption, receiptPreview, receiptSvg, receiptLabel } from "../src/components/tokens/tradeReceiptModel";
 
 const receiptToken = { name: "Example <asset>", symbol: "EX", mint: "example-mint", avatarUrl: "/example.png", priceUsd: 2, targetEquity: { symbol: "STOCK" } };
 const receiptResult = { success: true, tokensAmount: 12, quoteAmount: 24 };

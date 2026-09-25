@@ -1,4 +1,3 @@
-import { DEMO_EQUITIES } from "../src/lib/demoAssets";
 import * as anchor from "@coral-xyz/anchor";
 import {
   Connection,
@@ -27,7 +26,6 @@ import {
   TOKEN_VAULT_SEED,
   QUOTE_VAULT_SEED,
   TREASURY_VAULT_SEED,
-  USDC_MINT,
 } from "../src/sdk/constants";
 import {
   getGlobalConfigPda,
@@ -133,29 +131,52 @@ export async function airdropSol(
   solAmount = 5
 ): Promise<string> {
   const currentBalance = await connection.getBalance(recipient);
-  if (currentBalance >= 0.1 * LAMPORTS_PER_SOL) {
+  const minimumBalance = 0.1 * LAMPORTS_PER_SOL;
+  if (currentBalance >= minimumBalance) {
     return "already_funded";
   }
 
   if (isDevnet) {
-    // On Devnet: Transfer from admin if different, or skip if admin
-    if (recipient.equals(protocolAdmin.publicKey)) {
-      return "devnet_admin_funded";
-    }
-    const adminBalance = await connection.getBalance(protocolAdmin.publicKey);
-    if (adminBalance > 0.5 * LAMPORTS_PER_SOL) {
-      const tx = new anchor.web3.Transaction().add(
-        SystemProgram.transfer({
-          fromPubkey: protocolAdmin.publicKey,
-          toPubkey: recipient,
-          lamports: Math.min(solAmount, 0.2) * LAMPORTS_PER_SOL,
-        })
+    const targetBalance = Math.min(solAmount, 0.2) * LAMPORTS_PER_SOL;
+    let signature: string;
+    try {
+      signature = await connection.requestAirdrop(
+        recipient,
+        Math.max(1, targetBalance - currentBalance)
       );
-      return await anchor.web3.sendAndConfirmTransaction(connection, tx, [
-        protocolAdmin,
-      ]);
+      await connection.confirmTransaction(signature, "confirmed");
+    } catch (airdropError) {
+      const adminBalance = await connection.getBalance(protocolAdmin.publicKey);
+      const needed = Math.max(1, targetBalance - currentBalance);
+      if (
+        !recipient.equals(protocolAdmin.publicKey) &&
+        adminBalance >= needed + 5_000
+      ) {
+        const tx = new anchor.web3.Transaction().add(
+          SystemProgram.transfer({
+            fromPubkey: protocolAdmin.publicKey,
+            toPubkey: recipient,
+            lamports: needed,
+          })
+        );
+        signature = await anchor.web3.sendAndConfirmTransaction(connection, tx, [
+          protocolAdmin,
+        ]);
+      } else {
+        const detail = airdropError instanceof Error ? airdropError.message : String(airdropError);
+        throw new Error(
+          `Devnet test preflight could not fund ${recipient.toBase58()} to ${targetBalance / LAMPORTS_PER_SOL} SOL (current ${(currentBalance / LAMPORTS_PER_SOL).toFixed(4)} SOL). Fund this test wallet with https://faucet.solana.com or use a funded test wallet. RPC result: ${detail}`
+        );
+      }
     }
-    return "devnet_insufficient_faucet";
+
+    const fundedBalance = await connection.getBalance(recipient, "confirmed");
+    if (fundedBalance < minimumBalance) {
+      throw new Error(
+        `Devnet test preflight funding was not confirmed for ${recipient.toBase58()} (balance ${(fundedBalance / LAMPORTS_PER_SOL).toFixed(4)} SOL; need at least ${minimumBalance / LAMPORTS_PER_SOL} SOL).`
+      );
+    }
+    return signature;
   }
 
   // On Localnet: Request standard airdrop
@@ -187,23 +208,17 @@ export async function getTestQuoteMint(
   connection: Connection,
   payer: Keypair
 ): Promise<PublicKey> {
-  if (isDevnet) {
-    return USDC_MINT;
-  }
+  // Test-only mint: Devnet's configured quote mint is controlled by the
+  // deployment admin, not by arbitrary test payers. Never mint against it.
   return await createSplMint(connection, payer, 6);
 }
 
 export async function getTestEquityMint(
   connection: Connection,
-  payer: Keypair,
-  symbol = "$TOPAI"
+  payer: Keypair
 ): Promise<PublicKey> {
-  if (isDevnet) {
-    const asset = DEMO_EQUITIES.find(
-      (a) => a.symbol === symbol || a.ticker === symbol
-    );
-    if (asset) return new PublicKey(asset.mintAddress);
-  }
+  // Test-only equity mint. The Tessera/issuer asset mint has a separate issuer
+  // authority and must be exercised by a dedicated integration test.
   return await createSplMint(connection, payer, 6, payer.publicKey);
 }
 

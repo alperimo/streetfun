@@ -2,7 +2,7 @@ use crate::errors::StreetfunError;
 use crate::math::calculate_pro_rata_equity;
 use crate::state::{CurveAccount, CURVE_SEED, TREASURY_VAULT_SEED};
 use anchor_lang::prelude::*;
-use anchor_spl::token::{Burn, Mint, TokenAccount};
+use anchor_spl::token::{Burn, Mint, Token, TokenAccount};
 use anchor_spl::token_interface::{self, Mint as InterfaceMint, TokenAccount as InterfaceTokenAccount, TokenInterface, TransferChecked};
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy)]
@@ -37,7 +37,7 @@ pub struct BurnAndRedeem<'info> {
         bump = curve.treasury_vault_bump,
         token::mint = target_equity_mint,
         token::authority = curve,
-        token::token_program = token_program,
+        token::token_program = equity_token_program,
     )]
     pub treasury_vault: InterfaceAccount<'info, InterfaceTokenAccount>,
 
@@ -52,11 +52,12 @@ pub struct BurnAndRedeem<'info> {
         mut,
         token::mint = target_equity_mint,
         token::authority = redeemer,
-        token::token_program = token_program,
+        token::token_program = equity_token_program,
     )]
     pub redeemer_equity_account: InterfaceAccount<'info, InterfaceTokenAccount>,
 
-    pub token_program: Interface<'info, TokenInterface>,
+    pub token_program: Program<'info, Token>,
+    pub equity_token_program: Interface<'info, TokenInterface>,
 }
 
 pub fn handle_burn_and_redeem<'a, 'b, 'c, 'info>(
@@ -105,19 +106,9 @@ pub fn handle_burn_and_redeem<'a, 'b, 'c, 'info>(
     ];
     let signer_seeds = &[curve_seeds];
 
-    let equity_program = if *ctx.accounts.target_equity_mint.to_account_info().owner == ctx.accounts.token_program.key() {
-        ctx.accounts.token_program.to_account_info()
-    } else {
-        ctx.remaining_accounts
-            .iter()
-            .find(|acc| acc.key == ctx.accounts.target_equity_mint.to_account_info().owner)
-            .ok_or(StreetfunError::InvalidTokenProgram)?
-            .to_account_info()
-    };
-
     token_interface::transfer_checked(
         CpiContext::new_with_signer(
-            equity_program,
+            ctx.accounts.equity_token_program.to_account_info(),
             TransferChecked {
                 from: ctx.accounts.treasury_vault.to_account_info(),
                 mint: ctx.accounts.target_equity_mint.to_account_info(),

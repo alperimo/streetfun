@@ -52,4 +52,7 @@ pub enum StreetfunError {
 
     #[msg("Invalid token program provided for target equity mint.")]
     InvalidTokenProgram,
+
+    #[msg("Curve supply must match the fixed launch supply and live meme mint supply.")]
+    SupplyInvariantViolation,
 }

@@ -97,7 +97,11 @@
           "writable": true
         },
         {
-          "name": "token_program"
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "equity_token_program"
         }
       ],
       "args": [
@@ -440,10 +444,6 @@
           "writable": true
         },
         {
-          "name": "equity_source_authority",
-          "signer": true
-        },
-        {
           "name": "amm_quote_destination",
           "docs": [
             "Destination account receiving the 50% USDC AMM liquidity budget"
@@ -460,6 +460,9 @@
         {
           "name": "token_program",
           "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "equity_token_program"
         }
       ],
       "args": [
@@ -706,7 +709,8 @@
           }
         },
         {
-          "name": "token_program"
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
         },
         {
           "name": "associated_token_program",
@@ -719,6 +723,9 @@
         {
           "name": "rent",
           "address": "SysvarRent111111111111111111111111111111111"
+        },
+        {
+          "name": "equity_token_program"
         }
       ],
       "args": [
@@ -1111,6 +1118,11 @@
       "code": 6016,
       "name": "InvalidTokenProgram",
       "msg": "Invalid token program provided for target equity mint."
+    },
+    {
+      "code": 6017,
+      "name": "SupplyInvariantViolation",
+      "msg": "Curve supply must match the fixed launch supply and live meme mint supply."
     }
   ],
   "types": [

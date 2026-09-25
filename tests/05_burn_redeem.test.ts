@@ -2,7 +2,6 @@ import { expect } from "chai";
 import { Keypair } from "@solana/web3.js";
 import {
   createProvider,
-  protocolAdmin,
   loadProgram,
   airdropSol,
   createSplMint,
@@ -17,11 +16,10 @@ import {
   SystemProgram,
   SYSVAR_RENT_PUBKEY,
   BN,
-  TOTAL_MEME_SUPPLY,
 } from "./helpers";
 import { getOrCreateAssociatedTokenAccount } from "@solana/spl-token";
 
-describe("05 - StreetFun Protocol: Burn & Redeem for Pro-Rata Stock", () => {
+describe("05 - StreetFun Protocol: Redemption Safety Before Graduation", () => {
   const creator = Keypair.generate();
   const traderBob = Keypair.generate();
   const stockProvider = Keypair.generate();
@@ -44,7 +42,7 @@ describe("05 - StreetFun Protocol: Burn & Redeem for Pro-Rata Stock", () => {
   let bobTokenAta: any;
   let bobEquityAta: any;
 
-  const totalStockDeposited = 150 * 1_000_000; // 150 shares of $SPCX
+  const totalStockDeposited = 150 * 1_000_000; // 150 test-equity units
 
   before(async () => {
     await airdropSol(provider.connection, creator.publicKey, 10);
@@ -82,6 +80,7 @@ describe("05 - StreetFun Protocol: Burn & Redeem for Pro-Rata Stock", () => {
         quoteVault: quoteVaultPda,
         treasuryVault: treasuryVaultPda,
         tokenProgram: TOKEN_PROGRAM_ID,
+        equityTokenProgram: TOKEN_PROGRAM_ID,
         associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
         systemProgram: SystemProgram.programId,
         rent: SYSVAR_RENT_PUBKEY,
@@ -97,7 +96,7 @@ describe("05 - StreetFun Protocol: Burn & Redeem for Pro-Rata Stock", () => {
       config.protocolFeeRecipient
     );
 
-    // Bob gets USDC and buys to graduation
+    // Bob gets test quote units and buys to the graduation threshold.
     bobQuoteAta = await mintToAta(
       provider.connection,
       creator,
@@ -134,7 +133,8 @@ describe("05 - StreetFun Protocol: Burn & Redeem for Pro-Rata Stock", () => {
       .signers([traderBob])
       .rpc();
 
-    // Setup accounts for graduation
+    // Set up a test-equity source and generic output accounts. These are
+    // fixtures only; the settlement instruction must still remain closed.
     const stockProviderEquityAta = await mintToAta(
       provider.connection,
       stockProvider,
@@ -165,29 +165,32 @@ describe("05 - StreetFun Protocol: Burn & Redeem for Pro-Rata Stock", () => {
       ammTokenDest.publicKey
     );
 
-    // Graduate
-    await program.methods
-      .graduateAndExecuteStock({
-        minEquityTokensExpected: new BN(totalStockDeposited),
-      })
-      .accounts({
-        caller: protocolAdmin.publicKey,
-        globalConfig: globalConfigPda,
-        memeMint: memeMintKeypair.publicKey,
-        targetEquityMint: equityMint,
-        curve: curvePda,
-        tokenVault: tokenVaultPda,
-        quoteVault: quoteVaultPda,
-        treasuryVault: treasuryVaultPda,
-        equityPurchaseAccount: equityPurchaseQuoteAta.address,
-        equitySourceAccount: stockProviderEquityAta.address,
-        equitySourceAuthority: stockProvider.publicKey,
-        ammQuoteDestination: ammQuoteAta.address,
-        ammTokenDestination: ammTokenAta.address,
-        tokenProgram: TOKEN_PROGRAM_ID,
-      })
-      .signers([protocolAdmin, stockProvider])
-      .rpc();
+    try {
+      await program.methods
+        .graduateAndExecuteStock({ minEquityTokensExpected: new BN(totalStockDeposited) })
+        .accounts({
+          // A normal holder can trigger finalization; no admin or source wallet signs.
+          caller: traderBob.publicKey,
+          globalConfig: globalConfigPda,
+          memeMint: memeMintKeypair.publicKey,
+          targetEquityMint: equityMint,
+          curve: curvePda,
+          tokenVault: tokenVaultPda,
+          quoteVault: quoteVaultPda,
+          treasuryVault: treasuryVaultPda,
+          equityPurchaseAccount: equityPurchaseQuoteAta.address,
+          equitySourceAccount: stockProviderEquityAta.address,
+          ammQuoteDestination: ammQuoteAta.address,
+          ammTokenDestination: ammTokenAta.address,
+          tokenProgram: TOKEN_PROGRAM_ID,
+          equityTokenProgram: TOKEN_PROGRAM_ID,
+        })
+        .signers([traderBob])
+        .rpc();
+      expect.fail("Graduation must remain closed until the settlement proof exists");
+    } catch (err: any) {
+      expect(err.toString()).to.include("SettlementUnavailable");
+    }
 
     // Prepare Bob's equity ATA
     const equityAta = await getOrCreateAssociatedTokenAccount(
@@ -199,55 +202,46 @@ describe("05 - StreetFun Protocol: Burn & Redeem for Pro-Rata Stock", () => {
     bobEquityAta = equityAta.address;
   });
 
-  it("Trader burns meme tokens to redeem pro-rata real tokenized stock", async () => {
-    // Bob burns 10,000,000 meme tokens (1% of 1B supply)
-    // Entitled stock = 1% * 150 shares = 1.5 shares (1,500,000 units)
+  it("Rejects redemption before graduation without burning tokens or transferring collateral", async () => {
     const memeToBurn = new BN(10_000_000 * 1_000_000);
     const expectedEquityShares = 1_500_000; // 1.5 shares
 
     const bobMemeBalanceBefore = await provider.connection.getTokenAccountBalance(bobTokenAta);
     const treasuryBalanceBefore = await provider.connection.getTokenAccountBalance(treasuryVaultPda);
 
-    const tx = await program.methods
-      .burnAndRedeem({
-        memeTokensToBurn: memeToBurn,
-        minEquityTokensOut: new BN(expectedEquityShares),
-      })
-      .accounts({
-        redeemer: traderBob.publicKey,
-        memeMint: memeMintKeypair.publicKey,
-        targetEquityMint: equityMint,
-        curve: curvePda,
-        treasuryVault: treasuryVaultPda,
-        redeemerTokenAccount: bobTokenAta,
-        redeemerEquityAccount: bobEquityAta,
-        tokenProgram: TOKEN_PROGRAM_ID,
-      })
-      .signers([traderBob])
-      .rpc();
+    try {
+      await program.methods
+        .burnAndRedeem({
+          memeTokensToBurn: memeToBurn,
+          minEquityTokensOut: new BN(expectedEquityShares),
+        })
+        .accounts({
+          redeemer: traderBob.publicKey,
+          memeMint: memeMintKeypair.publicKey,
+          targetEquityMint: equityMint,
+          curve: curvePda,
+          treasuryVault: treasuryVaultPda,
+          redeemerTokenAccount: bobTokenAta,
+          redeemerEquityAccount: bobEquityAta,
+          tokenProgram: TOKEN_PROGRAM_ID,
+          equityTokenProgram: TOKEN_PROGRAM_ID,
+        })
+        .signers([traderBob])
+        .rpc();
+      expect.fail("Redemption must be unavailable before graduation");
+    } catch (err: any) {
+      expect(err.toString()).to.include("CurveNotGraduated");
+    }
 
-    expect(tx).to.be.a("string");
-
-    // 1. Verify Bob's meme token balance decreased by 10M
     const bobMemeBalanceAfter = await provider.connection.getTokenAccountBalance(bobTokenAta);
-    const memeBurned = Number(bobMemeBalanceBefore.value.amount) - Number(bobMemeBalanceAfter.value.amount);
-    expect(memeBurned).to.equal(10_000_000 * 1_000_000);
-
-    // 2. Verify Bob received exactly 1.5 real $SPCX shares
-    const bobEquityBalance = await provider.connection.getTokenAccountBalance(bobEquityAta);
-    expect(Number(bobEquityBalance.value.amount)).to.equal(expectedEquityShares);
-
-    // 3. Verify Treasury Vault locked balance decreased by 1.5 shares
     const treasuryBalanceAfter = await provider.connection.getTokenAccountBalance(treasuryVaultPda);
-    const sharesWithdrawn = Number(treasuryBalanceBefore.value.amount) - Number(treasuryBalanceAfter.value.amount);
-    expect(sharesWithdrawn).to.equal(expectedEquityShares);
-
-    // 4. Verify curve state total_equity_locked updated
-    const curveAccount = await program.account.curveAccount.fetch(curvePda);
-    expect(curveAccount.totalEquityLocked.toNumber()).to.equal(totalStockDeposited - expectedEquityShares);
+    const bobEquityBalance = await provider.connection.getTokenAccountBalance(bobEquityAta);
+    expect(bobMemeBalanceAfter.value.amount).to.equal(bobMemeBalanceBefore.value.amount);
+    expect(treasuryBalanceAfter.value.amount).to.equal(treasuryBalanceBefore.value.amount);
+    expect(bobEquityBalance.value.amount).to.equal("0");
   });
 
-  it("Redemption fails when minEquityTokensOut exceeds entitled amount", async () => {
+  it("Keeps the graduation gate ahead of redemption slippage checks", async () => {
     const memeToBurn = new BN(1_000_000 * 1_000_000); // 1M tokens
     const unrealisticExpectation = new BN(100 * 1_000_000); // 100 shares
 
@@ -266,12 +260,13 @@ describe("05 - StreetFun Protocol: Burn & Redeem for Pro-Rata Stock", () => {
           redeemerTokenAccount: bobTokenAta,
           redeemerEquityAccount: bobEquityAta,
           tokenProgram: TOKEN_PROGRAM_ID,
+          equityTokenProgram: TOKEN_PROGRAM_ID,
         })
         .signers([traderBob])
         .rpc();
-      expect.fail("Should have thrown SlippageExceeded");
+      expect.fail("Redemption must be unavailable before graduation");
     } catch (err: any) {
-      expect(err.toString()).to.include("SlippageExceeded");
+      expect(err.toString()).to.include("CurveNotGraduated");
     }
   });
 });

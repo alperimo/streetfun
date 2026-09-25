@@ -1,10 +1,10 @@
-const { expect } = require("chai");
-const {
+import { expect } from "chai";
+import {
   calculateBondingProgress,
   formatBondingProgress,
   formatTokenPrice,
   formatUsd,
-} = require("../src/lib/marketFormat");
+} from "../src/lib/marketFormat";
 
 describe("Live market formatting", () => {
   it("keeps small reserves visible rather than rounding them to zero thousands", () => {
