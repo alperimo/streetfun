@@ -27,6 +27,7 @@ export interface TokenMetadata {
     decimals?: number;
     verifiedTessera?: boolean;
     verifiedPreStocks?: boolean;
+    isTestCollateral?: boolean;
     provider?: string;
     isPreIpo?: boolean;
   };

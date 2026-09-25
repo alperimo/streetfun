@@ -133,11 +133,6 @@ export function MarketProvider({ children, initialTokens = [] }: MarketProviderP
       ?.channel("streetfun-live-market")
       .on(
         "postgres_changes",
-        { event: "*", schema: "public", table: "trades" },
-        scheduleRefresh
-      )
-      .on(
-        "postgres_changes",
         { event: "*", schema: "public", table: "tokens" },
         scheduleRefresh
       )
@@ -163,7 +158,10 @@ export function MarketProvider({ children, initialTokens = [] }: MarketProviderP
       mutationVersion.current += 1;
       try {
         const tokenService = getTokenService();
-        const newToken = await tokenService.launchToken(params, activePublicKey);
+        const walletIdentity = !isMock && wallet.publicKey
+          ? { publicKey: wallet.publicKey, sendTransaction: wallet.sendTransaction }
+          : activePublicKey;
+        const newToken = await tokenService.launchToken(params, walletIdentity);
         setTokens((prev) => [newToken, ...prev.filter((t) => t.mint !== newToken.mint)]);
         return newToken;
       } finally {
@@ -171,7 +169,7 @@ export function MarketProvider({ children, initialTokens = [] }: MarketProviderP
         isMutating.current = false;
       }
     },
-    [activePublicKey]
+    [activePublicKey, isMock, wallet.publicKey, wallet.sendTransaction]
   );
 
   const executeTrade = useCallback(

@@ -3,7 +3,7 @@ import { simulateBuyTokensOut } from "../../sdk/math";
 import { TokenMetadata } from "@/lib/types";
 import { INITIAL_TOKENS } from "@/lib/mockData";
 import { DEMO_EQUITIES } from "@/lib/demoAssets";
-import { ITokenService, TokenLaunchParams } from "../types";
+import { ITokenService, TokenLaunchParams, WalletIdentity } from "../types";
 import { PublicKey } from "@solana/web3.js";
 
 function normalizeTokens(tokens: TokenMetadata[]): TokenMetadata[] {
@@ -74,7 +74,7 @@ export class MockTokenService implements ITokenService {
 
   async launchToken(
     params: TokenLaunchParams,
-    walletPublicKey?: PublicKey | null
+    wallet?: WalletIdentity
   ): Promise<TokenMetadata> {
     // Artificial mock delay
     await new Promise((r) => setTimeout(r, 600));
@@ -96,8 +96,8 @@ export class MockTokenService implements ITokenService {
     const initialPrice = 30_000_000_000 / 1_073_000_000_000_000;
     const initialMcap = initialPrice * 1_000_000_000;
 
-    const creatorAddress = walletPublicKey
-      ? walletPublicKey.toBase58()
+    const creatorAddress = wallet
+      ? (wallet instanceof PublicKey ? wallet : wallet.publicKey).toBase58()
       : "7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU";
 
     const newToken: TokenMetadata = {
@@ -176,7 +176,7 @@ export class MockTokenService implements ITokenService {
 
     if (initialBuyUsdc > 0) {
       const { mockTradeService } = await import("./mockTradeService");
-      const result = await mockTradeService.executeTrade({ token: newToken, tradeMode: "buy", amount: initialBuyUsdc, slippagePct: 1 }, walletPublicKey);
+      const result = await mockTradeService.executeTrade({ token: newToken, tradeMode: "buy", amount: initialBuyUsdc, slippagePct: 1 }, wallet instanceof PublicKey ? wallet : wallet?.publicKey);
       return result.updatedToken;
     }
     return newToken;

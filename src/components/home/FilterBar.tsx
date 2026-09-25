@@ -15,19 +15,8 @@ interface FilterBarProps {
   onTagChange: (tag: string) => void;
   sortBy: SortOption;
   onSortChange: (sort: SortOption) => void;
+  equityTags: { id: string; label: string }[];
 }
-
-const EQUITY_TAGS = [
-  { id: "all", label: "All" },
-  { id: "openai", label: "OpenAI" },
-  { id: "spacex", label: "SpaceX" },
-  { id: "anthropic", label: "Anthropic" },
-  { id: "kalshi", label: "Kalshi" },
-  { id: "anduril", label: "Anduril" },
-  { id: "figureai", label: "Figure AI" },
-  { id: "neuralink", label: "Neuralink" },
-  { id: "polymarket", label: "Polymarket" },
-];
 
 const SORT_OPTIONS: { id: SortOption; label: string }[] = [
   { id: "mcap", label: "Market cap" },
@@ -45,6 +34,7 @@ export function FilterBar({
   onTagChange,
   sortBy,
   onSortChange,
+  equityTags,
 }: FilterBarProps) {
   return (
     <div className="mt-2 flex flex-col gap-4">
@@ -112,8 +102,8 @@ export function FilterBar({
       </div>
 
       <div className="flex w-full min-w-0 items-center gap-2 overflow-x-auto px-1 pb-1 text-xs scrollbar-none">
-        <span className="mr-1 whitespace-nowrap text-[11px] font-semibold text-muted">Backed with</span>
-        {EQUITY_TAGS.map((tag) => (
+        <span className="mr-1 whitespace-nowrap text-[11px] font-semibold text-muted">Target asset</span>
+        {equityTags.map((tag) => (
           <button
             key={tag.id}
             onClick={() => onTagChange(tag.id)}

@@ -113,7 +113,7 @@ export default function TreasuryPage() {
     const channel = supabase
       ?.channel("streetfun-live-treasury")
       .on("postgres_changes", { event: "*", schema: "public", table: "vault_holdings" }, scheduleRefresh)
-      .on("postgres_changes", { event: "*", schema: "public", table: "trades" }, scheduleRefresh)
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "trades", filter: "trade_type=eq.REDEEM" }, scheduleRefresh)
       .on("postgres_changes", { event: "*", schema: "public", table: "tokens" }, scheduleRefresh)
       .subscribe();
 

@@ -25,19 +25,16 @@ export function LaunchModal({
   const [name, setName] = useState("");
   const [symbol, setSymbol] = useState("");
   const [description, setDescription] = useState("");
-  const [avatarUrl, setAvatarUrl] = useState(
-    "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=160&q=80"
-  );
+  const [avatarUrl, setAvatarUrl] = useState("");
   const [selectedEquitySymbol, setSelectedEquitySymbol] = useState("$TSPACEX");
-  const [initialBuyUsdc, setInitialBuyUsdc] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [launchError, setLaunchError] = useState<string | null>(null);
 
-  const [providerFilter, setProviderFilter] = useState<"prestocks" | "tessera" | "all">("prestocks");
+  const [providerFilter, setProviderFilter] = useState<"prestocks" | "tessera" | "all">("all");
   const [liveAssets, setLiveAssets] = useState<(TesseraPreIpoAsset & { launchEnabled?: boolean; unavailableReason?: string; provider?: string })[]>([]);
   const [assetError, setAssetError] = useState<string | null>(null);
   const [isLoadingAssets, setIsLoadingAssets] = useState(false);
-  const assets = isMock ? DEMO_TOKENIZED_EQUITIES : liveAssets;
+  const assets = isMock ? DEMO_TOKENIZED_EQUITIES : liveAssets.filter(asset => asset.launchEnabled);
 
   const filteredAssets = assets.filter((eq: any) => {
     if (providerFilter === "all") return true;
@@ -55,7 +52,12 @@ export function LaunchModal({
       if (!response.ok) throw new Error("Verified Pre-IPO assets are unavailable.");
       const data = await response.json();
       setLiveAssets(data.assets);
-      const first = data.assets.find((a: any) => a.provider === "prestocks") || data.assets[0];
+      if (!data.assets.some((asset: any) => asset.launchEnabled)) {
+        setAssetError(data.assets.some((asset: any) => asset.existsOnConfiguredNetwork)
+          ? "Provider-issued assets are read-only until collateral acquisition and Meteora settlement are implemented. Only mapped Devnet test assets can launch."
+          : "No verified provider or mapped test mint exists on this Solana network.");
+      }
+      const first = data.assets.find((a: any) => a.launchEnabled) || data.assets[0];
       if (first) setSelectedEquitySymbol(first.symbol);
     }).catch(error => { if (!controller.signal.aborted) setAssetError(error.message); })
       .finally(() => { setIsLoadingAssets(false); });
@@ -83,20 +85,14 @@ export function LaunchModal({
     setLaunchError(null);
 
     try {
-      const initialBuyAmount = parseFloat(initialBuyUsdc) || 0;
       const newToken = await launchToken({
         name,
         symbol: symbol.toUpperCase(),
-        description:
-          description ||
-          `Decentralized culture coin backed by ${selectedEquity.name} ($${selectedEquity.symbol}) via ${
-            selectedEquity.issuer || "PreStocks SPV"
-          } ${selectedEquity.legalFramework}.`,
-        avatarUrl:
-          avatarUrl ||
-          "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=160&q=80",
+        description: description || ("testCollateral" in selectedEquity && selectedEquity.testCollateral
+          ? `Devnet test token targeting ${selectedEquity.name} (${selectedEquity.symbol}); it has no Tessera participation rights or acquired collateral.`
+          : `${name.trim()} is a StreetFun token targeting ${selectedEquity.name} (${selectedEquity.symbol}).`),
+        avatarUrl: avatarUrl.trim(),
         targetEquitySymbol: selectedEquity.symbol,
-        initialBuyUsdc: initialBuyAmount,
       });
 
       if (onTokenCreated) {
@@ -127,7 +123,7 @@ export function LaunchModal({
             <div>
               <h2 className="text-lg font-bold text-foreground">Launch Token</h2>
               <p className="text-xs text-muted">
-                Choose a verified PreStocks or Tessera pre-IPO backing asset
+                Choose a provider asset or a clearly labeled Devnet test asset
               </p>
             </div>
           </div>
@@ -176,11 +172,11 @@ export function LaunchModal({
             </div>
           </div>
 
-          {/* Target Backed Equity Selection */}
+          {/* Target Asset Selection */}
           <div>
             <div className="flex items-center justify-between mb-2">
               <label className="text-muted font-medium">
-                Select Backing Asset
+                Select Target Asset
               </label>
               {/* Provider Selection Tabs */}
               <div className="flex items-center gap-1 rounded-lg border border-border bg-card-subtle p-0.5">
@@ -240,6 +236,10 @@ export function LaunchModal({
                     </div>
                   </div>
                 ))
+              ) : filteredAssets.length === 0 ? (
+                <p className="rounded-xl border border-border bg-card p-4 text-muted">
+                  No launchable assets from this provider on the configured network.
+                </p>
               ) : (
                 filteredAssets.map((eq) => {
                   const isSelected = selectedEquitySymbol === eq.symbol;
@@ -268,7 +268,7 @@ export function LaunchModal({
                           <span className="font-bold text-xs text-foreground tracking-tight">{eq.symbol}</span>
                         </div>
                         <span className="text-[9px] uppercase tracking-wider font-bold px-2 py-0.5 rounded-md bg-slate-800/70 text-slate-300 border border-slate-700/60 font-mono whitespace-nowrap">
-                          {eq.isPreIpo ? "Pre-IPO" : "Public"}
+                          {"testCollateral" in eq && eq.testCollateral ? "Devnet test" : eq.isPreIpo ? "Pre-IPO" : "Public"}
                         </span>
                       </div>
                       <div className="flex items-center justify-between w-full mt-2 pt-1.5 border-t border-border/40">
@@ -276,7 +276,7 @@ export function LaunchModal({
                           {eq.name}
                         </span>
                         <span className="text-[11px] font-mono font-medium text-muted">
-                          ${eq.currentStockPriceUsd.toLocaleString()} mark
+                          {"testCollateral" in eq && eq.testCollateral ? "Devnet test asset" : `$${eq.currentStockPriceUsd.toLocaleString()} mark`}
                         </span>
                       </div>
                     </button>
@@ -314,32 +314,11 @@ export function LaunchModal({
             />
           </div>
 
-          {/* Initial Snipe / Creator Buy */}
-          <div>
-            <label className="block text-muted font-medium mb-1">
-              Initial Buy (Optional)
-            </label>
-            <div className="relative">
-              <input
-                type="number"
-                step="any"
-                min="0"
-                placeholder="0.00"
-                value={initialBuyUsdc}
-                onChange={(e) => setInitialBuyUsdc(e.target.value)}
-                className="w-full rounded-lg border border-border bg-card-subtle pl-3 pr-16 py-2 text-sm text-foreground placeholder-muted focus:border-border-active focus:bg-card focus:outline-none shadow-xs"
-              />
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 font-mono text-xs font-bold text-slate-300">
-                USDC
-              </span>
-            </div>
-          </div>
-
           {/* Mechanism Explainer Alert */}
           <div className="rounded-xl border border-border bg-card-subtle p-3 text-[11px] text-muted flex items-start gap-2">
             <Info className="h-4 w-4 text-brand-cyan flex-shrink-0 mt-0.5" />
             <span className="leading-relaxed">
-              <strong className="text-foreground">Graduation allocation:</strong> 50% of raised USDC purchases tokenized equity into the immutable Treasury Vault; 50% USDC + remaining meme supply seeds the Meteora DAMM v2 pool.
+              <strong className="text-foreground">Graduation:</strong> Settlement is paused until collateral acquisition and market liquidity can be verified together.
             </span>
           </div>
 
@@ -354,7 +333,7 @@ export function LaunchModal({
             ) : (
               <>
                 <Rocket className="h-4 w-4 stroke-[2.5]" />
-                <span>Launch Token</span>
+                <span>{selectedEquity && "testCollateral" in selectedEquity && selectedEquity.testCollateral ? "Launch Devnet Test Token" : "Launch Token"}</span>
               </>
             )}
           </button>

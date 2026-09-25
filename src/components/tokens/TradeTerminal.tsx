@@ -15,6 +15,11 @@ import { TradeReceipt } from "./TradeReceipt";
 import { receiptFromTrade, receiptFromRedemption, receiptPreview, type TradeReceiptData } from "./tradeReceiptModel";
 import { formatBondingProgress, formatTokenPrice, formatUsd } from "@/lib/marketFormat";
 
+function formatCollateralUnits(value: number, decimals: number): string {
+  if (!Number.isFinite(value)) return "—";
+  return value.toLocaleString("en-US", { maximumFractionDigits: Math.max(0, Math.min(decimals, 9)) });
+}
+
 interface TradeTerminalProps {
   token: TokenMetadata;
   onTradeSuccess?: () => void;
@@ -38,7 +43,6 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
   const [showSettings, setShowSettings] = useState(false);
   const [isTrading, setIsTrading] = useState(false);
   const [tradeErrorMsg, setTradeErrorMsg] = useState<string | null>(null);
-  const [redeemActionType, setRedeemActionType] = useState<"stock" | "usdc">("stock");
   const [buyAnimation, setBuyAnimation] = useState<"idle" | "success">("idle");
   const [quoteBalance, setQuoteBalance] = useState<number | null>(null);
   const [tokenBalance, setTokenBalance] = useState<number | null>(null);
@@ -138,7 +142,7 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
     numTokensToRedeem > 0 && totalMemeSupply > 0
       ? (numTokensToRedeem / totalMemeSupply) * totalStockSharesInVault
       : 0;
-  const entitledUsdcValue = entitledStockShares * targetStockPrice;
+  const entitledMarkValueUsd = entitledStockShares * targetStockPrice;
   const floorPricePerToken =
     totalMemeSupply > 0 ? token.treasury.totalEquityValueUsd / totalMemeSupply : 0;
 
@@ -197,11 +201,11 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
         const res = await executeRedeem({
           token,
           memeAmount: numTokensToRedeem,
-          actionType: redeemActionType,
+          actionType: "stock",
         });
 
         if (res.success) {
-          setReceipt(receiptFromRedemption(token, redeemActionType, numTokensToRedeem, res, isMock));
+          setReceipt(receiptFromRedemption(token, "stock", numTokensToRedeem, res, isMock));
           setAmount("");
           if (onTradeSuccess) onTradeSuccess();
         } else {
@@ -255,7 +259,7 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
           <button onClick={checkPending} disabled={isTrading} className="mt-2 font-semibold underline disabled:opacity-50">Check transaction status</button>
         </div>
       )}
-      {/* 3-Tab Switch: Buy / Sell / Redeem Stock */}
+      {/* 3-Tab Switch: Buy / Sell / Redeem collateral */}
       <div className="flex items-center justify-between border-b border-border pb-3">
         <div className="flex items-center gap-1 rounded-lg bg-card-subtle p-1 border border-border/80">
           <button
@@ -301,8 +305,8 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
                 : "text-muted hover:text-foreground"
             }`}
           >
-            <span>Redeem Stock</span>
-            <span className="rounded bg-amber-500/20 text-amber-300 px-1 text-[9px] font-bold">NAV</span>
+            <span>Redeem collateral</span>
+            {floorPricePerToken > 0 && <span className="rounded bg-amber-500/20 text-amber-300 px-1 text-[9px] font-bold">NAV</span>}
           </button>
         </div>
 
@@ -342,29 +346,7 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
 
       {tradeMode === "redeem" ? (
         <div className="mt-4 space-y-4">
-          {/* Dual Action Toggle */}
-          <div className="flex items-center gap-1 rounded-lg bg-card-subtle p-1 border border-border/80">
-            <button
-              onClick={() => setRedeemActionType("stock")}
-              className={`flex-1 py-1.5 rounded-md text-xs font-medium transition-colors ${
-                redeemActionType === "stock"
-                  ? "bg-card-hover text-foreground font-semibold border border-border-active"
-                  : "text-muted hover:text-foreground"
-              }`}
-            >
-              Redeem {token.targetEquity.symbol} Stock
-            </button>
-            <button
-              onClick={() => setRedeemActionType("usdc")}
-              className={`flex-1 py-1.5 rounded-md text-xs font-medium transition-colors ${
-                redeemActionType === "usdc"
-                  ? "bg-card-hover text-foreground font-semibold border border-border-active"
-                  : "text-muted hover:text-foreground"
-              }`}
-            >
-              Instant USDC Exit
-            </button>
-          </div>
+          <p className="text-[11px] text-muted">Withdraws your pro-rata balance of the collateral token held in the vault. USDC conversion is unavailable.</p>
 
           {/* Input Box */}
           <div>
@@ -416,30 +398,32 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
           {/* Interactive Calculation Card */}
           <div className="rounded-lg border border-border/80 bg-card-subtle p-3.5 space-y-2.5 text-xs">
             <div className="flex items-center justify-between">
-              <span className="text-muted">Collateral Stock:</span>
+              <span className="text-muted">Collateral token:</span>
               <span className="font-semibold text-foreground flex items-center gap-1">
                 {token.targetEquity.name} ({token.targetEquity.symbol})
               </span>
             </div>
 
             <div className="flex items-center justify-between">
-              <span className="text-muted">You Receive:</span>
+              <span className="text-muted">Pro-rata withdrawal:</span>
               <span className="font-mono font-bold text-amber-300 text-sm">
-                {entitledStockShares.toFixed(4)} Shares
+                {token.treasury.totalEquityLocked > 0
+                  ? `${formatCollateralUnits(entitledStockShares, token.targetEquity.decimals ?? 6)} ${token.targetEquity.symbol}`
+                  : "No collateral recorded"}
               </span>
             </div>
 
             <div className="flex items-center justify-between">
-              <span className="text-muted">Redemption Value:</span>
+              <span className="text-muted">Indicative mark value:</span>
               <span className="font-mono font-bold text-emerald-400 text-sm">
-                ${entitledUsdcValue.toFixed(2)} USDC
+                {targetStockPrice > 0 ? formatUsd(entitledMarkValueUsd) : "—"}
               </span>
             </div>
 
             <div className="flex items-center justify-between border-t border-border/80 pt-2 text-[11px]">
               <span className="text-muted">Vault Floor:</span>
               <span className="font-mono text-amber-300 font-medium">
-                {floorPricePerToken > 0 ? `${formatTokenPrice(floorPricePerToken)} / token` : "Oracle unavailable"}
+                {floorPricePerToken > 0 ? `${formatTokenPrice(floorPricePerToken)} / token` : "Verified mark unavailable"}
               </span>
             </div>
           </div>
@@ -455,7 +439,7 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
           {/* Action Button */}
           <button
             onClick={handleExecuteTrade}
-            disabled={isTrading || Boolean(pendingSignature) || (connected && (!Number.isFinite(numTokensToRedeem) || numTokensToRedeem <= 0 || !token.bondingCurve.isGraduated))}
+            disabled={isTrading || Boolean(pendingSignature) || !token.bondingCurve.isGraduated || (connected && (!Number.isFinite(numTokensToRedeem) || numTokensToRedeem <= 0))}
             className={`w-full rounded-lg py-3 text-sm font-semibold transition-colors shadow-xs disabled:opacity-50 ${
               !connected
                 ? "bg-card-hover/50 border border-border text-foreground hover:bg-card-hover"
@@ -464,11 +448,11 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
           >
             {isTrading
               ? "Executing on Solana..."
+              : !token.bondingCurve.isGraduated
+              ? "Available after graduation"
               : !connected
               ? "Connect Wallet to Redeem"
-              : redeemActionType === "stock"
-              ? `Burn & Redeem ${entitledStockShares.toFixed(4)} ${token.targetEquity.symbol} Stock`
-              : `Burn & Swap to $${entitledUsdcValue.toFixed(2)} USDC`}
+              : `Burn & Withdraw ${formatCollateralUnits(entitledStockShares, token.targetEquity.decimals ?? 6)} ${token.targetEquity.symbol}`}
           </button>
         </div>
       ) : token.bondingCurve.isGraduated ? (
@@ -489,7 +473,7 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
               }}
               className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 rounded-lg bg-amber-500/15 border border-amber-500/30 px-3.5 py-2 text-xs font-semibold text-amber-300 hover:bg-amber-500/25 transition-colors"
             >
-              Switch to Redeem Stock NAV
+              Switch to collateral redemption
             </button>
             <a
               href={token.bondingCurve.meteoraPoolAddress ? `https://app.meteora.ag/dlmm/${token.bondingCurve.meteoraPoolAddress}` : "https://docs.meteora.ag/"}
@@ -523,7 +507,7 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
             </div>
             <div className="flex items-center justify-between text-[10px] text-muted mt-1.5 font-mono">
               <span>{formatUsd(token.bondingCurve.realQuoteReservesUsd)} / {formatUsd(token.bondingCurve.graduationThresholdUsd)} USDC</span>
-              <span>50% Stock Purchase · 50% Liquidity</span>
+              <span>Graduation settlement paused</span>
             </div>
           </div>
 

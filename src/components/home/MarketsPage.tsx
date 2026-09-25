@@ -34,6 +34,16 @@ export function MarketsPage() {
     }
   }, []);
 
+  const equityTags = useMemo(() => {
+    const names = new Set(tokens
+      .filter(token => !token.bondingCurve.isGraduated || token.bondingCurve.meteoraPoolAddress)
+      .filter(token => token.targetEquity.verifiedTessera || token.targetEquity.verifiedPreStocks || token.targetEquity.isTestCollateral)
+      .map(token => token.targetEquity.name));
+    return [{ id: "all", label: "All" }, ...Array.from(names).sort().map(name => ({
+      id: name.toLowerCase().replace(/[^a-z0-9]/g, ""), label: name,
+    }))];
+  }, [tokens]);
+
   const filteredTokens = useMemo(() => {
     const now = Date.now();
     return tokens
@@ -49,21 +59,8 @@ export function MarketsPage() {
           return false;
         }
         if (selectedTag !== "all") {
-          const sym = (token.targetEquity.symbol || "").toLowerCase().replace(/[^a-z0-9]/g, "");
           const name = (token.targetEquity.name || "").toLowerCase().replace(/[^a-z0-9]/g, "");
-          const tag = selectedTag.toLowerCase().replace(/[^a-z0-9]/g, "");
-          const matches =
-            sym.includes(tag) ||
-            name.includes(tag) ||
-            (tag === "openai" && (sym.includes("opai") || name.includes("openai"))) ||
-            (tag === "spacex" && (sym.includes("spcx") || name.includes("spacex"))) ||
-            (tag === "kalshi" && (sym.includes("kls") || name.includes("kalshi"))) ||
-            (tag === "anthropic" && (sym.includes("anth") || name.includes("anthropic"))) ||
-            (tag === "anduril" && (sym.includes("and") || name.includes("anduril"))) ||
-            (tag === "figureai" && (sym.includes("fig") || name.includes("figure"))) ||
-            (tag === "neuralink" && (sym.includes("neur") || name.includes("neuralink"))) ||
-            (tag === "polymarket" && (sym.includes("poly") || name.includes("polymarket")));
-          if (!matches) return false;
+          if (name !== selectedTag) return false;
         }
 
         if (searchQuery.trim()) {
@@ -117,6 +114,7 @@ export function MarketsPage() {
               onTagChange={setSelectedTag}
               sortBy={sortBy}
               onSortChange={setSortBy}
+              equityTags={equityTags}
             />
             {loading ? (
               <div className="mt-5 grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">

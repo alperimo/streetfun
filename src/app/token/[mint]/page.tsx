@@ -158,12 +158,7 @@ export default function TokenDetailPage({ params }: PageProps) {
       : 0;
 
   // Spot price, market cap, reserves and progress share one on-chain snapshot.
-  const currentPrice =
-    token.priceUsd > 0
-      ? token.priceUsd
-      : token.bondingCurve.isGraduated && navFloor > 0
-      ? navFloor
-      : 0;
+  const currentPrice = token.priceUsd;
   const currentMarketCap = token.marketCapUsd;
   const formattedMarketCap =
     currentMarketCap > 0
@@ -232,13 +227,13 @@ export default function TokenDetailPage({ params }: PageProps) {
                   </span>
                   {token.bondingCurve.isGraduated && (
                     <span className="rounded-md border border-slate-700/60 bg-slate-800/50 px-2 py-0.5 text-[10px] font-medium text-slate-300">
-                      Graduated
+                      {token.bondingCurve.meteoraPoolAddress ? "Graduated" : "Settlement unverified"}
                     </span>
                   )}
                 </div>
 
                 <div className="mt-1 flex items-center gap-2 text-xs flex-wrap">
-                  <span className="text-muted">Target equity</span>
+                  <span className="text-muted">Target asset</span>
                   <span className="font-semibold text-foreground">
                     {token.targetEquity.name} ({token.targetEquity.symbol})
                   </span>
@@ -266,7 +261,7 @@ export default function TokenDetailPage({ params }: PageProps) {
             {/* External Links */}
             <div className="flex items-center gap-2">
               <a
-                href={`https://solscan.io/token/${token.mint}`}
+                href={`https://solscan.io/token/${token.mint}${process.env.NEXT_PUBLIC_SOLANA_NETWORK === "devnet" ? "?cluster=devnet" : ""}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-1.5 rounded-lg border border-border bg-card-hover/40 px-3 py-1.5 text-xs text-muted hover:text-foreground hover:border-border-active transition-colors font-medium"
@@ -412,9 +407,15 @@ export default function TokenDetailPage({ params }: PageProps) {
                       <tr>
                         <td colSpan={5} className="py-8 text-center text-muted">
                           <div className="flex flex-col items-center justify-center gap-1">
-                            <span className="text-xs font-semibold text-foreground">{tradesError ? "Verified trades unavailable" : "No Trades Recorded Yet"}</span>
+                            <span className="text-xs font-semibold text-foreground">
+                              {tradesLoading ? "Loading verified trades…" : tradesError ? "Verified trades unavailable" : "No Trades Recorded Yet"}
+                            </span>
                             <span className="text-[11px] text-muted">
-                              {tradesError ? "The trade index could not be refreshed." : "Execute a trade on this curve to mint the first on-chain record."}
+                              {tradesLoading
+                                ? "Reading the latest confirmed activity."
+                                : tradesError
+                                  ? "The trade index could not be refreshed."
+                                  : "Execute a trade on this curve to mint the first on-chain record."}
                             </span>
                           </div>
                         </td>
@@ -475,7 +476,7 @@ export default function TokenDetailPage({ params }: PageProps) {
                 Treasury & Security Details
               </div>
               <div className="flex justify-between text-muted">
-                <span>Collateral Asset:</span>
+                <span>Target asset:</span>
                 <span className="font-mono text-foreground font-semibold">
                   {token.targetEquity.name.replace(/\s*\(.*?\)/g, "").trim()} ({token.targetEquity.symbol.replace(/^\$/, "")})
                 </span>
@@ -483,7 +484,7 @@ export default function TokenDetailPage({ params }: PageProps) {
               <div className="flex justify-between text-muted">
                 <span>Asset Class:</span>
                 <span className="font-mono text-foreground">
-                  {token.targetEquity.isPreIpo ? "Pre-IPO Private Equity" : "Tokenized Public Stock"}
+                  {token.targetEquity.isTestCollateral ? "Devnet test token" : token.targetEquity.verifiedTessera ? "Tessera loan participation" : token.targetEquity.verifiedPreStocks ? "Pre-IPO exposure token" : "Unverified token"}
                 </span>
               </div>
               <div className="flex justify-between text-muted">
@@ -507,8 +508,8 @@ export default function TokenDetailPage({ params }: PageProps) {
                 <span className="font-mono text-foreground">{token.totalSupply?.toLocaleString("en-US") || "—"}</span>
               </div>
               <div className="flex justify-between text-muted">
-                <span>Graduation Split:</span>
-                <span className="font-mono text-foreground">{token.bondingCurve.equityPurchaseBudgetUsd && token.bondingCurve.ammLiquidityBudgetUsd ? `${formatUsd(token.bondingCurve.equityPurchaseBudgetUsd)} equity · ${formatUsd(token.bondingCurve.ammLiquidityBudgetUsd)} liquidity target` : "Unavailable"}</span>
+                <span>Allocation Target:</span>
+                <span className="font-mono text-foreground">{token.bondingCurve.equityPurchaseBudgetUsd && token.bondingCurve.ammLiquidityBudgetUsd ? `${formatUsd(token.bondingCurve.equityPurchaseBudgetUsd)} collateral · ${formatUsd(token.bondingCurve.ammLiquidityBudgetUsd)} liquidity (not settled)` : "Unavailable"}</span>
               </div>
             </div>
           </div>

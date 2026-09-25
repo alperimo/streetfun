@@ -22,8 +22,10 @@ export function BurnRedeemModule({ token }: BurnRedeemModuleProps) {
   const [txError, setTxError] = useState<string | null>(null);
 
   const totalMemeSupply = BigInt(Math.floor((token.totalSupply || 0) * 1_000_000));
+  const equityDecimals = token.targetEquity.decimals ?? 6;
+  const equityScale = 10 ** equityDecimals;
   const totalEquityLocked = BigInt(
-    Math.floor((token.treasury.totalEquityLocked || 0) * 1_000_000)
+    Math.floor((token.treasury.totalEquityLocked || 0) * equityScale)
   );
 
   const parsedAmount = Number(memeAmount);
@@ -32,11 +34,15 @@ export function BurnRedeemModule({ token }: BurnRedeemModuleProps) {
 
   const entitledStockShares =
     numMeme > 0 && totalMemeSupply > 0n && memeInLamports <= totalMemeSupply
-      ? Number(calculateEntitledStock(memeInLamports, totalMemeSupply, totalEquityLocked)) / 1_000_000
+      ? Number(calculateEntitledStock(memeInLamports, totalMemeSupply, totalEquityLocked)) / equityScale
       : 0;
 
   const stockPrice = token.targetEquity.stockPriceUsd;
   const entitledUsdcValue = entitledStockShares * stockPrice;
+  const totalMemeSupplyUnits = token.totalSupply || 0;
+  const navFloorPerToken = totalMemeSupplyUnits > 0
+    ? token.treasury.totalEquityValueUsd / totalMemeSupplyUnits
+    : 0;
 
   const handleExecuteRedeem = async (mode: "stock" | "usdc" = redeemMode) => {
     if (!connected || numMeme <= 0) return;
@@ -70,13 +76,13 @@ export function BurnRedeemModule({ token }: BurnRedeemModuleProps) {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border pb-4">
         <div>
           <div className="flex items-center gap-2">
-            <h3 className="text-base font-bold text-foreground">Redeem Equity</h3>
-            <span className="rounded-md border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-[10px] font-mono font-medium text-amber-300">
+            <h3 className="text-base font-bold text-foreground">Redeem Collateral</h3>
+            {navFloorPerToken > 0 && <span className="rounded-md border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-[10px] font-mono font-medium text-amber-300">
               NAV Floor Backed
-            </span>
+            </span>}
           </div>
           <p className="text-xs text-muted mt-0.5">
-            Burn ${token.symbol} to redeem your pro-rata share of {token.targetEquity.symbol} stock.
+            Burn ${token.symbol} to withdraw your pro-rata {token.targetEquity.symbol} collateral tokens.
           </p>
         </div>
 
@@ -89,9 +95,10 @@ export function BurnRedeemModule({ token }: BurnRedeemModuleProps) {
                 : "text-muted hover:text-foreground"
             }`}
           >
-            Withdraw Stock
+            Withdraw Collateral
           </button>
           <button
+            disabled
             onClick={() => setRedeemMode("usdc")}
             className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all ${
               redeemMode === "usdc"
@@ -99,7 +106,7 @@ export function BurnRedeemModule({ token }: BurnRedeemModuleProps) {
                 : "text-muted hover:text-foreground"
             }`}
           >
-            Swap to USDC
+            USDC swap unavailable
           </button>
         </div>
       </div>
@@ -142,11 +149,11 @@ export function BurnRedeemModule({ token }: BurnRedeemModuleProps) {
             <span>{numMeme.toLocaleString()} ${token.symbol}</span>
             <span className="text-brand-cyan">=</span>
             <span className="text-emerald-400">
-              {entitledStockShares.toFixed(4)} Shares ({token.targetEquity.symbol})
+              {entitledStockShares.toLocaleString("en-US", { maximumFractionDigits: Math.min(equityDecimals, 9) })} {token.targetEquity.symbol}
             </span>
           </div>
           <div className="font-mono text-xs text-muted">
-            Value: <strong className="text-foreground">${entitledUsdcValue.toFixed(2)}</strong>
+            Indicative mark: <strong className="text-foreground">{stockPrice > 0 ? `$${entitledUsdcValue.toFixed(2)}` : "—"}</strong>
           </div>
         </div>
 
