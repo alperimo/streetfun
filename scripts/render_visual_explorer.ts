@@ -1,186 +1,97 @@
-import puppeteer from "puppeteer-core";
+import { Connection } from "@solana/web3.js";
 import * as fs from "fs";
 import * as path from "path";
 
-const CHROME_PATH = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
-const ARTIFACTS_DIR = "/Users/alperenf/.gemini/antigravity/brain/eee7d099-16e6-4871-acc0-9f8aff898880";
+type Receipt = {
+  action?: string;
+  txSignature?: string | null;
+  status?: string;
+  reason?: string;
+  [key: string]: unknown;
+};
 
-const receipts = JSON.parse(fs.readFileSync(path.join(ARTIFACTS_DIR, "e2e_verified_transactions.json"), "utf8"));
-
-const htmlContent = `
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>StreetFun Protocol - Solana On-Chain Explorer Verification</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <style>
-    body { background-color: #060908; color: #e2e8f0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace; }
-    .terminal-card { background-color: #0c1210; border: 1px solid #1a2722; border-radius: 12px; }
-    .badge-success { background-color: rgba(34, 197, 94, 0.15); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.3); }
-    .badge-amber { background-color: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
-    .code-block { background-color: #080d0b; border: 1px solid #14201b; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
-  </style>
-</head>
-<body class="p-8 max-w-6xl mx-auto space-y-8">
-  <div class="flex items-center justify-between border-b border-[#1a2722] pb-6">
-    <div class="flex items-center gap-4">
-      <div class="h-10 w-10 rounded-xl bg-[#13241d] border border-[#22c55e]/40 flex items-center justify-center text-[#22c55e] font-bold text-xl">S</div>
-      <div>
-        <h1 class="text-2xl font-bold text-white flex items-center gap-3">
-          Solana Localnet Explorer: On-Chain Lifecycle Receipts
-          <span class="text-xs px-2.5 py-1 rounded-md badge-success uppercase tracking-wider font-semibold">Verified on 127.0.0.1:8899</span>
-        </h1>
-        <p class="text-xs text-slate-400 mt-1">Smart Contract Program ID: <span class="font-mono text-emerald-400">6ZiovCkRxRJgUaCS9uftFk3eVnGDsbnDXgUV1XHybH52</span></p>
-      </div>
-    </div>
-    <div class="text-right text-xs text-slate-400 font-mono">
-      Cluster: <span class="text-white">Solana Test Validator</span><br/>
-      Commitment: <span class="text-white">Confirmed</span>
-    </div>
-  </div>
-
-  <!-- 1. Launch Token -->
-  <div class="terminal-card p-6 space-y-4">
-    <div class="flex items-center justify-between">
-      <div class="flex items-center gap-2">
-        <span class="text-sm font-semibold text-emerald-400">01. Token Launch Instruction</span>
-        <span class="text-[10px] px-2 py-0.5 rounded badge-success">SUCCESS</span>
-      </div>
-      <span class="text-xs text-slate-400 font-mono">Slot #7188</span>
-    </div>
-    <div class="grid grid-cols-2 gap-4 text-xs font-mono">
-      <div>
-        <span class="text-slate-400 block text-[11px]">Transaction Signature:</span>
-        <span class="text-white break-all">${receipts["01_launch"].txSignature}</span>
-      </div>
-      <div>
-        <span class="text-slate-400 block text-[11px]">Launched Token & Mint:</span>
-        <span class="text-emerald-400 font-bold">${receipts["01_launch"].tokenName} ($${receipts["01_launch"].symbol})</span>
-        <span class="text-slate-400 block break-all text-[10px] mt-0.5">${receipts["01_launch"].memeMint}</span>
-      </div>
-    </div>
-    <div class="code-block p-3 rounded-lg text-xs text-slate-300">
-      <div class="text-emerald-400 font-semibold mb-1">Instruction: LaunchStonk</div>
-      <div>&gt; Curve PDA: ${receipts["01_launch"].curvePda}</div>
-      <div>&gt; Target Backing Equity: ${receipts["01_launch"].backingEquity}</div>
-      <div>&gt; Total Token Supply: 1,000,000,000 $SING | Real Tokens in Curve: 800,000,000 $SING</div>
-    </div>
-  </div>
-
-  <!-- 2. Bonding Trade: Buy & Sell -->
-  <div class="terminal-card p-6 space-y-4">
-    <div class="flex items-center justify-between">
-      <div class="flex items-center gap-2">
-        <span class="text-sm font-semibold text-emerald-400">02. Bonding Curve Buy & Sell Trading</span>
-        <span class="text-[10px] px-2 py-0.5 rounded badge-success">SUCCESS</span>
-      </div>
-      <span class="text-xs text-slate-400 font-mono">Slot #7190 - #7192</span>
-    </div>
-    <div class="grid grid-cols-2 gap-4 text-xs font-mono">
-      <div>
-        <span class="text-slate-400 block text-[11px]">Buy Tx Signature:</span>
-        <span class="text-white break-all text-[11px]">${receipts["02_buy"].txSignature}</span>
-        <span class="text-emerald-400 block mt-1">+34,277,831.55 $SING received for $1,000 USDC</span>
-      </div>
-      <div>
-        <span class="text-slate-400 block text-[11px]">Sell Tx Signature:</span>
-        <span class="text-white break-all text-[11px]">${receipts["03_sell"].txSignature}</span>
-        <span class="text-amber-400 block mt-1">-5,000,000 $SING sold back to curve</span>
-      </div>
-    </div>
-    <div class="code-block p-3 rounded-lg text-xs text-slate-300">
-      <div class="text-emerald-400 font-semibold mb-1">Instructions: BuyCurve &amp; SellCurve</div>
-      <div>&gt; Dynamic pricing constant product curve executed on-chain with 1% protocol fee routing</div>
-      <div>&gt; Anti-rug lock: Liquidity and tokens permanently secured in Curve PDA accounts</div>
-    </div>
-  </div>
-
-  <!-- 3. Graduation and 50/50 Split -->
-  <div class="terminal-card p-6 space-y-4 border-amber-500/40">
-    <div class="flex items-center justify-between">
-      <div class="flex items-center gap-2">
-        <span class="text-sm font-semibold text-amber-400">03. Curve Graduation &amp; 50/50 Liquidity / Stock Split</span>
-        <span class="text-[10px] px-2 py-0.5 rounded badge-amber">GRADUATED</span>
-      </div>
-      <span class="text-xs text-slate-400 font-mono">Slot #7200</span>
-    </div>
-    <div class="grid grid-cols-2 gap-4 text-xs font-mono">
-      <div>
-        <span class="text-slate-400 block text-[11px]">Graduation Tx Signature:</span>
-        <span class="text-white break-all text-[11px]">${receipts["04_graduation"].txSignature}</span>
-      </div>
-      <div>
-        <span class="text-slate-400 block text-[11px]">Graduation Threshold Reached:</span>
-        <span class="text-amber-400 font-bold">$60,000 USDC Full Reserve Hit</span>
-      </div>
-    </div>
-    <div class="grid grid-cols-2 gap-3 pt-2">
-      <div class="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20 text-xs">
-        <div class="text-amber-300 font-bold mb-1">50% Stock Collateral ($30,000 USDC)</div>
-        <div class="text-slate-300 font-mono text-[11px]">Purchased 150 OpenAI Pre-IPO shares. Permanently deposited and locked in Treasury Vault PDA:</div>
-        <div class="text-amber-400/90 font-mono text-[10px] break-all mt-1">${receipts["04_graduation"].treasuryVaultPda}</div>
-      </div>
-      <div class="p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-xs">
-        <div class="text-emerald-300 font-bold mb-1">50% AMM Liquidity ($30,000 USDC)</div>
-        <div class="text-slate-300 font-mono text-[11px]">Transferred to Meteora Dynamic Bonding Curve AMM LP Destination:</div>
-        <div class="text-emerald-400/90 font-mono text-[10px] break-all mt-1">${receipts["04_graduation"].ammQuoteAta}</div>
-      </div>
-    </div>
-    <div class="code-block p-3 rounded-lg text-xs text-slate-300">
-      <div class="text-amber-400 font-semibold mb-1">On-Chain Event Logs:</div>
-      <div class="text-emerald-400">&gt; Program log: Curve graduated successfully! Equity locked: 150000000 (150 shares), USDC deployed to AMM: 30615770476</div>
-      <div>&gt; Curve Status: is_graduated = true, total_equity_locked = 150 shares</div>
-    </div>
-  </div>
-
-  <!-- 4. Burn & Redeem -->
-  <div class="terminal-card p-6 space-y-4 border-amber-500/40">
-    <div class="flex items-center justify-between">
-      <div class="flex items-center gap-2">
-        <span class="text-sm font-semibold text-amber-400">04. Pro-Rata Stock Redemption via Meme Token Burn</span>
-        <span class="text-[10px] px-2 py-0.5 rounded badge-amber">REDEEMED</span>
-      </div>
-      <span class="text-xs text-slate-400 font-mono">Slot #7202</span>
-    </div>
-    <div class="grid grid-cols-2 gap-4 text-xs font-mono">
-      <div>
-        <span class="text-slate-400 block text-[11px]">Redeem Tx Signature:</span>
-        <span class="text-white break-all text-[11px]">${receipts["05_redeem"].txSignature}</span>
-      </div>
-      <div>
-        <span class="text-slate-400 block text-[11px]">Trader Burned &amp; Redeemed:</span>
-        <span class="text-rose-400 font-bold block">-10,000,000 $SING burned</span>
-        <span class="text-amber-300 font-bold block">+1.5 OpenAI Pre-IPO shares received ($300+ NAV)</span>
-      </div>
-    </div>
-    <div class="code-block p-3 rounded-lg text-xs text-slate-300">
-      <div class="text-amber-400 font-semibold mb-1">On-Chain Event Logs:</div>
-      <div class="text-emerald-400">&gt; Program log: Burn and redeem completed. Burned: 10000000000000, Redeemed Shares: 1500000, Remaining Locked: 148500000</div>
-      <div>&gt; Transferred 1.5 real tokenized shares from Treasury Vault PDA to Trader Associated Token Account</div>
-    </div>
-  </div>
-</body>
-</html>
-`;
-
-fs.writeFileSync(path.join(ARTIFACTS_DIR, "scratch", "solana_explorer_view.html"), htmlContent);
-
-async function main() {
-  const browser = await puppeteer.launch({
-    executablePath: CHROME_PATH,
-    headless: true,
-    defaultViewport: { width: 1400, height: 1300 },
-    args: ["--no-sandbox", "--disable-gpu"],
-  });
-
-  const page = await browser.newPage();
-  await page.goto("file://" + path.join(ARTIFACTS_DIR, "scratch", "solana_explorer_view.html"), { waitUntil: "networkidle2" });
-  await new Promise((r) => setTimeout(r, 1000));
-  await page.screenshot({ path: path.join(ARTIFACTS_DIR, "explorer_onchain_verification.png") });
-  console.log("📸 Captured explorer_onchain_verification.png");
-
-  await browser.close();
+function escapeHtml(value: unknown): string {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
 }
 
-main().catch(console.error);
+function selectedNetwork(): { name: string; rpcUrl: string; explorerQuery: string } {
+  const name = process.env.SOLANA_NETWORK || "localnet";
+  const defaults: Record<string, string> = {
+    localnet: "http://127.0.0.1:8899",
+    devnet: "https://api.devnet.solana.com",
+    "mainnet-beta": "https://api.mainnet-beta.solana.com",
+  };
+  const rpcUrl = process.env.SOLANA_RPC_URL || defaults[name];
+  if (!rpcUrl) throw new Error(`Unsupported SOLANA_NETWORK: ${name}`);
+
+  const explorerQuery =
+    name === "localnet"
+      ? `cluster=custom&customUrl=${encodeURIComponent(rpcUrl)}`
+      : `cluster=${encodeURIComponent(name)}`;
+  return { name, rpcUrl, explorerQuery };
+}
+
+async function main() {
+  const projectRoot = path.resolve(__dirname, "..");
+  const receiptsPath = path.resolve(
+    process.env.E2E_RECEIPTS_PATH ||
+      path.join(projectRoot, "target/test-artifacts/e2e_verified_transactions.json")
+  );
+  const outputPath = path.resolve(
+    process.env.E2E_PROOF_REPORT_PATH ||
+      path.join(projectRoot, "target/test-artifacts/transaction-proof.html")
+  );
+  const receipts = JSON.parse(fs.readFileSync(receiptsPath, "utf8")) as Record<string, Receipt>;
+  const { name, rpcUrl, explorerQuery } = selectedNetwork();
+  const connection = new Connection(rpcUrl, "confirmed");
+  const rows: string[] = [];
+
+  for (const [key, receipt] of Object.entries(receipts)) {
+    const signature = typeof receipt.txSignature === "string" ? receipt.txSignature : "";
+    const heading = escapeHtml(key);
+
+    if (!signature) {
+      rows.push(`<article><h2>${heading}</h2><p class="blocked">No confirmed transaction signature recorded. The receipt reports: ${escapeHtml(receipt.status || "no status")}. ${escapeHtml(receipt.reason || "")}</p></article>`);
+      continue;
+    }
+
+    const transaction = await connection.getTransaction(signature, {
+      commitment: "confirmed",
+      maxSupportedTransactionVersion: 0,
+    });
+    if (!transaction) {
+      throw new Error(`RPC did not return confirmed transaction ${signature} from ${name}`);
+    }
+
+    const successful = transaction.meta?.err == null;
+    const explorerUrl = `https://explorer.solana.com/tx/${encodeURIComponent(signature)}?${explorerQuery}`;
+    const logs = transaction.meta?.logMessages || [];
+    const logMarkup = logs.length
+      ? `<details><summary>On-chain logs (${logs.length})</summary><pre>${escapeHtml(logs.join("\n"))}</pre></details>`
+      : "<p>No transaction logs were returned by the RPC.</p>";
+    const errorMarkup = successful
+      ? ""
+      : `<p class="failed">Execution error: ${escapeHtml(JSON.stringify(transaction.meta?.err))}</p>`;
+
+    rows.push(`<article><h2>${heading}</h2><p class="${successful ? "confirmed" : "failed"}">${successful ? "Confirmed success" : "Confirmed failure"} · slot ${transaction.slot} · fee ${transaction.meta?.fee ?? "unknown"} lamports</p><p>Receipt label (not verified from chain data): ${escapeHtml(receipt.action || key)}</p><p><a href="${explorerUrl}" rel="noreferrer">Open confirmed transaction in Solana Explorer</a></p><code>${escapeHtml(signature)}</code>${errorMarkup}${logMarkup}</article>`);
+  }
+
+  const html = `<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>StreetFun transaction evidence</title>
+<style>body{font:16px system-ui,sans-serif;max-width:1000px;margin:40px auto;padding:0 20px;background:#101412;color:#e7ece9}article{padding:20px;margin:18px 0;border:1px solid #38443d;border-radius:10px;background:#171d19}h1,h2{margin-top:0}code,pre{overflow-wrap:anywhere;white-space:pre-wrap}a{color:#74d8c3}.confirmed{color:#7de2a1}.failed{color:#ff8d8d}.blocked{color:#f1c878}summary{cursor:pointer}</style></head>
+<body><h1>StreetFun transaction evidence</h1><p>RPC: ${escapeHtml(name)} (${escapeHtml(rpcUrl)}). Signatures below were fetched from that RPC at confirmed commitment. Records without a signature are shown as blocked or unsubmitted, not as transactions.</p>${rows.join("\n")}</body></html>`;
+
+  fs.mkdirSync(path.dirname(outputPath), { recursive: true });
+  fs.writeFileSync(outputPath, html);
+  console.log(`Wrote transaction evidence report: ${outputPath}`);
+}
+
+main().catch((error) => {
+  console.error(error instanceof Error ? error.message : String(error));
+  process.exitCode = 1;
+});
