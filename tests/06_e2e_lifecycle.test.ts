@@ -133,7 +133,7 @@ describe("06 - StreetFun Protocol: Complete E2E Lifecycle ($SING - Neural Singul
 
   it("Step 2: Trader Alice executes a Buy on $SING bonding curve", async () => {
     // Fund Alice with quote tokens (USDC)
-    const quoteNeeded = (graduationThresholdUsdc + 50) * 1_000_000;
+    const quoteNeeded = (graduationThresholdUsdc * 2 + 50) * 1_000_000;
     aliceQuoteAta = await mintToAta(
       provider.connection,
       creator,
@@ -223,8 +223,20 @@ describe("06 - StreetFun Protocol: Complete E2E Lifecycle ($SING - Neural Singul
   });
 
   it("Step 4: Pushes bonding curve to graduation threshold and verifies Graduation", async () => {
-    // Dynamically buy enough to exceed threshold
-    const buyQuoteIn = new BN(Math.ceil((graduationThresholdUsdc + 2) * 1_000_000));
+    // Buy the remaining net quote reserve needed to clear the threshold, including fees.
+    const [config, curveBeforeGraduation] = await Promise.all([
+      (program.account as any).globalConfig.fetch(globalConfigPda),
+      (program.account as any).curveAccount.fetch(curvePda),
+    ]);
+    const thresholdUnits = BigInt(config.graduationThreshold.toString());
+    const currentReserveUnits = BigInt(curveBeforeGraduation.realQuoteReserves.toString());
+    const netQuoteNeeded = thresholdUnits + 1_000_000n - currentReserveUnits;
+    const feeDenominator = 10_000n - BigInt(config.protocolFeeBps);
+    const buyQuoteUnits =
+      netQuoteNeeded > 0n
+        ? (netQuoteNeeded * 10_000n + feeDenominator - 1n) / feeDenominator
+        : 1n;
+    const buyQuoteIn = new BN(buyQuoteUnits.toString());
 
     await (program.methods as any)
       .buyCurve({
@@ -253,7 +265,7 @@ describe("06 - StreetFun Protocol: Complete E2E Lifecycle ($SING - Neural Singul
       equityMint,
       stockProvider.publicKey,
       totalStockDeposited,
-      creator
+      stockProvider
     );
 
     const stockProviderQuoteAta = await safeGetOrCreateAta(
@@ -286,7 +298,7 @@ describe("06 - StreetFun Protocol: Complete E2E Lifecycle ($SING - Neural Singul
         minEquityTokensExpected: new BN(totalStockDeposited),
       })
       .accounts({
-        caller: creator.publicKey,
+        caller: protocolAdmin.publicKey,
         globalConfig: globalConfigPda,
         memeMint: memeMint,
         targetEquityMint: equityMint,
@@ -301,7 +313,7 @@ describe("06 - StreetFun Protocol: Complete E2E Lifecycle ($SING - Neural Singul
         ammTokenDestination: ammTokenAta.address,
         tokenProgram: TOKEN_PROGRAM_ID,
       })
-      .signers(isDevnet ? [creator] : [creator, stockProvider])
+      .signers(isDevnet ? [protocolAdmin] : [protocolAdmin, stockProvider])
       .rpc();
 
     const expectedHalf = graduationThresholdUsdc / 2;
@@ -382,9 +394,10 @@ describe("06 - StreetFun Protocol: Complete E2E Lifecycle ($SING - Neural Singul
     console.log("✅ Step 5 Verified: Alice burned 1M $SING and redeemed", sharesReceived, "OpenAI Pre-IPO shares! Tx:", tx);
 
     const artifactPath = path.resolve(
-      "/Users/alperenf/.gemini/antigravity/brain/eee7d099-16e6-4871-acc0-9f8aff898880",
-      "e2e_verified_transactions.json"
+      process.cwd(),
+      "target/test-artifacts/e2e_verified_transactions.json"
     );
+    fs.mkdirSync(path.dirname(artifactPath), { recursive: true });
     fs.writeFileSync(artifactPath, JSON.stringify(txReceipts, null, 2));
     console.log("💾 Saved verified transaction receipts to e2e_verified_transactions.json");
   });
