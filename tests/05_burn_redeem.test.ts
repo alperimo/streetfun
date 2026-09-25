@@ -22,9 +22,6 @@ import { getOrCreateAssociatedTokenAccount } from "@solana/spl-token";
 describe("05 - StreetFun Protocol: Redemption Safety Before Graduation", () => {
   const creator = Keypair.generate();
   const traderBob = Keypair.generate();
-  const stockProvider = Keypair.generate();
-  const ammQuoteDest = Keypair.generate();
-  const ammTokenDest = Keypair.generate();
 
   const provider = createProvider(creator);
   const program = loadProgram(provider);
@@ -42,17 +39,12 @@ describe("05 - StreetFun Protocol: Redemption Safety Before Graduation", () => {
   let bobTokenAta: any;
   let bobEquityAta: any;
 
-  const totalStockDeposited = 150 * 1_000_000; // 150 test-equity units
-
   before(async () => {
     await airdropSol(provider.connection, creator.publicKey, 10);
     await airdropSol(provider.connection, traderBob.publicKey, 10);
-    await airdropSol(provider.connection, stockProvider.publicKey, 10);
-    await airdropSol(provider.connection, ammQuoteDest.publicKey, 5);
-    await airdropSol(provider.connection, ammTokenDest.publicKey, 5);
 
     quoteMint = await createSplMint(provider.connection, creator, 6);
-    equityMint = await createSplMint(provider.connection, stockProvider, 6);
+    equityMint = await createSplMint(provider.connection, creator, 6);
     memeMintKeypair = Keypair.generate();
 
     const memeMint = memeMintKeypair.publicKey;
@@ -67,7 +59,7 @@ describe("05 - StreetFun Protocol: Redemption Safety Before Graduation", () => {
         name: "Mars Colonization Token",
         symbol: "MARS",
         uri: "https://streetfun.xyz/metadata/mars.json",
-        meteoraDbcPool: null,
+        meteoraDammV2Pool: null,
       })
       .accounts({
         creator: creator.publicKey,
@@ -133,64 +125,8 @@ describe("05 - StreetFun Protocol: Redemption Safety Before Graduation", () => {
       .signers([traderBob])
       .rpc();
 
-    // Set up a test-equity source and generic output accounts. These are
-    // fixtures only; the settlement instruction must still remain closed.
-    const stockProviderEquityAta = await mintToAta(
-      provider.connection,
-      stockProvider,
-      equityMint,
-      stockProvider.publicKey,
-      totalStockDeposited,
-      stockProvider
-    );
-
-    const equityPurchaseQuoteAta = await getOrCreateAssociatedTokenAccount(
-      provider.connection,
-      stockProvider,
-      quoteMint,
-      stockProvider.publicKey
-    );
-
-    const ammQuoteAta = await getOrCreateAssociatedTokenAccount(
-      provider.connection,
-      ammQuoteDest,
-      quoteMint,
-      ammQuoteDest.publicKey
-    );
-
-    const ammTokenAta = await getOrCreateAssociatedTokenAccount(
-      provider.connection,
-      ammTokenDest,
-      memeMintKeypair.publicKey,
-      ammTokenDest.publicKey
-    );
-
-    try {
-      await program.methods
-        .graduateAndExecuteStock({ minEquityTokensExpected: new BN(totalStockDeposited) })
-        .accounts({
-          // A normal holder can trigger finalization; no admin or source wallet signs.
-          caller: traderBob.publicKey,
-          globalConfig: globalConfigPda,
-          memeMint: memeMintKeypair.publicKey,
-          targetEquityMint: equityMint,
-          curve: curvePda,
-          tokenVault: tokenVaultPda,
-          quoteVault: quoteVaultPda,
-          treasuryVault: treasuryVaultPda,
-          equityPurchaseAccount: equityPurchaseQuoteAta.address,
-          equitySourceAccount: stockProviderEquityAta.address,
-          ammQuoteDestination: ammQuoteAta.address,
-          ammTokenDestination: ammTokenAta.address,
-          tokenProgram: TOKEN_PROGRAM_ID,
-          equityTokenProgram: TOKEN_PROGRAM_ID,
-        })
-        .signers([traderBob])
-        .rpc();
-      expect.fail("Graduation must remain closed until the settlement proof exists");
-    } catch (err: any) {
-      expect(err.toString()).to.include("SettlementUnavailable");
-    }
+    const curveAtThreshold = await program.account.curveAccount.fetch(curvePda);
+    expect(curveAtThreshold.isGraduated).to.be.false;
 
     // Prepare Bob's equity ATA
     const equityAta = await getOrCreateAssociatedTokenAccount(

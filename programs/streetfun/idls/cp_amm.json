@@ -1,0 +1,581 @@
+{
+  "address": "cpamdpZCGKUy5JxQXB4dcpGPiikHawvSWAd6mEn1sGG",
+  "metadata": {
+    "name": "cp_amm",
+    "version": "0.2.4",
+    "spec": "0.1.0",
+    "description": "Created with Anchor"
+  },
+  "instructions": [
+    {
+      "name": "initialize_customizable_pool",
+      "discriminator": [
+        20,
+        161,
+        241,
+        24,
+        189,
+        221,
+        180,
+        2
+      ],
+      "accounts": [
+        {
+          "name": "creator"
+        },
+        {
+          "name": "position_nft_mint",
+          "docs": [
+            "position_nft_mint"
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "position_nft_account",
+          "docs": [
+            "position nft account"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  111,
+                  115,
+                  105,
+                  116,
+                  105,
+                  111,
+                  110,
+                  95,
+                  110,
+                  102,
+                  116,
+                  95,
+                  97,
+                  99,
+                  99,
+                  111,
+                  117,
+                  110,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "position_nft_mint"
+              }
+            ]
+          }
+        },
+        {
+          "name": "payer",
+          "docs": [
+            "Address paying to create the pool. Can be anyone"
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "pool_authority",
+          "address": "HLnpSz9h2S4hiLQ43rnSD9XkcUThA7B8hQMKmDaiTLcC"
+        },
+        {
+          "name": "pool",
+          "docs": [
+            "Initialize an account to store the pool state"
+          ],
+          "writable": true
+        },
+        {
+          "name": "position",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  111,
+                  115,
+                  105,
+                  116,
+                  105,
+                  111,
+                  110
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "position_nft_mint"
+              }
+            ]
+          }
+        },
+        {
+          "name": "token_a_mint",
+          "docs": [
+            "Token a mint"
+          ]
+        },
+        {
+          "name": "token_b_mint",
+          "docs": [
+            "Token b mint"
+          ]
+        },
+        {
+          "name": "token_a_vault",
+          "docs": [
+            "Token a vault for the pool"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  116,
+                  111,
+                  107,
+                  101,
+                  110,
+                  95,
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "token_a_mint"
+              },
+              {
+                "kind": "account",
+                "path": "pool"
+              }
+            ]
+          }
+        },
+        {
+          "name": "token_b_vault",
+          "docs": [
+            "Token b vault for the pool"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  116,
+                  111,
+                  107,
+                  101,
+                  110,
+                  95,
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "token_b_mint"
+              },
+              {
+                "kind": "account",
+                "path": "pool"
+              }
+            ]
+          }
+        },
+        {
+          "name": "payer_token_a",
+          "docs": [
+            "payer token a account"
+          ],
+          "writable": true
+        },
+        {
+          "name": "payer_token_b",
+          "docs": [
+            "creator token b account"
+          ],
+          "writable": true
+        },
+        {
+          "name": "token_a_program",
+          "docs": [
+            "Program to create mint account and mint tokens"
+          ]
+        },
+        {
+          "name": "token_b_program",
+          "docs": [
+            "Program to create mint account and mint tokens"
+          ]
+        },
+        {
+          "name": "token_2022_program",
+          "docs": [
+            "Program to create NFT mint/token account and transfer for token22 account"
+          ],
+          "address": "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "event_authority"
+        },
+        {
+          "name": "program"
+        }
+      ],
+      "args": [
+        {
+          "name": "params",
+          "type": {
+            "defined": {
+              "name": "InitializeCustomizablePoolParameters"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "swap2",
+      "discriminator": [
+        65,
+        75,
+        63,
+        76,
+        235,
+        91,
+        91,
+        136
+      ],
+      "accounts": [
+        {
+          "name": "pool_authority",
+          "address": "HLnpSz9h2S4hiLQ43rnSD9XkcUThA7B8hQMKmDaiTLcC"
+        },
+        {
+          "name": "pool",
+          "docs": [
+            "Pool account"
+          ],
+          "writable": true
+        },
+        {
+          "name": "input_token_account",
+          "docs": [
+            "The user token account for input token"
+          ],
+          "writable": true
+        },
+        {
+          "name": "output_token_account",
+          "docs": [
+            "The user token account for output token"
+          ],
+          "writable": true
+        },
+        {
+          "name": "token_a_vault",
+          "docs": [
+            "The vault token account for input token"
+          ],
+          "writable": true,
+          "relations": [
+            "pool"
+          ]
+        },
+        {
+          "name": "token_b_vault",
+          "docs": [
+            "The vault token account for output token"
+          ],
+          "writable": true,
+          "relations": [
+            "pool"
+          ]
+        },
+        {
+          "name": "token_a_mint",
+          "docs": [
+            "The mint of token a"
+          ]
+        },
+        {
+          "name": "token_b_mint",
+          "docs": [
+            "The mint of token b"
+          ]
+        },
+        {
+          "name": "payer",
+          "docs": [
+            "The user performing the swap"
+          ],
+          "signer": true
+        },
+        {
+          "name": "token_a_program",
+          "docs": [
+            "Token a program"
+          ]
+        },
+        {
+          "name": "token_b_program",
+          "docs": [
+            "Token b program"
+          ]
+        },
+        {
+          "name": "referral_token_account",
+          "docs": [
+            "referral token account"
+          ],
+          "writable": true,
+          "optional": true
+        },
+        {
+          "name": "event_authority"
+        },
+        {
+          "name": "program"
+        }
+      ],
+      "args": [
+        {
+          "name": "_params",
+          "type": {
+            "defined": {
+              "name": "SwapParameters2"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "types": [
+    {
+      "name": "BaseFeeParameters",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "data",
+            "type": {
+              "array": [
+                "u8",
+                27
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "DynamicFeeParameters",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "bin_step",
+            "type": "u16"
+          },
+          {
+            "name": "bin_step_u128",
+            "type": "u128"
+          },
+          {
+            "name": "filter_period",
+            "type": "u16"
+          },
+          {
+            "name": "decay_period",
+            "type": "u16"
+          },
+          {
+            "name": "reduction_factor",
+            "type": "u16"
+          },
+          {
+            "name": "max_volatility_accumulator",
+            "type": "u32"
+          },
+          {
+            "name": "variable_fee_control",
+            "type": "u32"
+          }
+        ]
+      }
+    },
+    {
+      "name": "InitializeCustomizablePoolParameters",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "pool_fees",
+            "docs": [
+              "pool fees"
+            ],
+            "type": {
+              "defined": {
+                "name": "PoolFeeParameters"
+              }
+            }
+          },
+          {
+            "name": "sqrt_min_price",
+            "docs": [
+              "sqrt min price"
+            ],
+            "type": "u128"
+          },
+          {
+            "name": "sqrt_max_price",
+            "docs": [
+              "sqrt max price"
+            ],
+            "type": "u128"
+          },
+          {
+            "name": "has_alpha_vault",
+            "docs": [
+              "has alpha vault"
+            ],
+            "type": "bool"
+          },
+          {
+            "name": "liquidity",
+            "docs": [
+              "initialize liquidity"
+            ],
+            "type": "u128"
+          },
+          {
+            "name": "sqrt_price",
+            "docs": [
+              "The init price of the pool as a sqrt(token_b/token_a) Q64.64 value. Market cap fee scheduler minimum price will be derived from this value"
+            ],
+            "type": "u128"
+          },
+          {
+            "name": "activation_type",
+            "docs": [
+              "activation type"
+            ],
+            "type": "u8"
+          },
+          {
+            "name": "collect_fee_mode",
+            "docs": [
+              "collect fee mode"
+            ],
+            "type": "u8"
+          },
+          {
+            "name": "activation_point",
+            "docs": [
+              "activation point"
+            ],
+            "type": {
+              "option": "u64"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "PoolFeeParameters",
+      "docs": [
+        "Information regarding fee charges"
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "base_fee",
+            "docs": [
+              "Base fee"
+            ],
+            "type": {
+              "defined": {
+                "name": "BaseFeeParameters"
+              }
+            }
+          },
+          {
+            "name": "compounding_fee_bps",
+            "docs": [
+              "compounding fee bps, only have value if CollectFeeMode::Compounding"
+            ],
+            "type": "u16"
+          },
+          {
+            "name": "padding",
+            "docs": [
+              "padding for future use"
+            ],
+            "type": "u8"
+          },
+          {
+            "name": "dynamic_fee",
+            "docs": [
+              "dynamic fee"
+            ],
+            "type": {
+              "option": {
+                "defined": {
+                  "name": "DynamicFeeParameters"
+                }
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "SwapParameters2",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "amount_0",
+            "docs": [
+              "When it's exact in, partial fill, this will be amount_in. When it's exact out, this will be amount_out"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "amount_1",
+            "docs": [
+              "When it's exact in, partial fill, this will be minimum_amount_out. When it's exact out, this will be maximum_amount_in"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "swap_mode",
+            "docs": [
+              "Swap mode, refer [SwapMode]"
+            ],
+            "type": "u8"
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -19,6 +19,7 @@ import {
 import BN from "bn.js";
 import * as fs from "fs";
 import * as path from "path";
+import { loadEnvConfig } from "@next/env";
 import {
   PROGRAM_ID,
   GLOBAL_CONFIG_SEED,
@@ -34,6 +35,10 @@ import {
   getQuoteVaultPda,
   getTreasuryVaultPda,
 } from "../src/sdk/pda";
+
+// ts-mocha does not load Next.js environment files on its own. In particular,
+// Devnet tests must use the explicitly funded wallet configured by the user.
+loadEnvConfig(process.cwd());
 
 export {
   BN,
@@ -63,16 +68,26 @@ export const LOCALNET_RPC = RPC_URL;
 
 // Admin Keypair Resolution
 export function getAdminKeypair(): Keypair {
-  const localKeypairPath = path.resolve(
-    process.env.HOME || "",
-    ".config/solana/id.json"
-  );
-  if (fs.existsSync(localKeypairPath)) {
+  const localKeypairPath = path.resolve(process.env.HOME || "", ".config/solana/id.json");
+  const configuredWalletPath = process.env.DEVNET_TEST_WALLET_KEYPAIR_PATH || process.env.ANCHOR_WALLET;
+  const candidates = isDevnet
+    ? [configuredWalletPath, localKeypairPath]
+    : [process.env.ANCHOR_WALLET, localKeypairPath];
+  for (const candidate of candidates) {
+    if (!candidate || !fs.existsSync(candidate)) continue;
     try {
-      const raw = JSON.parse(fs.readFileSync(localKeypairPath, "utf-8"));
-      return Keypair.fromSecretKey(Uint8Array.from(raw));
-    } catch {}
+      const raw = JSON.parse(fs.readFileSync(candidate, "utf-8"));
+      const keypair = Keypair.fromSecretKey(Uint8Array.from(raw));
+      const expectedAddress = isDevnet ? process.env.DEVNET_TEST_WALLET_ADDRESS : undefined;
+      if (expectedAddress && keypair.publicKey.toBase58() !== expectedAddress) {
+        throw new Error("Configured Devnet test wallet keypair does not match DEVNET_TEST_WALLET_ADDRESS.");
+      }
+      return keypair;
+    } catch (error) {
+      if (error instanceof Error && error.message.includes("does not match")) throw error;
+    }
   }
+  if (isDevnet) throw new Error("Devnet tests require DEVNET_TEST_WALLET_KEYPAIR_PATH to point to the funded test wallet keypair.");
   return Keypair.generate();
 }
 
@@ -84,6 +99,7 @@ export const GRADUATION_FEE_BPS = 150; // 1.5%
 export const INITIAL_VIRTUAL_QUOTE = new BN(30_000 * 1_000_000); // 30,000 USDC
 export const INITIAL_VIRTUAL_TOKENS = new BN("1073000000000000"); // 1.073B tokens
 export const TOTAL_MEME_SUPPLY = new BN("1000000000000000"); // 1 Billion tokens
+export const SALE_SUPPLY = new BN("800000000000000"); // 800M tokens sold through the curve
 
 export const GRADUATION_THRESHOLD = new BN(
   (isDevnet ? 60 : 60_000) * 1_000_000

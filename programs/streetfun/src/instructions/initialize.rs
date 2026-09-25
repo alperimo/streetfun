@@ -125,4 +125,3 @@ pub fn handle_update_global_config(
     );
     Ok(())
 }
-

@@ -33,7 +33,7 @@ export function receiptFromRedemption(token: TokenMetadata, action: "stock" | "u
   if (!result.success || !valid(input, amount)) return null;
   return { token: identity(token), operation: "redeem", kind: demo ? "demo" : "result",
     sent: { amount: input, symbol: token.symbol },
-    received: { amount, symbol: action === "stock" ? `${token.targetEquity.symbol} shares` : "USDC" },
+    received: { amount, symbol: action === "stock" ? `${token.targetEquity.symbol} tokens` : "USDC" },
     timestamp: new Date().toISOString(), signature: result.txSignature };
 }
 

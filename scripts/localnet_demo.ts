@@ -140,7 +140,7 @@ async function runDemo() {
       name: "Mars Colonization Token",
       symbol: "MARS",
       uri: "https://streetfun.xyz/metadata/mars.json",
-      meteoraDbcPool: null,
+      meteoraDammV2Pool: null,
     })
     .accounts({
       creator: payer.publicKey,

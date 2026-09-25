@@ -19,13 +19,13 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   metadataBase: new URL("https://streetfun.xyz"),
   title: "Streetfun · Memecoins With A Wall Street Floor",
-  description: "Trade viral momentum. Graduate to real tokenized stocks.",
+  description: "Trade viral momentum. Graduate to collateral-backed Solana tokens.",
   icons: {
     icon: "/generated/streetfun-logo.webp",
   },
   openGraph: {
     title: "Streetfun · Memecoins With A Wall Street Floor",
-    description: "Trade viral momentum. Graduate to real tokenized stocks.",
+    description: "Trade viral momentum. Graduate to collateral-backed Solana tokens.",
     url: "https://streetfun.xyz",
     siteName: "Streetfun",
     images: [
@@ -42,7 +42,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "Streetfun · Memecoins With A Wall Street Floor",
-    description: "Trade viral momentum. Graduate to real tokenized stocks.",
+    description: "Trade viral momentum. Graduate to collateral-backed Solana tokens.",
     site: "@streetfunxyz",
     creator: "@streetfunxyz",
     images: ["/og-image.png"],

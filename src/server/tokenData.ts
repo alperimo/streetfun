@@ -1,11 +1,12 @@
 import { Connection, PublicKey } from "@solana/web3.js";
 import * as anchor from "@coral-xyz/anchor";
-import { TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID, unpackAccount, unpackMint } from "@solana/spl-token";
+import { cpAmmCoder, deriveCustomizablePoolAddress, derivePoolAuthority, getPriceFromSqrtPrice } from "@meteora-ag/cp-amm-sdk";
+import { TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID, getEpochFee, getTransferFeeConfig, unpackAccount, unpackMint } from "@solana/spl-token";
 import idl from "@/idl/streetfun.json";
 import type { TokenMetadata } from "@/lib/types";
 import { calculateBondingProgress } from "@/lib/marketFormat";
 import { createServerSupabaseClient } from "./supabase";
-import { PROGRAM_ID, USDC_MINT } from "@/sdk/constants";
+import { METEORA_DAMM_V2_PROGRAM_ID, PROGRAM_ID, USDC_MINT } from "@/sdk/constants";
 import { getGlobalConfigPda, getQuoteVaultPda, getTreasuryVaultPda } from "@/sdk/pda";
 import { TradeStoreService } from "@/services/indexer/tradeStore";
 import { assertConfiguredCluster, getServerConnection } from "./rpc";
@@ -58,12 +59,15 @@ export class SolanaTokenService {
     // Database records alone never prove that a token exists on this cluster.
     if (!curves.length) return [];
     const mints = curves.map((c: any) => c.account.memeMint.toBase58());
-    const [metadata, config, prestocksRaw, tesseraRaw, stats] = await Promise.all([
+    const [metadata, config, prestocksRaw, tesseraRaw, stats, currentEpoch] = await Promise.all([
       this.getIndexedMetadata(mints),
       (program.account as any).globalConfig.fetch(getGlobalConfigPda(PROGRAM_ID)[0]),
       getPreStocksCatalog().catch(() => []),
       getTesseraCatalog().catch(() => []),
       TradeStoreService.getInstance().getMarketStats(mints).catch(() => null),
+      this.connection.getEpochInfo
+        ? this.connection.getEpochInfo("confirmed").catch(() => null)
+        : Promise.resolve(null),
     ]);
 
     const [prestocksAvailable, tesseraAvailable] = await Promise.all([
@@ -77,22 +81,23 @@ export class SolanaTokenService {
       assets.set(a.mintAddress, a);
     }
 
-    const tokens: TokenMetadata[] = [];
+    const records: Array<{ token: TokenMetadata; poolState?: any; poolAddress?: PublicKey }> = [];
     // Bounded requests replace one RPC request per token. Re-read each curve and
     // its balances together so price, supply and collateral share the RPC context.
     for (let start = 0; start < curves.length; start += 20) {
       const group = curves.slice(start, start + 20);
       const keys = group.flatMap((c: any) => [c.publicKey, c.account.memeMint,
-        getQuoteVaultPda(c.publicKey, PROGRAM_ID)[0], getTreasuryVaultPda(c.publicKey, PROGRAM_ID)[0], c.account.targetEquityMint]);
+        getQuoteVaultPda(c.publicKey, PROGRAM_ID)[0], getTreasuryVaultPda(c.publicKey, PROGRAM_ID)[0], c.account.targetEquityMint,
+        c.account.isGraduated && !c.account.meteoraDammV2Pool.equals(PublicKey.default) ? c.account.meteoraDammV2Pool : PublicKey.default]);
       const { context, value } = await this.connection.getMultipleAccountsInfoAndContext(keys, "confirmed");
       for (let i = 0; i < group.length; i++) {
-        const [curveInfo, mintInfo, quoteInfo, treasuryInfo, equityInfo] = value.slice(i * 5, i * 5 + 5);
+        const [curveInfo, mintInfo, quoteInfo, treasuryInfo, equityInfo, dammPoolInfo] = value.slice(i * 6, i * 6 + 6);
         const entry = group[i];
         if (!curveInfo || !curveInfo.owner.equals(PROGRAM_ID) || !mintInfo || !quoteInfo) continue;
         const account: any = program.coder.accounts.decode("curveAccount", curveInfo.data);
         const mint = account.memeMint.toBase58();
         const mintState = unpackMint(account.memeMint, mintInfo, TOKEN_PROGRAM_ID);
-        const quote = unpackAccount(keys[i * 5 + 2], quoteInfo, TOKEN_PROGRAM_ID);
+        const quote = unpackAccount(keys[i * 6 + 2], quoteInfo, TOKEN_PROGRAM_ID);
         if (!quote.mint.equals(USDC_MINT) || !quote.owner.equals(entry.publicKey) || mintState.decimals !== 6) continue;
         const asset = assets.get(account.targetEquityMint.toBase58());
         const indexed = metadata.get(mint);
@@ -105,9 +110,20 @@ export class SolanaTokenService {
 
         let equityBalance = 0;
         let equityDecimals: number | undefined;
+        let equityTransferFee: TokenMetadata["targetEquity"]["transferFee"] | undefined;
         if (equityInfo && treasuryInfo && (equityInfo.owner.equals(TOKEN_PROGRAM_ID) || equityInfo.owner.equals(TOKEN_2022_PROGRAM_ID))) {
           const equityMint = unpackMint(account.targetEquityMint, equityInfo, equityInfo.owner);
-          const treasury = unpackAccount(keys[i * 5 + 3], treasuryInfo, equityInfo.owner);
+          const transferFeeConfig = getTransferFeeConfig(equityMint);
+          if (!transferFeeConfig) {
+            equityTransferFee = null;
+          } else if (currentEpoch) {
+            const activeFee = getEpochFee(transferFeeConfig, BigInt(currentEpoch.epoch));
+            equityTransferFee = {
+              basisPoints: activeFee.transferFeeBasisPoints,
+              maximumFeeRaw: activeFee.maximumFee.toString(),
+            };
+          }
+          const treasury = unpackAccount(keys[i * 6 + 3], treasuryInfo, equityInfo.owner);
           if (treasury.mint.equals(account.targetEquityMint) && treasury.owner.equals(entry.publicKey)) {
             equityDecimals = equityMint.decimals;
             // Only accounted collateral is redeemable; donations must not inflate NAV.
@@ -118,16 +134,32 @@ export class SolanaTokenService {
         const hasProviderMark = Boolean(asset && !asset.testCollateral && asset.currentStockPriceUsd > 0);
         const equityValue = hasProviderMark ? equityBalance * asset.currentStockPriceUsd : 0;
 
-        const price = !isGraduated && virtualTokens > 0 ? virtualQuote / virtualTokens : 0;
+        const curvePrice = !isGraduated && virtualTokens > 0 ? virtualQuote / virtualTokens : 0;
         // A collateral NAV is not a traded market price or market capitalization.
-        const marketCap = price > 0 ? price * supply : 0;
 
-        tokens.push({
+        let poolState: any;
+        const poolAddress = isGraduated && !account.meteoraDammV2Pool.equals(PublicKey.default)
+          ? account.meteoraDammV2Pool
+          : undefined;
+        if (poolAddress && dammPoolInfo?.owner.equals(METEORA_DAMM_V2_PROGRAM_ID)) {
+          try {
+            const decoded = cpAmmCoder.accounts.decode("pool", dammPoolInfo.data);
+            const expectedAddress = deriveCustomizablePoolAddress(USDC_MINT, account.memeMint);
+            const validPair =
+              (decoded.tokenAMint.equals(USDC_MINT) && decoded.tokenBMint.equals(account.memeMint)) ||
+              (decoded.tokenBMint.equals(USDC_MINT) && decoded.tokenAMint.equals(account.memeMint));
+            if (poolAddress.equals(expectedAddress) && validPair) poolState = decoded;
+          } catch {
+            // Invalid or incompatible DAMM account data never becomes a market-price source.
+          }
+        }
+
+        records.push({ token: {
           mint, name: indexed?.name || `StreetFun ${mint.slice(0, 4)}`, symbol: indexed?.symbol || mint.slice(0, 5),
           description: indexed?.description || "On-chain StreetFun market.",
           avatarUrl: indexed?.avatar_url || "/generated/streetfun-logo.png", creator: account.creator.toBase58(),
           createdAt: indexed?.created_at || "", totalSupply: supply,
-          priceUsd: price, marketCapUsd: marketCap, priceChange24h: 0, priceChange24hAvailable: false,
+          priceUsd: curvePrice, marketCapUsd: curvePrice > 0 ? curvePrice * supply : 0, priceChange24h: 0, priceChange24hAvailable: false,
           volume24hUsd: stats?.[mint]?.volume24hUsd || 0, volume24hAvailable: stats !== null,
           targetEquity: {
             symbol: asset?.symbol || indexed?.target_equity_symbol || "UNVERIFIED",
@@ -143,6 +175,7 @@ export class SolanaTokenService {
             verifiedTessera: asset?.provider !== "prestocks" && !!asset && !asset.testCollateral,
             verifiedPreStocks: asset?.provider === "prestocks" && !asset.testCollateral,
             isTestCollateral: Boolean(asset?.testCollateral),
+            transferFee: equityTransferFee,
           },
           bondingCurve: {
             realQuoteReservesUsd: reserves, graduationThresholdUsd: threshold,
@@ -153,18 +186,63 @@ export class SolanaTokenService {
             // Database metadata is not proof of a funded Meteora pool.
             meteoraPoolAddress: undefined,
             dynamicFeeBps: Number(config.protocolFeeBps),
-            equityPurchaseBudgetUsd: Math.max(reserves, threshold) / 2,
-            ammLiquidityBudgetUsd: Math.max(reserves, threshold) / 2,
+            // This is the live quote already in the curve, not the threshold target.
+            equityPurchaseBudgetUsd: reserves / 2,
+            ammLiquidityBudgetUsd: reserves / 2,
           },
           treasury: { totalEquityLocked: equityBalance, totalEquityValueUsd: equityValue,
-            vaultPda: keys[i * 5 + 3].toBase58(), proofOfReserveVerified: false,
+            vaultPda: keys[i * 6 + 3].toBase58(), proofOfReserveVerified: false,
             valuationAvailable: hasProviderMark || equityBalance === 0,
             valuationSource: hasProviderMark ? `${asset.issuer} mark price` : undefined },
           dataSource: "onchain", lastUpdatedAt: new Date().toISOString(), observedSlot: context.slot,
-        });
+        }, poolState, poolAddress });
       }
     }
-    return tokens.sort((a, b) => b.bondingCurve.realQuoteReservesUsd - a.bondingCurve.realQuoteReservesUsd);
+
+    const poolRecords = records.filter((record) => record.poolState && record.poolAddress);
+    const vaultKeys = [...new Map(poolRecords.flatMap(({ poolState }) => [poolState.tokenAVault, poolState.tokenBVault])
+      .map((key: PublicKey) => [key.toBase58(), key])).values()];
+    const vaultInfos = new Map<string, import("@solana/web3.js").AccountInfo<Buffer> | null>();
+    for (let start = 0; start < vaultKeys.length; start += 100) {
+      const chunk = vaultKeys.slice(start, start + 100);
+      const infos = await this.connection.getMultipleAccountsInfo(chunk, "confirmed");
+      infos.forEach((info, index) => vaultInfos.set(chunk[index].toBase58(), info));
+    }
+    const poolAuthority = derivePoolAuthority();
+    for (const { token, poolState, poolAddress } of poolRecords) {
+      try {
+        const tokenAMint = poolState.tokenAMint as PublicKey;
+        const tokenBMint = poolState.tokenBMint as PublicKey;
+        const tokenAVault = poolState.tokenAVault as PublicKey;
+        const tokenBVault = poolState.tokenBVault as PublicKey;
+        const vaultAInfo = vaultInfos.get(tokenAVault.toBase58());
+        const vaultBInfo = vaultInfos.get(tokenBVault.toBase58());
+        if (!vaultAInfo || !vaultBInfo ||
+            (!vaultAInfo.owner.equals(TOKEN_PROGRAM_ID) && !vaultAInfo.owner.equals(TOKEN_2022_PROGRAM_ID)) ||
+            (!vaultBInfo.owner.equals(TOKEN_PROGRAM_ID) && !vaultBInfo.owner.equals(TOKEN_2022_PROGRAM_ID))) continue;
+        const reserveA = unpackAccount(tokenAVault, vaultAInfo, vaultAInfo.owner);
+        const reserveB = unpackAccount(tokenBVault, vaultBInfo, vaultBInfo.owner);
+        if (!reserveA.owner.equals(poolAuthority) || !reserveB.owner.equals(poolAuthority) ||
+            !reserveA.mint.equals(tokenAMint) || !reserveB.mint.equals(tokenBMint) ||
+            reserveA.amount === 0n || reserveB.amount === 0n) continue;
+        const quoteIsA = tokenAMint.equals(USDC_MINT);
+        const quoteIsB = tokenBMint.equals(USDC_MINT);
+        if (!quoteIsA && !quoteIsB) continue;
+        const memeIsA = tokenAMint.equals(new PublicKey(token.mint));
+        const memeIsB = tokenBMint.equals(new PublicKey(token.mint));
+        if (!memeIsA && !memeIsB) continue;
+        // StreetFun quote and meme mints both use six decimals.
+        const tokenBPerTokenA = getPriceFromSqrtPrice(poolState.sqrtPrice, 6, 6).toNumber();
+        const marketPrice = memeIsA ? tokenBPerTokenA : 1 / tokenBPerTokenA;
+        if (!Number.isFinite(marketPrice) || marketPrice <= 0) continue;
+        token.priceUsd = marketPrice;
+        token.marketCapUsd = marketPrice * (token.totalSupply || 0);
+        token.bondingCurve.meteoraPoolAddress = poolAddress!.toBase58();
+      } catch {
+        // Do not expose a graduated price until pool ownership and vaults are verified.
+      }
+    }
+    return records.map((record) => record.token).sort((a, b) => b.bondingCurve.realQuoteReservesUsd - a.bondingCurve.realQuoteReservesUsd);
   }
 
   async getToken(mint: string): Promise<TokenMetadata | null> {

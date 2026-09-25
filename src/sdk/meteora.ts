@@ -2,14 +2,9 @@ import { Connection, PublicKey } from "@solana/web3.js";
 import {
   DynamicBondingCurveClient,
   DYNAMIC_BONDING_CURVE_PROGRAM_ID,
-  MigrationOption,
 } from "@meteora-ag/dynamic-bonding-curve-sdk";
-import DLMM from "@meteora-ag/dlmm";
-import {
-  USDC_MINT,
-  EQUITY_SPOT_BUY_RATIO,
-  AMM_MIGRATION_RATIO,
-} from "./constants";
+import { CpAmm, type PoolState } from "@meteora-ag/cp-amm-sdk";
+import { USDC_MINT } from "./constants";
 
 export interface DbcPoolStatus {
   poolAddress: string;
@@ -19,35 +14,14 @@ export interface DbcPoolStatus {
   graduationThresholdUsdc: number;
   progressPct: number;
   isGraduated: boolean;
-  equityPurchaseBudgetUsdc: number;
-  ammLiquidityBudgetUsdc: number;
 }
 
-/**
- * Creates or retrieves a singleton Meteora Dynamic Bonding Curve Client
- */
+/** Creates a read-only Meteora DBC client for inspecting external DBC pools. */
 export function getMeteoraDbcClient(connection: Connection): DynamicBondingCurveClient {
   return DynamicBondingCurveClient.create(connection);
 }
 
-/**
- * Builds the curve configuration parameters for a StreetFun token launch on Meteora DBC.
- * Targets a 60,000 USDC migration threshold to DAMM V2 / DLMM.
- */
-export function buildStreetFunDbcCurveConfig(graduationThresholdUsdc: number) {
-  return {
-    quoteMint: USDC_MINT,
-    migrationOption: MigrationOption.MET_DAMM_V2,
-    migrationQuoteThreshold: graduationThresholdUsdc,
-    targetPreIpoRatio: EQUITY_SPOT_BUY_RATIO,
-    targetAmmRatio: AMM_MIGRATION_RATIO,
-    programId: DYNAMIC_BONDING_CURVE_PROGRAM_ID,
-  };
-}
-
-/**
- * Queries the live state of a Meteora DBC pool
- */
+/** Queries a real Meteora DBC pool; StreetFun launches currently use the native StreetFun curve. */
 export async function fetchDbcPoolStatus(
   connection: Connection,
   poolAddress: PublicKey
@@ -64,22 +38,20 @@ export async function fetchDbcPoolStatus(
     realQuoteReservesUsdc, graduationThresholdUsdc,
     progressPct: graduationThresholdUsdc > 0 ? Math.min(100, realQuoteReservesUsdc / graduationThresholdUsdc * 100) : 0,
     isGraduated: Boolean(pool.poolState.isMigrated),
-    equityPurchaseBudgetUsdc: realQuoteReservesUsdc * EQUITY_SPOT_BUY_RATIO,
-    ammLiquidityBudgetUsdc: realQuoteReservesUsdc * AMM_MIGRATION_RATIO,
   };
 }
 
 /**
- * Loads a graduated Meteora DLMM pool instance for post-graduation liquidity
+ * Loads a graduated Meteora DAMM v2 pool for post-graduation liquidity
  */
-export async function getMeteoraDlmmPool(
+export async function getMeteoraDammV2Pool(
   connection: Connection,
-  dlmmPoolAddress: PublicKey
-): Promise<DLMM | null> {
+  dammV2PoolAddress: PublicKey
+): Promise<PoolState | null> {
   try {
-    return await DLMM.create(connection, dlmmPoolAddress);
+    return await new CpAmm(connection).fetchPoolState(dammV2PoolAddress);
   } catch (err) {
-    console.warn("Could not load DLMM pool instance:", err);
+    console.warn("Could not load DAMM v2 pool state:", err);
     return null;
   }
 }

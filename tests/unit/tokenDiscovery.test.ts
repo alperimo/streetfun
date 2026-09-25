@@ -16,7 +16,7 @@ describe("Live token discovery", () => {
   const fixture = () => {
     const curves = [0, 1].map(() => ({ publicKey: Keypair.generate().publicKey, account: {
       memeMint: Keypair.generate().publicKey, targetEquityMint: Keypair.generate().publicKey,
-      creator: Keypair.generate().publicKey, meteoraDbcPool: PublicKey.default,
+      creator: Keypair.generate().publicKey, meteoraDammV2Pool: PublicKey.default,
       virtualQuoteReserves: 30_000_000_000n, virtualTokenReserves: 1_000_000_000_000_000n,
       realQuoteReserves: 0n, realTokenReserves: 800_000_000_000_000n,
       totalMemeSupply: 1_000_000_000_000_000n, totalEquityLocked: 0n, isGraduated: false,

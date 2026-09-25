@@ -1,8 +1,7 @@
 use crate::errors::StreetfunError;
 use crate::math::calculate_sell_quote_out;
 use crate::state::{
-    CurveAccount, GlobalConfig, CURVE_SEED, GLOBAL_CONFIG_SEED, QUOTE_VAULT_SEED,
-    TOKEN_VAULT_SEED,
+    CurveAccount, GlobalConfig, CURVE_SEED, GLOBAL_CONFIG_SEED, QUOTE_VAULT_SEED, TOKEN_VAULT_SEED,
 };
 use anchor_lang::prelude::*;
 use anchor_spl::token::{self, Mint, Token, TokenAccount, Transfer};
@@ -107,11 +106,7 @@ pub fn handle_sell_curve(ctx: Context<SellCurve>, params: SellCurveParams) -> Re
     )?;
 
     let meme_mint_key = ctx.accounts.meme_mint.key();
-    let curve_seeds: &[&[u8]] = &[
-        CURVE_SEED,
-        meme_mint_key.as_ref(),
-        &[curve.curve_bump],
-    ];
+    let curve_seeds: &[&[u8]] = &[CURVE_SEED, meme_mint_key.as_ref(), &[curve.curve_bump]];
     let signer_seeds = &[curve_seeds];
 
     // 2. Transfer net quote from quote vault to seller

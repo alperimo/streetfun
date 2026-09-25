@@ -1,11 +1,11 @@
 # StreetFun
 
-StreetFun is an equity-backed token launchpad on Solana where every memecoin is backed by verified tokenized equity and pre-IPO assets (such as SpaceX, OpenAI, Anthropic, Anduril, Figure AI, Kalshi, and Polymarket).
+StreetFun is a Solana token launchpad with an on-chain virtual-reserve bonding curve and third-party collateral tokens. Tessera T-Tokens are loan participation rights; they are not shares or ownership in the referenced company.
 
 Upon reaching graduation, the protocol executes an automated dual-allocation:
-1. **50% of USDC Reserves** purchases the underlying tokenized equity and locks it into an immutable Anchor PDA Treasury Vault.
-2. **50% of USDC Reserves plus remaining token supply** seeds an automated market maker pool on Meteora (DAMM v2 / DLMM), establishing deep secondary market liquidity.
-3. **Dual Floor**: Holders can burn their meme tokens at any time post-graduation to redeem their exact pro-rata share of real tokenized equities directly to their wallet, or swap them on Meteora.
+1. **Half of quote reserves** buys the selected collateral token through a live Meteora DAMM v2 market and locks the received tokens in the curve's PDA vault.
+2. **The other half plus remaining meme supply** seeds a new Meteora DAMM v2 pool for secondary-market liquidity.
+3. After graduation, holders can burn meme tokens to redeem their pro-rata portion of the vault-held collateral token, subject to Token-2022 transfer fees and on-chain balances.
 
 ---
 
@@ -16,16 +16,16 @@ Unlike traditional bonding curve platforms that operate as extractive zero-sum g
 1. **Collateralized Equity Backing ("Backed By")**:
    Each token is bound to a verified backing asset sourced from institutional on-chain providers:
    - **PreStocks**: 1:1 SPV-backed pre-IPO equities with audited mark pricing.
-   - **Tessera**: Tokenized private market debt and equity participation instruments.
+   - **Tessera**: T-Tokens that represent loan participation rights, not direct equity or company shares.
 
-2. **Deterministic Bonding Curve**:
-   Trades execute along a constant-product curve quoted in USDC, preventing quote asset volatility. Real-time progress indicators track quote accumulation toward graduation.
+2. **StreetFun Bonding Curve**:
+   Trades execute along a constant-product virtual-reserve curve quoted in USDC. Real-time progress indicators track quote accumulation toward graduation. This is StreetFun's curve; launches do not currently use Meteora DBC.
 
 3. **Automated Meteora Liquidity Migration**:
    On graduation, trading on the curve locks permanently. The contract allocates 50% of accumulated funds to acquire and vault the target equity, while routing the remaining 50% USDC and remaining meme tokens to initialize a Meteora liquidity pool.
 
 4. **On-Chain Burn & Redeem Module**:
-   A post-graduation redemption mechanism allowing holders to burn meme tokens for their pro-rata share of real tokenized stock held in the PDA vault, establishing a mathematical arbitrage floor.
+   A post-graduation redemption mechanism allowing holders to burn meme tokens for their pro-rata share of collateral tokens held in the PDA vault. This formula does not guarantee a market price or issuer redemption.
 
 5. **Integrated Platform Suites**:
    - **Explore**: Discover live curves, filter by backed equity provider, and track market momentum.
@@ -60,7 +60,7 @@ Where $\Delta x_{\text{net}} = \Delta x_{\text{gross}} - \text{Fee}$.
 
 Post-graduation, any holder burning $M$ meme tokens is entitled to:
 
-$$\text{Shares} = \frac{M}{\text{Total Meme Supply}} \times \text{Total Equity Locked}$$
+$$\text{Collateral units} = \frac{M}{\text{Outstanding Meme Supply}} \times \text{Collateral units held in the vault}$$
 
 All mathematical operations use checked 128-bit unsigned integer arithmetic to prevent overflow and round in favor of the vault.
 
@@ -119,8 +119,8 @@ streetfun/
 │   ├── 01_initialize.test.ts       # Protocol init & parameter tests
 │   ├── 02_launch.test.ts           # Token launch & PDA derivation tests
 │   ├── 03_bonding_trade.test.ts    # Buy/sell curve & price discovery tests
-│   ├── 04_graduation.test.ts       # 60k threshold trigger & 50/50 fund split tests
-│   └── 05_burn_redeem.test.ts      # Pro-rata stock redemption & burn tests
+│   ├── 05_burn_redeem.test.ts      # Pre-graduation redemption safety tests
+│   └── 06_e2e_lifecycle.test.ts    # DAMM v2 settlement and redemption with test collateral
 └── scripts/
     ├── init_protocol.ts            # Protocol initialization script
     ├── localnet_demo.ts            # End-to-end localnet live lifecycle runner
@@ -138,8 +138,8 @@ streetfun/
 | `launch_stonk` | Creator, Curve PDA, Token Vault, Quote Vault, Treasury Vault | Mints 1B meme supply to vault, sets target equity mint |
 | `buy_curve` | Buyer, Curve PDA, Token Vault, Quote Vault, Fee Recipient | Swaps USDC for meme tokens along the bonding curve |
 | `sell_curve` | Seller, Curve PDA, Token Vault, Quote Vault, Fee Recipient | Swaps meme tokens back to USDC prior to graduation |
-| `graduate_and_execute_stock` | Caller, Curve PDA, Treasury Vault, Equity Source, AMM Dest | Allocates 50% USDC to stock purchase; allocates 50% to AMM |
-| `burn_and_redeem` | Redeemer, Meme Mint, Treasury Vault, Equity Mint | Burns meme tokens; transfers pro-rata stock shares |
+| `graduate_and_execute_stock` | Caller, Curve PDA, Treasury Vault, DAMM v2 markets and pool accounts | Buys collateral with half the quote reserves; seeds the other half plus remaining meme tokens into DAMM v2 |
+| `burn_and_redeem` | Redeemer, Meme Mint, Treasury Vault, Collateral Mint | Burns meme tokens and transfers the pro-rata collateral-token amount |
 
 ---
 

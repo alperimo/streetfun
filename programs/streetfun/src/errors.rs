@@ -50,6 +50,12 @@ pub enum StreetfunError {
     #[msg("Verified asset purchase and liquidity settlement are unavailable.")]
     SettlementUnavailable,
 
+    #[msg("The DAMM v2 pool, token pair, or pool accounts do not match the requested settlement.")]
+    InvalidDammV2Pool,
+
+    #[msg("Settlement token balances do not match the required 50/50 allocation.")]
+    SettlementAmountsMismatch,
+
     #[msg("Invalid token program provided for target equity mint.")]
     InvalidTokenProgram,
 

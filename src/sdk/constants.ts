@@ -4,8 +4,10 @@ export const PROGRAM_ID = new PublicKey(
   process.env.NEXT_PUBLIC_PROGRAM_ID || "6ZiovCkRxRJgUaCS9uftFk3eVnGDsbnDXgUV1XHybH52"
 );
 
-// Meteora Dynamic Bonding Curve (DBC) & DLMM Program IDs
+// Meteora Dynamic Bonding Curve and DAMM v2 Program IDs.
 export const METEORA_DBC_PROGRAM_ID = new PublicKey("dbcij3LWUppWqq96dh6gJWwBifmcGfLSB5D4DuSMaqN");
+// DAMM v2 publishes the same program address for Devnet and mainnet.
+export const METEORA_DAMM_V2_PROGRAM_ID = new PublicKey("cpamdpZCGKUy5JxQXB4dcpGPiikHawvSWAd6mEn1sGG");
 export const USDC_MINT = new PublicKey(
   process.env.NEXT_PUBLIC_USDC_MINT || "DuQ1T5B6tmf5ZfSNpPomVcDntLEzR1mkoB81yHP5rGHG"
 );
@@ -17,9 +19,7 @@ export const QUOTE_VAULT_SEED = Buffer.from("quote-vault");
 export const TREASURY_VAULT_SEED = Buffer.from("treasury-vault");
 
 export const TOTAL_MEME_SUPPLY = 1_000_000_000n * 1_000_000n; // 1 Billion tokens (6 decimals)
-export const SALE_SUPPLY = 800_000_000n * 1_000_000n; // 800M for Meteora DBC curve
-export const EQUITY_SPOT_BUY_RATIO = 0.5; // 50% (30 USDC) to acquire Tessera Pre-IPO token ($TOPAI)
-export const AMM_MIGRATION_RATIO = 0.5; // 50% (30 USDC) + leftover meme supply to Meteora DLMM pool
+export const SALE_SUPPLY = 800_000_000n * 1_000_000n; // 800M for the StreetFun bonding curve
 
 export interface TesseraPreIpoAsset {
   symbol: string;

@@ -3,11 +3,15 @@ use crate::math::calculate_pro_rata_equity;
 use crate::state::{CurveAccount, CURVE_SEED, TREASURY_VAULT_SEED};
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Burn, Mint, Token, TokenAccount};
-use anchor_spl::token_interface::{self, Mint as InterfaceMint, TokenAccount as InterfaceTokenAccount, TokenInterface, TransferChecked};
+use anchor_spl::token_interface::{
+    self, Mint as InterfaceMint, TokenAccount as InterfaceTokenAccount, TokenInterface,
+    TransferChecked,
+};
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy)]
 pub struct BurnAndRedeemParams {
     pub meme_tokens_to_burn: u64,
+    /// Minimum spendable equity tokens the redeemer must receive after any Token-2022 fee.
     pub min_equity_tokens_out: u64,
 }
 
@@ -80,9 +84,11 @@ pub fn handle_burn_and_redeem<'a, 'b, 'c, 'info>(
         return Err(StreetfunError::InsufficientLiquidity.into());
     }
 
-    if entitled_shares < params.min_equity_tokens_out {
-        return Err(StreetfunError::SlippageExceeded.into());
-    }
+    require!(
+        entitled_shares <= ctx.accounts.treasury_vault.amount,
+        StreetfunError::InsufficientLiquidity
+    );
+    let redeemer_equity_before = ctx.accounts.redeemer_equity_account.amount;
 
     // 1. Burn user's meme tokens permanently
     anchor_spl::token::burn(
@@ -99,11 +105,7 @@ pub fn handle_burn_and_redeem<'a, 'b, 'c, 'info>(
 
     // 2. Transfer pro-rata tokenized equity from Treasury Vault to redeemer
     let meme_mint_key = ctx.accounts.meme_mint.key();
-    let curve_seeds: &[&[u8]] = &[
-        CURVE_SEED,
-        meme_mint_key.as_ref(),
-        &[curve.curve_bump],
-    ];
+    let curve_seeds: &[&[u8]] = &[CURVE_SEED, meme_mint_key.as_ref(), &[curve.curve_bump]];
     let signer_seeds = &[curve_seeds];
 
     token_interface::transfer_checked(
@@ -120,9 +122,23 @@ pub fn handle_burn_and_redeem<'a, 'b, 'c, 'info>(
         entitled_shares,
         ctx.accounts.target_equity_mint.decimals,
     )?;
+    ctx.accounts.redeemer_equity_account.reload()?;
+    let equity_received = ctx
+        .accounts
+        .redeemer_equity_account
+        .amount
+        .checked_sub(redeemer_equity_before)
+        .ok_or(StreetfunError::SettlementAmountsMismatch)?;
+    require!(
+        equity_received >= params.min_equity_tokens_out,
+        StreetfunError::SlippageExceeded
+    );
 
     // 3. Update curve supply and remaining locked equity
-    curve.total_meme_supply = ctx.accounts.meme_mint.supply
+    curve.total_meme_supply = ctx
+        .accounts
+        .meme_mint
+        .supply
         .checked_sub(params.meme_tokens_to_burn)
         .ok_or(StreetfunError::MathOverflow)?;
     curve.total_equity_locked = curve
@@ -133,7 +149,7 @@ pub fn handle_burn_and_redeem<'a, 'b, 'c, 'info>(
     msg!(
         "Burn and redeem completed. Burned: {}, Redeemed Shares: {}, Remaining Locked: {}",
         params.meme_tokens_to_burn,
-        entitled_shares,
+        equity_received,
         curve.total_equity_locked
     );
 

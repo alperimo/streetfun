@@ -9,6 +9,10 @@ use instructions::*;
 
 declare_id!("6ZiovCkRxRJgUaCS9uftFk3eVnGDsbnDXgUV1XHybH52");
 
+// Generated CPI client from Meteora's published DAMM v2 IDL in
+// programs/streetfun/idls/cp_amm.json.
+declare_program!(cp_amm);
+
 #[program]
 pub mod streetfun {
     use super::*;
@@ -27,24 +31,15 @@ pub mod streetfun {
         instructions::initialize::handle_update_global_config(ctx, params)
     }
 
-    pub fn launch_stonk(
-        ctx: Context<LaunchStonk>,
-        params: LaunchStonkParams,
-    ) -> Result<()> {
+    pub fn launch_stonk(ctx: Context<LaunchStonk>, params: LaunchStonkParams) -> Result<()> {
         instructions::launch::handle_launch_stonk(ctx, params)
     }
 
-    pub fn buy_curve(
-        ctx: Context<BuyCurve>,
-        params: BuyCurveParams,
-    ) -> Result<()> {
+    pub fn buy_curve(ctx: Context<BuyCurve>, params: BuyCurveParams) -> Result<()> {
         instructions::buy::handle_buy_curve(ctx, params)
     }
 
-    pub fn sell_curve(
-        ctx: Context<SellCurve>,
-        params: SellCurveParams,
-    ) -> Result<()> {
+    pub fn sell_curve(ctx: Context<SellCurve>, params: SellCurveParams) -> Result<()> {
         instructions::sell::handle_sell_curve(ctx, params)
     }
 
@@ -91,7 +86,9 @@ pub struct GraduatedEvent {
     pub target_equity_mint: Pubkey,
     pub quote_for_equity: u64,
     pub equity_locked: u64,
-    pub quote_for_amm: u64,
+    pub quote_for_liquidity: u64,
+    pub meme_tokens_deposited: u64,
+    pub meteora_damm_v2_pool: Pubkey,
     pub timestamp: i64,
 }
 

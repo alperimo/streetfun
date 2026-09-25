@@ -1,8 +1,7 @@
 use crate::errors::StreetfunError;
 use crate::math::calculate_buy_tokens_out;
 use crate::state::{
-    CurveAccount, GlobalConfig, CURVE_SEED, GLOBAL_CONFIG_SEED, QUOTE_VAULT_SEED,
-    TOKEN_VAULT_SEED,
+    CurveAccount, GlobalConfig, CURVE_SEED, GLOBAL_CONFIG_SEED, QUOTE_VAULT_SEED, TOKEN_VAULT_SEED,
 };
 use anchor_lang::prelude::*;
 use anchor_spl::token::{self, Mint, Token, TokenAccount, Transfer};
@@ -81,7 +80,10 @@ pub fn handle_buy_curve(ctx: Context<BuyCurve>, params: BuyCurveParams) -> Resul
         return Err(StreetfunError::CurveAlreadyGraduated.into());
     }
 
-    require!(curve.real_quote_reserves < ctx.accounts.global_config.graduation_threshold, StreetfunError::GraduationThresholdReached);
+    require!(
+        curve.real_quote_reserves < ctx.accounts.global_config.graduation_threshold,
+        StreetfunError::GraduationThresholdReached
+    );
 
     let result = calculate_buy_tokens_out(
         params.quote_amount_in,
@@ -125,11 +127,7 @@ pub fn handle_buy_curve(ctx: Context<BuyCurve>, params: BuyCurveParams) -> Resul
 
     // 3. Transfer meme tokens from token vault to buyer
     let meme_mint_key = ctx.accounts.meme_mint.key();
-    let curve_seeds: &[&[u8]] = &[
-        CURVE_SEED,
-        meme_mint_key.as_ref(),
-        &[curve.curve_bump],
-    ];
+    let curve_seeds: &[&[u8]] = &[CURVE_SEED, meme_mint_key.as_ref(), &[curve.curve_bump]];
     let signer_seeds = &[curve_seeds];
 
     token::transfer(

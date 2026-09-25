@@ -5,26 +5,53 @@ import bs58 from "bs58";
 import idl from "../../src/idl/streetfun.json";
 import { PROGRAM_ID } from "../../src/sdk/constants";
 import { decodeStreetfunInstructions } from "../../src/server/indexTransaction";
-import { canLaunchTesseraAsset, parseTesseraCatalog } from "../../src/server/tessera";
+import { canLaunchTesseraAsset, parseTesseraCatalog, resolveTesseraAssetsForNetwork } from "../../src/server/tessera";
 import { getServerRpcUrl } from "../../src/server/rpc";
 import { alphaClaimMessage, validAlphaClaim } from "../../src/lib/alphaClaim";
 import { POST as trade } from "../../src/app/api/trade/route";
 import { POST as graduate } from "../../src/app/api/graduate/route";
 import { POST as redeem } from "../../src/app/api/redeem/route";
+import { netAfterTransferFee } from "../../src/sdk/transferFee";
 
 describe("Backend audit regressions", () => {
-  it("rejects public server-wallet spending and incomplete graduation", async () => {
-    expect((await trade()).status).to.equal(410); expect((await redeem()).status).to.equal(410); expect((await graduate()).status).to.equal(503);
+  it("keeps trading and redemption off public server signers and validates graduation plans", async () => {
+    const invalidGraduation = await graduate(new Request("http://localhost/api/graduate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({}),
+    }));
+    expect((await trade()).status).to.equal(410);
+    expect((await redeem()).status).to.equal(410);
+    expect(invalidGraduation.status).to.equal(400);
   });
   it("requires real Tessera mint and finite price data", () => {
     expect(() => parseTesseraCatalog([{ symbol: "OpenAI", name: "OpenAI", mint: "placeholder", markPrice: 185 }])).to.throw();
     expect(() => parseTesseraCatalog([{ symbol: "OpenAI", name: "OpenAI", mint: Keypair.generate().publicKey.toBase58(), markPrice: NaN }])).to.throw();
   });
-  it("allows only explicitly mapped Devnet test collateral to launch", () => {
-    expect(canLaunchTesseraAsset(true, true, true)).to.equal(true);
-    expect(canLaunchTesseraAsset(false, true, false)).to.equal(false);
+  it("prices a Token-2022 redemption by spendable receipt after the current transfer fee", () => {
+    expect(netAfterTransferFee(50_000n, 20, 1_000n)).to.equal(49_900n);
+    expect(netAfterTransferFee(1n, 1, 1_000n)).to.equal(0n);
+    expect(netAfterTransferFee(5_000_000n, 20, 1_000n)).to.equal(4_999_000n);
+    expect(netAfterTransferFee(50_000n, 0, 0n)).to.equal(50_000n);
+  });
+  it("allows real Tessera mints on mainnet and only mapped test collateral on Devnet", () => {
+    expect(canLaunchTesseraAsset(true, true, true)).to.equal(false);
+    expect(canLaunchTesseraAsset(true, true, true, true)).to.equal(true);
+    expect(canLaunchTesseraAsset(false, true, false)).to.equal(true);
+    expect(canLaunchTesseraAsset(false, true, undefined)).to.equal(true);
+    expect(canLaunchTesseraAsset(false, true, true)).to.equal(false);
     expect(canLaunchTesseraAsset(true, true, false)).to.equal(false);
     expect(canLaunchTesseraAsset(true, false, true)).to.equal(false);
+  });
+  it("never leaks Tessera mainnet mints into the Devnet test catalog", () => {
+    const mainnetAssets = parseTesseraCatalog([{
+      symbol: "OpenAI", name: "OpenAI", mint: Keypair.generate().publicKey.toBase58(), markPrice: 185,
+    }]);
+    const devnetAssets = resolveTesseraAssetsForNetwork(true, mainnetAssets);
+    expect(devnetAssets).to.have.length(3);
+    expect(devnetAssets.every(asset => asset.testCollateral && asset.currentStockPriceUsd === 0)).to.equal(true);
+    expect(devnetAssets.map(asset => asset.mintAddress)).not.to.include(mainnetAssets[0].mintAddress);
+    expect(resolveTesseraAssetsForNetwork(false, mainnetAssets)).to.equal(mainnetAssets);
   });
   it("uses Helius on the configured cluster without a public API key", () => {
     const keys = ["SOLANA_RPC_URL", "NEXT_PUBLIC_SOLANA_RPC", "HELIUS_API_KEY", "NEXT_PUBLIC_SOLANA_NETWORK"];
@@ -44,7 +71,7 @@ describe("Backend audit regressions", () => {
   it("decodes launch instruction accounts independently of fee-payer ordering", () => {
     const coder = new Program({ ...idl, address: PROGRAM_ID.toBase58() } as any, { connection: {} } as any).coder;
     const accounts = Array.from({ length: 13 }, () => Keypair.generate().publicKey);
-    const instruction = { programId: PROGRAM_ID, accounts, data: bs58.encode(coder.instruction.encode("launchStonk", { params: { name: "Actual Name", symbol: "ACT", uri: "", meteoraDbcPool: null } })) };
+    const instruction = { programId: PROGRAM_ID, accounts, data: bs58.encode(coder.instruction.encode("launchStonk", { params: { name: "Actual Name", symbol: "ACT", uri: "", meteoraDammV2Pool: null } })) };
     const tx: any = { meta: { err: null, logMessages: [`Program ${PROGRAM_ID} invoke [1]`, "Program log: Instruction: LaunchStonk", `Program ${PROGRAM_ID} success`] }, transaction: { message: { accountKeys: [{ pubkey: PublicKey.default }], instructions: [instruction] } } };
     const [decoded] = decodeStreetfunInstructions(tx);
     expect(decoded.instruction.accounts[2].equals(accounts[2])).to.equal(true); expect(decoded.data.params.name).to.equal("Actual Name");

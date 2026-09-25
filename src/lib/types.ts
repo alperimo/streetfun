@@ -28,6 +28,8 @@ export interface TokenMetadata {
     verifiedTessera?: boolean;
     verifiedPreStocks?: boolean;
     isTestCollateral?: boolean;
+    /** Active Token-2022 transfer fee, if the mint has one; undefined means unknown. */
+    transferFee?: { basisPoints: number; maximumFeeRaw: string } | null;
     provider?: string;
     isPreIpo?: boolean;
   };

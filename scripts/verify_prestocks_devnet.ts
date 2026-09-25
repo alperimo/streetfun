@@ -58,7 +58,7 @@ async function main() {
       name: "Starlink Fleet",
       symbol: "STAR",
       uri: "https://streetfun.xyz/metadata/star.json",
-      meteoraDbcPool: null,
+      meteoraDammV2Pool: null,
     })
     .accounts({
       creator: protocolAdmin.publicKey,

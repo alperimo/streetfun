@@ -5,6 +5,7 @@ import { useWallet } from "@solana/wallet-adapter-react";
 import { ArrowRight, Check, ShieldCheck, RefreshCw } from "lucide-react";
 import { TokenMetadata } from "@/lib/types";
 import { calculateEntitledStock } from "@/sdk/math";
+import { netAfterTransferFee } from "@/sdk/transferFee";
 import { useMarket } from "@/context/MarketContext";
 
 interface BurnRedeemModuleProps {
@@ -32,10 +33,21 @@ export function BurnRedeemModule({ token }: BurnRedeemModuleProps) {
   const numMeme = Number.isFinite(parsedAmount) && parsedAmount > 0 ? parsedAmount : 0;
   const memeInLamports = BigInt(Math.floor(numMeme * 1_000_000));
 
-  const entitledStockShares =
+  const entitledGrossRaw =
     numMeme > 0 && totalMemeSupply > 0n && memeInLamports <= totalMemeSupply
-      ? Number(calculateEntitledStock(memeInLamports, totalMemeSupply, totalEquityLocked)) / equityScale
-      : 0;
+      ? calculateEntitledStock(memeInLamports, totalMemeSupply, totalEquityLocked)
+      : 0n;
+  const transferFee = token.targetEquity.transferFee;
+  const estimatedTransferFeeRaw = transferFee && entitledGrossRaw > 0n
+    ? entitledGrossRaw - netAfterTransferFee(entitledGrossRaw, transferFee.basisPoints, BigInt(transferFee.maximumFeeRaw))
+    : 0n;
+  const entitledNetRaw = transferFee ? entitledGrossRaw - estimatedTransferFeeRaw : entitledGrossRaw;
+  const entitledStockShares = Number(entitledNetRaw) / equityScale;
+  const transferFeeDisclosure = transferFee === undefined
+    ? "Current transfer fee is unavailable; the transaction enforces a minimum net receipt on-chain."
+    : transferFee === null
+      ? "No Token-2022 transfer fee is configured for this collateral."
+      : `Net estimate after the current ${(transferFee.basisPoints / 100).toFixed(2)}% transfer fee; the fee may change before signing.`;
 
   const stockPrice = token.targetEquity.stockPriceUsd;
   const entitledUsdcValue = entitledStockShares * stockPrice;
@@ -166,6 +178,7 @@ export function BurnRedeemModule({ token }: BurnRedeemModuleProps) {
             {token.treasury.proofOfReserveVerified ? "Reserve verified" : "Reserve verification unavailable"}
           </span>
         </div>
+        <p className="text-[10px] text-muted">{transferFeeDisclosure}</p>
       </div>
 
       {txSuccess && (
@@ -204,21 +217,14 @@ export function BurnRedeemModule({ token }: BurnRedeemModuleProps) {
         </button>
 
         <button
-          onClick={() => {
-            setRedeemMode("usdc");
-            handleExecuteRedeem("usdc");
-          }}
-          disabled={!numMeme || isProcessing}
+          disabled
           className="flex flex-col items-center justify-center gap-1 rounded-xl border border-emerald-500/40 bg-emerald-500/10 py-3 px-4 text-xs font-bold text-emerald-400 hover:bg-emerald-500/20 transition-colors disabled:opacity-50 shadow-sm"
         >
           <div className="flex items-center gap-1.5">
-            {isProcessing && redeemMode === "usdc" ? (
-              <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-            ) : null}
-            <span className="text-sm">{isProcessing && redeemMode === "usdc" ? "Swapping..." : "1-Click Swap to USDC"}</span>
+            <span className="text-sm">USDC conversion unavailable</span>
           </div>
           <span className="text-[10px] text-emerald-400 font-normal">
-            Instant Jupiter swap to USDC
+            No conversion is submitted; withdraw collateral tokens directly.
           </span>
         </button>
       </div>

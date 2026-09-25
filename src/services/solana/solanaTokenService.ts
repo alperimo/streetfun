@@ -70,7 +70,7 @@ export class SolanaTokenService implements ITokenService {
       name: params.name.trim(),
       symbol: params.symbol.trim().toUpperCase(),
       uri: params.avatarUrl || "",
-      meteoraDbcPool: null,
+      meteoraDammV2Pool: null,
     }).accounts({
       creator: wallet.publicKey, globalConfig, memeMint: memeMint.publicKey,
       targetEquityMint, curve, tokenVault, quoteMint: USDC_MINT,

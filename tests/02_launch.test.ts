@@ -48,7 +48,7 @@ describe("02 - StreetFun Protocol: Launch Stonk", () => {
         name: "Mars Colonization Token",
         symbol: "MARS",
         uri: "https://streetfun.xyz/metadata/mars.json",
-        meteoraDbcPool: null,
+        meteoraDammV2Pool: null,
       })
       .accounts({
         creator: creator.publicKey,
@@ -106,7 +106,7 @@ describe("02 - StreetFun Protocol: Launch Stonk", () => {
           name: "Mars Colonization Token 2",
           symbol: "MARS2",
           uri: "https://streetfun.xyz/metadata/mars2.json",
-          meteoraDbcPool: null,
+          meteoraDammV2Pool: null,
         })
         .accounts({
           creator: creator.publicKey,

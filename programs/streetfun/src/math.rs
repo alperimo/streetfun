@@ -46,7 +46,10 @@ pub fn calculate_buy_tokens_out(
         return Err(StreetfunError::ZeroAmount.into());
     }
 
-    require!(virtual_quote > 0 && virtual_tokens > 0, StreetfunError::InsufficientLiquidity);
+    require!(
+        virtual_quote > 0 && virtual_tokens > 0,
+        StreetfunError::InsufficientLiquidity
+    );
     let fee_quote = calculate_fee(quote_in, fee_bps)?;
     let net_quote = quote_in
         .checked_sub(fee_quote)
@@ -114,7 +117,10 @@ pub fn calculate_sell_quote_out(
         return Err(StreetfunError::ZeroAmount.into());
     }
 
-    require!(virtual_quote > 0 && virtual_tokens > 0, StreetfunError::InsufficientLiquidity);
+    require!(
+        virtual_quote > 0 && virtual_tokens > 0,
+        StreetfunError::InsufficientLiquidity
+    );
     let x = virtual_quote as u128;
     let y = virtual_tokens as u128;
     let dy = tokens_in as u128;
@@ -139,7 +145,10 @@ pub fn calculate_sell_quote_out(
 
     let gross_quote_out = dx as u64;
 
-    require!(gross_quote_out > 0, StreetfunError::InsufficientQuoteReserves);
+    require!(
+        gross_quote_out > 0,
+        StreetfunError::InsufficientQuoteReserves
+    );
     if gross_quote_out > real_quote {
         return Err(StreetfunError::InsufficientQuoteReserves.into());
     }
@@ -179,7 +188,10 @@ pub fn calculate_pro_rata_equity(
         return Err(StreetfunError::CalculationError.into());
     }
 
-    require!(meme_amount_burned <= total_meme_supply, StreetfunError::CalculationError);
+    require!(
+        meme_amount_burned <= total_meme_supply,
+        StreetfunError::CalculationError
+    );
     let entitled_shares = (meme_amount_burned as u128)
         .checked_mul(total_equity_locked as u128)
         .ok_or(StreetfunError::MathOverflow)?
@@ -206,7 +218,6 @@ mod tests {
         assert!(calculate_buy_tokens_out(u64::MAX, 1, 100, 100, 0).is_err());
         assert!(calculate_sell_quote_out(u64::MAX, 100, 1, 100, 0).is_err());
     }
-
 
     #[test]
     fn test_constant_product_buy() {

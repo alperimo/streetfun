@@ -14,6 +14,7 @@ import { useMarket } from "@/context/MarketContext";
 import { TradeReceipt } from "./TradeReceipt";
 import { receiptFromTrade, receiptFromRedemption, receiptPreview, type TradeReceiptData } from "./tradeReceiptModel";
 import { formatBondingProgress, formatTokenPrice, formatUsd } from "@/lib/marketFormat";
+import { graduateToken } from "@/services/solana/solanaGraduationService";
 
 function formatCollateralUnits(value: number, decimals: number): string {
   if (!Number.isFinite(value)) return "—";
@@ -27,7 +28,7 @@ interface TradeTerminalProps {
 
 export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
   const { connection } = useConnection();
-  const { connected: walletAdapterConnected, publicKey } = useWallet();
+  const { connected: walletAdapterConnected, publicKey, sendTransaction } = useWallet();
   const { isWalletConnected, executeTrade, executeRedeem, isMock, refreshTokens, setWalletDialogOpen } = useMarket();
   const connected = walletAdapterConnected || isWalletConnected;
   const [receipt, setReceipt] = useState<TradeReceiptData | null>(null);
@@ -47,11 +48,16 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
   const [quoteBalance, setQuoteBalance] = useState<number | null>(null);
   const [tokenBalance, setTokenBalance] = useState<number | null>(null);
   const [pendingSignature, setPendingSignature] = useState<string | null>(null);
+  const [pendingGraduationSignature, setPendingGraduationSignature] = useState<string | null>(null);
   const orderInFlight = useRef(false);
   const pendingKey = pendingTradeKey(publicKey?.toBase58(), token.mint);
   useEffect(() => {
     try { setPendingSignature(sessionStorage.getItem(pendingKey)); } catch {}
   }, [pendingKey]);
+  const graduationPendingKey = `streetfun:graduation:${publicKey?.toBase58()}:${token.mint}`;
+  useEffect(() => {
+    try { setPendingGraduationSignature(sessionStorage.getItem(graduationPendingKey)); } catch {}
+  }, [graduationPendingKey]);
   const savePending = (signature: string | null) => {
     setPendingSignature(signature);
     savePendingTrade(pendingKey, signature);
@@ -240,6 +246,54 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
     } catch (err: any) {
       if (err instanceof SubmittedTransactionError) savePending(err.signature);
       setTradeErrorMsg(err?.message || "Operation failed");
+    } finally {
+      orderInFlight.current = false;
+      setIsTrading(false);
+    }
+  };
+
+  const handleGraduation = async () => {
+    if (!walletAdapterConnected || !publicKey || !sendTransaction) {
+      setWalletDialogOpen(true);
+      return;
+    }
+    if (orderInFlight.current || isTrading || pendingSignature) return;
+    orderInFlight.current = true;
+    setIsTrading(true);
+    setTradeErrorMsg(null);
+    try {
+      if (pendingGraduationSignature) {
+        const statuses = await connection.getSignatureStatuses([pendingGraduationSignature], { searchTransactionHistory: true });
+        const status = statuses.value[0];
+        if (status?.err) {
+          sessionStorage.removeItem(graduationPendingKey);
+          setPendingGraduationSignature(null);
+          throw new Error("The pending graduation transaction failed on Solana. Review the settlement route and try again.");
+        }
+        if (!status || (status.confirmationStatus !== "confirmed" && status.confirmationStatus !== "finalized")) {
+          setTradeErrorMsg(`Graduation is still pending. Transaction: ${pendingGraduationSignature}`);
+          return;
+        }
+        sessionStorage.removeItem(graduationPendingKey);
+        setPendingGraduationSignature(null);
+        await refreshTokens();
+        setTradeErrorMsg(`Graduation confirmed. DAMM v2 pool: ${token.bondingCurve.meteoraPoolAddress || "refreshing"}`);
+        onTradeSuccess?.();
+        return;
+      }
+
+      const result = await graduateToken(token.mint, { publicKey, sendTransaction });
+      await refreshTokens();
+      setTradeErrorMsg(`Graduation confirmed. DAMM v2 pool ${result.poolAddress}; transaction ${result.signature}`);
+      onTradeSuccess?.();
+    } catch (error) {
+      if (error instanceof SubmittedTransactionError) {
+        setPendingGraduationSignature(error.signature);
+        try { sessionStorage.setItem(graduationPendingKey, error.signature); } catch {}
+        setTradeErrorMsg(`The settlement was submitted and is awaiting confirmation. Check its status before retrying: ${error.signature}`);
+      } else {
+        setTradeErrorMsg(error instanceof Error ? error.message : "Graduation settlement failed.");
+      }
     } finally {
       orderInFlight.current = false;
       setIsTrading(false);
@@ -462,7 +516,7 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
           </div>
           <h3 className="mt-3 text-sm font-bold text-foreground">Curve trading closed</h3>
           <p className="mt-1.5 text-xs text-muted leading-relaxed">
-            This curve is marked graduated, but no verified AMM liquidity is available.
+            This legacy curve is marked graduated, but no verified Meteora liquidity is available.
             Collateral redemption depends on the token balance held in its vault.
           </p>
           <div className="mt-4 flex flex-col sm:flex-row items-center justify-center gap-2">
@@ -476,12 +530,12 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
               Switch to collateral redemption
             </button>
             <a
-              href={token.bondingCurve.meteoraPoolAddress ? `https://app.meteora.ag/dlmm/${token.bondingCurve.meteoraPoolAddress}` : "https://docs.meteora.ag/"}
+              href={token.bondingCurve.meteoraPoolAddress ? `https://app.meteora.ag/dammv2/${token.bondingCurve.meteoraPoolAddress}` : "https://docs.meteora.ag/developer-guides/damm-v2"}
               target="_blank"
               rel="noopener noreferrer"
               className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 rounded-lg bg-card-hover border border-border px-3.5 py-2 text-xs font-semibold text-foreground hover:bg-card-hover/80 transition-colors"
             >
-              Meteora information ↗
+              Meteora pool ↗
             </a>
           </div>
         </div>
@@ -507,8 +561,21 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
             </div>
             <div className="flex items-center justify-between text-[10px] text-muted mt-1.5 font-mono">
               <span>{formatUsd(token.bondingCurve.realQuoteReservesUsd)} / {formatUsd(token.bondingCurve.graduationThresholdUsd)} USDC</span>
-              <span>Graduation settlement paused</span>
+              <span>{token.bondingCurve.progressPct >= 100 ? "Ready to move into Meteora liquidity" : "Settlement starts at the funding threshold"}</span>
             </div>
+            {!isMock && token.bondingCurve.progressPct >= 100 && (
+              <>
+                <button
+                  type="button"
+                  onClick={handleGraduation}
+                  disabled={isTrading || Boolean(pendingSignature)}
+                  className="mt-3 w-full rounded-xl bg-brand-cyan px-4 py-3 text-sm font-semibold text-background transition hover:bg-brand-cyan-hover disabled:opacity-50"
+                >
+                  {isTrading ? "Settling graduation…" : pendingGraduationSignature ? "Check graduation status" : walletAdapterConnected ? "Settle graduation" : "Connect wallet to settle"}
+                </button>
+                <p className="mt-2 text-center text-[10px] text-muted">Two wallet approvals are required: prepare settlement, then finalize it.</p>
+              </>
+            )}
           </div>
 
           {/* Input Box */}

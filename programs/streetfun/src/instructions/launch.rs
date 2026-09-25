@@ -1,22 +1,22 @@
 use crate::state::{
-    CurveAccount, GlobalConfig, CURVE_SEED, GLOBAL_CONFIG_SEED, QUOTE_VAULT_SEED,
-    TOKEN_VAULT_SEED, TREASURY_VAULT_SEED,
+    CurveAccount, GlobalConfig, CURVE_SEED, GLOBAL_CONFIG_SEED, QUOTE_VAULT_SEED, TOKEN_VAULT_SEED,
+    TREASURY_VAULT_SEED,
 };
 use anchor_lang::prelude::*;
 use anchor_spl::associated_token::AssociatedToken;
 use anchor_spl::token::spl_token::instruction::AuthorityType;
 use anchor_spl::token::{self, Mint, MintTo, SetAuthority, Token, TokenAccount};
-use anchor_spl::token_interface::{TokenInterface};
+use anchor_spl::token_interface::TokenInterface;
 
 pub const TOTAL_MEME_SUPPLY: u64 = 1_000_000_000_000_000; // 1 Billion tokens with 6 decimals
-pub const SALE_SUPPLY: u64 = 800_000_000_000_000; // 800M for bonding curve, 200M reserved for Meteora DLMM liquidity
+pub const SALE_SUPPLY: u64 = 800_000_000_000_000; // 800M for the curve, 200M reserved for Meteora DAMM v2 liquidity
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone)]
 pub struct LaunchStonkParams {
     pub name: String,
     pub symbol: String,
     pub uri: String,
-    pub meteora_dbc_pool: Option<Pubkey>,
+    pub meteora_damm_v2_pool: Option<Pubkey>,
 }
 
 #[derive(Accounts)]
@@ -92,20 +92,22 @@ pub struct LaunchStonk<'info> {
     pub equity_token_program: Interface<'info, TokenInterface>,
 }
 
-pub fn handle_launch_stonk(
-    ctx: Context<LaunchStonk>,
-    params: LaunchStonkParams,
-) -> Result<()> {
-    require!(ctx.accounts.quote_mint.decimals == 6, crate::errors::StreetfunError::CalculationError);
-    require!(params.name.len() <= 64 && params.symbol.len() <= 16 && params.uri.len() <= 256, crate::errors::StreetfunError::CalculationError);
-    require!(params.meteora_dbc_pool.is_none(), crate::errors::StreetfunError::SettlementUnavailable);
+pub fn handle_launch_stonk(ctx: Context<LaunchStonk>, params: LaunchStonkParams) -> Result<()> {
+    require!(
+        ctx.accounts.quote_mint.decimals == 6,
+        crate::errors::StreetfunError::CalculationError
+    );
+    require!(
+        params.name.len() <= 64 && params.symbol.len() <= 16 && params.uri.len() <= 256,
+        crate::errors::StreetfunError::CalculationError
+    );
+    require!(
+        params.meteora_damm_v2_pool.is_none(),
+        crate::errors::StreetfunError::SettlementUnavailable
+    );
     let curve_key = ctx.accounts.curve.key();
     let meme_mint_key = ctx.accounts.meme_mint.key();
-    let curve_seeds: &[&[u8]] = &[
-        CURVE_SEED,
-        meme_mint_key.as_ref(),
-        &[ctx.bumps.curve],
-    ];
+    let curve_seeds: &[&[u8]] = &[CURVE_SEED, meme_mint_key.as_ref(), &[ctx.bumps.curve]];
     let signer_seeds = &[curve_seeds];
 
     // Mint the fixed 1 Billion supply directly to the token vault
@@ -140,7 +142,7 @@ pub fn handle_launch_stonk(
     curve.creator = ctx.accounts.creator.key();
     curve.meme_mint = ctx.accounts.meme_mint.key();
     curve.target_equity_mint = ctx.accounts.target_equity_mint.key();
-    curve.meteora_dbc_pool = params.meteora_dbc_pool.unwrap_or(Pubkey::default());
+    curve.meteora_damm_v2_pool = params.meteora_damm_v2_pool.unwrap_or(Pubkey::default());
     curve.virtual_quote_reserves = ctx.accounts.global_config.initial_virtual_quote_reserves;
     curve.virtual_token_reserves = ctx.accounts.global_config.initial_virtual_token_reserves;
     curve.real_quote_reserves = 0;

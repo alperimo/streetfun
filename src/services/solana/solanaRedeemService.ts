@@ -1,11 +1,12 @@
 import { AnchorProvider, Program, BN } from "@coral-xyz/anchor";
 import { Connection, PublicKey, Transaction } from "@solana/web3.js";
-import { TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID, getAccount, getMint, getAssociatedTokenAddress, createAssociatedTokenAccountIdempotentInstruction, getTransferFeeConfig } from "@solana/spl-token";
+import { TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID, getEpochFee, getAccount, getMint, getAssociatedTokenAddress, createAssociatedTokenAccountIdempotentInstruction, getTransferFeeConfig } from "@solana/spl-token";
 import { IRedeemService, RedeemParams, RedeemResult, WalletIdentity } from "../types";
 import { PROGRAM_ID } from "@/sdk/constants";
 import { getBrowserRpcUrl } from "@/sdk/network";
 import { getCurvePda, getTreasuryVaultPda } from "@/sdk/pda";
 import { toTokenUnits } from "@/sdk/amounts";
+import { netAfterTransferFee } from "@/sdk/transferFee";
 import { confirmSubmittedTransaction, pendingTradeKey, savePendingTrade, SubmittedTransactionError } from "./transactionConfirmation";
 import { solanaTokenService } from "./solanaTokenService";
 import idl from "@/idl/streetfun.json";
@@ -35,18 +36,23 @@ export class SolanaRedeemService implements IRedeemService {
       getMint(connection, curve.targetEquityMint, "confirmed", equityTokenProgram),
       getAccount(connection, treasuryVault, "confirmed", equityTokenProgram),
     ]);
-    if (getTransferFeeConfig(equityMint)) {
-      throw new Error("This collateral charges Token-2022 transfer fees. Exact net redemption is not supported; no tokens were burned.");
-    }
     const supply = BigInt(curve.totalMemeSupply.toString());
     const collateral = BigInt(curve.totalEquityLocked.toString());
     if (amount > supply || supply === 0n) throw new Error("Burn amount exceeds outstanding supply.");
-    const expected = amount * collateral / supply;
-    if (expected === 0n || expected > vault.amount) throw new Error("Insufficient redeemable collateral.");
+    const expectedGross = amount * collateral / supply;
+    const transferFeeConfig = getTransferFeeConfig(equityMint);
+    const epoch = await connection.getEpochInfo("confirmed");
+    const activeTransferFee = transferFeeConfig
+      ? getEpochFee(transferFeeConfig, BigInt(epoch.epoch))
+      : null;
+    const expectedNet = activeTransferFee
+      ? netAfterTransferFee(expectedGross, activeTransferFee.transferFeeBasisPoints, activeTransferFee.maximumFee)
+      : expectedGross;
+    if (expectedGross === 0n || expectedNet === 0n || expectedGross > vault.amount) throw new Error("Insufficient redeemable collateral.");
     const userToken = await getAssociatedTokenAddress(memeMint, wallet.publicKey);
     const userEquity = await getAssociatedTokenAddress(curve.targetEquityMint, wallet.publicKey, false, equityTokenProgram);
     const tx = new Transaction().add(createAssociatedTokenAccountIdempotentInstruction(wallet.publicKey, userEquity, wallet.publicKey, curve.targetEquityMint, equityTokenProgram));
-    tx.add(await (program.methods as any).burnAndRedeem({ memeTokensToBurn: new BN(amount.toString()), minEquityTokensOut: new BN(expected.toString()) }).accounts({
+    tx.add(await (program.methods as any).burnAndRedeem({ memeTokensToBurn: new BN(amount.toString()), minEquityTokensOut: new BN(expectedNet.toString()) }).accounts({
       redeemer: wallet.publicKey, memeMint, targetEquityMint: curve.targetEquityMint, curve: curvePda,
       treasuryVault, redeemerTokenAccount: userToken, redeemerEquityAccount: userEquity,
       tokenProgram: TOKEN_PROGRAM_ID, equityTokenProgram,

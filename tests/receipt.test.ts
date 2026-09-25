@@ -1,8 +1,27 @@
 import { expect } from "chai";
 import { receiptFromTrade, receiptFromRedemption, receiptPreview, receiptSvg, receiptLabel } from "../src/components/tokens/tradeReceiptModel";
+import type { TokenMetadata } from "../src/lib/types";
+import type { TradeResult, RedeemResult } from "../src/services/types";
 
-const receiptToken = { name: "Example <asset>", symbol: "EX", mint: "example-mint", avatarUrl: "/example.png", priceUsd: 2, targetEquity: { symbol: "STOCK" } };
-const receiptResult = { success: true, tokensAmount: 12, quoteAmount: 24 };
+const receiptToken: TokenMetadata = {
+  mint: "example-mint", name: "Example <asset>", symbol: "EX", description: "",
+  avatarUrl: "/example.png", creator: "tester", createdAt: "2026-01-01T00:00:00.000Z",
+  marketCapUsd: 0, priceUsd: 2, priceChange24h: 0, volume24hUsd: 0,
+  targetEquity: {
+    symbol: "STOCK", name: "Example asset", mintAddress: "stock-mint",
+    custodian: "", legalFramework: "", logoUrl: "", stockPriceUsd: 0,
+  },
+  bondingCurve: {
+    realQuoteReservesUsd: 0, graduationThresholdUsd: 0, progressPct: 0,
+    virtualQuoteReserves: "0", virtualTokenReserves: "0", realTokenReserves: "0",
+    isGraduated: false,
+  },
+  treasury: { totalEquityLocked: 0, totalEquityValueUsd: 0, vaultPda: "" },
+};
+const receiptResult: TradeResult = {
+  success: true, tokensAmount: 12, quoteAmount: 24, effectivePrice: 2,
+  priceImpactPct: 0, isGraduated: false, message: "", updatedToken: receiptToken,
+};
 
 describe("Trade receipt presentation", () => {
   it("keeps returned amounts and buy/sell directions", () => {
@@ -26,8 +45,10 @@ describe("Trade receipt presentation", () => {
     expect(receiptLabel(live.kind)).to.equal("Receipt");
   });
   it("uses the selected redemption asset and service amount", () => {
-    const result = { success: true, entitledShares: 0.25, usdcValue: 50 };
-    expect(receiptFromRedemption(receiptToken, "stock", 100, result, true).received).to.deep.equal({ amount: 0.25, symbol: "STOCK shares" });
+    const result: RedeemResult = {
+      success: true, entitledShares: 0.25, usdcValue: 50, message: "", updatedToken: receiptToken,
+    };
+    expect(receiptFromRedemption(receiptToken, "stock", 100, result, true).received).to.deep.equal({ amount: 0.25, symbol: "STOCK tokens" });
     expect(receiptFromRedemption(receiptToken, "usdc", 100, result, true).received).to.deep.equal({ amount: 50, symbol: "USDC" });
   });
   it("escapes token metadata and keeps preview disclosure in exported artwork", () => {
