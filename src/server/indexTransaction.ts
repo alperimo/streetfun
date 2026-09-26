@@ -22,6 +22,21 @@ const dbcCoder = new BorshCoder(DynamicBondingCurveIdl as any);
 
 type DecodedInstruction = { instruction: any; name: string; data: any; index: number };
 
+function normalizeInstructionName(value: string): string {
+  return value.replace(/_/g, "").toLowerCase();
+}
+
+/** Resolve the DBC registry account from the IDL, not a fragile positional guess. */
+export function getDbcLaunchRegistryAddress(instruction: { accounts: PublicKey[] }): PublicKey | undefined {
+  const definition = (idl as any).instructions?.find((item: any) =>
+    normalizeInstructionName(item.name) === "registerdbclaunch",
+  );
+  const accountIndex = definition?.accounts?.findIndex((item: any) =>
+    normalizeInstructionName(item.name) === "dbclaunch",
+  ) ?? -1;
+  return accountIndex < 0 ? undefined : instruction.accounts[accountIndex];
+}
+
 function flattenInstructions(tx: ParsedTransactionWithMeta): Array<{ instruction: any; index: number }> {
   const flat: Array<{ instruction: any; index: number }> = [];
   for (const [index, instruction] of tx.transaction.message.instructions.entries()) {
@@ -131,16 +146,16 @@ async function indexMeteoraSwapInstructions(
     const [launchAddress] = getDbcLaunchPda(mint, PROGRAM_ID);
     const registryInfo = await connection.getAccountInfo(launchAddress, { commitment: "confirmed", minContextSlot: tx.slot });
     if (!registryInfo?.owner.equals(PROGRAM_ID)) continue;
-    const registry: any = coder.accounts.decode("DbcLaunchAccount", registryInfo.data);
-    if (!registry.meme_mint.equals(mint) || !registry.quote_mint.equals(quoteMint)) continue;
+    const registry: any = coder.accounts.decode("dbcLaunchAccount", registryInfo.data);
+    if (!registry.memeMint.equals(mint) || !registry.quoteMint.equals(quoteMint)) continue;
     if (entry.protocol === "dbc") {
-      if (!registry.dbc_pool.equals(pool)) continue;
+      if (!registry.dbcPool.equals(pool)) continue;
     } else {
-      const virtualPool = await DynamicBondingCurveClient.create(connection, "confirmed").state.getPool(registry.dbc_pool);
+      const virtualPool = await DynamicBondingCurveClient.create(connection, "confirmed").state.getPool(registry.dbcPool);
       if (!virtualPool?.poolState.isMigrated) continue;
       const expectedDamm = deriveDammV2PoolAddressForIndex(registry, mint, quoteMint);
-      if (!registry.is_graduated && !pool.equals(expectedDamm)) continue;
-      if (registry.is_graduated && !registry.meteora_damm_v2_pool.equals(pool)) continue;
+      if (!registry.isGraduated && !pool.equals(expectedDamm)) continue;
+      if (registry.isGraduated && !registry.meteoraDammV2Pool.equals(pool)) continue;
     }
 
     // StreetFun's settlement CPI swaps from the protocol PDA, which is a
@@ -187,7 +202,7 @@ async function indexMeteoraSwapInstructions(
 }
 
 function deriveDammV2PoolAddressForIndex(registry: any, mint: PublicKey, quoteMint: PublicKey): PublicKey {
-  if (registry.is_graduated) return registry.meteora_damm_v2_pool;
+  if (registry.isGraduated) return registry.meteoraDammV2Pool;
   return deriveDammV2PoolAddress(getDbcMigrationDammConfigAddress(), mint, quoteMint);
 }
 
@@ -272,22 +287,22 @@ export async function indexConfirmedTransaction(
     if (isDbcLaunch) {
       const creator = entry.instruction.accounts[0];
       if (!signerFor(tx, creator)) throw new InvalidCurveTradeError("DBC launch creator did not sign.");
-      const registryAddress = entry.instruction.accounts[8];
+      const registryAddress = getDbcLaunchRegistryAddress(entry.instruction);
       const registryInfo = registryAddress && await connection.getAccountInfo(registryAddress, { commitment: "confirmed", minContextSlot: tx.slot });
       if (!registryInfo?.owner.equals(PROGRAM_ID)) throw new PendingCurveTradeError("DBC launch registry is not available yet.");
-      const registry: any = coder.accounts.decode("DbcLaunchAccount", registryInfo.data);
-      if (!registry.meme_mint.equals(mint) || !registry.creator.equals(creator)) throw new InvalidCurveTradeError("DBC launch registry does not match the signed launch.");
+      const registry: any = coder.accounts.decode("dbcLaunchAccount", registryInfo.data);
+      if (!registry.memeMint.equals(mint) || !registry.creator.equals(creator)) throw new InvalidCurveTradeError("DBC launch registry does not match the signed launch.");
       const metadata = decodeDbcPoolInitialization(tx, mint);
       const [{ data: existing, error }, assets] = await Promise.all([
         db.from("tokens").select("*").eq("mint", mint.toBase58()).maybeSingle(),
         getNetworkAssetCatalog(connection).catch(() => []),
       ]);
       if (error) throw new Error("Token metadata read failed.");
-      const asset: any = assets.find((item: any) => item.mintAddress === registry.target_equity_mint.toBase58());
+      const asset: any = assets.find((item: any) => item.mintAddress === registry.targetEquityMint.toBase58());
       await store.recordToken({
         mint: mint.toBase58(), name: metadata.name, symbol: metadata.symbol,
         target_equity_symbol: asset?.symbol || existing?.target_equity_symbol || "UNVERIFIED",
-        target_equity_mint: registry.target_equity_mint.toBase58(), creator: creator.toBase58(),
+        target_equity_mint: registry.targetEquityMint.toBase58(), creator: creator.toBase58(),
         description: existing?.description || "", avatar_url: existing?.avatar_url || undefined,
         is_graduated: false, meteora_pool: undefined,
       });
@@ -300,15 +315,15 @@ export async function indexConfirmedTransaction(
       const [launchAddress] = getDbcLaunchPda(mint, PROGRAM_ID);
       const launchInfo = await connection.getAccountInfo(launchAddress, { commitment: "confirmed", minContextSlot: tx.slot });
       if (!launchInfo || !launchInfo.owner.equals(PROGRAM_ID)) throw new PendingCurveTradeError("DBC launch registry is not available yet.");
-      const launch: any = coder.accounts.decode("DbcLaunchAccount", launchInfo.data);
-      if (!launch.meme_mint.equals(mint)) throw new InvalidCurveTradeError("Invalid DBC launch registry mint.");
+      const launch: any = coder.accounts.decode("dbcLaunchAccount", launchInfo.data);
+      if (!launch.memeMint.equals(mint)) throw new InvalidCurveTradeError("Invalid DBC launch registry mint.");
       const { data: existing, error } = await db.from("tokens").select("*").eq("mint", mint.toBase58()).maybeSingle();
       if (error) throw new Error("Token metadata read failed.");
       if (!existing) throw new PendingCurveTradeError("DBC launch metadata is not indexed yet; retry after launch indexing.");
-      const pool = launch.meteora_damm_v2_pool.equals(PublicKey.default) ? undefined : launch.meteora_damm_v2_pool.toBase58();
+      const pool = launch.meteoraDammV2Pool.equals(PublicKey.default) ? undefined : launch.meteoraDammV2Pool.toBase58();
       await store.recordToken({
-        ...existing, mint: mint.toBase58(), target_equity_mint: launch.target_equity_mint.toBase58(),
-        creator: launch.creator.toBase58(), is_graduated: Boolean(launch.is_graduated), meteora_pool: pool,
+        ...existing, mint: mint.toBase58(), target_equity_mint: launch.targetEquityMint.toBase58(),
+        creator: launch.creator.toBase58(), is_graduated: Boolean(launch.isGraduated), meteora_pool: pool,
       });
       indexedMints.add(mint.toBase58());
       if (isDbcRedeem) {
@@ -317,12 +332,12 @@ export async function indexConfirmedTransaction(
         const equityAccount = entry.instruction.accounts[6];
         if (!signerFor(tx, redeemer)) throw new InvalidCurveTradeError("DBC redeemer did not sign.");
         const memeDelta = accountBalanceDelta(tx, memeAccount, mint, redeemer);
-        const equityDelta = accountBalanceDelta(tx, equityAccount, launch.target_equity_mint, redeemer);
+        const equityDelta = accountBalanceDelta(tx, equityAccount, launch.targetEquityMint, redeemer);
         const burned = memeDelta.pre - memeDelta.post;
         const shares = equityDelta.post - equityDelta.pre;
         if (burned <= 0n || shares <= 0n) throw new InvalidCurveTradeError("DBC redemption has no verified token balance movement.");
         const accountIndex = tx.transaction.message.accountKeys.findIndex(key => key.pubkey.equals(equityAccount));
-        const equityBalance = tx.meta?.postTokenBalances?.find(balance => balance.accountIndex === accountIndex && balance.mint === launch.target_equity_mint.toBase58());
+        const equityBalance = tx.meta?.postTokenBalances?.find(balance => balance.accountIndex === accountIndex && balance.mint === launch.targetEquityMint.toBase58());
         if (!equityBalance) throw new PendingCurveTradeError("DBC redemption collateral decimals are not available.");
         const trade: TradeRecord = {
           tx_signature: signature, instruction_index: entry.index, mint: mint.toBase58(), trade_type: "REDEEM",

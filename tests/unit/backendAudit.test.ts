@@ -1,10 +1,11 @@
 import { expect } from "chai";
 import { Keypair, PublicKey } from "@solana/web3.js";
 import { Program } from "@coral-xyz/anchor";
+import BN from "bn.js";
 import bs58 from "bs58";
 import idl from "../../src/idl/streetfun.json";
 import { PROGRAM_ID } from "../../src/sdk/constants";
-import { decodeStreetfunInstructions } from "../../src/server/indexTransaction";
+import { decodeStreetfunInstructions, getDbcLaunchRegistryAddress } from "../../src/server/indexTransaction";
 import { canLaunchTesseraAsset, parseTesseraCatalog, resolveTesseraAssetsForNetwork } from "../../src/server/tessera";
 import { getAssetMarkPrice } from "../../src/server/assetValuation";
 import { getUsdcPerCollateralFromSqrtPrice } from "../../src/server/dammV2CollateralMarket";
@@ -105,6 +106,22 @@ describe("Backend audit regressions", () => {
     const [decoded] = decodeStreetfunInstructions(tx);
     expect(decoded.instruction.accounts[2].equals(accounts[2])).to.equal(true); expect(decoded.data.params.name).to.equal("Actual Name");
     tx.meta.err = { InstructionError: [0, "failure"] }; expect(() => decodeStreetfunInstructions(tx)).to.throw("did not succeed");
+  });
+  it("resolves and decodes the DBC launch registry using the normalized IDL names", async () => {
+    const instructionDefinition = (idl as any).instructions.find((entry: any) => entry.name === "register_dbc_launch");
+    const accounts = instructionDefinition.accounts.map(() => Keypair.generate().publicKey);
+    const registryIndex = instructionDefinition.accounts.findIndex((account: any) => account.name === "dbc_launch");
+    expect(registryIndex).to.equal(9);
+    expect(getDbcLaunchRegistryAddress({ accounts })?.equals(accounts[registryIndex])).to.equal(true);
+    const program = new Program({ ...idl, address: PROGRAM_ID.toBase58() } as any, { connection: {} } as any);
+    const data = await program.coder.accounts.encode("dbcLaunchAccount", {
+      creator: accounts[0], memeMint: accounts[2], targetEquityMint: accounts[3], quoteMint: accounts[4],
+      dbcConfig: accounts[5], dbcPool: accounts[6], meteoraDammV2Pool: PublicKey.default,
+      initialMemeSupply: new BN(0), settlementQuoteAmount: new BN(0), totalEquityLocked: new BN(0),
+      graduatedAt: new BN(0), isGraduated: false, bump: 0,
+    });
+    expect(program.coder.accounts.decode("dbcLaunchAccount", data).memeMint.equals(accounts[2])).to.equal(true);
+    expect(() => program.coder.accounts.decode("DbcLaunchAccount", data)).to.throw("Account not found");
   });
   it("cannot create a launch from another program's spoofed log text", () => {
     const other = Keypair.generate().publicKey;
