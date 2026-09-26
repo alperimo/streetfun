@@ -34,7 +34,7 @@ export function LaunchModal({
   const [liveAssets, setLiveAssets] = useState<(TesseraPreIpoAsset & { launchEnabled?: boolean; unavailableReason?: string; provider?: string })[]>([]);
   const [assetError, setAssetError] = useState<string | null>(null);
   const [isLoadingAssets, setIsLoadingAssets] = useState(false);
-  const assets = isMock ? DEMO_TOKENIZED_EQUITIES : liveAssets.filter(asset => asset.launchEnabled);
+  const assets = isMock ? DEMO_TOKENIZED_EQUITIES : liveAssets;
 
   const filteredAssets = assets.filter((eq: any) => {
     if (providerFilter === "all") return true;

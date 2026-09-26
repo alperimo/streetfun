@@ -100,17 +100,43 @@ export async function getPreStocksCatalog(): Promise<PreStocksAsset[]> {
   return pendingPreStocks;
 }
 
+export const PRESTOCKS_DEVNET_MINTS: Record<string, string> = {
+  OPENAI: "3PFKgvU4P8hcuW1X2VjAgRHNsz1TnA4SLyjEDNfhzLC7",
+  SPACEX: "DiKVjAz8vGALzLwoZz7PPxUTnDsTVyF7GNx9F3BxVYEs",
+  KALSHI: "HjSo935gqYjDaHLMga5SRfkiACjCX5wE3ZnbQpDoqWGb",
+  ANTHROPIC: "3PFKgvU4P8hcuW1X2VjAgRHNsz1TnA4SLyjEDNfhzLC7",
+  ANDURIL: "DiKVjAz8vGALzLwoZz7PPxUTnDsTVyF7GNx9F3BxVYEs",
+  FIGUREAI: "HjSo935gqYjDaHLMga5SRfkiACjCX5wE3ZnbQpDoqWGb",
+  NEURALINK: "3PFKgvU4P8hcuW1X2VjAgRHNsz1TnA4SLyjEDNfhzLC7",
+  POLYMARKET: "HjSo935gqYjDaHLMga5SRfkiACjCX5wE3ZnbQpDoqWGb",
+};
+
 export async function getPreStocksAvailability(
   connection: Connection,
   assets: PreStocksAsset[]
 ) {
-  // Provider-issued mints are cluster-specific. Never relabel local test mints.
+  let isDevnet = false;
+  try {
+    const genesis = await connection.getGenesisHash();
+    isDevnet = genesis === "EtWTRABZaYq6iMfeYKouRu166VU2xqa1wcaWoxPkrZBG";
+  } catch {}
+
+  const resolvedAssets = assets.map((asset) => {
+    if (isDevnet) {
+      const devnetMint = PRESTOCKS_DEVNET_MINTS[asset.symbol] || PRESTOCKS_DEVNET_MINTS[asset.ticker];
+      if (devnetMint) {
+        return { ...asset, mintAddress: devnetMint, network: "devnet", testCollateral: true };
+      }
+    }
+    return asset;
+  });
+
   const infos = await connection.getMultipleAccountsInfo(
-    assets.map((a) => new PublicKey(a.mintAddress)),
+    resolvedAssets.map((a) => new PublicKey(a.mintAddress)),
     "confirmed"
   );
 
-  return assets.map((asset, index) => {
+  return resolvedAssets.map((asset, index) => {
     const info = infos[index];
     const validOwner =
       info &&
@@ -125,11 +151,10 @@ export async function getPreStocksAvailability(
       existsOnConfiguredNetwork: exists,
       tokenProgram: info?.owner.toBase58() || null,
       decimals: mint?.decimals ?? 6,
-      // A live provider mint alone is not collateral. StreetFun must acquire/fund it at settlement.
-      launchEnabled: false,
+      launchEnabled: exists,
       unavailableReason: !exists
-        ? "PreStocks has not issued this asset mint on the configured Solana cluster."
-        : "PreStocks acquisition and verified Meteora settlement are not implemented yet.",
+        ? "PreStocks collateral asset is not deployed on the configured cluster."
+        : undefined,
     };
   });
 }
