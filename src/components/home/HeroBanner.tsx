@@ -30,9 +30,9 @@ export function HeroBanner() {
       change: isMock ? "+47.3%" : error ? "Unavailable" : "Live",
     },
     {
-      label: hasDevnetTestCollateral ? "Test collateral" : "Equity TVL",
+      label: "Equity TVL",
       value: isMock ? "$40.7M" : !error && !loading && equityValuationAvailable ? formatUsd(totalEquityTvl) : "—",
-      change: isMock ? "+28.1%" : error || !equityValuationAvailable ? "Valuation unavailable" : hasDevnetTestCollateral ? "Devnet market value" : "Mark Value",
+      change: isMock ? "+28.1%" : error || !equityValuationAvailable ? "Valuation unavailable" : "Mark Value",
     },
     {
       label: "Graduated",

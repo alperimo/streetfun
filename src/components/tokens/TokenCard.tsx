@@ -109,10 +109,8 @@ export function TokenCard({ token }: TokenCardProps) {
               {token.targetEquity.symbol.replace(/^\$/, "")}
             </span>
             <span className="rounded-md border border-border bg-card-hover px-2 py-0.5 text-[10px] tracking-wide font-mono font-medium text-muted whitespace-nowrap">
-              {token.targetEquity.isTestCollateral
-                ? "Devnet test"
-                : token.targetEquity.verifiedTessera || token.targetEquity.verifiedPreStocks
-                  ? "Pre-IPO" : "Unverified"}
+              {token.targetEquity.isTestCollateral || token.targetEquity.verifiedTessera || token.targetEquity.verifiedPreStocks
+                ? "Pre-IPO" : "Unverified"}
             </span>
           </div>
           {token.bondingCurve.isGraduated ? (

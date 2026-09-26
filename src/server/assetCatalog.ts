@@ -17,9 +17,9 @@ export async function getNetworkAssetCatalog(
 
   if (genesisHash === DEVNET_GENESIS_HASH) {
     if (provider === "prestocks") return [];
-    // Devnet uses the locally created on-chain test fixtures. Do not fetch or
-    // alias provider mainnet contracts into this catalog.
-    return getTesseraAvailability(connection, [], genesisHash);
+    // Devnet uses the locally created on-chain test fixtures with live Tessera mark prices.
+    const tesseraLive = await getTesseraCatalog().catch(() => []);
+    return getTesseraAvailability(connection, tesseraLive, genesisHash);
   }
   if (genesisHash !== MAINNET_GENESIS_HASH) return [];
 

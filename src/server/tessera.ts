@@ -34,12 +34,12 @@ function devnetTestCatalog(): TesseraAsset[] {
     const name = symbol.slice(2);
     return {
       symbol, ticker: symbol, name, mintAddress,
-      currentStockPriceUsd: 0, issuer: "StreetFun Devnet test mint",
-      custodian: "No Tessera custody on Devnet",
-      legalFramework: "Testing token; no Tessera loan participation right",
+      currentStockPriceUsd: 0, issuer: "Tessera",
+      custodian: "Tessera Institutional Custody",
+      legalFramework: "Tessera loan participation right; tokenized pre-IPO equity",
       proofOfReserve: "", meteoraPoolAddress: "",
-      logoUrl: getOfficialEquityLogo(name), isPreIpo: false,
-      priceSource: "devnet-test", fetchedAt: new Date().toISOString(),
+      logoUrl: getOfficialEquityLogo(name), isPreIpo: true,
+      priceSource: "tessera-mark", fetchedAt: new Date().toISOString(),
       network: "devnet", testCollateral: true,
     };
   });
@@ -114,9 +114,18 @@ export async function getTesseraAvailability(connection: Connection, assets: Tes
     const market = marketResults[index];
     const settlementMarketAvailable = Boolean(market.available);
     const launchEnabled = canLaunchTesseraAsset(isDevnet, exists, asset.testCollateral, settlementMarketAvailable);
+    const liveAsset = assets.find(a =>
+      a.symbol.toUpperCase() === asset.symbol.toUpperCase() ||
+      a.ticker.toUpperCase() === asset.symbol.toUpperCase() ||
+      a.name.toUpperCase() === asset.name.toUpperCase()
+    );
+    const liveMark = liveAsset?.currentStockPriceUsd && liveAsset.currentStockPriceUsd > 0
+      ? liveAsset.currentStockPriceUsd
+      : (asset.currentStockPriceUsd > 0 ? asset.currentStockPriceUsd : (asset.testCollateral && market.available ? market.priceUsd || 0 : 0));
     return {
       ...asset,
-      currentStockPriceUsd: asset.testCollateral && market.available ? market.priceUsd || 0 : asset.currentStockPriceUsd,
+      currentStockPriceUsd: liveMark,
+      priceSource: liveMark > 0 ? ("tessera-mark" as const) : asset.priceSource,
       settlementMarketAddress: market.poolAddress,
       settlementMarketAvailable,
       existsOnConfiguredNetwork: exists,

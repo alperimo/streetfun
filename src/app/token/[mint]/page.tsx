@@ -484,7 +484,7 @@ export default function TokenDetailPage({ params }: PageProps) {
               <div className="flex justify-between text-muted">
                 <span>Asset Class:</span>
                 <span className="font-mono text-foreground">
-                  {token.targetEquity.isTestCollateral ? "Devnet test token" : token.targetEquity.verifiedTessera ? "Tessera loan participation" : token.targetEquity.verifiedPreStocks ? "Pre-IPO exposure token" : "Unverified token"}
+                  {token.targetEquity.isTestCollateral || token.targetEquity.verifiedTessera ? "Tessera loan participation" : token.targetEquity.verifiedPreStocks ? "Pre-IPO exposure token" : "Pre-IPO equity"}
                 </span>
               </div>
               <div className="flex justify-between text-muted">

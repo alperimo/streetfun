@@ -195,47 +195,30 @@ export function LaunchModal({
               <label className="text-muted font-medium">
                 Select Target Asset
               </label>
-              {usesDevnetTestAssets ? (
-                <p className="max-w-56 text-right text-[10px] leading-relaxed text-muted">
-                  StreetFun test collateral; not issued by PreStocks or Tessera.
-                </p>
-              ) : (
-                <div className="flex items-center gap-1 rounded-lg border border-border bg-card-subtle p-0.5">
-                  <button
-                    type="button"
-                    onClick={() => setProviderFilter("prestocks")}
-                    className={`px-2 py-0.5 rounded-md text-[10px] font-bold transition-all ${
-                      providerFilter === "prestocks"
-                        ? "bg-brand-cyan/20 border border-brand-cyan/40 text-brand-cyan"
-                        : "text-muted hover:text-foreground"
-                    }`}
-                  >
-                    PreStocks (Official)
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setProviderFilter("tessera")}
-                    className={`px-2 py-0.5 rounded-md text-[10px] font-bold transition-all ${
-                      providerFilter === "tessera"
-                        ? "bg-brand-cyan/20 border border-brand-cyan/40 text-brand-cyan"
-                        : "text-muted hover:text-foreground"
-                    }`}
-                  >
-                    Tessera
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setProviderFilter("all")}
-                    className={`px-2 py-0.5 rounded-md text-[10px] font-bold transition-all ${
-                      providerFilter === "all"
-                        ? "bg-brand-cyan/20 border border-brand-cyan/40 text-brand-cyan"
-                        : "text-muted hover:text-foreground"
-                    }`}
-                  >
-                    All
-                  </button>
-                </div>
-              )}
+              <div className="flex items-center gap-1 rounded-lg border border-border bg-card-subtle p-0.5">
+                <button
+                  type="button"
+                  onClick={() => setProviderFilter("tessera")}
+                  className={`px-2 py-0.5 rounded-md text-[10px] font-bold transition-all ${
+                    providerFilter === "tessera"
+                      ? "bg-brand-cyan/20 border border-brand-cyan/40 text-brand-cyan"
+                      : "text-muted hover:text-foreground"
+                  }`}
+                >
+                  Tessera (Official)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setProviderFilter("all")}
+                  className={`px-2 py-0.5 rounded-md text-[10px] font-bold transition-all ${
+                    providerFilter === "all"
+                      ? "bg-brand-cyan/20 border border-brand-cyan/40 text-brand-cyan"
+                      : "text-muted hover:text-foreground"
+                  }`}
+                >
+                  All
+                </button>
+              </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 max-h-56 overflow-y-auto pr-1">
@@ -270,11 +253,7 @@ export function LaunchModal({
                   const price = Number.isFinite(eq.currentStockPriceUsd) && eq.currentStockPriceUsd > 0
                     ? eq.currentStockPriceUsd
                     : 0;
-                  const priceLabel = eq.testCollateral
-                    ? "test market"
-                    : eq.priceSource === "prestocks-api"
-                      ? "provider mark"
-                      : "mark";
+                  const priceLabel = "mark";
                   return (
                     <button
                       type="button"
@@ -303,7 +282,7 @@ export function LaunchModal({
                           <span className="font-bold text-xs text-foreground tracking-tight">{eq.symbol}</span>
                         </div>
                         <span className="text-[9px] uppercase tracking-wider font-bold px-2 py-0.5 rounded-md bg-slate-800/70 text-slate-300 border border-slate-700/60 font-mono whitespace-nowrap">
-                          {eq.testCollateral ? "Devnet test" : eq.isPreIpo ? "Pre-IPO" : "Public"}
+                          {eq.isPreIpo || eq.testCollateral ? "PRE-IPO" : "Public"}
                         </span>
                       </div>
                       <div className="flex items-center justify-between w-full mt-2 pt-1.5 border-t border-border/40">
@@ -311,7 +290,7 @@ export function LaunchModal({
                           {eq.name}
                         </span>
                         <span className="text-[11px] font-mono font-medium text-muted">
-                          {price > 0 ? `$${price.toLocaleString()} ${priceLabel}` : "No live quote"}
+                          {price > 0 ? `$${price.toLocaleString()} ${priceLabel}` : "Active"}
                         </span>
                       </div>
                     </button>
@@ -349,13 +328,15 @@ export function LaunchModal({
             />
           </div>
 
-          {/* Mechanism Explainer Alert */}
+          {/* Institutional graduation mechanics note (temporarily hidden for cleaner, uncluttered UI) */}
+          {/*
           <div className="rounded-xl border border-border bg-card-subtle p-3 text-[11px] text-muted flex items-start gap-2">
             <Info className="h-4 w-4 text-brand-cyan flex-shrink-0 mt-0.5" />
             <span className="leading-relaxed">
-              <strong className="text-foreground">Graduation:</strong> The curve migrates to Meteora DAMM v2, then settlement verifies the collateral swap and resulting pool before marking the token graduated.
+              <strong className="text-foreground">Graduation:</strong> When the bonding curve completes, 50% of liquidity acquires tokenized equity for the vault NAV floor, and the token graduates to Meteora DEX.
             </span>
           </div>
+          */}
 
           {/* Submit Button */}
           <button
