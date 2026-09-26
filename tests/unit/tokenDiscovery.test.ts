@@ -33,6 +33,7 @@ describe("Live token discovery", () => {
     let scans = 0, batches = 0;
     const service = new SolanaTokenService({
       getGenesisHash: async () => "EtWTRABZaYq6iMfeYKouRu166VU2xqa1wcaWoxPkrZBG",
+      getMultipleAccountsInfo: async () => [],
       getMultipleAccountsInfoAndContext: async () => {
         batches++;
         return { context: { slot: 123 }, value: curves.flatMap((c, i) => [

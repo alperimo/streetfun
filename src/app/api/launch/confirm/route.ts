@@ -1,11 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { decodeDbcPoolInitialization, decodeStreetfunInstructions, indexConfirmedTransaction, readConfirmedTransaction } from "@/server/indexTransaction";
-import { getServerConnection } from "@/server/rpc";
+import { assertConfiguredCluster, getServerConnection } from "@/server/rpc";
 import { solanaTokenService } from "@/server/tokenData";
 import { InvalidCurveTradeError } from "@/services/indexer/parseCurveTrade";
 import { createServerSupabaseClient } from "@/server/supabase";
-import { getTesseraCatalog } from "@/server/tessera";
-import { getPreStocksCatalog } from "@/server/prestocks";
+import { getNetworkAssetCatalog } from "@/server/assetCatalog";
 
 export async function POST(req: NextRequest) {
   try {
@@ -13,6 +12,7 @@ export async function POST(req: NextRequest) {
     if (typeof requestedMint !== "string") throw new InvalidCurveTradeError("A token mint is required.");
     if (avatarUrl && (typeof avatarUrl !== "string" || !/^https:\/\//i.test(avatarUrl))) throw new InvalidCurveTradeError("The token image URL must use HTTPS.");
     const connection = getServerConnection();
+    const genesisHash = await assertConfiguredCluster(connection);
     const tx = await readConfirmedTransaction(connection, signature);
     const launch = decodeStreetfunInstructions(tx).find(entry =>
       entry.name.replace(/_/g, "").toLowerCase() === "registerdbclaunch" &&
@@ -26,8 +26,8 @@ export async function POST(req: NextRequest) {
     if (metadataUri.pathname !== `/api/metadata/${requestedMint}`) throw new InvalidCurveTradeError("The confirmed DBC metadata URI does not resolve to this StreetFun launch.");
     const targetMint = launch.instruction.accounts[3]?.toBase58();
     if (!targetMint) throw new InvalidCurveTradeError("Confirmed DBC launch is missing its collateral mint.");
-    const [tessera, prestocks] = await Promise.all([getTesseraCatalog().catch(() => []), getPreStocksCatalog().catch(() => [])]);
-    const asset: any = [...tessera, ...prestocks].find((entry: any) => entry.mintAddress === targetMint);
+    const assets = await getNetworkAssetCatalog(connection, "all", genesisHash);
+    const asset: any = assets.find((entry: any) => entry.mintAddress === targetMint);
     if (!asset || asset.symbol !== targetEquitySymbol) throw new InvalidCurveTradeError("Selected collateral symbol does not match its mapped live mint.");
     await indexConfirmedTransaction(connection, signature, undefined, requestedMint);
     const db = createServerSupabaseClient();

@@ -15,8 +15,7 @@ import { solanaTokenService } from "./tokenData";
 import { persistVaultHoldingSnapshot } from "./treasury";
 import { persistDbcVaultHoldingSnapshot } from "./treasury";
 import { getDbcMigrationDammConfigAddress } from "./meteoraDbc";
-import { getTesseraCatalog } from "./tessera";
-import { getPreStocksCatalog } from "./prestocks";
+import { getNetworkAssetCatalog } from "./assetCatalog";
 
 const coder = new BorshCoder(new Program({ ...idl, address: PROGRAM_ID.toBase58() } as any, { connection: getServerConnection() } as any).idl);
 const dbcCoder = new BorshCoder(DynamicBondingCurveIdl as any);
@@ -279,13 +278,12 @@ export async function indexConfirmedTransaction(
       const registry: any = coder.accounts.decode("DbcLaunchAccount", registryInfo.data);
       if (!registry.meme_mint.equals(mint) || !registry.creator.equals(creator)) throw new InvalidCurveTradeError("DBC launch registry does not match the signed launch.");
       const metadata = decodeDbcPoolInitialization(tx, mint);
-      const [{ data: existing, error }, tessera, prestocks] = await Promise.all([
+      const [{ data: existing, error }, assets] = await Promise.all([
         db.from("tokens").select("*").eq("mint", mint.toBase58()).maybeSingle(),
-        getTesseraCatalog().catch(() => []),
-        getPreStocksCatalog().catch(() => []),
+        getNetworkAssetCatalog(connection).catch(() => []),
       ]);
       if (error) throw new Error("Token metadata read failed.");
-      const asset: any = [...tessera, ...prestocks].find((item: any) => item.mintAddress === registry.target_equity_mint.toBase58());
+      const asset: any = assets.find((item: any) => item.mintAddress === registry.target_equity_mint.toBase58());
       await store.recordToken({
         mint: mint.toBase58(), name: metadata.name, symbol: metadata.symbol,
         target_equity_symbol: asset?.symbol || existing?.target_equity_symbol || "UNVERIFIED",

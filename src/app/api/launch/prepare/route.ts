@@ -8,10 +8,9 @@ import { NextRequest, NextResponse } from "next/server";
 import idl from "@/idl/streetfun.json";
 import { METEORA_DBC_PROGRAM_ID, PROGRAM_ID, USDC_MINT } from "@/sdk/constants";
 import { getDbcLaunchPda, getGlobalConfigPda } from "@/sdk/pda";
-import { getPreStocksAvailability, getPreStocksCatalog } from "@/server/prestocks";
+import { getNetworkAssetCatalog } from "@/server/assetCatalog";
 import { assertStreetFunDbcConfig, getDbcClient, getDbcConfigAddress } from "@/server/meteoraDbc";
 import { getServerConnection, assertConfiguredCluster } from "@/server/rpc";
-import { getTesseraAvailability, getTesseraCatalog } from "@/server/tessera";
 
 export const dynamic = "force-dynamic";
 
@@ -49,16 +48,9 @@ export async function POST(request: NextRequest) {
     }
 
     const connection = getServerConnection();
-    await assertConfiguredCluster(connection);
-    const [tesseraRaw, preStocksRaw] = await Promise.all([
-      getTesseraCatalog().catch(() => []),
-      getPreStocksCatalog().catch(() => []),
-    ]);
-    const [tesseraAssets, preStocksAssets] = await Promise.all([
-      getTesseraAvailability(connection, tesseraRaw),
-      getPreStocksAvailability(connection, preStocksRaw),
-    ]);
-    const asset = [...tesseraAssets, ...preStocksAssets].find(item => item.symbol === targetEquitySymbol);
+    const genesisHash = await assertConfiguredCluster(connection);
+    const assets = await getNetworkAssetCatalog(connection, "all", genesisHash);
+    const asset = assets.find(item => item.symbol === targetEquitySymbol);
     if (!asset?.launchEnabled) {
       return NextResponse.json({ error: "This backing asset has no live, verified settlement route on the configured cluster." }, { status: 409 });
     }

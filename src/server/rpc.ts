@@ -1,5 +1,13 @@
 import { Connection, clusterApiUrl } from "@solana/web3.js";
 
+export const DEVNET_GENESIS_HASH = "EtWTRABZaYq6iMfeYKouRu166VU2xqa1wcaWoxPkrZBG";
+
+export function assertDevnetNetwork(network: string, genesisHash: string): void {
+  if (network !== "devnet" || genesisHash !== DEVNET_GENESIS_HASH) {
+    throw new Error("This operation is Devnet-only; the configured network and RPC must both resolve to Devnet.");
+  }
+}
+
 export function getServerRpcUrl(): string {
   if (process.env.SOLANA_RPC_URL) return process.env.SOLANA_RPC_URL;
   if (process.env.NEXT_PUBLIC_SOLANA_RPC) return process.env.NEXT_PUBLIC_SOLANA_RPC;
@@ -30,4 +38,11 @@ export async function assertConfiguredCluster(rpc: Connection): Promise<string> 
   const network = process.env.NEXT_PUBLIC_SOLANA_NETWORK || "devnet";
   if (expected[network] && genesis !== expected[network]) throw new Error("RPC cluster does not match the configured network.");
   return genesis;
+}
+
+export async function assertDevnetCluster(rpc: Connection): Promise<string> {
+  const genesisHash = await rpc.getGenesisHash();
+  const network = process.env.NEXT_PUBLIC_SOLANA_NETWORK || "devnet";
+  assertDevnetNetwork(network, genesisHash);
+  return genesisHash;
 }

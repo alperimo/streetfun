@@ -7,7 +7,7 @@ import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import BN from "bn.js";
 import { TESSERA_DEVNET_TEST_MINTS } from "../src/server/tessera";
 import { USDC_MINT } from "../src/sdk/constants";
-import { assertConfiguredCluster, getServerConnection } from "../src/server/rpc";
+import { assertDevnetCluster, getServerConnection } from "../src/server/rpc";
 
 function loadPayer(): Keypair {
   const path = process.env.ANCHOR_WALLET || process.env.SOLANA_KEYPAIR || join(homedir(), ".config/solana/id.json");
@@ -18,7 +18,7 @@ function loadPayer(): Keypair {
 
 async function main() {
   const connection = getServerConnection();
-  await assertConfiguredCluster(connection);
+  await assertDevnetCluster(connection);
   const payer = loadPayer();
   const client = new CpAmm(connection);
 

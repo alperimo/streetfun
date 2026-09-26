@@ -2,6 +2,7 @@ import { Connection, PublicKey } from "@solana/web3.js";
 import { TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID, unpackMint } from "@solana/spl-token";
 import type { TesseraPreIpoAsset } from "@/sdk/constants";
 import { getOfficialEquityLogo } from "@/lib/assetLogos";
+import { getDammV2CollateralMarket } from "./dammV2CollateralMarket";
 
 export interface PreStocksAsset extends TesseraPreIpoAsset {
   priceSource: "prestocks-api";
@@ -60,10 +61,10 @@ export function parsePreStocksCatalog(
       impliedValuation: row.impliedValuation,
       supply: row.supply,
       externalUrl: row.external_url,
-      issuer: "PreStocks SPV",
-      custodian: "PreStocks Institutional Custody",
-      legalFramework: "1:1 SPV exposure tracking underlying private company shares",
-      proofOfReserve: "PreStocks On-Chain Proof of Reserve (Pyth & SPV Ledger)",
+      issuer: "PreStocks",
+      custodian: "See PreStocks disclosures",
+      legalFramework: "Economic exposure token; see provider disclosures",
+      proofOfReserve: "",
       meteoraPoolAddress: "",
       logoUrl: getOfficialEquityLogo(row.symbol) || row.image || "/logos/openai.png",
       isPreIpo: true,
@@ -100,41 +101,36 @@ export async function getPreStocksCatalog(): Promise<PreStocksAsset[]> {
   return pendingPreStocks;
 }
 
-export const PRESTOCKS_DEVNET_MINTS: Record<string, string> = {
-  OPENAI: "3PFKgvU4P8hcuW1X2VjAgRHNsz1TnA4SLyjEDNfhzLC7",
-  SPACEX: "DiKVjAz8vGALzLwoZz7PPxUTnDsTVyF7GNx9F3BxVYEs",
-  KALSHI: "HjSo935gqYjDaHLMga5SRfkiACjCX5wE3ZnbQpDoqWGb",
-  ANTHROPIC: "3PFKgvU4P8hcuW1X2VjAgRHNsz1TnA4SLyjEDNfhzLC7",
-  ANDURIL: "DiKVjAz8vGALzLwoZz7PPxUTnDsTVyF7GNx9F3BxVYEs",
-  FIGUREAI: "HjSo935gqYjDaHLMga5SRfkiACjCX5wE3ZnbQpDoqWGb",
-  NEURALINK: "3PFKgvU4P8hcuW1X2VjAgRHNsz1TnA4SLyjEDNfhzLC7",
-  POLYMARKET: "HjSo935gqYjDaHLMga5SRfkiACjCX5wE3ZnbQpDoqWGb",
-};
+const MAINNET_GENESIS_HASH = "5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp";
+
+export function resolvePreStocksAssetsForNetwork(
+  isMainnet: boolean,
+  assets: PreStocksAsset[],
+): PreStocksAsset[] {
+  // PreStocks catalog contracts are mainnet contracts. StreetFun's Devnet
+  // Tessera-style fixtures must never be presented as PreStocks assets.
+  return isMainnet ? assets : [];
+}
 
 export async function getPreStocksAvailability(
   connection: Connection,
-  assets: PreStocksAsset[]
+  assets: PreStocksAsset[],
+  knownGenesisHash?: string,
 ) {
-  let isDevnet = false;
-  try {
-    const genesis = await connection.getGenesisHash();
-    isDevnet = genesis === "EtWTRABZaYq6iMfeYKouRu166VU2xqa1wcaWoxPkrZBG";
-  } catch {}
-
-  const resolvedAssets = assets.map((asset) => {
-    if (isDevnet) {
-      const devnetMint = PRESTOCKS_DEVNET_MINTS[asset.symbol] || PRESTOCKS_DEVNET_MINTS[asset.ticker];
-      if (devnetMint) {
-        return { ...asset, mintAddress: devnetMint, network: "devnet", testCollateral: true };
-      }
-    }
-    return asset;
-  });
+  const genesis = knownGenesisHash || await connection.getGenesisHash();
+  const resolvedAssets = resolvePreStocksAssetsForNetwork(genesis === MAINNET_GENESIS_HASH, assets);
+  if (!resolvedAssets.length) return [];
 
   const infos = await connection.getMultipleAccountsInfo(
     resolvedAssets.map((a) => new PublicKey(a.mintAddress)),
     "confirmed"
   );
+  const markets = await Promise.all(resolvedAssets.map(async (asset, index) => {
+    const info = infos[index];
+    const validOwner = info && (info.owner.equals(TOKEN_PROGRAM_ID) || info.owner.equals(TOKEN_2022_PROGRAM_ID));
+    if (!validOwner) return { available: false };
+    return getDammV2CollateralMarket(connection, new PublicKey(asset.mintAddress), info);
+  }));
 
   return resolvedAssets.map((asset, index) => {
     const info = infos[index];
@@ -146,14 +142,20 @@ export async function getPreStocksAvailability(
       ? unpackMint(new PublicKey(asset.mintAddress), info, info.owner)
       : null;
     const exists = !!mint?.isInitialized;
+    const market = markets[index];
+    const settlementMarketAvailable = Boolean(market.available);
     return {
       ...asset,
       existsOnConfiguredNetwork: exists,
       tokenProgram: info?.owner.toBase58() || null,
       decimals: mint?.decimals ?? 6,
-      launchEnabled: exists,
+      settlementMarketAddress: market.poolAddress,
+      settlementMarketAvailable,
+      launchEnabled: exists && settlementMarketAvailable,
       unavailableReason: !exists
         ? "PreStocks collateral asset is not deployed on the configured cluster."
+        : !settlementMarketAvailable
+          ? "No DAMM v2 / USDC pool can quote the configured settlement allocation for this asset."
         : undefined,
     };
   });

@@ -6,7 +6,10 @@ import idl from "../../src/idl/streetfun.json";
 import { PROGRAM_ID } from "../../src/sdk/constants";
 import { decodeStreetfunInstructions } from "../../src/server/indexTransaction";
 import { canLaunchTesseraAsset, parseTesseraCatalog, resolveTesseraAssetsForNetwork } from "../../src/server/tessera";
-import { getServerRpcUrl } from "../../src/server/rpc";
+import { getAssetMarkPrice } from "../../src/server/assetValuation";
+import { getUsdcPerCollateralFromSqrtPrice } from "../../src/server/dammV2CollateralMarket";
+import { parsePreStocksCatalog, resolvePreStocksAssetsForNetwork } from "../../src/server/prestocks";
+import { assertDevnetNetwork, getServerRpcUrl } from "../../src/server/rpc";
 import { alphaClaimMessage, validAlphaClaim } from "../../src/lib/alphaClaim";
 import { POST as trade } from "../../src/app/api/trade/route";
 import { POST as graduate } from "../../src/app/api/graduate/route";
@@ -28,6 +31,17 @@ describe("Backend audit regressions", () => {
     expect(() => parseTesseraCatalog([{ symbol: "OpenAI", name: "OpenAI", mint: "placeholder", markPrice: 185 }])).to.throw();
     expect(() => parseTesseraCatalog([{ symbol: "OpenAI", name: "OpenAI", mint: Keypair.generate().publicKey.toBase58(), markPrice: NaN }])).to.throw();
   });
+  it("never invents a collateral mark when live price data is missing or invalid", () => {
+    expect(getAssetMarkPrice({ currentStockPriceUsd: 0 })).to.equal(0);
+    expect(getAssetMarkPrice({ currentStockPriceUsd: Number.NaN })).to.equal(0);
+    expect(getAssetMarkPrice({ currentStockPriceUsd: 812.79 })).to.equal(812.79);
+  });
+  it("normalizes DAMM v2 spot prices to USDC per collateral token", () => {
+    expect(getUsdcPerCollateralFromSqrtPrice(2, true)).to.equal(0.5);
+    expect(getUsdcPerCollateralFromSqrtPrice(2, false)).to.equal(2);
+    expect(getUsdcPerCollateralFromSqrtPrice(0, true)).to.equal(undefined);
+    expect(getUsdcPerCollateralFromSqrtPrice(Number.POSITIVE_INFINITY, true)).to.equal(undefined);
+  });
   it("prices a Token-2022 redemption by spendable receipt after the current transfer fee", () => {
     expect(netAfterTransferFee(50_000n, 20, 1_000n)).to.equal(49_900n);
     expect(netAfterTransferFee(1n, 1, 1_000n)).to.equal(0n);
@@ -37,8 +51,9 @@ describe("Backend audit regressions", () => {
   it("allows real Tessera mints on mainnet and only mapped test collateral on Devnet", () => {
     expect(canLaunchTesseraAsset(true, true, true)).to.equal(false);
     expect(canLaunchTesseraAsset(true, true, true, true)).to.equal(true);
-    expect(canLaunchTesseraAsset(false, true, false)).to.equal(true);
-    expect(canLaunchTesseraAsset(false, true, undefined)).to.equal(true);
+    expect(canLaunchTesseraAsset(false, true, false, true)).to.equal(true);
+    expect(canLaunchTesseraAsset(false, true, undefined, true)).to.equal(true);
+    expect(canLaunchTesseraAsset(false, true, false, false)).to.equal(false);
     expect(canLaunchTesseraAsset(false, true, true)).to.equal(false);
     expect(canLaunchTesseraAsset(true, true, false)).to.equal(false);
     expect(canLaunchTesseraAsset(true, false, true)).to.equal(false);
@@ -52,6 +67,20 @@ describe("Backend audit regressions", () => {
     expect(devnetAssets.every(asset => asset.testCollateral && asset.currentStockPriceUsd === 0)).to.equal(true);
     expect(devnetAssets.map(asset => asset.mintAddress)).not.to.include(mainnetAssets[0].mintAddress);
     expect(resolveTesseraAssetsForNetwork(false, mainnetAssets)).to.equal(mainnetAssets);
+  });
+  it("never aliases Devnet test mints to PreStocks provider assets", () => {
+    const catalog = parsePreStocksCatalog([{
+      symbol: "OPENAI", name: "OpenAI", contract_address: Keypair.generate().publicKey.toBase58(),
+      markPrice: 100, tokenPrice: 100, markValuation: 0, impliedValuation: 0, supply: 0,
+    }]);
+    expect(resolvePreStocksAssetsForNetwork(false, catalog)).to.deep.equal([]);
+    expect(resolvePreStocksAssetsForNetwork(true, catalog)).to.equal(catalog);
+  });
+  it("rejects Devnet-only transaction tooling on any other configured cluster", () => {
+    const devnetHash = "EtWTRABZaYq6iMfeYKouRu166VU2xqa1wcaWoxPkrZBG";
+    expect(() => assertDevnetNetwork("devnet", devnetHash)).not.to.throw();
+    expect(() => assertDevnetNetwork("mainnet-beta", devnetHash)).to.throw("Devnet-only");
+    expect(() => assertDevnetNetwork("devnet", "5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp")).to.throw("Devnet-only");
   });
   it("uses Helius on the configured cluster without a public API key", () => {
     const keys = ["SOLANA_RPC_URL", "NEXT_PUBLIC_SOLANA_RPC", "HELIUS_API_KEY", "NEXT_PUBLIC_SOLANA_NETWORK"];

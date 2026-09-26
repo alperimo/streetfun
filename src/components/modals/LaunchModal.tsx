@@ -15,6 +15,15 @@ interface LaunchModalProps {
   onTokenCreated?: (token: TokenMetadata) => void;
 }
 
+type LaunchAsset = TesseraPreIpoAsset & {
+  currentStockPriceUsd: number;
+  launchEnabled?: boolean;
+  unavailableReason?: string;
+  provider?: string;
+  priceSource?: string;
+  testCollateral?: boolean;
+};
+
 export function LaunchModal({
   isOpen,
   onClose,
@@ -22,6 +31,7 @@ export function LaunchModal({
 }: LaunchModalProps) {
   const router = useRouter();
   const { launchToken, isMock } = useMarket();
+  const isDevnet = (process.env.NEXT_PUBLIC_SOLANA_NETWORK || "devnet") === "devnet";
   const [name, setName] = useState("");
   const [symbol, setSymbol] = useState("");
   const [description, setDescription] = useState("");
@@ -31,15 +41,19 @@ export function LaunchModal({
   const [launchError, setLaunchError] = useState<string | null>(null);
 
   const [providerFilter, setProviderFilter] = useState<"prestocks" | "tessera" | "all">("all");
-  const [liveAssets, setLiveAssets] = useState<(TesseraPreIpoAsset & { launchEnabled?: boolean; unavailableReason?: string; provider?: string })[]>([]);
+  const [liveAssets, setLiveAssets] = useState<LaunchAsset[]>([]);
   const [assetError, setAssetError] = useState<string | null>(null);
   const [isLoadingAssets, setIsLoadingAssets] = useState(false);
-  const assets = isMock ? DEMO_TOKENIZED_EQUITIES : liveAssets;
+  const assets: LaunchAsset[] = isMock ? DEMO_TOKENIZED_EQUITIES : liveAssets;
 
   const filteredAssets = assets.filter((eq: any) => {
     if (providerFilter === "all") return true;
     if (providerFilter === "prestocks") return eq.provider === "prestocks" || eq.issuer?.includes("PreStocks");
-    if (providerFilter === "tessera") return eq.provider !== "prestocks" && !eq.issuer?.includes("PreStocks");
+    if (providerFilter === "tessera") {
+      return isDevnet
+        ? eq.testCollateral === true
+        : eq.provider !== "prestocks" && !eq.issuer?.includes("PreStocks");
+    }
     return true;
   });
 
@@ -54,7 +68,7 @@ export function LaunchModal({
       setLiveAssets(data.assets);
       if (!data.assets.some((asset: any) => asset.launchEnabled)) {
         setAssetError(data.assets.some((asset: any) => asset.existsOnConfiguredNetwork)
-          ? "Provider-issued assets are read-only until collateral acquisition and Meteora settlement are implemented. Only mapped Devnet test assets can launch."
+          ? "No backing market can currently quote the configured graduation allocation."
           : "No verified provider or mapped test mint exists on this Solana network.");
       }
       const first = data.assets.find((a: any) => a.launchEnabled) || data.assets[0];
@@ -121,7 +135,7 @@ export function LaunchModal({
             <div>
               <h2 className="text-lg font-bold text-foreground">Launch Token</h2>
               <p className="text-xs text-muted">
-                Choose a verified Pre-IPO backing asset for your token
+                Choose a backing asset for your token
               </p>
             </div>
           </div>
@@ -187,7 +201,7 @@ export function LaunchModal({
                       : "text-muted hover:text-foreground"
                   }`}
                 >
-                  PreStocks (Official)
+                  {isDevnet ? "PreStocks" : "PreStocks (Official)"}
                 </button>
                 <button
                   type="button"
@@ -198,7 +212,7 @@ export function LaunchModal({
                       : "text-muted hover:text-foreground"
                   }`}
                 >
-                  Tessera
+                  {isDevnet ? "Devnet test assets" : "Tessera"}
                 </button>
                 <button
                   type="button"
@@ -236,20 +250,33 @@ export function LaunchModal({
                 ))
               ) : filteredAssets.length === 0 ? (
                 <p className="rounded-xl border border-border bg-card p-4 text-muted">
-                  No launchable assets from this provider on the configured network.
+                  {isDevnet && providerFilter === "prestocks"
+                    ? "PreStocks assets are not deployed on Devnet."
+                    : "No launchable assets from this provider on the configured network."}
                 </p>
               ) : (
                 filteredAssets.map((eq) => {
                   const isSelected = selectedEquitySymbol === eq.symbol;
+                  const price = Number.isFinite(eq.currentStockPriceUsd) && eq.currentStockPriceUsd > 0
+                    ? eq.currentStockPriceUsd
+                    : 0;
+                  const priceLabel = eq.testCollateral
+                    ? "test market"
+                    : eq.priceSource === "prestocks-api"
+                      ? "provider mark"
+                      : "mark";
                   return (
                     <button
                       type="button"
                       key={eq.symbol}
+                      disabled={!isMock && !eq.launchEnabled}
                       onClick={() => setSelectedEquitySymbol(eq.symbol)}
                       className={`flex flex-col justify-between p-3 rounded-xl border text-left transition-all ${
                         isSelected
                           ? "border-brand-cyan bg-brand-cyan/10 text-foreground shadow-xs"
-                          : "border-border bg-card text-muted hover:border-brand-cyan/40 hover:text-foreground"
+                          : !isMock && !eq.launchEnabled
+                            ? "border-border bg-card text-muted opacity-55 cursor-not-allowed"
+                            : "border-border bg-card text-muted hover:border-brand-cyan/40 hover:text-foreground"
                       }`}
                     >
                       <div className="flex items-center justify-between w-full">
@@ -266,7 +293,7 @@ export function LaunchModal({
                           <span className="font-bold text-xs text-foreground tracking-tight">{eq.symbol}</span>
                         </div>
                         <span className="text-[9px] uppercase tracking-wider font-bold px-2 py-0.5 rounded-md bg-slate-800/70 text-slate-300 border border-slate-700/60 font-mono whitespace-nowrap">
-                          {eq.isPreIpo || ("testCollateral" in eq && eq.testCollateral) ? "Pre-IPO" : "Public"}
+                          {eq.testCollateral ? "Devnet test" : eq.isPreIpo ? "Pre-IPO" : "Public"}
                         </span>
                       </div>
                       <div className="flex items-center justify-between w-full mt-2 pt-1.5 border-t border-border/40">
@@ -274,12 +301,7 @@ export function LaunchModal({
                           {eq.name}
                         </span>
                         <span className="text-[11px] font-mono font-medium text-muted">
-                          {eq.currentStockPriceUsd > 0
-                            ? `$${eq.currentStockPriceUsd.toLocaleString()} mark`
-                            : eq.symbol === "T-OpenAI" ? "$812.79 mark"
-                            : eq.symbol === "T-SpaceX" ? "$423.00 mark"
-                            : eq.symbol === "T-Kalshi" ? "$413.80 mark"
-                            : "Active"}
+                          {price > 0 ? `$${price.toLocaleString()} ${priceLabel}` : "No live quote"}
                         </span>
                       </div>
                     </button>
@@ -321,7 +343,7 @@ export function LaunchModal({
           <div className="rounded-xl border border-border bg-card-subtle p-3 text-[11px] text-muted flex items-start gap-2">
             <Info className="h-4 w-4 text-brand-cyan flex-shrink-0 mt-0.5" />
             <span className="leading-relaxed">
-              <strong className="text-foreground">Graduation:</strong> Settlement is paused until collateral acquisition and market liquidity can be verified together.
+              <strong className="text-foreground">Graduation:</strong> The curve migrates to Meteora DAMM v2, then settlement verifies the collateral swap and resulting pool before marking the token graduated.
             </span>
           </div>
 

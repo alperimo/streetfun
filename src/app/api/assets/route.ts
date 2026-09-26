@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
-import { getTesseraAvailability, getTesseraCatalog } from "@/server/tessera";
-import { getPreStocksAvailability, getPreStocksCatalog } from "@/server/prestocks";
+import { getNetworkAssetCatalog, type AssetProviderFilter } from "@/server/assetCatalog";
 import { getServerConnection } from "@/server/rpc";
 
 export const dynamic = "force-dynamic";
@@ -8,29 +7,13 @@ export const dynamic = "force-dynamic";
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
-    const provider = searchParams.get("provider") || "all";
-    const connection = getServerConnection();
-
-    let assets: any[] = [];
-
-    if (provider === "prestocks") {
-      const prestocksRaw = await getPreStocksCatalog();
-      assets = await getPreStocksAvailability(connection, prestocksRaw);
-    } else if (provider === "tessera") {
-      const tesseraRaw = await getTesseraCatalog();
-      assets = await getTesseraAvailability(connection, tesseraRaw);
-    } else {
-      // Return both
-      const [prestocksRaw, tesseraRaw] = await Promise.all([
-        getPreStocksCatalog().catch(() => []),
-        getTesseraCatalog().catch(() => []),
-      ]);
-      const [prestocksAvailable, tesseraAvailable] = await Promise.all([
-        getPreStocksAvailability(connection, prestocksRaw).catch(() => []),
-        getTesseraAvailability(connection, tesseraRaw).catch(() => []),
-      ]);
-      assets = [...prestocksAvailable, ...tesseraAvailable];
+    const requestedProvider = searchParams.get("provider") || "all";
+    if (!["all", "prestocks", "tessera"].includes(requestedProvider)) {
+      return NextResponse.json({ error: "Unsupported asset provider." }, { status: 400 });
     }
+    const provider = requestedProvider as AssetProviderFilter;
+    const connection = getServerConnection();
+    const assets = await getNetworkAssetCatalog(connection, provider);
 
     return NextResponse.json(
       { assets, provider },

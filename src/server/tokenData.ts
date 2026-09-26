@@ -12,26 +12,10 @@ import { getDbcLaunchPda, getGlobalConfigPda, getQuoteVaultPda, getTreasuryVault
 import { getDbcSettlementFallbackAt } from "@/sdk/dbcSettlement";
 import { TradeStoreService } from "@/services/indexer/tradeStore";
 import { assertConfiguredCluster, getServerConnection } from "./rpc";
-import { getTesseraAvailability, getTesseraCatalog } from "./tessera";
-import { getPreStocksAvailability, getPreStocksCatalog } from "./prestocks";
+import { getNetworkAssetCatalog } from "./assetCatalog";
 import { getOfficialEquityLogo } from "@/lib/assetLogos";
+import { getAssetMarkPrice, getAssetValuationSource } from "./assetValuation";
 import { getDbcClient, getDbcMigrationDammConfigAddress } from "./meteoraDbc";
-
-function getEffectiveMarkPrice(asset?: any): number {
-  if (!asset) return 0;
-  if (asset.currentStockPriceUsd && asset.currentStockPriceUsd > 0) return asset.currentStockPriceUsd;
-  const sym = (asset.symbol || asset.ticker || "").toUpperCase();
-  const name = (asset.name || "").toUpperCase();
-  if (sym.includes("OPENAI") || name.includes("OPENAI")) return 812.79;
-  if (sym.includes("SPACEX") || name.includes("SPACEX")) return 423.00;
-  if (sym.includes("KALSHI") || name.includes("KALSHI")) return 413.80;
-  if (sym.includes("ANTHROPIC") || name.includes("ANTHROPIC") || sym.includes("CLAUDE")) return 1060.14;
-  if (sym.includes("ANDURIL") || name.includes("ANDURIL")) return 157.41;
-  if (sym.includes("FIGURE") || name.includes("FIGURE")) return 180.54;
-  if (sym.includes("NEURALINK") || name.includes("NEURALINK")) return 337.23;
-  if (sym.includes("POLYMARKET") || name.includes("POLYMARKET")) return 145.86;
-  return 0;
-}
 
 /** Server snapshots are coalesced per process and invalidated by verified events. */
 export class SolanaTokenService {
@@ -73,7 +57,7 @@ export class SolanaTokenService {
 
   private async fetchSnapshot(): Promise<TokenMetadata[]> {
     const program = this.getProgram();
-    await assertConfiguredCluster(this.connection);
+    const genesisHash = await assertConfiguredCluster(this.connection);
     const [curves, dbcLaunches] = await Promise.all([
       (program.account as any).curveAccount.all(),
       (program.account as any).dbcLaunchAccount.all(),
@@ -103,27 +87,20 @@ export class SolanaTokenService {
         dbcConfigStates.set(dbcConfigs[index].toBase58(), configState);
       });
     }
-    const [metadata, config, prestocksRaw, tesseraRaw, stats, currentEpoch] = await Promise.all([
+    const [metadata, config, assetCatalog, stats, currentEpoch] = await Promise.all([
       this.getIndexedMetadata(mints),
       curves.length
         ? (program.account as any).globalConfig.fetch(getGlobalConfigPda(PROGRAM_ID)[0])
         : Promise.resolve(null),
-      getPreStocksCatalog().catch(() => []),
-      getTesseraCatalog().catch(() => []),
+      getNetworkAssetCatalog(this.connection, "all", genesisHash),
       TradeStoreService.getInstance().getMarketStats(mints).catch(() => null),
       this.connection.getEpochInfo
         ? this.connection.getEpochInfo("confirmed").catch(() => null)
         : Promise.resolve(null),
     ]);
 
-    const [prestocksAvailable, tesseraAvailable] = await Promise.all([
-      getPreStocksAvailability(this.connection, prestocksRaw).catch(() => []),
-      getTesseraAvailability(this.connection, tesseraRaw).catch(() => []),
-    ]);
-
     const assets = new Map<string, any>();
-    // PreStocks first, Tessera second
-    for (const a of [...tesseraAvailable, ...prestocksAvailable]) {
+    for (const a of assetCatalog) {
       assets.set(a.mintAddress, a);
     }
 
@@ -177,9 +154,9 @@ export class SolanaTokenService {
             equityBalance = Number(treasury.amount < accounted ? treasury.amount : accounted) / 10 ** equityDecimals;
           }
         }
-        const effectiveMarkPrice = getEffectiveMarkPrice(asset);
-        const hasProviderMark = Boolean(asset && effectiveMarkPrice > 0);
-        const equityValue = hasProviderMark ? equityBalance * effectiveMarkPrice : 0;
+        const assetMarkPrice = getAssetMarkPrice(asset);
+        const hasAssetMark = assetMarkPrice > 0;
+        const equityValue = hasAssetMark ? equityBalance * assetMarkPrice : 0;
 
         const curvePrice = !isGraduated && virtualTokens > 0 ? virtualQuote / virtualTokens : 0;
         // A collateral NAV is not a traded market price or market capitalization.
@@ -216,7 +193,7 @@ export class SolanaTokenService {
             custodian: asset?.custodian || "Unverified",
             legalFramework: asset?.legalFramework || "Collateral identity unverified",
             logoUrl: getOfficialEquityLogo(asset?.symbol || indexed?.target_equity_symbol || asset?.name),
-            stockPriceUsd: hasProviderMark ? effectiveMarkPrice : 0,
+            stockPriceUsd: assetMarkPrice,
             isPreIpo: !!asset && !asset.testCollateral,
             decimals: equityDecimals,
             verifiedTessera: asset?.provider !== "prestocks" && !!asset && !asset.testCollateral,
@@ -239,8 +216,8 @@ export class SolanaTokenService {
           },
           treasury: { totalEquityLocked: equityBalance, totalEquityValueUsd: equityValue,
             vaultPda: keys[i * 6 + 3].toBase58(), proofOfReserveVerified: false,
-            valuationAvailable: hasProviderMark || equityBalance === 0,
-            valuationSource: hasProviderMark ? `${asset.issuer} mark price` : undefined },
+            valuationAvailable: hasAssetMark || equityBalance === 0,
+            valuationSource: getAssetValuationSource(asset) },
           dataSource: "onchain", lastUpdatedAt: new Date().toISOString(), observedSlot: context.slot,
         }, poolState, poolAddress, expectedPoolAddress: poolAddress ? deriveCustomizablePoolAddress(USDC_MINT, account.memeMint) : undefined });
       }
@@ -338,9 +315,9 @@ export class SolanaTokenService {
         const dammPoolVerified = Boolean(poolState.poolState.isMigrated && dammPoolState);
         const isGraduated = Boolean(registry.isGraduated && dammPoolVerified && treasuryMatchesRegistry);
         const settlementPending = Boolean(poolState.poolState.isMigrated && !isGraduated);
-        const effectiveMarkPrice = getEffectiveMarkPrice(asset);
-        const hasProviderMark = Boolean(asset && effectiveMarkPrice > 0);
-        const equityValue = hasProviderMark ? equityBalance * effectiveMarkPrice : 0;
+        const assetMarkPrice = getAssetMarkPrice(asset);
+        const hasAssetMark = assetMarkPrice > 0;
+        const equityValue = hasAssetMark ? equityBalance * assetMarkPrice : 0;
         const price = poolState.poolState.isMigrated
           ? 0
           : getDbcPriceFromSqrtPrice(poolState.poolState.sqrtPrice, 6, 6).toNumber();
@@ -368,7 +345,7 @@ export class SolanaTokenService {
               issuer: asset?.issuer || "Unverified", custodian: asset?.custodian || "Unverified",
               legalFramework: asset?.legalFramework || "Collateral identity unverified",
               logoUrl: getOfficialEquityLogo(asset?.symbol || indexed?.target_equity_symbol || asset?.name),
-              stockPriceUsd: hasProviderMark ? effectiveMarkPrice : 0,
+              stockPriceUsd: assetMarkPrice,
               isPreIpo: !!asset && !asset.testCollateral, decimals: equityDecimals,
               verifiedTessera: asset?.provider !== "prestocks" && !!asset && !asset.testCollateral,
               verifiedPreStocks: asset?.provider === "prestocks" && !asset.testCollateral,
@@ -391,8 +368,8 @@ export class SolanaTokenService {
             treasury: {
               totalEquityLocked: equityBalance, totalEquityValueUsd: equityValue,
               vaultPda: treasuryAddress.toBase58(), proofOfReserveVerified: false,
-              valuationAvailable: hasProviderMark || equityBalance === 0,
-              valuationSource: hasProviderMark ? `${asset.issuer} mark price` : undefined,
+              valuationAvailable: hasAssetMark || equityBalance === 0,
+              valuationSource: getAssetValuationSource(asset),
             },
             dataSource: "onchain", lastUpdatedAt: new Date().toISOString(), observedSlot: context.slot,
           },
