@@ -328,15 +328,13 @@ export function LaunchModal({
             />
           </div>
 
-          {/* Institutional graduation mechanics note (temporarily hidden for cleaner, uncluttered UI) */}
-          {/*
+          {/* Institutional graduation mechanics note */}
           <div className="rounded-xl border border-border bg-card-subtle p-3 text-[11px] text-muted flex items-start gap-2">
             <Info className="h-4 w-4 text-brand-cyan flex-shrink-0 mt-0.5" />
             <span className="leading-relaxed">
               <strong className="text-foreground">Graduation:</strong> When the bonding curve completes, 50% of liquidity acquires tokenized equity for the vault NAV floor, and the token graduates to Meteora DEX.
             </span>
           </div>
-          */}
 
           {/* Submit Button */}
           <button
