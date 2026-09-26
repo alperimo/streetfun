@@ -61,4 +61,7 @@ pub enum StreetfunError {
 
     #[msg("Curve supply must match the fixed launch supply and live meme mint supply.")]
     SupplyInvariantViolation,
+
+    #[msg("Permissionless settlement opens 24 hours after Meteora records the curve completion.")]
+    SettlementFallbackNotReady,
 }

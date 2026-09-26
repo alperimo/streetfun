@@ -37,6 +37,8 @@ export interface TokenMetadata {
     /** New launches use Meteora DBC; old tokens can retain the legacy protocol. */
     protocol?: "meteora-dbc" | "streetfun-legacy";
     dbcPoolAddress?: string;
+    /** Unix time after which any wallet may complete DBC settlement. */
+    dbcSettlementFallbackAt?: number;
     settlementPending?: boolean;
     realQuoteReservesUsd: number;
     graduationThresholdUsd: number;

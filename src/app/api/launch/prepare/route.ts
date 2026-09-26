@@ -1,7 +1,8 @@
 import * as anchor from "@coral-xyz/anchor";
 import { DynamicBondingCurveClient, deriveDbcPoolAddress, deriveDbcTokenVaultAddress } from "@meteora-ag/dynamic-bonding-curve-sdk";
-import { hasTransferHookExtension } from "@meteora-ag/cp-amm-sdk";
-import { getAssociatedTokenAddressSync, TOKEN_PROGRAM_ID } from "@solana/spl-token";
+import { CpAmm, getCurrentPoint as getDammCurrentPoint, hasTransferHookExtension, SwapMode } from "@meteora-ag/cp-amm-sdk";
+import { getAssociatedTokenAddressSync, getMint, TOKEN_2022_PROGRAM_ID, TOKEN_PROGRAM_ID } from "@solana/spl-token";
+import BN from "bn.js";
 import { PublicKey, Transaction } from "@solana/web3.js";
 import { NextRequest, NextResponse } from "next/server";
 import idl from "@/idl/streetfun.json";
@@ -69,11 +70,59 @@ export async function POST(request: NextRequest) {
 
     const configAddress = getDbcConfigAddress();
     const dbcClient = getDbcClient(connection);
-    await assertStreetFunDbcConfig(dbcClient, configAddress);
+    const dbcConfigState: any = await assertStreetFunDbcConfig(dbcClient, configAddress);
     const pool = deriveDbcPoolAddress(USDC_MINT, memeMint, configAddress);
     const quoteVault = deriveDbcTokenVaultAddress(pool, USDC_MINT);
     const [globalConfig] = getGlobalConfigPda(PROGRAM_ID);
     const [dbcLaunch] = getDbcLaunchPda(memeMint, PROGRAM_ID);
+
+    const partnerQuoteBudget = BigInt(dbcConfigState.migrationQuoteThreshold.toString()) / 2n;
+    if (partnerQuoteBudget <= 0n) {
+      return NextResponse.json({ error: "The configured partner migration allocation is too small for collateral settlement." }, { status: 409 });
+    }
+    const amm = new CpAmm(connection);
+    const [equityAsA, equityAsB] = await Promise.all([
+      amm.fetchPoolStatesByTokenAMint(equityMint),
+      amm.fetchPoolStatesByTokenBMint(equityMint),
+    ]);
+    const markets = [...equityAsA, ...equityAsB].filter(({ account }: any) =>
+      (account.tokenAMint.equals(USDC_MINT) && account.tokenBMint.equals(equityMint)) ||
+      (account.tokenBMint.equals(USDC_MINT) && account.tokenAMint.equals(equityMint)),
+    );
+    const [epoch, usdcMintState, equityMintState] = await Promise.all([
+      connection.getEpochInfo("confirmed"),
+      getMint(connection, USDC_MINT, "confirmed", TOKEN_PROGRAM_ID),
+      getMint(connection, equityMint, "confirmed", equityTokenProgram),
+    ]);
+    const marketQuotes = await Promise.all(markets.map(async (market: any) => {
+      try {
+        const usdcIsA = market.account.tokenAMint.equals(USDC_MINT);
+        const currentPoint = await getDammCurrentPoint(connection, market.account.activationType as any);
+        const quote = amm.getQuote2({
+          inputTokenMint: USDC_MINT,
+          slippage: 100,
+          currentPoint,
+          poolState: market.account,
+          tokenADecimal: usdcIsA ? usdcMintState.decimals : equityMintState.decimals,
+          tokenBDecimal: usdcIsA ? equityMintState.decimals : usdcMintState.decimals,
+          outputTokenInfo: equityTokenProgram.equals(TOKEN_2022_PROGRAM_ID)
+            ? { mint: equityMintState, currentEpoch: epoch.epoch }
+            : undefined,
+          hasReferral: false,
+          swapMode: SwapMode.ExactIn,
+          amountIn: new BN(partnerQuoteBudget.toString()),
+        });
+        return quote.outputAmount.isZero() ? null : { market, quote };
+      } catch { return null; }
+    }));
+    const bestMarket = marketQuotes.reduce<{ market: any; quote: any } | null>((best, candidate) =>
+      candidate && (!best || candidate.quote.outputAmount.gt(best.quote.outputAmount)) ? candidate : best,
+    null);
+    if (!bestMarket) {
+      return NextResponse.json({ error: "No active Meteora DAMM v2 market can quote the configured collateral allocation." }, { status: 409 });
+    }
+    const equityDammV2Pool = bestMarket.market.publicKey as PublicKey;
+
     const appUrl = metadataBaseUrl(request);
     const uri = new URL(`/api/metadata/${memeMint.toBase58()}`, appUrl).toString();
     if (uri.length > 200) return NextResponse.json({ error: "The configured app URL exceeds Meteora's on-chain metadata URI limit." }, { status: 400 });
@@ -105,6 +154,7 @@ export async function POST(request: NextRequest) {
       dbcConfig: configAddress,
       dbcPool: pool,
       dbcQuoteVault: quoteVault,
+      equityDammV2Pool,
       dbcLaunch,
       treasuryVault: getAssociatedTokenAddressSync(equityMint, dbcLaunch, true, equityTokenProgram),
       partnerQuoteAccount: getAssociatedTokenAddressSync(USDC_MINT, globalConfig, true, TOKEN_PROGRAM_ID),
@@ -134,6 +184,7 @@ export async function POST(request: NextRequest) {
       pool: pool.toBase58(),
       config: configAddress.toBase58(),
       targetEquityMint: equityMint.toBase58(),
+      settlementMarket: equityDammV2Pool.toBase58(),
       metadataUri: uri,
     }, { headers: { "Cache-Control": "no-store" } });
   } catch (error) {

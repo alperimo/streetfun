@@ -22,6 +22,7 @@ import { NextResponse } from "next/server";
 import { PublicKey } from "@solana/web3.js";
 import idl from "@/idl/streetfun.json";
 import { METEORA_DAMM_V2_PROGRAM_ID, METEORA_DBC_PROGRAM_ID, PROGRAM_ID, USDC_MINT } from "@/sdk/constants";
+import { getDbcSettlementFallbackAt, isDbcSettlementFallbackOpen } from "@/sdk/dbcSettlement";
 import { getDbcLaunchPda, getGlobalConfigPda } from "@/sdk/pda";
 import { assertStreetFunDbcConfig, getDbcClient, getDbcMigrationDammConfigAddress } from "@/server/meteoraDbc";
 import { assertConfiguredCluster, getServerConnection } from "@/server/rpc";
@@ -69,9 +70,6 @@ export async function POST(request: Request) {
     try { registry = await (program.account as any).dbcLaunchAccount.fetch(registryAddress); }
     catch { throw new DbcGraduationError("This mint has no StreetFun DBC launch registry.", 404, "DBC_LAUNCH_NOT_FOUND"); }
     if (!registry.memeMint.equals(mint)) throw new DbcGraduationError("Launch registry and mint do not match.", 409, "DBC_REGISTRY_MISMATCH");
-    if (!registry.creator.equals(caller)) {
-      throw new DbcGraduationError("Only the launch creator can authorize DBC migration and equity settlement.", 403, "CREATOR_AUTH_REQUIRED");
-    }
     if (registry.isGraduated) throw new DbcGraduationError("This token has already completed settlement.", 409, "ALREADY_GRADUATED");
 
     const dbcClient = getDbcClient(connection);
@@ -86,6 +84,15 @@ export async function POST(request: Request) {
     const quoteReserve = BigInt(virtualPool.poolState.quoteReserve.toString());
     if (threshold <= 0n || quoteReserve < threshold) {
       throw new DbcGraduationError("The live DBC quote reserve has not reached its migration threshold.", 409, "THRESHOLD_NOT_REACHED");
+    }
+    const settlementFallbackAt = getDbcSettlementFallbackAt(virtualPool.poolState.finishCurveTimestamp.toString());
+    const fallbackOpen = isDbcSettlementFallbackOpen(settlementFallbackAt);
+    if (!registry.creator.equals(caller) && !fallbackOpen) {
+      throw new DbcGraduationError(
+        "The creator can settle immediately. Any wallet can settle 24 hours after Meteora records curve completion.",
+        403,
+        "SETTLEMENT_FALLBACK_NOT_READY",
+      );
     }
 
     const migrationDammConfig = getDbcMigrationDammConfigAddress();
@@ -102,6 +109,7 @@ export async function POST(request: Request) {
         quoteReserve: quoteReserve.toString(),
         migrationThreshold: threshold.toString(),
         requiredPartnerQuoteForEquity: (threshold / 2n).toString(),
+        settlementFallbackAt,
       }, { headers: { "Cache-Control": "no-store" } });
     }
 
@@ -134,12 +142,22 @@ export async function POST(request: Request) {
       client.fetchPoolStatesByTokenAMint(registry.targetEquityMint),
       client.fetchPoolStatesByTokenBMint(registry.targetEquityMint),
     ]);
-    const equityMarkets = [...targetAsA, ...targetAsB].filter(({ account }: any) =>
+    let equityMarkets = [...targetAsA, ...targetAsB].filter(({ account }: any) =>
       (account.tokenAMint.equals(USDC_MINT) && account.tokenBMint.equals(registry.targetEquityMint)) ||
       (account.tokenBMint.equals(USDC_MINT) && account.tokenAMint.equals(registry.targetEquityMint)),
     );
+    if (!registry.creator.equals(caller)) {
+      if (registry.meteoraDammV2Pool.equals(PublicKey.default)) {
+        throw new DbcGraduationError(
+          "This launch predates the registered settlement-market fallback. The creator must authorize its settlement.",
+          409,
+          "FALLBACK_MARKET_NOT_REGISTERED",
+        );
+      }
+      equityMarkets = equityMarkets.filter(({ publicKey }: any) => publicKey.equals(registry.meteoraDammV2Pool));
+    }
     if (!equityMarkets.length) {
-      throw new DbcGraduationError("No live Meteora DAMM v2 USDC/collateral pool exists, so the equity purchase cannot be verified.", 409, "EQUITY_MARKET_UNAVAILABLE");
+      throw new DbcGraduationError("The registered USDC/collateral DAMM v2 market is unavailable, so settlement cannot be verified.", 409, "EQUITY_MARKET_UNAVAILABLE");
     }
     const [epoch, usdcMint] = await Promise.all([
       connection.getEpochInfo("confirmed"),
@@ -195,6 +213,7 @@ export async function POST(request: Request) {
           : migratedState.tokenBVault.toBase58(),
       },
       pool: { address: migratedPool.toBase58(), quoteReserve: quoteReserve.toString(), migrationThreshold: threshold.toString() },
+      settlementFallbackAt,
       accounts: {
         caller: caller.toBase58(), globalConfig: globalConfig.toBase58(), memeMint: mint.toBase58(),
         quoteMint: registry.quoteMint.toBase58(), targetEquityMint: registry.targetEquityMint.toBase58(),

@@ -17,6 +17,9 @@ export const METEORA_DAMM_V2_MIGRATION_CONFIG = new PublicKey(
   "A8gMrEPJkacWkcb3DGwtJwTe16HktSEfvwtuDh2MCtck"
 );
 
+/** Creator settlement is immediate; public fallback opens one day after DBC completion. */
+export const DBC_SETTLEMENT_FALLBACK_DELAY_SECONDS = 24 * 60 * 60;
+
 export const GLOBAL_CONFIG_SEED = Buffer.from("global-config");
 export const DBC_LAUNCH_SEED = Buffer.from("dbc-launch");
 export const CURVE_SEED = Buffer.from("curve");

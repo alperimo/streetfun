@@ -1183,6 +1183,12 @@
           "writable": true
         },
         {
+          "name": "equity_damm_v2_pool",
+          "docs": [
+            "The live USDC/collateral DAMM v2 pool selected during launch preparation."
+          ]
+        },
+        {
           "name": "dbc_launch",
           "writable": true,
           "pda": {
@@ -1546,7 +1552,7 @@
         {
           "name": "caller",
           "docs": [
-            "Only the launch creator may authorize spending its migration allocation."
+            "The creator may settle immediately; after the fallback delay settlement is permissionless."
           ],
           "writable": true,
           "signer": true
@@ -2150,6 +2156,11 @@
       "code": 6019,
       "name": "SupplyInvariantViolation",
       "msg": "Curve supply must match the fixed launch supply and live meme mint supply."
+    },
+    {
+      "code": 6020,
+      "name": "SettlementFallbackNotReady",
+      "msg": "Permissionless settlement opens 24 hours after Meteora records the curve completion."
     }
   ],
   "types": [
@@ -2328,6 +2339,9 @@
           },
           {
             "name": "meteora_damm_v2_pool",
+            "docs": [
+              "Selected collateral market before graduation; migrated DBC pool afterward."
+            ],
             "type": "pubkey"
           },
           {

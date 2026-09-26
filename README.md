@@ -2,10 +2,12 @@
 
 StreetFun is a Solana launchpad. New tokens use Meteora's Dynamic Bonding Curve (DBC) for launch trading and migrate into Meteora DAMM v2. Existing tokens launched on StreetFun's legacy curve keep their legacy trade path. Tessera T-Tokens are loan participation rights; they are not shares or ownership in the referenced company.
 
-DBC graduation has two verified outcomes. The launch creator signs the migration and settlement so an unrelated caller cannot direct the partner allocation into a low-output collateral market:
+DBC graduation completes two verified outcomes. The creator may initiate migration and settlement immediately. If the creator does not act, any wallet may complete settlement 24 hours after Meteora records that the curve finished. New launches pin the collateral market selected from live DAMM v2 quotes; the permissionless path must use that market and enforce a minimum output of at least 90% of its on-chain spot quote:
 1. Meteora migrates the completed DBC pool and its configured liquidity positions into DAMM v2.
 2. StreetFun claims the configured 50% partner migration allocation, buys the selected Tessera/PreStocks collateral in a live DAMM v2 market, and locks the acquired tokens in the launch's treasury PDA. The contract records graduation only after the swap succeeds and the treasury balance increases by at least the quoted minimum.
 3. After graduation, holders can burn meme tokens to redeem their pro-rata portion of the vault-held collateral token, subject to Token-2022 transfer fees and on-chain balances.
+
+The fallback is deliberately fail-closed for older DBC registrations that did not record a collateral market: those launches still require creator-authorized settlement. The spot-price floor bounds caller-selected slippage against the pinned pool; it is not an external fair-value oracle.
 
 Meteora's separate 0.2% protocol migration fee applies during DBC-to-DAMM v2 migration. It is separate from StreetFun's configured partner allocation. See Meteora's [migration and liquidity guide](https://docs.meteora.ag/core-products/dbc/migration-and-liquidity) and [TypeScript SDK examples](https://docs.meteora.ag/developer-guides/dbc/typescript-sdk/examples).
 
@@ -24,7 +26,7 @@ Unlike traditional bonding curve platforms that operate as extractive zero-sum g
    New launches use Meteora's live virtual pool for price discovery and USDC buys/sells. The server reads the DBC pool state and fixed-supply mint directly from Solana; the database supplies indexed metadata and activity, not the market price or reserve source. Legacy tokens continue to use StreetFun's original curve.
 
 3. **DBC graduation and DAMM v2 settlement**:
-   At the configured DBC quote threshold, curve trading ends. DBC's migration instruction creates the DAMM v2 pool and configured positions. StreetFun then atomically claims its configured partner quote allocation, swaps that amount for the selected collateral through a live DAMM v2 market, validates the received amount, and records the pool and vault balances. DAMM v2 is the migration target; DLMM is not used.
+   At the configured DBC quote threshold, curve trading ends. DBC's migration instruction creates the DAMM v2 pool and configured positions. StreetFun then atomically claims its configured partner quote allocation, swaps that amount for the selected collateral through a live DAMM v2 market, validates the received amount, and records the pool and vault balances. The creator can settle immediately; any wallet can use the launch-pinned market after the 24-hour fallback delay. DAMM v2 is the migration target; DLMM is not used.
 
 4. **On-Chain Burn & Redeem Module**:
    A post-graduation redemption mechanism allowing holders to burn meme tokens for their pro-rata share of collateral tokens held in the PDA vault. This formula does not guarantee a market price or issuer redemption.
@@ -151,8 +153,8 @@ streetfun/
 | `buy_curve` | Buyer, Curve PDA, Token Vault, Quote Vault, Fee Recipient | Swaps USDC for meme tokens along the bonding curve |
 | `sell_curve` | Seller, Curve PDA, Token Vault, Quote Vault, Fee Recipient | Swaps meme tokens back to USDC prior to graduation |
 | `graduate_and_execute_stock` | Caller, legacy Curve PDA, Treasury Vault, DAMM v2 markets and pool accounts | Settles an existing legacy token |
-| `register_dbc_launch` | Creator, DBC pool/config, launch registry and treasury vault | Registers a Meteora-created DBC pool and binds its collateral mint |
-| `settle_dbc_graduation` | Launch creator, migrated DBC DAMM v2 pool, partner quote allocation, collateral DAMM v2 market and treasury | Claims the partner allocation, buys collateral, checks the received balance, then records graduation |
+| `register_dbc_launch` | Creator, DBC pool/config, selected collateral DAMM v2 market, launch registry and treasury vault | Registers a Meteora-created DBC pool and pins its collateral settlement market |
+| `settle_dbc_graduation` | Creator immediately, or any wallet after 24 hours; migrated DBC pool, pinned collateral market, partner quote allocation and treasury | Claims the partner allocation, buys collateral, checks the minimum output and received balance, then records graduation |
 | `burn_and_redeem` / `burn_and_redeem_dbc` | Redeemer, mint, launch state, Treasury Vault and Collateral Mint | Burns meme tokens and transfers the pro-rata collateral-token amount |
 
 ---

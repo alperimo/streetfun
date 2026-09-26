@@ -9,6 +9,7 @@ import { calculateBondingProgress } from "@/lib/marketFormat";
 import { createServerSupabaseClient } from "./supabase";
 import { METEORA_DAMM_V2_PROGRAM_ID, METEORA_DBC_PROGRAM_ID, PROGRAM_ID, USDC_MINT } from "@/sdk/constants";
 import { getDbcLaunchPda, getGlobalConfigPda, getQuoteVaultPda, getTreasuryVaultPda } from "@/sdk/pda";
+import { getDbcSettlementFallbackAt } from "@/sdk/dbcSettlement";
 import { TradeStoreService } from "@/services/indexer/tradeStore";
 import { assertConfiguredCluster, getServerConnection } from "./rpc";
 import { getTesseraAvailability, getTesseraCatalog } from "./tessera";
@@ -375,6 +376,9 @@ export class SolanaTokenService {
             },
             bondingCurve: {
               protocol: "meteora-dbc", dbcPoolAddress: registry.dbcPool.toBase58(), settlementPending,
+              dbcSettlementFallbackAt: !registry.meteoraDammV2Pool.equals(PublicKey.default)
+                ? getDbcSettlementFallbackAt(poolState.poolState.finishCurveTimestamp.toString())
+                : undefined,
               realQuoteReservesUsd: quoteReserveUsd, graduationThresholdUsd: thresholdUsd,
               progressPct: isGraduated ? 100 : progressPct,
               dbcQuoteReserveRaw: poolState.poolState.quoteReserve.toString(),

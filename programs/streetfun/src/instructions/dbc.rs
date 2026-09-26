@@ -19,6 +19,7 @@ const DAMM_V2_POOL_SEED: &[u8] = b"pool";
 const DBC_EVENT_AUTHORITY_SEED: &[u8] = b"__event_authority";
 const VIRTUAL_POOL_DISCRIMINATOR: [u8; 8] = [213, 224, 5, 209, 98, 69, 119, 92];
 const DBC_CONFIG_DISCRIMINATOR: [u8; 8] = [26, 108, 14, 123, 116, 230, 129, 43];
+const DAMM_V2_POOL_DISCRIMINATOR: [u8; 8] = [241, 154, 109, 4, 17, 177, 109, 188];
 const DBC_CONFIG_QUOTE_MINT_OFFSET: usize = 8;
 const DBC_CONFIG_FEE_CLAIMER_OFFSET: usize = 40;
 const DBC_CONFIG_LEFTOVER_RECEIVER_OFFSET: usize = 72;
@@ -41,15 +42,22 @@ const DBC_POOL_CREATOR_OFFSET: usize = 104;
 const DBC_POOL_BASE_MINT_OFFSET: usize = 136;
 const DBC_POOL_QUOTE_VAULT_OFFSET: usize = 200;
 const DBC_POOL_IS_MIGRATED_OFFSET: usize = 305;
+// From Meteora's published Dynamic Bonding Curve PoolState layout.
+const DBC_POOL_FINISH_CURVE_TIMESTAMP_OFFSET: usize = 344;
 const DAMM_V2_POOL_TOKEN_A_MINT_OFFSET: usize = 168;
 const DAMM_V2_POOL_TOKEN_B_MINT_OFFSET: usize = 200;
 const DAMM_V2_POOL_TOKEN_A_VAULT_OFFSET: usize = 232;
 const DAMM_V2_POOL_TOKEN_B_VAULT_OFFSET: usize = 264;
+// From Meteora's published DAMM v2 Pool layout.
+const DAMM_V2_POOL_SQRT_PRICE_OFFSET: usize = 456;
 const DBC_MIGRATION_FEE_PERCENTAGE: u8 = 50;
 const DBC_MIGRATION_OPTION_MET_DAMM_V2: u8 = 1;
 const DBC_MIGRATION_FEE_OPTION_CUSTOMIZABLE: u8 = 6;
 const DBC_TOTAL_SUPPLY: u64 = 1_000_000_000_000_000;
 const WITHDRAW_MIGRATION_FEE_DISCRIMINATOR: [u8; 8] = [237, 142, 45, 23, 129, 6, 222, 162];
+const DBC_SETTLEMENT_FALLBACK_DELAY_SECONDS: i64 = 24 * 60 * 60;
+const MAX_PERMISSIONLESS_SETTLEMENT_SLIPPAGE_BPS: u64 = 1_000;
+const BPS_DENOMINATOR: u64 = 10_000;
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy)]
 pub struct SettleDbcGraduationParams {
@@ -79,6 +87,10 @@ pub struct RegisterDbcLaunch<'info> {
     /// CHECK: DBC's canonical quote vault is checked against the pool state and token owner below.
     #[account(mut)]
     pub dbc_quote_vault: InterfaceAccount<'info, InterfaceTokenAccount>,
+
+    /// The live USDC/collateral DAMM v2 pool selected during launch preparation.
+    /// CHECK: Program ownership, pair and price state are validated below.
+    pub equity_damm_v2_pool: UncheckedAccount<'info>,
 
     #[account(
         init,
@@ -164,6 +176,28 @@ pub fn handle_register_dbc_launch(ctx: Context<RegisterDbcLaunch>) -> Result<()>
         DBC_POOL_AUTHORITY,
         StreetfunError::InvalidDammV2Pool
     );
+    require_keys_eq!(
+        *ctx.accounts.equity_damm_v2_pool.to_account_info().owner,
+        cp_amm::ID,
+        StreetfunError::InvalidDammV2Pool
+    );
+    let market_a = read_dbc_pool_pubkey(
+        &ctx.accounts.equity_damm_v2_pool.to_account_info(),
+        DAMM_V2_POOL_TOKEN_A_MINT_OFFSET,
+    )?;
+    let market_b = read_dbc_pool_pubkey(
+        &ctx.accounts.equity_damm_v2_pool.to_account_info(),
+        DAMM_V2_POOL_TOKEN_B_MINT_OFFSET,
+    )?;
+    validate_market_pair(
+        market_a,
+        market_b,
+        ctx.accounts.quote_mint.key(),
+        ctx.accounts.target_equity_mint.key(),
+        market_a,
+        market_b,
+    )?;
+    read_damm_v2_sqrt_price(&ctx.accounts.equity_damm_v2_pool.to_account_info())?;
 
     let launch = &mut ctx.accounts.dbc_launch;
     launch.creator = ctx.accounts.creator.key();
@@ -172,7 +206,9 @@ pub fn handle_register_dbc_launch(ctx: Context<RegisterDbcLaunch>) -> Result<()>
     launch.quote_mint = ctx.accounts.quote_mint.key();
     launch.dbc_config = ctx.accounts.dbc_config.key();
     launch.dbc_pool = ctx.accounts.dbc_pool.key();
-    launch.meteora_damm_v2_pool = Pubkey::default();
+    // Before graduation this field pins the fallback collateral market. After
+    // settlement it records the migrated DBC meme/quote pool instead.
+    launch.meteora_damm_v2_pool = ctx.accounts.equity_damm_v2_pool.key();
     launch.initial_meme_supply = ctx.accounts.meme_mint.supply;
     launch.settlement_quote_amount = 0;
     launch.total_equity_locked = 0;
@@ -193,7 +229,7 @@ pub fn handle_register_dbc_launch(ctx: Context<RegisterDbcLaunch>) -> Result<()>
 
 #[derive(Accounts)]
 pub struct SettleDbcGraduation<'info> {
-    /// Only the launch creator may authorize spending its migration allocation.
+    /// The creator may settle immediately; after the fallback delay settlement is permissionless.
     #[account(mut)]
     pub caller: Signer<'info>,
 
@@ -211,7 +247,6 @@ pub struct SettleDbcGraduation<'info> {
         constraint = dbc_launch.meme_mint == meme_mint.key() @ StreetfunError::InvalidDammV2Pool,
         constraint = dbc_launch.quote_mint == quote_mint.key() @ StreetfunError::InvalidDammV2Pool,
         constraint = dbc_launch.target_equity_mint == target_equity_mint.key() @ StreetfunError::InvalidEquityMint,
-        constraint = dbc_launch.creator == caller.key() @ StreetfunError::Unauthorized,
         constraint = !dbc_launch.is_graduated @ StreetfunError::CurveAlreadyGraduated,
     )]
     pub dbc_launch: Box<Account<'info, DbcLaunchAccount>>,
@@ -322,6 +357,12 @@ pub fn handle_settle_dbc_graduation(
         ctx.accounts.dbc_quote_vault.key(),
         true,
     )?;
+    let fallback_settlement = validate_settlement_caller(
+        ctx.accounts.caller.key(),
+        ctx.accounts.dbc_launch.creator,
+        read_dbc_pool_finish_curve_timestamp(&ctx.accounts.dbc_pool.to_account_info())?,
+        Clock::get()?.unix_timestamp,
+    )?;
     require_keys_eq!(
         ctx.accounts.dbc_quote_vault.mint,
         ctx.accounts.quote_mint.key(),
@@ -404,6 +445,23 @@ pub fn handle_settle_dbc_graduation(
         quote_for_equity > 0,
         StreetfunError::InsufficientQuoteReserves
     );
+    if fallback_settlement {
+        validate_permissionless_market(
+            ctx.accounts.dbc_launch.meteora_damm_v2_pool,
+            ctx.accounts.equity_damm_v2_pool.key(),
+        )?;
+        let quote_is_token_a = ctx.accounts.equity_token_a_mint.key() == ctx.accounts.quote_mint.key();
+        let sqrt_price = read_damm_v2_sqrt_price(&ctx.accounts.equity_damm_v2_pool.to_account_info())?;
+        let minimum_safe_output = permissionless_settlement_minimum_output(
+            quote_for_equity,
+            sqrt_price,
+            quote_is_token_a,
+        )?;
+        require!(
+            params.min_equity_tokens_expected >= minimum_safe_output,
+            StreetfunError::SlippageExceeded
+        );
+    }
 
     let equity_before = ctx.accounts.treasury_vault.amount;
     let config_bump = [ctx.accounts.global_config.bump];
@@ -518,6 +576,134 @@ fn withdraw_dbc_partner_migration_fee(accounts: &SettleDbcGraduation) -> Result<
         signer_seeds,
     )?;
     Ok(())
+}
+
+/// A creator can settle as soon as the DBC curve is complete. If the creator
+/// is unavailable, any signer can settle one day after Meteora records that
+/// the curve finished. The pool timestamp is owned by Meteora and cannot be
+/// reset by a settlement caller.
+fn validate_settlement_caller(
+    caller: Pubkey,
+    creator: Pubkey,
+    finish_curve_timestamp: i64,
+    now: i64,
+) -> Result<bool> {
+    if caller == creator {
+        return Ok(false);
+    }
+    require!(
+        finish_curve_timestamp > 0,
+        StreetfunError::SettlementFallbackNotReady
+    );
+    let fallback_at = finish_curve_timestamp
+        .checked_add(DBC_SETTLEMENT_FALLBACK_DELAY_SECONDS)
+        .ok_or(StreetfunError::MathOverflow)?;
+    require!(now >= fallback_at, StreetfunError::SettlementFallbackNotReady);
+    Ok(true)
+}
+
+fn validate_permissionless_market(registered_market: Pubkey, selected_market: Pubkey) -> Result<()> {
+    require!(
+        registered_market != Pubkey::default() && registered_market == selected_market,
+        StreetfunError::InvalidDammV2Pool
+    );
+    Ok(())
+}
+
+fn read_dbc_pool_finish_curve_timestamp(pool: &AccountInfo) -> Result<i64> {
+    let data = pool.try_borrow_data()?;
+    let end = DBC_POOL_FINISH_CURVE_TIMESTAMP_OFFSET + 8;
+    require!(data.len() >= end, StreetfunError::InvalidDammV2Pool);
+    let timestamp = u64::from_le_bytes(
+        data[DBC_POOL_FINISH_CURVE_TIMESTAMP_OFFSET..end]
+            .try_into()
+            .map_err(|_| StreetfunError::InvalidDammV2Pool)?,
+    );
+    i64::try_from(timestamp).map_err(|_| StreetfunError::MathOverflow.into())
+}
+
+fn read_damm_v2_sqrt_price(pool: &AccountInfo) -> Result<u128> {
+    let data = pool.try_borrow_data()?;
+    let end = DAMM_V2_POOL_SQRT_PRICE_OFFSET + 16;
+    require!(
+        data.len() >= end && data[..8] == DAMM_V2_POOL_DISCRIMINATOR,
+        StreetfunError::InvalidDammV2Pool
+    );
+    let sqrt_price = u128::from_le_bytes(
+        data[DAMM_V2_POOL_SQRT_PRICE_OFFSET..end]
+            .try_into()
+            .map_err(|_| StreetfunError::InvalidDammV2Pool)?,
+    );
+    require!(sqrt_price > 0, StreetfunError::InvalidDammV2Pool);
+    Ok(sqrt_price)
+}
+
+/// Enforces a bounded minimum output for permissionless settlement. The bound
+/// uses the DAMM v2 pool's on-chain spot price and allows up to 10% for fees,
+/// transfer fees, and price impact. The caller can ask for stricter slippage,
+/// but cannot waive this floor after the creator fallback opens.
+fn permissionless_settlement_minimum_output(
+    quote_amount: u64,
+    sqrt_price: u128,
+    quote_is_token_a: bool,
+) -> Result<u64> {
+    require!(quote_amount > 0 && sqrt_price > 0, StreetfunError::ZeroAmount);
+    let price_q64 = q64_multiply(sqrt_price, sqrt_price)?;
+    require!(price_q64 > 0, StreetfunError::InvalidDammV2Pool);
+    let output_per_input_q64 = if quote_is_token_a {
+        price_q64
+    } else {
+        reciprocal_q64(price_q64)?
+    };
+    let spot_output = multiply_u64_by_q64(quote_amount, output_per_input_q64)?;
+    let minimum = (u128::from(spot_output)
+        .checked_mul(u128::from(BPS_DENOMINATOR - MAX_PERMISSIONLESS_SETTLEMENT_SLIPPAGE_BPS))
+        .ok_or(StreetfunError::MathOverflow)?
+        / u128::from(BPS_DENOMINATOR)) as u64;
+    Ok(minimum)
+}
+
+fn q64_multiply(a: u128, b: u128) -> Result<u128> {
+    let a_hi = a >> 64;
+    let a_lo = u128::from(a as u64);
+    let b_hi = b >> 64;
+    let b_lo = u128::from(b as u64);
+    let high = a_hi
+        .checked_mul(b_hi)
+        .and_then(|value| value.checked_mul(1u128 << 64))
+        .ok_or(StreetfunError::MathOverflow)?;
+    let cross_a = a_hi.checked_mul(b_lo).ok_or(StreetfunError::MathOverflow)?;
+    let cross_b = b_hi.checked_mul(a_lo).ok_or(StreetfunError::MathOverflow)?;
+    let low = a_lo
+        .checked_mul(b_lo)
+        .ok_or(StreetfunError::MathOverflow)?
+        >> 64;
+    high
+        .checked_add(cross_a)
+        .and_then(|value| value.checked_add(cross_b))
+        .and_then(|value| value.checked_add(low))
+        .ok_or(StreetfunError::MathOverflow.into())
+}
+
+fn reciprocal_q64(value: u128) -> Result<u128> {
+    require!(value > 0, StreetfunError::InvalidDammV2Pool);
+    // floor(2^128 / value), with 2^128 represented as u128::MAX + 1.
+    let quotient = u128::MAX / value;
+    let remainder = u128::MAX % value;
+    quotient
+        .checked_add(u128::from(remainder == value - 1))
+        .ok_or(StreetfunError::MathOverflow.into())
+}
+
+fn multiply_u64_by_q64(amount: u64, value_q64: u128) -> Result<u64> {
+    let whole = (value_q64 >> 64)
+        .checked_mul(u128::from(amount))
+        .ok_or(StreetfunError::MathOverflow)?;
+    let fractional = (u128::from(value_q64 as u64) * u128::from(amount)) >> 64;
+    let output = whole
+        .checked_add(fractional)
+        .ok_or(StreetfunError::MathOverflow)?;
+    u64::try_from(output).map_err(|_| StreetfunError::MathOverflow.into())
 }
 
 fn validate_dbc_config(
@@ -775,4 +961,35 @@ fn read_dbc_pool_pubkey_data(data: &[u8], offset: usize) -> Result<Pubkey> {
         .try_into()
         .map_err(|_| StreetfunError::InvalidDammV2Pool)?;
     Ok(Pubkey::new_from_array(bytes))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn creator_can_settle_immediately_but_other_wallets_wait_one_day() {
+        let creator = Pubkey::new_unique();
+        let keeper = Pubkey::new_unique();
+        let finished_at = 1_000;
+
+        assert_eq!(validate_settlement_caller(creator, creator, 0, 0).unwrap(), false);
+        assert!(validate_settlement_caller(keeper, creator, finished_at, finished_at + 86_399).is_err());
+        assert_eq!(validate_settlement_caller(keeper, creator, finished_at, finished_at + 86_400).unwrap(), true);
+        assert!(validate_settlement_caller(keeper, creator, 0, i64::MAX).is_err());
+        let registered_market = Pubkey::new_unique();
+        assert!(validate_permissionless_market(Pubkey::default(), registered_market).is_err());
+        assert!(validate_permissionless_market(registered_market, Pubkey::new_unique()).is_err());
+        assert!(validate_permissionless_market(registered_market, registered_market).is_ok());
+    }
+
+    #[test]
+    fn permissionless_minimum_output_uses_pool_spot_and_bounded_slippage() {
+        let one = 1u128 << 64;
+        let four = 2u128 << 64;
+        assert_eq!(permissionless_settlement_minimum_output(1_000, one, true).unwrap(), 900);
+        assert_eq!(permissionless_settlement_minimum_output(1_000, one, false).unwrap(), 900);
+        assert_eq!(permissionless_settlement_minimum_output(1_000, four, true).unwrap(), 3_600);
+        assert_eq!(permissionless_settlement_minimum_output(1_000, four, false).unwrap(), 225);
+    }
 }

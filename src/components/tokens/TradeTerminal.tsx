@@ -31,6 +31,17 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
   const { connected: walletAdapterConnected, publicKey, sendTransaction } = useWallet();
   const { isWalletConnected, executeTrade, executeRedeem, isMock, refreshTokens, setWalletDialogOpen } = useMarket();
   const isDbcCreator = Boolean(publicKey && token.bondingCurve.protocol === "meteora-dbc" && token.creator === publicKey.toBase58());
+  const [unixNow, setUnixNow] = useState(() => Math.floor(Date.now() / 1000));
+  useEffect(() => {
+    const timer = window.setInterval(() => setUnixNow(Math.floor(Date.now() / 1000)), 15_000);
+    return () => window.clearInterval(timer);
+  }, []);
+  const isDbcFallbackOpen = Boolean(
+    token.bondingCurve.protocol === "meteora-dbc" &&
+    token.bondingCurve.dbcSettlementFallbackAt &&
+    unixNow >= token.bondingCurve.dbcSettlementFallbackAt,
+  );
+  const canSettleDbc = isDbcCreator || isDbcFallbackOpen;
   const connected = walletAdapterConnected || isWalletConnected;
   const [receipt, setReceipt] = useState<TradeReceiptData | null>(null);
   const [tradeMode, setTradeMode] = useState<"buy" | "sell" | "redeem">(
@@ -632,10 +643,12 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
               <span>{formatUsd(token.bondingCurve.realQuoteReservesUsd)} / {formatUsd(token.bondingCurve.graduationThresholdUsd)} USDC</span>
               <span>{token.bondingCurve.isGraduated ? "DAMM v2 market active" : token.bondingCurve.settlementPending ? "Meteora migration complete; equity settlement is pending" : token.bondingCurve.progressPct >= 100 ? "Ready to migrate into Meteora DAMM v2" : "Settlement starts at the funding threshold"}</span>
             </div>
-            {!isMock && !token.bondingCurve.isGraduated && token.bondingCurve.progressPct >= 100 && token.bondingCurve.protocol === "meteora-dbc" && !isDbcCreator && (
-              <p className="mt-3 text-center text-[10px] text-muted">Only the launch creator can authorize DBC migration and equity settlement.</p>
+            {!isMock && !token.bondingCurve.isGraduated && token.bondingCurve.progressPct >= 100 && token.bondingCurve.protocol === "meteora-dbc" && !canSettleDbc && (
+              <p className="mt-3 text-center text-[10px] text-muted">
+                The creator can settle now. Any wallet can complete settlement 24 hours after Meteora records curve completion.
+              </p>
             )}
-            {!isMock && !token.bondingCurve.isGraduated && token.bondingCurve.progressPct >= 100 && (token.bondingCurve.protocol !== "meteora-dbc" || isDbcCreator) && (
+            {!isMock && !token.bondingCurve.isGraduated && token.bondingCurve.progressPct >= 100 && (token.bondingCurve.protocol !== "meteora-dbc" || canSettleDbc) && (
               <>
                 <button
                   type="button"
@@ -643,9 +656,13 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
                   disabled={isTrading || Boolean(pendingSignature)}
                   className="mt-3 w-full rounded-xl bg-brand-cyan px-4 py-3 text-sm font-semibold text-background transition hover:bg-brand-cyan-hover disabled:opacity-50"
                 >
-                  {isTrading ? "Settling graduation…" : pendingGraduationSignature ? "Check graduation status" : walletAdapterConnected ? "Settle graduation" : "Connect wallet to settle"}
+                  {isTrading ? "Settling graduation…" : pendingGraduationSignature ? "Check graduation status" : walletAdapterConnected ? "Complete settlement" : "Connect wallet to settle"}
                 </button>
-                <p className="mt-2 text-center text-[10px] text-muted">Two wallet approvals are required: prepare settlement, then finalize it.</p>
+                <p className="mt-2 text-center text-[10px] text-muted">
+                  {token.bondingCurve.protocol === "meteora-dbc" && !isDbcCreator
+                    ? "Any wallet may settle after the fallback period; the on-chain minimum is tied to the pool’s live spot price with up to 10% tolerance."
+                    : "Two wallet approvals are required: prepare settlement, then finalize it."}
+                </p>
               </>
             )}
           </div>

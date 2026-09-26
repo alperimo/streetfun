@@ -58,6 +58,7 @@ pub struct DbcLaunchAccount {
     pub quote_mint: Pubkey,
     pub dbc_config: Pubkey,
     pub dbc_pool: Pubkey,
+    /// Selected collateral market before graduation; migrated DBC pool afterward.
     pub meteora_damm_v2_pool: Pubkey,
     pub initial_meme_supply: u64,
     pub settlement_quote_amount: u64,
