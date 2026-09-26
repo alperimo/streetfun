@@ -160,13 +160,36 @@ async function createSettlementLookupTable(
   settlement: Transaction,
   additionalSigners: PublicKey[],
 ): Promise<AddressLookupTableAccount> {
+  // compileMessage requires a recent blockhash even though this transaction is
+  // only being inspected to collect lookup-table addresses.
+  settlement.feePayer = wallet.publicKey;
+  settlement.recentBlockhash = (await connection.getLatestBlockhash("confirmed")).blockhash;
   const accountKeys = settlement.compileMessage().accountKeys;
   const addresses = accountKeys
     .filter(key => !key.equals(wallet.publicKey) && !additionalSigners.some(signer => signer.equals(key)))
     .slice(0, 28);
   if (addresses.length < 13) throw new Error("The settlement account list could not be compacted safely.");
 
-  const recentSlot = await connection.getSlot("confirmed");
+  // A slot number is not necessarily produced (Solana can skip slots). The ALT
+  // program only accepts a slot present in SlotHashes, so choose an actually
+  // produced confirmed block just behind the RPC's current slot.
+  const currentSlot = await connection.getSlot("confirmed");
+  const producedSlots = await connection.getBlocks(
+    Math.max(0, currentSlot - 32),
+    currentSlot,
+    "confirmed",
+  );
+  let recentSlot: number | undefined;
+  for (let index = producedSlots.length - 1; index >= 0; index -= 1) {
+    if (producedSlots[index] < currentSlot) {
+      recentSlot = producedSlots[index];
+      break;
+    }
+  }
+  recentSlot ??= producedSlots[producedSlots.length - 1];
+  if (recentSlot === undefined) {
+    throw new Error("Could not find a produced recent Solana slot for settlement setup.");
+  }
   const [createInstruction, lookupTableAddress] = AddressLookupTableProgram.createLookupTable({
     authority: wallet.publicKey,
     payer: wallet.publicKey,

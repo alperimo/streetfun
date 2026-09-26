@@ -1,5 +1,17 @@
 import { expect } from "chai";
-import { Keypair, PublicKey, sendAndConfirmTransaction } from "@solana/web3.js";
+import {
+  AddressLookupTableAccount,
+  AddressLookupTableProgram,
+  Connection,
+  ComputeBudgetProgram,
+  Keypair,
+  PublicKey,
+  sendAndConfirmTransaction,
+  Transaction,
+  TransactionInstruction,
+  TransactionMessage,
+  VersionedTransaction,
+} from "@solana/web3.js";
 import { getAccount, getMint, TOKEN_2022_PROGRAM_ID } from "@solana/spl-token";
 import {
   ActivationType,
@@ -45,10 +57,134 @@ import {
 import * as fs from "fs";
 import * as path from "path";
 
+async function sendGraduationWithLookupTable(
+  connection: Connection,
+  caller: Keypair,
+  graduationInstruction: TransactionInstruction,
+  additionalSigners: Keypair[],
+) {
+  const settlement = new Transaction().add(
+    ComputeBudgetProgram.setComputeUnitLimit({ units: 1_400_000 }),
+    graduationInstruction,
+  );
+  settlement.feePayer = caller.publicKey;
+  settlement.recentBlockhash = (
+    await connection.getLatestBlockhash("confirmed")
+  ).blockhash;
+
+  const additionalSignerKeys = additionalSigners.map((signer) => signer.publicKey);
+  const addresses = settlement
+    .compileMessage()
+    .accountKeys.filter(
+      (key) =>
+        !key.equals(caller.publicKey) &&
+        !additionalSignerKeys.some((signer) => signer.equals(key)),
+    )
+    .slice(0, 28);
+  if (addresses.length < 13) {
+    throw new Error("The graduation account list could not be compacted safely.");
+  }
+
+  // Use a block slot rather than currentSlot - 1: the latter may be skipped,
+  // in which case the ALT program rejects it with "not a recent slot".
+  const currentSlot = await connection.getSlot("confirmed");
+  const producedSlots = await connection.getBlocks(
+    Math.max(0, currentSlot - 32),
+    currentSlot,
+    "confirmed",
+  );
+  let recentSlot: number | undefined;
+  for (let index = producedSlots.length - 1; index >= 0; index -= 1) {
+    if (producedSlots[index] < currentSlot) {
+      recentSlot = producedSlots[index];
+      break;
+    }
+  }
+  recentSlot ??= producedSlots[producedSlots.length - 1];
+  if (recentSlot === undefined) {
+    throw new Error("Could not find a produced recent Solana slot for graduation setup.");
+  }
+  const [createLookupTable, lookupTableAddress] =
+    AddressLookupTableProgram.createLookupTable({
+      authority: caller.publicKey,
+      payer: caller.publicKey,
+      recentSlot,
+    });
+  const extendLookupTable = AddressLookupTableProgram.extendLookupTable({
+    lookupTable: lookupTableAddress,
+    authority: caller.publicKey,
+    payer: caller.publicKey,
+    addresses,
+  });
+  const setup = new Transaction().add(createLookupTable, extendLookupTable);
+  const setupBlockhash = await connection.getLatestBlockhash("confirmed");
+  setup.feePayer = caller.publicKey;
+  setup.recentBlockhash = setupBlockhash.blockhash;
+  const lookupTableSetupSignature = await sendAndConfirmTransaction(
+    connection,
+    setup,
+    [caller],
+    { commitment: "confirmed", preflightCommitment: "confirmed" },
+  );
+
+  let lookupTable: AddressLookupTableAccount | undefined;
+  for (let attempt = 0; attempt < 12; attempt += 1) {
+    const [{ value }, currentSlot] = await Promise.all([
+      connection.getAddressLookupTable(lookupTableAddress, {
+        commitment: "confirmed",
+      }),
+      connection.getSlot("confirmed"),
+    ]);
+    if (
+      value?.state.authority?.equals(caller.publicKey) &&
+      value.state.addresses.length === addresses.length &&
+      currentSlot > value.state.lastExtendedSlot
+    ) {
+      lookupTable = value;
+      break;
+    }
+    await new Promise((resolve) => setTimeout(resolve, 400));
+  }
+  if (!lookupTable) {
+    throw new Error(
+      `Lookup table setup ${lookupTableSetupSignature} confirmed, but the table did not become active.`,
+    );
+  }
+
+  const blockhash = await connection.getLatestBlockhash("confirmed");
+  const message = new TransactionMessage({
+    payerKey: caller.publicKey,
+    recentBlockhash: blockhash.blockhash,
+    instructions: settlement.instructions,
+  }).compileToV0Message([lookupTable]);
+  const transaction = new VersionedTransaction(message);
+  transaction.sign([caller, ...additionalSigners]);
+  const signature = await connection.sendTransaction(transaction, {
+    skipPreflight: false,
+    preflightCommitment: "confirmed",
+  });
+  const confirmation = await connection.confirmTransaction(
+    { signature, ...blockhash },
+    "confirmed",
+  );
+  if (confirmation.value.err) {
+    throw new Error(
+      `Graduation transaction ${signature} failed: ${JSON.stringify(confirmation.value.err)}`,
+    );
+  }
+
+  return {
+    signature,
+    lookupTableSetupSignature,
+    lookupTableAddress,
+  };
+}
+
 describe("06 - StreetFun Protocol: Lifecycle Safety (test collateral)", () => {
-  // Participants: On devnet, admin acts as creator and stock provider to leverage funded keys
+  // Use the configured funded Devnet wallet for each lifecycle signature. On
+  // localnet, keep independent actors to exercise separate wallet accounts.
   const creator = isDevnet ? protocolAdmin : Keypair.generate();
-  const traderAlice = Keypair.generate();
+  const traderAlice = isDevnet ? protocolAdmin : Keypair.generate();
   const stockProvider = isDevnet ? protocolAdmin : Keypair.generate();
 
   const provider = createProvider(creator);
@@ -305,7 +441,7 @@ describe("06 - StreetFun Protocol: Lifecycle Safety (test collateral)", () => {
         : 1n;
     const buyQuoteIn = new BN(buyQuoteUnits.toString());
 
-    await (program.methods as any)
+    const thresholdBuySignature = await (program.methods as any)
       .buyCurve({
         quoteAmountIn: buyQuoteIn,
         minTokensOut: new BN(1),
@@ -324,6 +460,14 @@ describe("06 - StreetFun Protocol: Lifecycle Safety (test collateral)", () => {
       })
       .signers([traderAlice])
       .rpc();
+    txReceipts["03a_threshold_buy"] = {
+      action: "BONDING_BUY_TO_GRADUATION_THRESHOLD",
+      txSignature: thresholdBuySignature,
+      trader: traderAlice.publicKey.toBase58(),
+      quoteInRaw: buyQuoteUnits.toString(),
+      graduationThresholdQuote,
+    };
+    console.log("✅ Step 4 threshold buy confirmed with tx:", thresholdBuySignature);
 
     const sourceMarketBefore = await marketAmm.fetchPoolState(equityDammV2Pool);
     const sourceQuoteBefore = await safeGetAccount(provider.connection, sourceMarketBefore.tokenAVault);
@@ -367,7 +511,7 @@ describe("06 - StreetFun Protocol: Lifecycle Safety (test collateral)", () => {
     const callerMemeBefore = await safeGetAccount(provider.connection, callerMemeAta.address);
     const [globalConfig] = deriveGlobalConfigPda();
     const dammV2EventAuthority = PublicKey.findProgramAddressSync([Buffer.from("__event_authority")], CP_AMM_PROGRAM_ID)[0];
-    const graduationSignature = await (program.methods as any)
+    const graduationInstruction = await (program.methods as any)
       .graduateAndExecuteStock({
         minEquityTokensExpected: equityQuote.minimumAmountOut,
         poolLiquidity: preparedDestinationPool.liquidityDelta,
@@ -407,8 +551,19 @@ describe("06 - StreetFun Protocol: Lifecycle Safety (test collateral)", () => {
         associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
         systemProgram: SystemProgram.programId,
       })
-      .signers([traderAlice, positionNftMint])
-      .rpc();
+      .instruction();
+    const graduation = await sendGraduationWithLookupTable(
+      provider.connection,
+      traderAlice,
+      graduationInstruction,
+      [positionNftMint],
+    );
+    const graduationSignature = graduation.signature;
+    txReceipts["04a_graduation_lookup_table"] = {
+      action: "CREATE_GRADUATION_ADDRESS_LOOKUP_TABLE",
+      txSignature: graduation.lookupTableSetupSignature,
+      address: graduation.lookupTableAddress.toBase58(),
+    };
 
     const curveAfterGrad = await (program.account as any).curveAccount.fetch(curvePda);
     const treasuryAfter = await safeGetAccount(provider.connection, treasuryVaultPda);
@@ -461,7 +616,14 @@ describe("06 - StreetFun Protocol: Lifecycle Safety (test collateral)", () => {
       traderAlice.publicKey
     );
 
-    const memeToBurn = new BN(1_000_000);
+    // Amounts are in six-decimal base units. Burning 1_000_000 raw units is
+    // only one meme token and rounds the pro-rata equity entitlement to zero.
+    const memeToBurn = new BN(100_000 * 1_000_000);
+    const redeemerMemeBalance = await safeGetAccount(
+      provider.connection,
+      aliceTokenAta.address,
+    );
+    expect(redeemerMemeBalance.amount >= BigInt(memeToBurn.toString())).to.equal(true);
     const curveBeforeRedeem = await (program.account as any).curveAccount.fetch(curvePda);
     const mintBeforeRedeem = await getMint(provider.connection, memeMint);
     const entitledEquity = BigInt(memeToBurn.toString()) * BigInt(curveBeforeRedeem.totalEquityLocked.toString()) / BigInt(mintBeforeRedeem.supply.toString());
