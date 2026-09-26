@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "next dev",
     "setup:meteora-dbc": "node scripts/setup_meteora_dbc_config.cjs",
+    "seed:devnet-pools": "node scripts/seed_devnet_meteora_pools.cjs",
     "build": "next build",
     "start": "next start",
     "lint": "tsc --noEmit",
