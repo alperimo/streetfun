@@ -32,6 +32,7 @@ export function LaunchModal({
   const router = useRouter();
   const { launchToken, isMock } = useMarket();
   const isDevnet = (process.env.NEXT_PUBLIC_SOLANA_NETWORK || "devnet") === "devnet";
+  const usesDevnetTestAssets = isDevnet && !isMock;
   const [name, setName] = useState("");
   const [symbol, setSymbol] = useState("");
   const [description, setDescription] = useState("");
@@ -50,7 +51,7 @@ export function LaunchModal({
     if (providerFilter === "all") return true;
     if (providerFilter === "prestocks") return eq.provider === "prestocks" || eq.issuer?.includes("PreStocks");
     if (providerFilter === "tessera") {
-      return isDevnet
+      return usesDevnetTestAssets
         ? eq.testCollateral === true
         : eq.provider !== "prestocks" && !eq.issuer?.includes("PreStocks");
     }
@@ -63,13 +64,17 @@ export function LaunchModal({
     setAssetError(null);
     setIsLoadingAssets(true);
     fetch("/api/assets", { signal: controller.signal }).then(async response => {
-      if (!response.ok) throw new Error("Verified Pre-IPO assets are unavailable.");
+      if (!response.ok) throw new Error(usesDevnetTestAssets
+        ? "Devnet test collateral is unavailable."
+        : "Verified Pre-IPO assets are unavailable.");
       const data = await response.json();
       setLiveAssets(data.assets);
       if (!data.assets.some((asset: any) => asset.launchEnabled)) {
         setAssetError(data.assets.some((asset: any) => asset.existsOnConfiguredNetwork)
           ? "No backing market can currently quote the configured graduation allocation."
-          : "No verified provider or mapped test mint exists on this Solana network.");
+          : usesDevnetTestAssets
+            ? "No StreetFun Devnet test collateral is available on this network."
+            : "No verified provider asset exists on this Solana network.");
       }
       const first = data.assets.find((a: any) => a.launchEnabled) || data.assets[0];
       if (first) setSelectedEquitySymbol(first.symbol);
@@ -190,42 +195,47 @@ export function LaunchModal({
               <label className="text-muted font-medium">
                 Select Target Asset
               </label>
-              {/* Provider Selection Tabs */}
-              <div className="flex items-center gap-1 rounded-lg border border-border bg-card-subtle p-0.5">
-                <button
-                  type="button"
-                  onClick={() => setProviderFilter("prestocks")}
-                  className={`px-2 py-0.5 rounded-md text-[10px] font-bold transition-all ${
-                    providerFilter === "prestocks"
-                      ? "bg-brand-cyan/20 border border-brand-cyan/40 text-brand-cyan"
-                      : "text-muted hover:text-foreground"
-                  }`}
-                >
-                  {isDevnet ? "PreStocks" : "PreStocks (Official)"}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setProviderFilter("tessera")}
-                  className={`px-2 py-0.5 rounded-md text-[10px] font-bold transition-all ${
-                    providerFilter === "tessera"
-                      ? "bg-brand-cyan/20 border border-brand-cyan/40 text-brand-cyan"
-                      : "text-muted hover:text-foreground"
-                  }`}
-                >
-                  {isDevnet ? "Devnet test assets" : "Tessera"}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setProviderFilter("all")}
-                  className={`px-2 py-0.5 rounded-md text-[10px] font-bold transition-all ${
-                    providerFilter === "all"
-                      ? "bg-brand-cyan/20 border border-brand-cyan/40 text-brand-cyan"
-                      : "text-muted hover:text-foreground"
-                  }`}
-                >
-                  All
-                </button>
-              </div>
+              {usesDevnetTestAssets ? (
+                <p className="max-w-56 text-right text-[10px] leading-relaxed text-muted">
+                  StreetFun test collateral; not issued by PreStocks or Tessera.
+                </p>
+              ) : (
+                <div className="flex items-center gap-1 rounded-lg border border-border bg-card-subtle p-0.5">
+                  <button
+                    type="button"
+                    onClick={() => setProviderFilter("prestocks")}
+                    className={`px-2 py-0.5 rounded-md text-[10px] font-bold transition-all ${
+                      providerFilter === "prestocks"
+                        ? "bg-brand-cyan/20 border border-brand-cyan/40 text-brand-cyan"
+                        : "text-muted hover:text-foreground"
+                    }`}
+                  >
+                    PreStocks (Official)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setProviderFilter("tessera")}
+                    className={`px-2 py-0.5 rounded-md text-[10px] font-bold transition-all ${
+                      providerFilter === "tessera"
+                        ? "bg-brand-cyan/20 border border-brand-cyan/40 text-brand-cyan"
+                        : "text-muted hover:text-foreground"
+                    }`}
+                  >
+                    Tessera
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setProviderFilter("all")}
+                    className={`px-2 py-0.5 rounded-md text-[10px] font-bold transition-all ${
+                      providerFilter === "all"
+                        ? "bg-brand-cyan/20 border border-brand-cyan/40 text-brand-cyan"
+                        : "text-muted hover:text-foreground"
+                    }`}
+                  >
+                    All
+                  </button>
+                </div>
+              )}
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 max-h-56 overflow-y-auto pr-1">
@@ -250,8 +260,8 @@ export function LaunchModal({
                 ))
               ) : filteredAssets.length === 0 ? (
                 <p className="rounded-xl border border-border bg-card p-4 text-muted">
-                  {isDevnet && providerFilter === "prestocks"
-                    ? "PreStocks assets are not deployed on Devnet."
+                  {usesDevnetTestAssets
+                    ? "No test collateral is available on this network."
                     : "No launchable assets from this provider on the configured network."}
                 </p>
               ) : (
