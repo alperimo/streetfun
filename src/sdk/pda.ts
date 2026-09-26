@@ -13,6 +13,10 @@ export function getGlobalConfigPda(programId: PublicKey = PROGRAM_ID): [PublicKe
   return PublicKey.findProgramAddressSync([GLOBAL_CONFIG_SEED], programId);
 }
 
+export function getSettlementPolicyPda(quoteMint: PublicKey, equityMint: PublicKey, programId = PROGRAM_ID): [PublicKey, number] {
+  return PublicKey.findProgramAddressSync([Buffer.from("settlement-policy"), quoteMint.toBuffer(), equityMint.toBuffer()], programId);
+}
+
 export function getDbcLaunchPda(
   memeMint: PublicKey,
   programId: PublicKey = PROGRAM_ID,

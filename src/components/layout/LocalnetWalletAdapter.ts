@@ -14,6 +14,7 @@ import {
   Transaction,
   VersionedTransaction,
 } from "@solana/web3.js";
+import { getBrowserRpcUrl } from "@/sdk/network";
 
 const STORAGE_KEY = "streetfun-localnet-wallet";
 
@@ -104,5 +105,15 @@ export class LocalnetWalletAdapter extends BaseWalletAdapter<"Localnet Dev Walle
       this.emit("error", error);
       throw error;
     }
+  }
+
+  async signTransaction<T extends Transaction | VersionedTransaction>(transaction: T): Promise<T> {
+    if (!this.keypair) throw new WalletNotConnectedError();
+    if (process.env.NEXT_PUBLIC_SOLANA_NETWORK !== "localnet") throw new Error("The local wallet is only available on localnet.");
+    const rpcHost = new URL(getBrowserRpcUrl()).hostname;
+    if (rpcHost !== "localhost" && rpcHost !== "127.0.0.1") throw new Error("The local testing wallet can only sign for a local validator.");
+    if (transaction instanceof VersionedTransaction) transaction.sign([this.keypair]);
+    else transaction.partialSign(this.keypair);
+    return transaction;
   }
 }

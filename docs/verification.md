@@ -16,6 +16,20 @@ Verify a simulated buy updates the receipt and history, narrow-screen layouts re
 
 Apply `supabase/migrations/202609190001_chart_buckets.sql` through the normal database migration process. It fixes multi-hour/day candle boundaries, excludes redemptions from candles, and preserves six decimal places in quote amounts.
 
-The graduation instruction now requires the configured protocol administrator and a nonzero equity amount. This is a trusted operator settlement: destination accounts and the exchange price are still operator-selected. It does not verify an external swap or create an AMM pool. Permissionless graduation must remain disabled until those operations are verified on chain. Updating the source does not upgrade an already deployed program; rebuild, run validator integration tests, and deploy through the normal program upgrade process.
+Rebuild and upgrade the StreetFun program before deploying these settlement clients. Updating the source or IDL alone does not change an already deployed program. Existing global, curve and DBC registry account layouts remain unchanged; the new `SettlementPolicy` account is separate. Both graduation instructions now require that account, so the client and program upgrade must be coordinated.
 
-Live trading of graduated tokens and live equity redemption remain unavailable until verified execution routes are configured. Browser simulations and native unit tests do not validate those integrations.
+For each quote/collateral pair, the configured protocol administrator must approve a DAMM v2 market and publish a minimum **net** exchange rate before settlement. Use an independently reviewed collateral price and account for swap and Token-2022 transfer fees; do not derive the safety floor solely from the pool being traded. A compromised or careless administrator can still approve an unsafe rate. There is no automatic rate publisher in this repository.
+
+With `ANCHOR_PROVIDER_URL`, `ANCHOR_WALLET`, the configured network and quote mint set for the intended deployment:
+
+```sh
+npm run publish:settlement-policy -- <collateral-mint> <approved-DAMM-pool> <maximum-USDC-per-net-collateral-token>
+```
+
+This signs an administrator transaction and publishes a four-minute policy (the contract caps validity at five minutes). Refresh it before expiry if a settlement has not completed. The script checks network identity, wallet authority, and mint precision; the contract additionally verifies pool ownership and the asset pair. Every executor, including the creator, must use this market and meet the rate floor. Missing or expired policies stop settlement without releasing reserves.
+
+The local validator lifecycle test exercises actual DAMM v2 swap and pool-creation CPIs, rejects unauthorized policy updates and dust minimums, and verifies that one-atom donations and an external token burn cannot block legacy graduation. Native tests cover substituted markets, expiry and DBC caller timing. These checks do not replace a complete DBC migration test on the target deployment, issuer-specific Token-2022 testing, or a production security review.
+
+Launch recovery stores the signed transaction identifier and public launch details in browser storage before broadcasting. Keep that record until Solana confirms success, failure or expiry; clearing browser storage loses automatic recovery. The confirmation endpoint verifies the metadata digest committed in the signed DBC URI. Older launches without a digest can be reindexed but cannot change unsigned image or description fields through confirmation.
+
+Treasury holdings come from verified live vault balances. On a refresh failure, the interface labels the retained snapshot with its last verification time. Indexed redemption history remains separate from current holdings.

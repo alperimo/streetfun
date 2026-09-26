@@ -27,6 +27,8 @@ import { getDbcLaunchPda, getGlobalConfigPda } from "@/sdk/pda";
 import { assertStreetFunDbcConfig, getDbcClient, getDbcMigrationDammConfigAddress } from "@/server/meteoraDbc";
 import { assertConfiguredCluster, getServerConnection } from "@/server/rpc";
 
+import { readSettlementPolicy, protectedSettlementMinimum } from "@/server/settlementPolicy";
+
 export const dynamic = "force-dynamic";
 
 class DbcGraduationError extends Error {
@@ -142,20 +144,12 @@ export async function POST(request: Request) {
       client.fetchPoolStatesByTokenAMint(registry.targetEquityMint),
       client.fetchPoolStatesByTokenBMint(registry.targetEquityMint),
     ]);
+    const policy = await readSettlementPolicy(program, USDC_MINT, registry.targetEquityMint, thresholdPartnerFee);
     let equityMarkets = [...targetAsA, ...targetAsB].filter(({ account }: any) =>
       (account.tokenAMint.equals(USDC_MINT) && account.tokenBMint.equals(registry.targetEquityMint)) ||
       (account.tokenBMint.equals(USDC_MINT) && account.tokenAMint.equals(registry.targetEquityMint)),
     );
-    if (!registry.creator.equals(caller)) {
-      if (registry.meteoraDammV2Pool.equals(PublicKey.default)) {
-        throw new DbcGraduationError(
-          "This launch predates the registered settlement-market fallback. The creator must authorize its settlement.",
-          409,
-          "FALLBACK_MARKET_NOT_REGISTERED",
-        );
-      }
-      equityMarkets = equityMarkets.filter(({ publicKey }: any) => publicKey.equals(registry.meteoraDammV2Pool));
-    }
+    equityMarkets = equityMarkets.filter(({ publicKey }: any) => publicKey.equals(policy.market));
     if (!equityMarkets.length) {
       throw new DbcGraduationError("The registered USDC/collateral DAMM v2 market is unavailable, so settlement cannot be verified.", 409, "EQUITY_MARKET_UNAVAILABLE");
     }
@@ -198,7 +192,7 @@ export async function POST(request: Request) {
     if (!expectedPartnerQuoteAccount) {
       throw new DbcGraduationError("StreetFun's quote-token partner account is missing; launch registration did not complete.", 409, "PARTNER_ACCOUNT_MISSING");
     }
-    const minEquityTokensExpected = BigInt(bestQuote.quote.minimumAmountOut.toString());
+    const minEquityTokensExpected = protectedSettlementMinimum(BigInt(bestQuote.quote.outputAmount.toString()), BigInt(bestQuote.quote.minimumAmountOut.toString()), policy.minimum);
     if (minEquityTokensExpected <= 0n) throw new DbcGraduationError("The live collateral quote returned no spendable shares.", 409, "ZERO_EQUITY_QUOTE");
 
     return NextResponse.json({
@@ -215,6 +209,7 @@ export async function POST(request: Request) {
       pool: { address: migratedPool.toBase58(), quoteReserve: quoteReserve.toString(), migrationThreshold: threshold.toString() },
       settlementFallbackAt,
       accounts: {
+        settlementPolicy: policy.address.toBase58(),
         caller: caller.toBase58(), globalConfig: globalConfig.toBase58(), memeMint: mint.toBase58(),
         quoteMint: registry.quoteMint.toBase58(), targetEquityMint: registry.targetEquityMint.toBase58(),
         dbcLaunch: registryAddress.toBase58(), dbcPool: registry.dbcPool.toBase58(), dbcConfig: registry.dbcConfig.toBase58(),

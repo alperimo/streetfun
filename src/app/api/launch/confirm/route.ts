@@ -5,10 +5,11 @@ import { solanaTokenService } from "@/server/tokenData";
 import { InvalidCurveTradeError } from "@/services/indexer/parseCurveTrade";
 import { createServerSupabaseClient } from "@/server/supabase";
 import { getNetworkAssetCatalog } from "@/server/assetCatalog";
+import { launchMetadataDigest, normalizeLaunchMetadata } from "@/lib/launchMetadata";
 
 export async function POST(req: NextRequest) {
   try {
-    const { signature, mint: requestedMint, targetEquitySymbol, name, symbol, avatarUrl } = await req.json();
+    const { signature, mint: requestedMint, targetEquitySymbol, name, symbol, avatarUrl, description } = await req.json();
     if (typeof requestedMint !== "string") throw new InvalidCurveTradeError("A token mint is required.");
     if (avatarUrl && (typeof avatarUrl !== "string" || !/^https:\/\//i.test(avatarUrl))) throw new InvalidCurveTradeError("The token image URL must use HTTPS.");
     const connection = getServerConnection();
@@ -24,6 +25,11 @@ export async function POST(req: NextRequest) {
     if (initialized.name !== name || initialized.symbol !== symbol) throw new InvalidCurveTradeError("Launch name or symbol does not match the confirmed DBC metadata.");
     const metadataUri = new URL(initialized.uri);
     if (metadataUri.pathname !== `/api/metadata/${requestedMint}`) throw new InvalidCurveTradeError("The confirmed DBC metadata URI does not resolve to this StreetFun launch.");
+    const commitment = metadataUri.searchParams.get("v");
+    const metadata = normalizeLaunchMetadata({ avatarUrl, description });
+    if (commitment && commitment !== await launchMetadataDigest(metadata)) {
+      throw new InvalidCurveTradeError("Token image and description do not match the creator-signed launch.");
+    }
     const targetMint = launch.instruction.accounts[3]?.toBase58();
     if (!targetMint) throw new InvalidCurveTradeError("Confirmed DBC launch is missing its collateral mint.");
     const assets = await getNetworkAssetCatalog(connection, "all", genesisHash);
@@ -35,7 +41,9 @@ export async function POST(req: NextRequest) {
     const { data: updated, error } = await db.from("tokens").update({
       name: initialized.name, symbol: initialized.symbol,
       target_equity_symbol: asset.symbol, target_equity_mint: targetMint,
-      avatar_url: avatarUrl || null,
+      // Older launches did not sign an image commitment. Public confirmations
+      // may reindex their on-chain fields, but cannot change off-chain content.
+      ...(commitment ? { avatar_url: metadata.avatarUrl || null, description: metadata.description } : {}),
       updated_at: new Date().toISOString(),
     }).eq("mint", requestedMint).select("mint").maybeSingle();
     if (error) throw new Error("Confirmed launch metadata could not be saved.");

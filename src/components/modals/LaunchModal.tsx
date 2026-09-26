@@ -7,6 +7,7 @@ import type { TesseraPreIpoAsset } from "@/sdk/constants";
 import { DEMO_TOKENIZED_EQUITIES } from "@/lib/demoAssets";
 import { useRouter } from "next/navigation";
 import { TokenMetadata } from "@/lib/types";
+import { loadPendingLaunch, LAUNCH_PENDING_EVENT, PendingLaunch } from "@/services/solana/pendingLaunch";
 import { useMarket } from "@/context/MarketContext";
 
 interface LaunchModalProps {
@@ -30,7 +31,9 @@ export function LaunchModal({
   onTokenCreated,
 }: LaunchModalProps) {
   const router = useRouter();
-  const { launchToken, isMock } = useMarket();
+  const { launchToken, resumeLaunch, walletPublicKey, isMock } = useMarket();
+  const [pendingLaunch, setPendingLaunch] = useState<PendingLaunch | null>(null);
+  const [pendingReadError, setPendingReadError] = useState(false);
   const isDevnet = (process.env.NEXT_PUBLIC_SOLANA_NETWORK || "devnet") === "devnet";
   const usesDevnetTestAssets = isDevnet && !isMock;
   const [name, setName] = useState("");
@@ -88,6 +91,39 @@ export function LaunchModal({
     window.addEventListener("keydown", dismiss);
     return () => window.removeEventListener("keydown", dismiss);
   }, [isOpen, onClose]);
+  useEffect(() => {
+    const readPending = () => {
+      try {
+        setPendingLaunch(!isMock && walletPublicKey ? loadPendingLaunch(walletPublicKey.toBase58()) : null);
+        setPendingReadError(false);
+      } catch (error) {
+        setPendingReadError(true);
+        setLaunchError(error instanceof Error ? error.message : "Saved launch details are unavailable.");
+      }
+    };
+    readPending();
+    window.addEventListener("storage", readPending);
+    window.addEventListener(LAUNCH_PENDING_EVENT, readPending);
+    return () => {
+      window.removeEventListener("storage", readPending);
+      window.removeEventListener(LAUNCH_PENDING_EVENT, readPending);
+    };
+  }, [isOpen, isMock, walletPublicKey]);
+
+  const handleResume = async () => {
+    setIsSubmitting(true);
+    setLaunchError(null);
+    try {
+      const token = await resumeLaunch();
+      if (token) {
+        onTokenCreated?.(token);
+        onClose();
+        router.push(`/token/${token.mint}`);
+      }
+    } catch (error) {
+      setLaunchError(error instanceof Error ? error.message : "Could not check the launch.");
+    } finally { setIsSubmitting(false); }
+  };
   if (!isOpen) return null;
 
   const selectedEquity =
@@ -98,7 +134,7 @@ export function LaunchModal({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name || !symbol || !selectedEquity) return;
+    if (isSubmitting || pendingLaunch || pendingReadError || !name || !symbol || !selectedEquity) return;
 
     setIsSubmitting(true);
     setLaunchError(null);
@@ -146,11 +182,23 @@ export function LaunchModal({
           </div>
           <button
             onClick={onClose}
+            aria-label="Close launch dialog"
             className="p-1.5 rounded-lg text-muted hover:text-foreground hover:bg-card-subtle transition-colors"
           >
             <X className="h-5 w-5" />
           </button>
         </div>
+
+        {pendingLaunch && (
+          <div role="status" className="mt-4 rounded-xl border border-border bg-card-hover p-4 text-sm text-foreground">
+            <p className="font-semibold">A token launch is awaiting confirmation</p>
+            <p className="mt-1 text-xs text-muted">Check the original launch before creating another token. This also retries saving its token details.</p>
+            <p className="mt-2 break-all font-mono text-xs text-muted">{pendingLaunch.signature}</p>
+            <button type="button" onClick={handleResume} disabled={isSubmitting} className="mt-3 rounded-xl border border-border px-3 py-2 font-semibold hover:bg-card disabled:opacity-50">
+              {isSubmitting ? "Checking launch…" : "Check launch status"}
+            </button>
+          </div>
+        )}
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="mt-5 space-y-4 text-xs">
@@ -339,7 +387,7 @@ export function LaunchModal({
           {/* Submit Button */}
           <button
             type="submit"
-            disabled={isSubmitting || (!isMock && (!selectedEquity || !("launchEnabled" in selectedEquity) || !selectedEquity.launchEnabled))}
+            disabled={isSubmitting || Boolean(pendingLaunch) || pendingReadError || (!isMock && (!selectedEquity || !("launchEnabled" in selectedEquity) || !selectedEquity.launchEnabled))}
             className="w-full rounded-xl bg-brand-cyan py-3 text-sm font-bold text-slate-950 hover:opacity-90 transition-opacity disabled:opacity-50 shadow-md shadow-brand-cyan/20 flex items-center justify-center gap-2 cursor-pointer"
           >
             {isSubmitting ? (

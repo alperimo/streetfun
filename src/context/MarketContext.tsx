@@ -36,6 +36,7 @@ interface MarketContextType {
   refreshTokens: () => Promise<void>;
   getToken: (mint: string) => TokenMetadata | undefined;
   launchToken: (params: TokenLaunchParams) => Promise<TokenMetadata>;
+  resumeLaunch: () => Promise<TokenMetadata | null>;
   executeTrade: (params: TradeParams) => Promise<TradeResult>;
   executeRedeem: (params: RedeemParams) => Promise<RedeemResult>;
 }
@@ -159,7 +160,7 @@ export function MarketProvider({ children, initialTokens = [] }: MarketProviderP
       try {
         const tokenService = getTokenService();
         const walletIdentity = !isMock && wallet.publicKey
-          ? { publicKey: wallet.publicKey, sendTransaction: wallet.sendTransaction }
+          ? { publicKey: wallet.publicKey, sendTransaction: wallet.sendTransaction, signTransaction: wallet.signTransaction }
           : activePublicKey;
         const newToken = await tokenService.launchToken(params, walletIdentity);
         setTokens((prev) => [newToken, ...prev.filter((t) => t.mint !== newToken.mint)]);
@@ -169,8 +170,23 @@ export function MarketProvider({ children, initialTokens = [] }: MarketProviderP
         isMutating.current = false;
       }
     },
-    [activePublicKey, isMock, wallet.publicKey, wallet.sendTransaction]
+    [activePublicKey, isMock, wallet.publicKey, wallet.sendTransaction, wallet.signTransaction]
   );
+
+  const resumeLaunch = useCallback(async () => {
+    if (isMutating.current) throw new Error("Another order is already in progress.");
+    isMutating.current = true;
+    mutationVersion.current += 1;
+    try {
+      const service = getTokenService();
+      const token = await service.resumeLaunch?.(wallet.publicKey ? { publicKey: wallet.publicKey, sendTransaction: wallet.sendTransaction } : null) || null;
+      if (token) setTokens(prev => [token, ...prev.filter(t => t.mint !== token.mint)]);
+      return token;
+    } finally {
+      mutationVersion.current += 1;
+      isMutating.current = false;
+    }
+  }, [wallet.publicKey, wallet.sendTransaction]);
 
   const executeTrade = useCallback(
     async (params: TradeParams) => {
@@ -246,6 +262,7 @@ export function MarketProvider({ children, initialTokens = [] }: MarketProviderP
         refreshTokens,
         getToken,
         launchToken,
+        resumeLaunch,
         executeTrade,
         executeRedeem,
       }}

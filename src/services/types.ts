@@ -10,6 +10,7 @@ import {
 
 export interface WalletTransactionSender {
   publicKey: PublicKey;
+  signTransaction?: <T extends Transaction | VersionedTransaction>(transaction: T) => Promise<T>;
   sendTransaction: (
     transaction: Transaction | VersionedTransaction,
     connection: Connection,
@@ -77,6 +78,7 @@ export interface ITokenService {
   getTokens(): Promise<TokenMetadata[]>;
   getToken(mint: string): Promise<TokenMetadata | null>;
   launchToken(params: TokenLaunchParams, wallet?: WalletIdentity): Promise<TokenMetadata>;
+  resumeLaunch?(wallet?: WalletIdentity): Promise<TokenMetadata | null>;
 }
 
 export interface ITradeService {

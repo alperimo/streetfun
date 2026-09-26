@@ -39,6 +39,7 @@ interface TreasuryRedemption {
 }
 
 interface TreasuryData {
+  asOf: string | null;
   holdings: VaultHolding[];
   recentRedemptions: TreasuryRedemption[];
   graduatedVaultCount: number;
@@ -244,10 +245,13 @@ export default function TreasuryPage() {
 
         {hasLoadError && !isMock && (
           <div role="status" className="mb-5 rounded-xl border border-border bg-card px-4 py-3 text-sm text-muted">
-            Treasury metrics are synchronizing with the network. Retrying...
+            Current balances could not be verified. {treasuryData?.asOf ? `Showing the last verified snapshot from ${new Date(treasuryData.asOf).toLocaleString()}.` : "Retrying…"}
           </div>
         )}
 
+        {!isMock && treasuryData?.asOf && (
+          <p className="mb-4 text-xs text-muted">Balances verified {new Date(treasuryData.asOf).toLocaleString()}.</p>
+        )}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {statCards.map(({ label, value, detail, icon: Icon }) => (
             <div key={label} className="rounded-2xl border border-border bg-card p-5 shadow-sm">
@@ -267,7 +271,7 @@ export default function TreasuryPage() {
           <section className="flex flex-col rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6 lg:col-span-7">
             <div className="mb-1 flex items-center justify-between gap-3 border-b border-border/50 pb-3">
               <h2 className="text-base font-bold text-foreground">Top Vault Holdings</h2>
-              <span className="text-right text-xs text-muted">Current collateral balances by asset</span>
+              <span className="text-right text-xs text-muted">Verified collateral balances by asset</span>
             </div>
 
             {isLoading && !isMock ? (
@@ -315,7 +319,7 @@ export default function TreasuryPage() {
                       <div className="font-mono text-sm font-bold tabular-nums text-foreground">
                         {formatAmount(asset.equityAmount)} units
                       </div>
-                      <div className="mt-0.5 text-[11px] text-muted">Current on-chain balance</div>
+                      <div className="mt-0.5 text-[11px] text-muted">{hasLoadError ? "Last verified balance" : "Verified on-chain balance"}</div>
                     </div>
                   </div>
                 ))}

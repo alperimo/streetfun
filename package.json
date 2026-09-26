@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "next dev",
     "setup:meteora-dbc": "node scripts/setup_meteora_dbc_config.cjs",
+    "publish:settlement-policy": "ts-node -r tsconfig-paths/register -P ./tests/tsconfig.json scripts/publish_settlement_policy.ts",
     "seed:devnet-pools": "node scripts/seed_devnet_meteora_pools.cjs",
     "verify:devnet-markets": "node scripts/verify_devnet_test_markets.cjs",
     "build": "next build",

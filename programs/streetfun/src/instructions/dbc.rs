@@ -1,6 +1,9 @@
 use crate::cp_amm;
 use crate::errors::StreetfunError;
-use crate::state::{DbcLaunchAccount, GlobalConfig, DBC_LAUNCH_SEED, GLOBAL_CONFIG_SEED};
+use crate::state::{
+    DbcLaunchAccount, GlobalConfig, SettlementPolicy, DBC_LAUNCH_SEED, GLOBAL_CONFIG_SEED,
+    SETTLEMENT_POLICY_SEED,
+};
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::{
     instruction::{AccountMeta, Instruction},
@@ -56,8 +59,6 @@ const DBC_MIGRATION_FEE_OPTION_CUSTOMIZABLE: u8 = 6;
 const DBC_TOTAL_SUPPLY: u64 = 1_000_000_000_000_000;
 const WITHDRAW_MIGRATION_FEE_DISCRIMINATOR: [u8; 8] = [237, 142, 45, 23, 129, 6, 222, 162];
 const DBC_SETTLEMENT_FALLBACK_DELAY_SECONDS: i64 = 24 * 60 * 60;
-const MAX_PERMISSIONLESS_SETTLEMENT_SLIPPAGE_BPS: u64 = 1_000;
-const BPS_DENOMINATOR: u64 = 10_000;
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy)]
 pub struct SettleDbcGraduationParams {
@@ -317,6 +318,8 @@ pub struct SettleDbcGraduation<'info> {
     pub equity_token_program: Interface<'info, TokenInterface>,
     pub associated_token_program: Program<'info, AssociatedToken>,
     pub system_program: Program<'info, System>,
+    #[account(seeds = [SETTLEMENT_POLICY_SEED, quote_mint.key().as_ref(), target_equity_mint.key().as_ref()], bump = settlement_policy.bump)]
+    pub settlement_policy: Account<'info, SettlementPolicy>,
 }
 
 pub fn handle_settle_dbc_graduation(
@@ -357,7 +360,7 @@ pub fn handle_settle_dbc_graduation(
         ctx.accounts.dbc_quote_vault.key(),
         true,
     )?;
-    let fallback_settlement = validate_settlement_caller(
+    validate_settlement_caller(
         ctx.accounts.caller.key(),
         ctx.accounts.dbc_launch.creator,
         read_dbc_pool_finish_curve_timestamp(&ctx.accounts.dbc_pool.to_account_info())?,
@@ -445,23 +448,15 @@ pub fn handle_settle_dbc_graduation(
         quote_for_equity > 0,
         StreetfunError::InsufficientQuoteReserves
     );
-    if fallback_settlement {
-        validate_permissionless_market(
-            ctx.accounts.dbc_launch.meteora_damm_v2_pool,
-            ctx.accounts.equity_damm_v2_pool.key(),
-        )?;
-        let quote_is_token_a = ctx.accounts.equity_token_a_mint.key() == ctx.accounts.quote_mint.key();
-        let sqrt_price = read_damm_v2_sqrt_price(&ctx.accounts.equity_damm_v2_pool.to_account_info())?;
-        let minimum_safe_output = permissionless_settlement_minimum_output(
-            quote_for_equity,
-            sqrt_price,
-            quote_is_token_a,
-        )?;
-        require!(
-            params.min_equity_tokens_expected >= minimum_safe_output,
-            StreetfunError::SlippageExceeded
-        );
-    }
+    crate::instructions::settlement_policy::validate_settlement_policy(
+        &ctx.accounts.settlement_policy,
+        ctx.accounts.equity_damm_v2_pool.key(),
+        ctx.accounts.quote_mint.key(),
+        ctx.accounts.target_equity_mint.key(),
+        quote_for_equity,
+        params.min_equity_tokens_expected,
+        Clock::get()?.unix_timestamp,
+    )?;
 
     let equity_before = ctx.accounts.treasury_vault.amount;
     let config_bump = [ctx.accounts.global_config.bump];
@@ -598,16 +593,11 @@ fn validate_settlement_caller(
     let fallback_at = finish_curve_timestamp
         .checked_add(DBC_SETTLEMENT_FALLBACK_DELAY_SECONDS)
         .ok_or(StreetfunError::MathOverflow)?;
-    require!(now >= fallback_at, StreetfunError::SettlementFallbackNotReady);
-    Ok(true)
-}
-
-fn validate_permissionless_market(registered_market: Pubkey, selected_market: Pubkey) -> Result<()> {
     require!(
-        registered_market != Pubkey::default() && registered_market == selected_market,
-        StreetfunError::InvalidDammV2Pool
+        now >= fallback_at,
+        StreetfunError::SettlementFallbackNotReady
     );
-    Ok(())
+    Ok(true)
 }
 
 fn read_dbc_pool_finish_curve_timestamp(pool: &AccountInfo) -> Result<i64> {
@@ -636,74 +626,6 @@ fn read_damm_v2_sqrt_price(pool: &AccountInfo) -> Result<u128> {
     );
     require!(sqrt_price > 0, StreetfunError::InvalidDammV2Pool);
     Ok(sqrt_price)
-}
-
-/// Enforces a bounded minimum output for permissionless settlement. The bound
-/// uses the DAMM v2 pool's on-chain spot price and allows up to 10% for fees,
-/// transfer fees, and price impact. The caller can ask for stricter slippage,
-/// but cannot waive this floor after the creator fallback opens.
-fn permissionless_settlement_minimum_output(
-    quote_amount: u64,
-    sqrt_price: u128,
-    quote_is_token_a: bool,
-) -> Result<u64> {
-    require!(quote_amount > 0 && sqrt_price > 0, StreetfunError::ZeroAmount);
-    let price_q64 = q64_multiply(sqrt_price, sqrt_price)?;
-    require!(price_q64 > 0, StreetfunError::InvalidDammV2Pool);
-    let output_per_input_q64 = if quote_is_token_a {
-        price_q64
-    } else {
-        reciprocal_q64(price_q64)?
-    };
-    let spot_output = multiply_u64_by_q64(quote_amount, output_per_input_q64)?;
-    let minimum = (u128::from(spot_output)
-        .checked_mul(u128::from(BPS_DENOMINATOR - MAX_PERMISSIONLESS_SETTLEMENT_SLIPPAGE_BPS))
-        .ok_or(StreetfunError::MathOverflow)?
-        / u128::from(BPS_DENOMINATOR)) as u64;
-    Ok(minimum)
-}
-
-fn q64_multiply(a: u128, b: u128) -> Result<u128> {
-    let a_hi = a >> 64;
-    let a_lo = u128::from(a as u64);
-    let b_hi = b >> 64;
-    let b_lo = u128::from(b as u64);
-    let high = a_hi
-        .checked_mul(b_hi)
-        .and_then(|value| value.checked_mul(1u128 << 64))
-        .ok_or(StreetfunError::MathOverflow)?;
-    let cross_a = a_hi.checked_mul(b_lo).ok_or(StreetfunError::MathOverflow)?;
-    let cross_b = b_hi.checked_mul(a_lo).ok_or(StreetfunError::MathOverflow)?;
-    let low = a_lo
-        .checked_mul(b_lo)
-        .ok_or(StreetfunError::MathOverflow)?
-        >> 64;
-    high
-        .checked_add(cross_a)
-        .and_then(|value| value.checked_add(cross_b))
-        .and_then(|value| value.checked_add(low))
-        .ok_or(StreetfunError::MathOverflow.into())
-}
-
-fn reciprocal_q64(value: u128) -> Result<u128> {
-    require!(value > 0, StreetfunError::InvalidDammV2Pool);
-    // floor(2^128 / value), with 2^128 represented as u128::MAX + 1.
-    let quotient = u128::MAX / value;
-    let remainder = u128::MAX % value;
-    quotient
-        .checked_add(u128::from(remainder == value - 1))
-        .ok_or(StreetfunError::MathOverflow.into())
-}
-
-fn multiply_u64_by_q64(amount: u64, value_q64: u128) -> Result<u64> {
-    let whole = (value_q64 >> 64)
-        .checked_mul(u128::from(amount))
-        .ok_or(StreetfunError::MathOverflow)?;
-    let fractional = (u128::from(value_q64 as u64) * u128::from(amount)) >> 64;
-    let output = whole
-        .checked_add(fractional)
-        .ok_or(StreetfunError::MathOverflow)?;
-    u64::try_from(output).map_err(|_| StreetfunError::MathOverflow.into())
 }
 
 fn validate_dbc_config(
@@ -973,23 +895,17 @@ mod tests {
         let keeper = Pubkey::new_unique();
         let finished_at = 1_000;
 
-        assert_eq!(validate_settlement_caller(creator, creator, 0, 0).unwrap(), false);
-        assert!(validate_settlement_caller(keeper, creator, finished_at, finished_at + 86_399).is_err());
-        assert_eq!(validate_settlement_caller(keeper, creator, finished_at, finished_at + 86_400).unwrap(), true);
+        assert_eq!(
+            validate_settlement_caller(creator, creator, 0, 0).unwrap(),
+            false
+        );
+        assert!(
+            validate_settlement_caller(keeper, creator, finished_at, finished_at + 86_399).is_err()
+        );
+        assert_eq!(
+            validate_settlement_caller(keeper, creator, finished_at, finished_at + 86_400).unwrap(),
+            true
+        );
         assert!(validate_settlement_caller(keeper, creator, 0, i64::MAX).is_err());
-        let registered_market = Pubkey::new_unique();
-        assert!(validate_permissionless_market(Pubkey::default(), registered_market).is_err());
-        assert!(validate_permissionless_market(registered_market, Pubkey::new_unique()).is_err());
-        assert!(validate_permissionless_market(registered_market, registered_market).is_ok());
-    }
-
-    #[test]
-    fn permissionless_minimum_output_uses_pool_spot_and_bounded_slippage() {
-        let one = 1u128 << 64;
-        let four = 2u128 << 64;
-        assert_eq!(permissionless_settlement_minimum_output(1_000, one, true).unwrap(), 900);
-        assert_eq!(permissionless_settlement_minimum_output(1_000, one, false).unwrap(), 900);
-        assert_eq!(permissionless_settlement_minimum_output(1_000, four, true).unwrap(), 3_600);
-        assert_eq!(permissionless_settlement_minimum_output(1_000, four, false).unwrap(), 225);
     }
 }

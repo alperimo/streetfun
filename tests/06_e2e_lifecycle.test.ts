@@ -12,7 +12,7 @@ import {
   TransactionMessage,
   VersionedTransaction,
 } from "@solana/web3.js";
-import { getAccount, getMint, TOKEN_2022_PROGRAM_ID } from "@solana/spl-token";
+import { getAccount, getMint, transfer, mintTo, burn, TOKEN_2022_PROGRAM_ID } from "@solana/spl-token";
 import {
   ActivationType,
   BaseFeeMode,
@@ -54,6 +54,7 @@ import {
   SALE_SUPPLY,
   TOTAL_MEME_SUPPLY,
 } from "./helpers";
+import { getSettlementPolicyPda } from "../src/sdk/pda";
 import * as fs from "fs";
 import * as path from "path";
 
@@ -474,6 +475,11 @@ describe("06 - StreetFun Protocol: Lifecycle Safety (test collateral)", () => {
     const sourceEquityBefore = await safeGetAccount(provider.connection, sourceMarketBefore.tokenBVault);
     const curveAtThreshold = await (program.account as any).curveAccount.fetch(curvePda);
     expect(BigInt(curveAtThreshold.realQuoteReserves.toString()) >= thresholdUnits).to.equal(true);
+    // Permissionless SPL transfers and burns must not freeze graduation.
+    await transfer(provider.connection, traderAlice, aliceQuoteAta.address, quoteVaultPda, traderAlice, 1n);
+    await transfer(provider.connection, traderAlice, aliceTokenAta.address, tokenVaultPda, traderAlice, 1n);
+    await mintTo(provider.connection, stockProvider, equityMint, treasuryVaultPda, stockProvider, 1n);
+    await burn(provider.connection, traderAlice, aliceTokenAta.address, memeMint, traderAlice, 1n);
     const treasuryBefore = await safeGetAccount(provider.connection, treasuryVaultPda);
     const quoteForEquity = new BN((BigInt(curveAtThreshold.realQuoteReserves.toString()) / 2n).toString());
     const currentPoint = await getCurrentPoint(provider.connection, sourceMarketBefore.activationType as any);
@@ -511,6 +517,16 @@ describe("06 - StreetFun Protocol: Lifecycle Safety (test collateral)", () => {
     const callerMemeBefore = await safeGetAccount(provider.connection, callerMemeAta.address);
     const [globalConfig] = deriveGlobalConfigPda();
     const dammV2EventAuthority = PublicKey.findProgramAddressSync([Buffer.from("__event_authority")], CP_AMM_PROGRAM_ID)[0];
+    const [settlementPolicy] = getSettlementPolicyPda(quoteMint, equityMint);
+    const policyParams = { minimumOutputNumerator: new BN(9), minimumOutputDenominator: new BN(10), validUntil: new BN(Math.floor(Date.now() / 1000) + 240) };
+    const policyAccounts = { admin: protocolAdmin.publicKey, globalConfig, quoteMint, equityMint, market: equityDammV2Pool, settlementPolicy, systemProgram: SystemProgram.programId };
+    await loadProgram(createProvider(protocolAdmin)).methods.updateSettlementPolicy(policyParams).accounts(policyAccounts).rpc();
+    if (!traderAlice.publicKey.equals(protocolAdmin.publicKey)) {
+      try {
+        await program.methods.updateSettlementPolicy(policyParams).accounts({ ...policyAccounts, admin: traderAlice.publicKey }).signers([traderAlice]).rpc();
+        expect.fail("An unrelated wallet changed the approved rate");
+      } catch (error) { expect(String(error)).to.include("Unauthorized"); }
+    }
     const graduationInstruction = await (program.methods as any)
       .graduateAndExecuteStock({
         minEquityTokensExpected: equityQuote.minimumAmountOut,
@@ -527,6 +543,7 @@ describe("06 - StreetFun Protocol: Lifecycle Safety (test collateral)", () => {
         tokenVault: tokenVaultPda,
         quoteVault: quoteVaultPda,
         treasuryVault: treasuryVaultPda,
+        settlementPolicy,
         equityDammV2Pool: equityDammV2Pool,
         equityReserveA: sourceMarketBefore.tokenAVault,
         equityReserveB: sourceMarketBefore.tokenBVault,
@@ -552,6 +569,12 @@ describe("06 - StreetFun Protocol: Lifecycle Safety (test collateral)", () => {
         systemProgram: SystemProgram.programId,
       })
       .instruction();
+    const unsafeInstruction = new TransactionInstruction({ ...graduationInstruction, data: Buffer.from(graduationInstruction.data) });
+    unsafeInstruction.data.writeBigUInt64LE(1n, 8);
+    try {
+      await sendGraduationWithLookupTable(provider.connection, traderAlice, unsafeInstruction, [positionNftMint]);
+      expect.fail("Dust collateral minimum was accepted");
+    } catch (error) { expect(String(error)).to.match(/SlippageExceeded|0x1775/); }
     const graduation = await sendGraduationWithLookupTable(
       provider.connection,
       traderAlice,
@@ -582,7 +605,9 @@ describe("06 - StreetFun Protocol: Lifecycle Safety (test collateral)", () => {
     expect(curveAfterGrad.realTokenReserves.toString()).to.equal("0");
     expect(curveAfterGrad.totalMemeSupply.toString()).to.equal(memeMintAfterGraduation.supply.toString());
     expect(treasuryAfter.amount > 0n).to.equal(true);
-    expect(curveAfterGrad.totalEquityLocked.toString()).to.equal(treasuryAfter.amount.toString());
+    expect(curveAfterGrad.totalEquityLocked.toString()).to.equal((treasuryAfter.amount - treasuryBefore.amount).toString());
+    expect((await safeGetAccount(provider.connection, quoteVaultPda)).amount).to.equal(1n);
+    expect((await safeGetAccount(provider.connection, tokenVaultPda)).amount).to.equal(1n);
     expect(treasuryAfter.amount > treasuryBefore.amount).to.equal(true);
     expect(destinationQuoteBalance.amount.toString()).to.equal(quoteForLiquidity.toString());
     expect(destinationMemeBalance.amount.toString()).to.equal(expectedPoolTokens.toString());

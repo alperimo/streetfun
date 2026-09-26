@@ -353,9 +353,7 @@ export class SolanaTokenService {
             },
             bondingCurve: {
               protocol: "meteora-dbc", dbcPoolAddress: registry.dbcPool.toBase58(), settlementPending,
-              dbcSettlementFallbackAt: !registry.meteoraDammV2Pool.equals(PublicKey.default)
-                ? getDbcSettlementFallbackAt(poolState.poolState.finishCurveTimestamp.toString())
-                : undefined,
+              dbcSettlementFallbackAt: getDbcSettlementFallbackAt(poolState.poolState.finishCurveTimestamp.toString()),
               realQuoteReservesUsd: quoteReserveUsd, graduationThresholdUsd: thresholdUsd,
               progressPct: isGraduated ? 100 : progressPct,
               dbcQuoteReserveRaw: poolState.poolState.quoteReserve.toString(),

@@ -21,6 +21,8 @@ import { getCurvePda, getGlobalConfigPda, getQuoteVaultPda, getTokenVaultPda, ge
 import { assertConfiguredCluster, getServerConnection } from "@/server/rpc";
 import { prepareExactDammV2GraduationPool } from "@/server/dammV2Graduation";
 
+import { readSettlementPolicy, protectedSettlementMinimum } from "@/server/settlementPolicy";
+
 export const dynamic = "force-dynamic";
 
 class GraduationPlanError extends Error {
@@ -115,8 +117,8 @@ export async function POST(request: Request) {
       throw new GraduationPlanError("The collateral vault token program does not match the Tessera mint.", 409, "TREASURY_VAULT_MISMATCH");
     }
     const treasuryVault = unpackAccount(treasuryVaultAddress, treasuryVaultInfo, equityTokenProgram);
-    if (!treasuryVault.mint.equals(curve.targetEquityMint) || !treasuryVault.owner.equals(curveAddress) || treasuryVault.amount !== 0n) {
-      throw new GraduationPlanError("The collateral vault is not empty and correctly controlled for settlement.", 409, "TREASURY_VAULT_MISMATCH");
+    if (!treasuryVault.mint.equals(curve.targetEquityMint) || !treasuryVault.owner.equals(curveAddress)) {
+      throw new GraduationPlanError("The collateral vault is not correctly controlled for settlement.", 409, "TREASURY_VAULT_MISMATCH");
     }
     if ((await hasTransferHookExtension(connection, curve.targetEquityMint)).hasTransferHook) {
       throw new GraduationPlanError(
@@ -126,25 +128,26 @@ export async function POST(request: Request) {
       );
     }
     const expectedPoolTokenAmount = BigInt(curve.realTokenReserves.toString()) + TOTAL_MEME_SUPPLY - SALE_SUPPLY;
-    if (!quoteVault.mint.equals(USDC_MINT) || !quoteVault.owner.equals(curveAddress) || quoteVault.amount.toString() !== curve.realQuoteReserves.toString()) {
+    if (!quoteVault.mint.equals(USDC_MINT) || !quoteVault.owner.equals(curveAddress) || quoteVault.amount < BigInt(curve.realQuoteReserves.toString())) {
       throw new GraduationPlanError("The live quote vault does not match the curve's recorded reserves.", 409, "QUOTE_RESERVE_MISMATCH");
     }
-    if (!tokenVault.mint.equals(memeMint) || !tokenVault.owner.equals(curveAddress) || tokenVault.amount.toString() !== expectedPoolTokenAmount.toString()) {
+    if (!tokenVault.mint.equals(memeMint) || !tokenVault.owner.equals(curveAddress) || tokenVault.amount < expectedPoolTokenAmount) {
       throw new GraduationPlanError("The live token vault does not match the required post-graduation supply.", 409, "TOKEN_SUPPLY_MISMATCH");
     }
-    if (memeMintState.decimals !== 6 || memeMintState.supply.toString() !== curve.totalMemeSupply.toString() || curve.totalMemeSupply.toString() !== "1000000000000000") {
+    if (memeMintState.decimals !== 6 || memeMintState.supply <= 0n || memeMintState.supply > BigInt(curve.totalMemeSupply.toString()) || curve.totalMemeSupply.toString() !== "1000000000000000") {
       throw new GraduationPlanError("The live mint supply does not satisfy the graduation supply invariant.", 409, "TOKEN_SUPPLY_MISMATCH");
     }
 
+    const policy = await readSettlementPolicy(program, USDC_MINT, curve.targetEquityMint, quoteForEquity);
     const client = new CpAmm(connection);
     const [targetAsA, targetAsB] = await Promise.all([
       client.fetchPoolStatesByTokenAMint(curve.targetEquityMint),
       client.fetchPoolStatesByTokenBMint(curve.targetEquityMint),
     ]);
     const markets = [...targetAsA, ...targetAsB];
-    const equityMarkets = markets.filter(({ account }: any) =>
+    const equityMarkets = markets.filter(({ publicKey, account }: any) => publicKey.equals(policy.market) && (
       (account.tokenAMint.equals(USDC_MINT) && account.tokenBMint.equals(curve.targetEquityMint)) ||
-      (account.tokenBMint.equals(USDC_MINT) && account.tokenAMint.equals(curve.targetEquityMint)),
+      (account.tokenBMint.equals(USDC_MINT) && account.tokenAMint.equals(curve.targetEquityMint))),
     );
     if (!equityMarkets.length) {
       throw new GraduationPlanError(
@@ -227,7 +230,7 @@ export async function POST(request: Request) {
         quoteForLiquidity: quoteForLiquidity.toString(),
         expectedMemeTokens: expectedPoolTokenAmount.toString(),
         estimatedEquityOut: selectedQuote.outputAmount.toString(),
-        minEquityTokensExpected: selectedQuote.minimumAmountOut.toString(),
+        minEquityTokensExpected: protectedSettlementMinimum(BigInt(selectedQuote.outputAmount.toString()), BigInt(selectedQuote.minimumAmountOut.toString()), policy.minimum).toString(),
       },
       pool: {
         address: dammV2Pool.toBase58(),
@@ -235,6 +238,7 @@ export async function POST(request: Request) {
         liquidity: preparedPool.liquidityDelta.toString(),
       },
       accounts: {
+        settlementPolicy: policy.address.toBase58(),
         caller: caller.toBase58(),
         globalConfig: globalConfigAddress.toBase58(),
         memeMint: memeMint.toBase58(),

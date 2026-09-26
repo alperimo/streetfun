@@ -17,6 +17,13 @@ declare_program!(cp_amm);
 pub mod streetfun {
     use super::*;
 
+    pub fn update_settlement_policy(
+        ctx: Context<UpdateSettlementPolicy>,
+        params: UpdateSettlementPolicyParams,
+    ) -> Result<()> {
+        instructions::settlement_policy::handle_update_settlement_policy(ctx, params)
+    }
+
     pub fn initialize_global_config(
         ctx: Context<InitializeGlobalConfig>,
         params: InitializeConfigParams,

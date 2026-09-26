@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { TradeStoreService, TradeRecord, TokenRecord } from "@/services/indexer/tradeStore";
 
 export async function POST(req: NextRequest) {
-  if (process.env.NEXT_PUBLIC_USE_MOCK_DATA !== "true") {
+  if (process.env.NODE_ENV === "production" || process.env.NEXT_PUBLIC_USE_MOCK_DATA !== "true") {
     return NextResponse.json(
       { error: "Direct indexing is disabled in live mode. Submit a confirmed Solana signature." },
       { status: 403 }

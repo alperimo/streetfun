@@ -840,6 +840,43 @@
         {
           "name": "system_program",
           "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "settlement_policy",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  101,
+                  116,
+                  116,
+                  108,
+                  101,
+                  109,
+                  101,
+                  110,
+                  116,
+                  45,
+                  112,
+                  111,
+                  108,
+                  105,
+                  99,
+                  121
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "quote_mint"
+              },
+              {
+                "kind": "account",
+                "path": "target_equity_mint"
+              }
+            ]
+          }
         }
       ],
       "args": [
@@ -1862,6 +1899,43 @@
         {
           "name": "system_program",
           "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "settlement_policy",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  101,
+                  116,
+                  116,
+                  108,
+                  101,
+                  109,
+                  101,
+                  110,
+                  116,
+                  45,
+                  112,
+                  111,
+                  108,
+                  105,
+                  99,
+                  121
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "quote_mint"
+              },
+              {
+                "kind": "account",
+                "path": "target_equity_mint"
+              }
+            ]
+          }
         }
       ],
       "args": [
@@ -1933,6 +2007,115 @@
           }
         }
       ]
+    },
+    {
+      "name": "update_settlement_policy",
+      "discriminator": [
+        11,
+        241,
+        161,
+        61,
+        158,
+        28,
+        75,
+        225
+      ],
+      "accounts": [
+        {
+          "name": "admin",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "global_config"
+          ]
+        },
+        {
+          "name": "global_config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  108,
+                  111,
+                  98,
+                  97,
+                  108,
+                  45,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "quote_mint"
+        },
+        {
+          "name": "equity_mint"
+        },
+        {
+          "name": "market"
+        },
+        {
+          "name": "settlement_policy",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  101,
+                  116,
+                  116,
+                  108,
+                  101,
+                  109,
+                  101,
+                  110,
+                  116,
+                  45,
+                  112,
+                  111,
+                  108,
+                  105,
+                  99,
+                  121
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "quote_mint"
+              },
+              {
+                "kind": "account",
+                "path": "equity_mint"
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "params",
+          "type": {
+            "defined": {
+              "name": "UpdateSettlementPolicyParams"
+            }
+          }
+        }
+      ]
     }
   ],
   "accounts": [
@@ -1973,6 +2156,19 @@
         252,
         176,
         217
+      ]
+    },
+    {
+      "name": "SettlementPolicy",
+      "discriminator": [
+        143,
+        79,
+        122,
+        164,
+        45,
+        174,
+        137,
+        242
       ]
     }
   ],
@@ -2639,6 +2835,50 @@
       }
     },
     {
+      "name": "SettlementPolicy",
+      "docs": [
+        "Administrator-approved market and minimum net exchange rate. Rates expire",
+        "independently of pool spot prices, which a settlement caller can manipulate."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "quote_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "equity_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "market",
+            "type": "pubkey"
+          },
+          {
+            "name": "minimum_output_numerator",
+            "type": "u64"
+          },
+          {
+            "name": "minimum_output_denominator",
+            "type": "u64"
+          },
+          {
+            "name": "updated_at",
+            "type": "i64"
+          },
+          {
+            "name": "valid_until",
+            "type": "i64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
       "name": "StonkLaunchedEvent",
       "type": {
         "kind": "struct",
@@ -2750,6 +2990,29 @@
             "type": {
               "option": "pubkey"
             }
+          }
+        ]
+      }
+    },
+    {
+      "name": "UpdateSettlementPolicyParams",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "minimum_output_numerator",
+            "docs": [
+              "Minimum spendable equity atoms / input quote atoms, after all fees."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "minimum_output_denominator",
+            "type": "u64"
+          },
+          {
+            "name": "valid_until",
+            "type": "i64"
           }
         ]
       }

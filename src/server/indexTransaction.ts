@@ -304,7 +304,9 @@ export async function indexConfirmedTransaction(
         target_equity_symbol: asset?.symbol || existing?.target_equity_symbol || "UNVERIFIED",
         target_equity_mint: registry.targetEquityMint.toBase58(), creator: creator.toBase58(),
         description: existing?.description || "", avatar_url: existing?.avatar_url || undefined,
-        is_graduated: false, meteora_pool: undefined,
+        is_graduated: Boolean(registry.isGraduated),
+        meteora_pool: registry.isGraduated && !registry.meteoraDammV2Pool.equals(PublicKey.default)
+          ? registry.meteoraDammV2Pool.toBase58() : undefined,
       });
       indexedMints.add(mint.toBase58());
       indexed++;

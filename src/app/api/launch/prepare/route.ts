@@ -11,6 +11,7 @@ import { getDbcLaunchPda, getGlobalConfigPda } from "@/sdk/pda";
 import { getNetworkAssetCatalog } from "@/server/assetCatalog";
 import { assertStreetFunDbcConfig, getDbcClient, getDbcConfigAddress } from "@/server/meteoraDbc";
 import { getServerConnection, assertConfiguredCluster } from "@/server/rpc";
+import { launchMetadataDigest, normalizeLaunchMetadata } from "@/lib/launchMetadata";
 
 export const dynamic = "force-dynamic";
 
@@ -22,7 +23,7 @@ function key(value: unknown, field: string): PublicKey {
 
 function metadataBaseUrl(request: NextRequest): URL {
   const configured = process.env.NEXT_PUBLIC_APP_URL;
-  const origin = configured || request.headers.get("origin") || new URL(request.url).origin;
+  const origin = configured || new URL(request.url).origin;
   const url = new URL(origin);
   const isLocal = url.hostname === "localhost" || url.hostname === "127.0.0.1";
   if (url.protocol !== "https:" && !(isLocal && url.protocol === "http:")) {
@@ -40,6 +41,7 @@ export async function POST(request: NextRequest) {
     const name = typeof body?.name === "string" ? body.name.trim() : "";
     const symbol = typeof body?.symbol === "string" ? body.symbol.trim().toUpperCase() : "";
     const avatarUrl = typeof body?.avatarUrl === "string" ? body.avatarUrl.trim() : "";
+    const metadata = normalizeLaunchMetadata({ avatarUrl, description: body?.description });
     if (!name || name.length > 32 || !symbol || symbol.length > 10) {
       return NextResponse.json({ error: "Token name and symbol exceed the Meteora metadata limits." }, { status: 400 });
     }
@@ -116,7 +118,9 @@ export async function POST(request: NextRequest) {
     const equityDammV2Pool = bestMarket.market.publicKey as PublicKey;
 
     const appUrl = metadataBaseUrl(request);
-    const uri = new URL(`/api/metadata/${memeMint.toBase58()}`, appUrl).toString();
+    const metadataUrl = new URL(`/api/metadata/${memeMint.toBase58()}`, appUrl);
+    metadataUrl.searchParams.set("v", await launchMetadataDigest(metadata));
+    const uri = metadataUrl.toString();
     if (uri.length > 200) return NextResponse.json({ error: "The configured app URL exceeds Meteora's on-chain metadata URI limit." }, { status: 400 });
 
     const dbcPoolTransaction = await dbcClient.creator.createPool({

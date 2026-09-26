@@ -6,9 +6,25 @@ pub const TOKEN_VAULT_SEED: &[u8] = b"token-vault";
 pub const QUOTE_VAULT_SEED: &[u8] = b"quote-vault";
 pub const TREASURY_VAULT_SEED: &[u8] = b"treasury-vault";
 pub const DBC_LAUNCH_SEED: &[u8] = b"dbc-launch";
+pub const SETTLEMENT_POLICY_SEED: &[u8] = b"settlement-policy";
 
 pub const MAX_FEE_BPS: u16 = 1_000; // Max 10%
 pub const BPS_DENOMINATOR: u64 = 10_000;
+
+/// Administrator-approved market and minimum net exchange rate. Rates expire
+/// independently of pool spot prices, which a settlement caller can manipulate.
+#[account]
+#[derive(InitSpace)]
+pub struct SettlementPolicy {
+    pub quote_mint: Pubkey,
+    pub equity_mint: Pubkey,
+    pub market: Pubkey,
+    pub minimum_output_numerator: u64,
+    pub minimum_output_denominator: u64,
+    pub updated_at: i64,
+    pub valid_until: i64,
+    pub bump: u8,
+}
 
 #[account]
 #[derive(InitSpace)]

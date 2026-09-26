@@ -2,8 +2,8 @@ use crate::cp_amm;
 use crate::errors::StreetfunError;
 use crate::instructions::launch::{SALE_SUPPLY, TOTAL_MEME_SUPPLY};
 use crate::state::{
-    CurveAccount, GlobalConfig, CURVE_SEED, GLOBAL_CONFIG_SEED, QUOTE_VAULT_SEED, TOKEN_VAULT_SEED,
-    TREASURY_VAULT_SEED,
+    CurveAccount, GlobalConfig, SettlementPolicy, CURVE_SEED, GLOBAL_CONFIG_SEED, QUOTE_VAULT_SEED,
+    SETTLEMENT_POLICY_SEED, TOKEN_VAULT_SEED, TREASURY_VAULT_SEED,
 };
 use anchor_lang::prelude::*;
 use anchor_spl::{
@@ -149,6 +149,9 @@ pub struct GraduateAndExecuteStock<'info> {
     pub token_2022_program: Program<'info, Token2022>,
     pub associated_token_program: Program<'info, AssociatedToken>,
     pub system_program: Program<'info, System>,
+
+    #[account(seeds = [SETTLEMENT_POLICY_SEED, quote_mint.key().as_ref(), target_equity_mint.key().as_ref()], bump = settlement_policy.bump)]
+    pub settlement_policy: Account<'info, SettlementPolicy>,
 }
 
 #[inline(never)]
@@ -158,7 +161,9 @@ pub fn handle_graduate_and_execute_stock<'a, 'b, 'c, 'info>(
 ) -> Result<()> {
     validate_pre_settlement(&ctx.accounts, &params)?;
 
-    let quote_total = ctx.accounts.quote_vault.amount;
+    let quote_total = ctx.accounts.curve.real_quote_reserves;
+    let quote_surplus = ctx.accounts.quote_vault.amount - quote_total;
+    let equity_before = ctx.accounts.treasury_vault.amount;
     let (quote_for_equity, quote_for_liquidity) = split_settlement_quote(quote_total)?;
     let expected_pool_tokens = ctx
         .accounts
@@ -171,6 +176,16 @@ pub fn handle_graduate_and_execute_stock<'a, 'b, 'c, 'info>(
         StreetfunError::InsufficientLiquidity
     );
 
+    let token_surplus = ctx.accounts.token_vault.amount - expected_pool_tokens;
+    crate::instructions::settlement_policy::validate_settlement_policy(
+        &ctx.accounts.settlement_policy,
+        ctx.accounts.equity_damm_v2_pool.key(),
+        ctx.accounts.quote_mint.key(),
+        ctx.accounts.target_equity_mint.key(),
+        quote_for_equity,
+        params.min_equity_tokens_expected,
+        Clock::get()?.unix_timestamp,
+    )?;
     let equity_acquired = perform_equity_swap(&mut ctx.accounts, quote_for_equity, &params)?;
     create_damm_v2_pool(
         &mut ctx.accounts,
@@ -186,17 +201,23 @@ pub fn handle_graduate_and_execute_stock<'a, 'b, 'c, 'info>(
         ctx.accounts.meme_mint.supply,
     )?;
     require!(
-        ctx.accounts.quote_vault.amount == 0 && ctx.accounts.token_vault.amount == 0,
+        ctx.accounts.quote_vault.amount == quote_surplus
+            && ctx.accounts.token_vault.amount == token_surplus,
         StreetfunError::SettlementAmountsMismatch
     );
     require!(
-        ctx.accounts.treasury_vault.amount == equity_acquired,
+        ctx.accounts
+            .treasury_vault
+            .amount
+            .checked_sub(equity_before)
+            == Some(equity_acquired),
         StreetfunError::SettlementAmountsMismatch
     );
 
     let now = Clock::get()?.unix_timestamp;
     let curve = &mut ctx.accounts.curve;
     curve.total_equity_locked = equity_acquired;
+    curve.total_meme_supply = ctx.accounts.meme_mint.supply;
     curve.real_quote_reserves = 0;
     curve.real_token_reserves = 0;
     curve.meteora_damm_v2_pool = ctx.accounts.damm_v2_pool.key();
@@ -248,11 +269,11 @@ fn validate_pre_settlement(
         StreetfunError::GraduationThresholdNotReached
     );
     require!(
-        accounts.quote_vault.amount == accounts.curve.real_quote_reserves,
+        accounts.quote_vault.amount >= accounts.curve.real_quote_reserves,
         StreetfunError::SettlementAmountsMismatch
     );
     require!(
-        accounts.treasury_vault.amount == 0 && accounts.curve.total_equity_locked == 0,
+        accounts.curve.total_equity_locked == 0,
         StreetfunError::SettlementAmountsMismatch
     );
     require!(
@@ -271,7 +292,7 @@ fn validate_pre_settlement(
         .checked_add(TOTAL_MEME_SUPPLY - SALE_SUPPLY)
         .ok_or(StreetfunError::MathOverflow)?;
     require!(
-        accounts.token_vault.amount == expected_pool_tokens,
+        accounts.token_vault.amount >= expected_pool_tokens,
         StreetfunError::SupplyInvariantViolation
     );
     require!(
@@ -722,7 +743,9 @@ fn split_settlement_quote(total: u64) -> Result<(u64, u64)> {
 
 fn validate_meme_supply(recorded_supply: u64, live_mint_supply: u64) -> Result<()> {
     require!(
-        recorded_supply == TOTAL_MEME_SUPPLY && live_mint_supply == recorded_supply,
+        recorded_supply == TOTAL_MEME_SUPPLY
+            && live_mint_supply > 0
+            && live_mint_supply <= recorded_supply,
         StreetfunError::SupplyInvariantViolation
     );
     Ok(())
@@ -738,8 +761,9 @@ mod tests {
     }
 
     #[test]
-    fn rejects_live_mint_supply_mismatch() {
-        assert!(validate_meme_supply(TOTAL_MEME_SUPPLY, TOTAL_MEME_SUPPLY - 1).is_err());
+    fn accepts_external_burns_but_rejects_supply_inflation() {
+        assert!(validate_meme_supply(TOTAL_MEME_SUPPLY, TOTAL_MEME_SUPPLY - 1).is_ok());
+        assert!(validate_meme_supply(TOTAL_MEME_SUPPLY, TOTAL_MEME_SUPPLY + 1).is_err());
     }
 
     #[test]
