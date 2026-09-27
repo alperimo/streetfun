@@ -9,7 +9,7 @@ DBC graduation completes the following verified steps. The creator may initiate 
 
 The administrator publishes a `SettlementPolicy` for each quote/collateral pair, based on an independently reviewed rate. Each policy expires within five minutes and bounds the minimum spendable collateral received after fees. A caller cannot bypass this floor, substitute a pool, or rely on the pool's manipulable spot price as its own safety check. Settlement pauses if the policy is absent or expired. This is a trusted pricing role, not an autonomous oracle; permissionless execution depends on the administrator refreshing the policy. Older DBC registrations can use the approved market after the same 24-hour delay. See [release requirements](docs/verification.md) for deployment and publishing instructions.
 
-Meteora's separate 0.2% protocol migration fee applies during DBC-to-DAMM v2 migration. It is separate from StreetFun's configured partner allocation. See Meteora's [migration and liquidity guide](https://docs.meteora.ag/core-products/dbc/migration-and-liquidity) and [TypeScript SDK examples](https://docs.meteora.ag/developer-guides/dbc/typescript-sdk/examples).
+Meteora's separate 0.2% protocol migration fee applies during DBC-to-DAMM v2 migration. It is separate from StreetFun's configured partner allocation. See Meteora's [migration and liquidity guide](https://docs.meteora.ag/core-products/dbc/migration-and-liquidity) and [TypeScript SDK examples](https://docs.meteora.ag/developer-guides/dbc/typescript-sdk/examples). 
 
 ---
 
