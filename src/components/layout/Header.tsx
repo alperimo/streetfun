@@ -24,9 +24,10 @@ const WalletButton = dynamic(
 interface HeaderProps {
   onOpenSearch: () => void;
   onOpenLaunch: () => void;
+  onOpenHowItWorks?: () => void;
 }
 
-export function Header({ onOpenSearch, onOpenLaunch }: HeaderProps) {
+export function Header({ onOpenSearch, onOpenLaunch, onOpenHowItWorks }: HeaderProps) {
   const pathname = usePathname();
 
   useEffect(() => {
@@ -43,8 +44,8 @@ export function Header({ onOpenSearch, onOpenLaunch }: HeaderProps) {
   return (
     <header className="site-header sticky top-0 z-40 w-full bg-background backdrop-blur-md">
       <div className="mx-auto flex h-[80px] w-full max-w-[1350px] items-center justify-between gap-2 px-4 sm:gap-4 sm:px-10 lg:px-0">
-        {/* Left: Brand & Treasury */}
-        <div className="flex h-full min-w-0 items-center gap-2 sm:gap-8">
+        {/* Left: Brand & Navigation */}
+        <div className="flex h-full min-w-0 items-center gap-4 sm:gap-8">
           <Link href="/" className="flex shrink-0 items-center gap-2.5" aria-label="StreetFun home">
             <StreetFunLogo size={34} className="h-[34px] w-[34px] flex-shrink-0 text-brand-cyan" />
             <span className="hidden text-[21px] font-bold tracking-[-0.04em] text-foreground sm:inline">
@@ -52,7 +53,7 @@ export function Header({ onOpenSearch, onOpenLaunch }: HeaderProps) {
             </span>
           </Link>
 
-          <nav className="flex h-full items-center text-[15px]">
+          <nav className="flex h-full items-center gap-4 sm:gap-6 text-[15px]">
             <Link
               href="/treasury"
               className={`relative flex h-full items-center px-1 transition-colors ${
@@ -69,11 +70,28 @@ export function Header({ onOpenSearch, onOpenLaunch }: HeaderProps) {
                 />
               )}
             </Link>
+
+            {onOpenHowItWorks && (
+              <button
+                type="button"
+                onClick={onOpenHowItWorks}
+                className="relative flex h-full items-center px-1 font-medium text-muted hover:text-foreground transition-colors cursor-pointer"
+              >
+                <span>How It Works</span>
+              </button>
+            )}
           </nav>
         </div>
 
         {/* Right: Search bar, Launch CTA, and Wallet */}
         <div className="flex shrink-0 items-center gap-2.5 sm:gap-3">
+          {(process.env.NEXT_PUBLIC_SOLANA_NETWORK || "devnet") === "devnet" && (
+            <div className="hidden lg:flex h-11 items-center gap-2 rounded-xl border border-border bg-card px-3 text-xs font-mono font-medium text-muted select-none shadow-xs">
+              <span className="h-2 w-2 rounded-full bg-emerald-400" />
+              <span>Devnet</span>
+            </div>
+          )}
+
           {/* Search bar with slightly smaller width per user request */}
           <button
             onClick={onOpenSearch}

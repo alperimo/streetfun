@@ -9,6 +9,7 @@ import { TokenCard } from "@/components/tokens/TokenCard";
 import { TokenCardSkeleton } from "@/components/common/Skeletons";
 import { SearchModal } from "@/components/modals/SearchModal";
 import { LaunchModal } from "@/components/modals/LaunchModal";
+import { HowItWorksModal } from "@/components/modals/HowItWorksModal";
 import { tokenCreatedAt } from "@/lib/marketFormat";
 import { useMarket } from "@/context/MarketContext";
 
@@ -21,6 +22,7 @@ export function MarketsPage() {
 
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isLaunchOpen, setIsLaunchOpen] = useState(false);
+  const [isHowItWorksOpen, setIsHowItWorksOpen] = useState(false);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -30,6 +32,13 @@ export function MarketsPage() {
       }
       if (params.get("search") === "true") {
         setIsSearchOpen(true);
+      }
+      try {
+        if (!localStorage.getItem("streetfun:onboarded")) {
+          setIsHowItWorksOpen(true);
+        }
+      } catch {
+        // storage fallback
       }
     }
   }, []);
@@ -93,6 +102,7 @@ export function MarketsPage() {
       <Header
         onOpenSearch={() => setIsSearchOpen(true)}
         onOpenLaunch={() => setIsLaunchOpen(true)}
+        onOpenHowItWorks={() => setIsHowItWorksOpen(true)}
       />
 
       <main className="flex-1 w-full bg-background pb-12">
@@ -157,7 +167,7 @@ export function MarketsPage() {
         </div>
       </main>
 
-      <Footer />
+      <Footer onOpenHowItWorks={() => setIsHowItWorksOpen(true)} />
 
       <SearchModal
         isOpen={isSearchOpen}
@@ -167,6 +177,10 @@ export function MarketsPage() {
       <LaunchModal
         isOpen={isLaunchOpen}
         onClose={() => setIsLaunchOpen(false)}
+      />
+      <HowItWorksModal
+        isOpen={isHowItWorksOpen}
+        onClose={() => setIsHowItWorksOpen(false)}
       />
     </div>
   );

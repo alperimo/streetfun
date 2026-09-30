@@ -23,6 +23,8 @@ export function HeroBanner() {
     return "$0";
   };
 
+  const isDevnet = (process.env.NEXT_PUBLIC_SOLANA_NETWORK || "devnet") === "devnet";
+
   const stats = [
     {
       label: "24h Volume",
@@ -32,7 +34,7 @@ export function HeroBanner() {
     {
       label: "Equity TVL",
       value: isMock ? "$40.7M" : !error && !loading && equityValuationAvailable ? formatUsd(totalEquityTvl) : "—",
-      change: isMock ? "+28.1%" : error || !equityValuationAvailable ? "Valuation unavailable" : "Mark Value",
+      change: isMock ? "+28.1%" : error || !equityValuationAvailable ? "Valuation unavailable" : isDevnet ? "Devnet Mark" : "Mark Value",
     },
     {
       label: "Graduated",
