@@ -31,6 +31,50 @@ function verifySolanaSignature(
   }
 }
 
+export async function GET(req: NextRequest) {
+  try {
+    const { searchParams } = new URL(req.url);
+    const walletAddress = searchParams.get("wallet");
+    if (!walletAddress) {
+      return NextResponse.json(
+        { error: "Missing required parameter: wallet" },
+        { status: 400 }
+      );
+    }
+
+    const supabase = createServerSupabaseClient();
+    if (!supabase) {
+      return NextResponse.json({ error: "Alpha claims are temporarily unavailable." }, { status: 503 });
+    }
+
+    const { data: existing, error } = await supabase
+      .from("alpha_passes")
+      .select("pass_number, wallet_address, x_handle, created_at")
+      .eq("wallet_address", walletAddress)
+      .maybeSingle();
+
+    if (error) {
+      return NextResponse.json({ error: "Failed to check pass" }, { status: 500 });
+    }
+
+    if (!existing) {
+      return NextResponse.json({ hasPass: false });
+    }
+
+    return NextResponse.json({
+      hasPass: true,
+      pass: {
+        passNumber: existing.pass_number,
+        walletAddress: existing.wallet_address,
+        xHandle: existing.x_handle,
+        createdAt: existing.created_at,
+      },
+    });
+  } catch (err: any) {
+    return NextResponse.json({ error: err?.message || "Internal server error" }, { status: 500 });
+  }
+}
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();

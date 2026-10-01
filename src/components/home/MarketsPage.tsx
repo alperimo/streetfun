@@ -10,8 +10,10 @@ import { TokenCardSkeleton } from "@/components/common/Skeletons";
 import { SearchModal } from "@/components/modals/SearchModal";
 import { LaunchModal } from "@/components/modals/LaunchModal";
 import { HowItWorksModal } from "@/components/modals/HowItWorksModal";
+import { WaitlistModal } from "@/components/modals/WaitlistModal";
 import { tokenCreatedAt } from "@/lib/marketFormat";
 import { useMarket } from "@/context/MarketContext";
+import { useAlphaPass } from "@/context/AlphaPassContext";
 
 export function MarketsPage() {
   const { tokens, loading, error } = useMarket();
@@ -23,6 +25,7 @@ export function MarketsPage() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isLaunchOpen, setIsLaunchOpen] = useState(false);
   const [isHowItWorksOpen, setIsHowItWorksOpen] = useState(false);
+  const { openWaitlist } = useAlphaPass();
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -33,8 +36,11 @@ export function MarketsPage() {
       if (params.get("search") === "true") {
         setIsSearchOpen(true);
       }
+      if (params.get("waitlist") === "true" || params.get("alpha") === "true") {
+        openWaitlist();
+      }
       try {
-        if (!localStorage.getItem("streetfun:onboarded")) {
+        if (!localStorage.getItem("streetfun:onboarded") && params.get("waitlist") !== "true") {
           setIsHowItWorksOpen(true);
         }
       } catch {
@@ -182,6 +188,7 @@ export function MarketsPage() {
         isOpen={isHowItWorksOpen}
         onClose={() => setIsHowItWorksOpen(false)}
       />
+      <WaitlistModal />
     </div>
   );
 }

@@ -3,6 +3,7 @@ import "./globals.css";
 import { WalletProvider } from "@/components/layout/WalletProvider";
 import { ThemeProvider } from "@/context/ThemeContext";
 import { MarketProvider } from "@/context/MarketContext";
+import { AlphaPassProvider } from "@/context/AlphaPassContext";
 
 import { getLiveTokens } from "@/services/tokens/liveTokens";
 import { TokenMetadata } from "@/lib/types";
@@ -93,7 +94,9 @@ export default async function RootLayout({
       <body className="min-h-screen bg-background text-foreground antialiased selection:bg-brand-cyan/20 selection:text-brand-cyan">
         <ThemeProvider>
           <WalletProvider>
-            <MarketProvider initialTokens={initialTokens}>{children}</MarketProvider>
+            <AlphaPassProvider>
+              <MarketProvider initialTokens={initialTokens}>{children}</MarketProvider>
+            </AlphaPassProvider>
           </WalletProvider>
         </ThemeProvider>
       </body>

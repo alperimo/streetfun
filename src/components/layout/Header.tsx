@@ -7,6 +7,7 @@ import dynamic from "next/dynamic";
 import { Search, Plus, Wallet } from "lucide-react";
 
 import { StreetFunLogo } from "@/components/common/StreetFunLogo";
+import { useAlphaPass } from "@/context/AlphaPassContext";
 
 const WalletButton = dynamic(
   () => import("./WalletButton").then((mod) => mod.WalletButton),
@@ -25,10 +26,13 @@ interface HeaderProps {
   onOpenSearch: () => void;
   onOpenLaunch: () => void;
   onOpenHowItWorks?: () => void;
+  onOpenWaitlist?: () => void;
 }
 
-export function Header({ onOpenSearch, onOpenLaunch, onOpenHowItWorks }: HeaderProps) {
+export function Header({ onOpenSearch, onOpenLaunch, onOpenHowItWorks, onOpenWaitlist }: HeaderProps) {
   const pathname = usePathname();
+  const { passData, openWaitlist: contextOpenWaitlist } = useAlphaPass();
+  const handleOpenWaitlist = onOpenWaitlist || contextOpenWaitlist;
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -90,6 +94,26 @@ export function Header({ onOpenSearch, onOpenLaunch, onOpenHowItWorks }: HeaderP
               <span className="h-2 w-2 rounded-full bg-emerald-400" />
               <span>Devnet</span>
             </div>
+          )}
+
+          {/* Mainnet Waitlist button */}
+          {passData ? (
+            <button
+              onClick={handleOpenWaitlist}
+              type="button"
+              aria-label={`Waitlist Pass #${String(passData.passNumber).padStart(4, "0")}`}
+              className="flex h-11 items-center justify-center rounded-xl border border-brand-cyan/40 bg-card hover:bg-card-hover px-4 text-xs font-mono font-bold text-brand-cyan transition-colors cursor-pointer shrink-0 shadow-sm"
+            >
+              Pass #{String(passData.passNumber).padStart(4, "0")}
+            </button>
+          ) : (
+            <button
+              onClick={handleOpenWaitlist}
+              type="button"
+              className="flex h-11 items-center justify-center rounded-xl border border-border bg-card hover:bg-card-hover hover:border-brand-cyan/50 hover:text-foreground px-4 text-xs font-semibold text-foreground transition-all cursor-pointer shrink-0 shadow-sm"
+            >
+              Mainnet Waitlist
+            </button>
           )}
 
           {/* Search bar with slightly smaller width per user request */}

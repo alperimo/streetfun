@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Check, Copy, Share2, Sparkles, ShieldCheck, Zap, Layers } from "lucide-react";
+import { Check, Copy, Share2, ShieldCheck, Zap, Layers } from "lucide-react";
 import { StreetFunLogo } from "@/components/common/StreetFunLogo";
 
 interface AlphaPassCardProps {
@@ -32,7 +32,7 @@ export function AlphaPassCard({
   };
 
   const handleShareOnX = () => {
-    const tweetText = `Just claimed my @streetfunxyz Alpha Pass #${formattedPassNumber} 🐂\n\nWall Street is coming to Solana memecoins with tokenized equity backing.\n\nClaim your Day-1 0% fee pass: https://streetfun.fun`;
+    const tweetText = `Just claimed my @streetfunxyz Early Access Pass #${formattedPassNumber}\n\nTrade viral momentum with collateral backing on Solana.\n\nJoin the Mainnet waitlist: https://streetfun.xyz`;
     const shareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}`;
     window.open(shareUrl, "_blank", "noopener,noreferrer");
   };
@@ -72,20 +72,19 @@ export function AlphaPassCard({
             <StreetFunLogo size={32} className="h-8 w-8 text-brand-cyan drop-shadow-[0_0_8px_rgba(199,242,132,0.4)]" />
             <div>
               <div className="text-base font-black tracking-tight text-foreground">StreetFun</div>
-              <div className="text-[10px] font-mono tracking-widest uppercase text-muted">Solana Equity Engine</div>
+              <div className="text-[10px] font-mono tracking-widest uppercase text-muted">Solana Launchpad</div>
             </div>
           </div>
 
-          <div className="flex items-center gap-1.5 rounded-full border border-brand-cyan/30 bg-brand-cyan/10 px-3 py-1 text-[11px] font-semibold text-brand-cyan shadow-[0_0_10px_rgba(199,242,132,0.2)]">
-            <Sparkles className="h-3 w-3 animate-pulse text-brand-cyan" />
-            <span>GENESIS PASS</span>
+          <div className="flex items-center gap-1.5 rounded-full border border-brand-cyan/30 bg-brand-cyan/10 px-3 py-1 text-[11px] font-semibold text-brand-cyan">
+            <span>EARLY ACCESS PASS</span>
           </div>
         </div>
 
         {/* Pass Number Display */}
         <div className="relative mt-8 text-center sm:text-left">
           <div className="text-xs font-mono font-medium tracking-wider text-muted uppercase">
-            Alpha Member Identifier
+            Waitlist Pass Identifier
           </div>
           <div className="mt-1 flex items-baseline justify-center sm:justify-start gap-2">
             <span className="font-mono text-4xl sm:text-5xl font-black tracking-tighter text-foreground drop-shadow-sm">
@@ -105,7 +104,7 @@ export function AlphaPassCard({
           <button
             onClick={handleCopyWallet}
             title="Copy wallet address"
-            className="flex items-center gap-1 rounded-lg border border-border bg-card-subtle px-2 py-1 text-[11px] font-mono text-muted hover:text-foreground transition-colors"
+            className="flex items-center gap-1 rounded-lg border border-border bg-card-subtle px-2 py-1 text-[11px] font-mono text-muted hover:text-foreground transition-colors cursor-pointer"
           >
             {copied ? (
               <>
@@ -124,7 +123,7 @@ export function AlphaPassCard({
         {/* Unlocked Perks Matrix */}
         <div className="relative mt-6 space-y-2 border-t border-border/60 pt-5">
           <div className="text-[11px] font-semibold uppercase tracking-wider text-muted">
-            Unlocked Genesis Privileges
+            Waitlist Privileges
           </div>
 
           <div className="grid grid-cols-1 gap-2 text-xs">
@@ -134,24 +133,24 @@ export function AlphaPassCard({
             </div>
             <div className="flex items-center gap-2.5 rounded-lg border border-border/40 bg-card/30 p-2.5">
               <ShieldCheck className="h-4 w-4 shrink-0 text-brand-cyan" />
-              <span className="text-foreground font-medium">Genesis Equity Vault Whitelist (Pre-IPO)</span>
+              <span className="text-foreground font-medium">Priority Platform Early Access</span>
             </div>
             <div className="flex items-center gap-2.5 rounded-lg border border-border/40 bg-card/30 p-2.5">
               <Layers className="h-4 w-4 shrink-0 text-brand-cyan" />
-              <span className="text-foreground font-medium">Devnet Closed Beta VIP Access</span>
+              <span className="text-foreground font-medium">Devnet Live Testing Access</span>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Action: Share on X / Boost */}
+      {/* Action: Share on X */}
       <div className="mt-5 space-y-3">
         <button
           onClick={handleShareOnX}
-          className="flex w-full items-center justify-center gap-2.5 rounded-2xl border border-brand-cyan bg-brand-cyan px-5 py-3.5 text-sm font-bold text-background shadow-lg shadow-brand-cyan/25 transition-all hover:brightness-110 hover:shadow-brand-cyan/40 cursor-pointer"
+          className="flex w-full items-center justify-center gap-2 rounded-2xl border border-brand-cyan bg-brand-cyan px-5 py-3.5 text-sm font-bold text-background shadow-lg shadow-brand-cyan/25 transition-all hover:brightness-110 hover:shadow-brand-cyan/40 cursor-pointer"
         >
           <Share2 className="h-4 w-4 stroke-[2.5]" />
-          <span>Share Alpha Pass on X (Boost Rank)</span>
+          <span>Share Pass on X</span>
         </button>
 
         {/* Optional X Handle Linking */}
