@@ -187,10 +187,13 @@ export async function POST(request: NextRequest) {
       const currentQuoteReserve = new BN(virtualPool.poolState.quoteReserve.toString());
       if (migrationThreshold.gt(currentQuoteReserve)) {
         const remainingToGraduate = migrationThreshold.sub(currentQuoteReserve);
-        if (amountIn.gt(remainingToGraduate)) {
+        // Meteora DBC integer math requires at least 2 micro-USDC for non-zero token output.
+        // Meteora allows up to 2-3 micro-USDC over the boundary to complete the curve.
+        const maxPermitted = remainingToGraduate.add(new BN(2));
+        if (amountIn.gt(maxPermitted)) {
           const remainingUsd = remainingToGraduate.toNumber() / 1e6;
           const displayRemaining = remainingUsd < 0.01
-            ? remainingUsd.toFixed(6).replace(/0+$/, "")
+            ? Math.max(0.000002, remainingUsd).toFixed(6).replace(/0+$/, "")
             : remainingUsd.toFixed(2);
           throw new Error(
             `Amount exceeds remaining curve capacity ($${displayRemaining} USDC left to graduate).`

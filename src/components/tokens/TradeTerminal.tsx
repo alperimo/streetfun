@@ -25,8 +25,10 @@ function formatRemainingFillAmount(val: number): string {
   if (!Number.isFinite(val) || val <= 0) return "0";
   const rawMicros = Math.floor(Math.round(val * 1_000_000));
   if (rawMicros <= 0) return "0";
+  // Meteora DBC integer math requires at least 2 micro-USDC (0.000002) for non-zero token output.
+  const executableMicros = Math.max(2, rawMicros);
   if (val < 0.01) {
-    return (rawMicros / 1_000_000).toFixed(6).replace(/0+$/, "").replace(/\.$/, "") || "0.000001";
+    return (executableMicros / 1_000_000).toFixed(6).replace(/0+$/, "").replace(/\.$/, "") || "0.000002";
   }
   return val.toFixed(2);
 }
@@ -35,8 +37,9 @@ function formatRemainingDisplay(val: number): string {
   if (!Number.isFinite(val) || val <= 0) return "$0.00";
   const rawMicros = Math.floor(Math.round(val * 1_000_000));
   if (rawMicros <= 0) return "$0.00";
+  const executableMicros = Math.max(2, rawMicros);
   if (val < 0.01) {
-    return `$${(rawMicros / 1_000_000).toFixed(6).replace(/0+$/, "").replace(/\.$/, "")}`;
+    return `$${(executableMicros / 1_000_000).toFixed(6).replace(/0+$/, "").replace(/\.$/, "")}`;
   }
   return `$${val.toFixed(2)}`;
 }
@@ -292,7 +295,7 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
     tradeMode === "buy" &&
     !token.bondingCurve.isGraduated &&
     remainingQuoteUsd > 0 &&
-    numAmount > remainingQuoteUsd + 0.0000001;
+    numAmount > Math.max(0.0000025, remainingQuoteUsd + 0.0000001);
 
   const hasInsufficientUsdc =
     connected && tradeMode === "buy" && numAmount > 0 && quoteBalance !== null && numAmount > quoteBalance;

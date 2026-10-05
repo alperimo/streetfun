@@ -5,7 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Copy, Check } from "lucide-react";
 import { TokenMetadata } from "@/lib/types";
-import { formatBondingProgress, formatUsd } from "@/lib/marketFormat";
+import { formatBondingProgress, formatUsd, formatCurveReserveUsd } from "@/lib/marketFormat";
 
 interface TokenCardProps {
   token: TokenMetadata;
@@ -156,7 +156,7 @@ export function TokenCard({ token }: TokenCardProps) {
               </div>
               <div className="mt-0.5 flex items-baseline justify-between gap-2">
                 <div className="font-mono text-2xl font-extrabold text-foreground tracking-tight">
-                  {formatUsd(token.bondingCurve.realQuoteReservesUsd)}{" "}
+                  {formatCurveReserveUsd(token.bondingCurve.realQuoteReservesUsd, token.bondingCurve.graduationThresholdUsd)}{" "}
                   <span className="text-xs font-normal text-muted">/ {formatUsd(token.bondingCurve.graduationThresholdUsd)} USDC</span>
                 </div>
                 {token.bondingCurve.progressPct === 0 && (
