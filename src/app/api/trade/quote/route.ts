@@ -31,7 +31,8 @@ function parsePublicKey(value: unknown, field: string): PublicKey {
 }
 
 function toRawAmount(value: unknown): bigint {
-  const text = typeof value === "number" ? String(value) : typeof value === "string" ? value.trim() : "";
+  let text = typeof value === "number" ? String(value) : typeof value === "string" ? value.trim() : "";
+  text = text.replace(",", ".");
   if (!/^\d+(?:\.\d{1,6})?$/.test(text)) throw new Error("Enter a valid amount with up to six decimal places.");
   const [whole, fraction = ""] = text.split(".");
   const raw = BigInt(whole) * 1_000_000n + BigInt((fraction + "000000").slice(0, 6));

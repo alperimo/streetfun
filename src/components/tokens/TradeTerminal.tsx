@@ -21,6 +21,20 @@ function formatCollateralUnits(value: number, decimals: number): string {
   return value.toLocaleString("en-US", { maximumFractionDigits: Math.max(0, Math.min(decimals, 9)) });
 }
 
+function formatRemainingFillAmount(val: number): string {
+  if (!Number.isFinite(val) || val <= 0) return "0";
+  if (val <= 0.0001) return "0.0001";
+  if (val < 0.01) return val.toFixed(4);
+  return val.toFixed(2);
+}
+
+function formatRemainingDisplay(val: number): string {
+  if (!Number.isFinite(val) || val <= 0) return "$0.00";
+  if (val <= 0.0001) return "$0.0001";
+  if (val < 0.01) return `$${val.toFixed(4)}`;
+  return `$${val.toFixed(2)}`;
+}
+
 interface TradeTerminalProps {
   token: TokenMetadata;
   onTradeSuccess?: () => void;
@@ -122,7 +136,8 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
   const realTokens = BigInt(token.bondingCurve.realTokenReserves || "0");
 
   useEffect(() => {
-    if (token.bondingCurve.protocol !== "meteora-dbc" || tradeMode === "redeem" || !amount || Number(amount) <= 0) {
+    const clean = (amount || "").replace(",", ".");
+    if (token.bondingCurve.protocol !== "meteora-dbc" || tradeMode === "redeem" || !clean || Number(clean) <= 0) {
       setLiveQuote(null);
       setLiveQuoteError(null);
       setLiveQuoteLoading(false);
@@ -139,7 +154,7 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
           headers: { "Content-Type": "application/json" },
           cache: "no-store",
           signal: controller.signal,
-          body: JSON.stringify({ mint: token.mint, direction: tradeMode, amount, slippageBps: Math.round(slippage * 100) }),
+          body: JSON.stringify({ mint: token.mint, direction: tradeMode, amount: clean, slippageBps: Math.round(slippage * 100) }),
         });
         const payload = await response.json().catch(() => null);
         if (!response.ok) throw new Error(payload?.error || "Live Meteora quote is unavailable.");
@@ -206,7 +221,8 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
   // Simulation calculation
   const simulation = useMemo(() => {
     if (tradeMode === "redeem") return null;
-    const numAmount = parseFloat(amount);
+    const clean = (amount || "").replace(",", ".");
+    const numAmount = parseFloat(clean);
     if (!numAmount || numAmount <= 0) return null;
 
     if (token.bondingCurve.protocol === "meteora-dbc") {
@@ -255,10 +271,11 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
     }
   }, [amount, tradeMode, virtualQuote, virtualTokens, realTokens, token.bondingCurve.realQuoteReservesUsd, token.bondingCurve.dynamicFeeBps, token.bondingCurve.protocol, liveQuote, liveQuoteError]);
 
-  const numAmount = parseFloat(amount) || 0;
+  const cleanAmount = (amount || "").replace(",", ".");
+  const numAmount = parseFloat(cleanAmount) || 0;
   const remainingQuoteUsd = Math.max(
     0,
-    token.bondingCurve.graduationThresholdUsd - token.bondingCurve.realQuoteReservesUsd
+    Math.round((token.bondingCurve.graduationThresholdUsd - token.bondingCurve.realQuoteReservesUsd) * 1_000_000) / 1_000_000
   );
   const isNearCap =
     !token.bondingCurve.isGraduated &&
@@ -269,7 +286,9 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
     tradeMode === "buy" &&
     !token.bondingCurve.isGraduated &&
     remainingQuoteUsd > 0 &&
-    numAmount > remainingQuoteUsd;
+    (remainingQuoteUsd <= 0.00015
+      ? numAmount > 0.0002
+      : numAmount > remainingQuoteUsd + 0.000002);
 
   const hasInsufficientUsdc =
     connected && tradeMode === "buy" && numAmount > 0 && quoteBalance !== null && numAmount > quoteBalance;
@@ -281,7 +300,7 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
     if (orderInFlight.current || pendingSignature) return;
     if (tradeMode === "buy" && exceedsCap) {
       setTradeErrorMsg(
-        `Amount exceeds remaining curve capacity ($${remainingQuoteUsd < 0.01 ? remainingQuoteUsd.toFixed(4) : remainingQuoteUsd.toFixed(2)} USDC remaining).`
+        `Amount exceeds remaining curve capacity (${formatRemainingDisplay(remainingQuoteUsd)} USDC remaining).`
       );
       return;
     }
@@ -293,7 +312,7 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
       setTradeErrorMsg(`Insufficient $${token.symbol} balance in your wallet.`);
       return;
     }
-    try { toTokenUnits(Number(amount)); }
+    try { toTokenUnits(Number(cleanAmount)); }
     catch (error) { setTradeErrorMsg((error as Error).message); return; }
     orderInFlight.current = true;
     const submittedMode = tradeMode;
@@ -318,7 +337,6 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
           setTradeErrorMsg(res.message || "Redemption failed");
         }
       } else {
-        const numAmount = parseFloat(amount);
         const res = await executeTrade({
           token,
           tradeMode,
@@ -528,12 +546,14 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
 
             <div className="relative flex items-center rounded-lg border border-border bg-card-subtle transition-colors focus-within:border-border-active">
               <input
-                type="number"
-                step="any"
-                min="0"
+                type="text"
+                inputMode="decimal"
                 placeholder="0"
                 value={amount}
-                onChange={(e) => setAmount(e.target.value)}
+                onChange={(e) => {
+                  const val = e.target.value.replace(",", ".");
+                  if (val === "" || /^\d*\.?\d*$/.test(val)) setAmount(val);
+                }}
                 className="w-full bg-transparent pl-3.5 pr-28 py-2.5 text-lg sm:text-xl font-mono font-medium text-foreground placeholder:text-muted/40 focus:outline-none"
               />
               <div className="absolute right-2 flex items-center gap-1.5 rounded-md bg-card border border-border px-2 py-1 text-xs font-semibold text-foreground">
@@ -680,10 +700,10 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
                 {isNearCap && (
                   <button
                     type="button"
-                    onClick={() => setAmount(remainingQuoteUsd < 0.01 ? remainingQuoteUsd.toFixed(4) : remainingQuoteUsd.toFixed(2))}
+                    onClick={() => setAmount(formatRemainingFillAmount(remainingQuoteUsd))}
                     className="ml-1.5 text-brand-cyan hover:underline cursor-pointer"
                   >
-                    ({remainingQuoteUsd < 0.01 ? `$${remainingQuoteUsd.toFixed(4)}` : `$${remainingQuoteUsd.toFixed(2)}`} left)
+                    ({formatRemainingDisplay(remainingQuoteUsd)} left)
                   </button>
                 )}
               </span>
@@ -726,12 +746,14 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
 
             <div className="relative flex items-center rounded-lg border border-border bg-card-subtle transition-colors focus-within:border-border-active">
               <input
-                type="number"
-                step="any"
-                min="0"
+                type="text"
+                inputMode="decimal"
                 placeholder="0.00"
                 value={amount}
-                onChange={(e) => setAmount(e.target.value)}
+                onChange={(e) => {
+                  const val = e.target.value.replace(",", ".");
+                  if (val === "" || /^\d*\.?\d*$/.test(val)) setAmount(val);
+                }}
                 className="w-full bg-transparent pl-3.5 pr-28 py-2.5 text-lg sm:text-xl font-mono font-medium text-foreground placeholder:text-muted/40 focus:outline-none"
               />
               <div className="absolute right-2 flex items-center gap-1.5 rounded-md bg-card border border-border px-2 py-1 text-xs font-semibold text-foreground">
@@ -770,7 +792,7 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
                         onClick={() => {
                           const frac = pct === "Max" ? 1 : parseInt(pct, 10) / 100;
                           const val = remainingQuoteUsd * frac;
-                          setAmount(val < 0.01 ? val.toFixed(4) : val.toFixed(2));
+                          setAmount(formatRemainingFillAmount(val));
                         }}
                         className="rounded-md bg-card-hover/40 py-1.5 text-muted hover:bg-card-hover hover:text-foreground transition-colors cursor-pointer"
                       >
@@ -807,11 +829,11 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
               <div className="mt-2.5 flex items-center justify-between gap-2 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-300">
                 <div className="flex items-center gap-1.5">
                   <AlertCircle className="h-3.5 w-3.5 shrink-0 text-amber-400" />
-                  <span>Remaining curve cap is {remainingQuoteUsd < 0.01 ? `$${remainingQuoteUsd.toFixed(4)}` : `$${remainingQuoteUsd.toFixed(2)}`} USDC</span>
+                  <span>Remaining curve cap is {formatRemainingDisplay(remainingQuoteUsd)} USDC</span>
                 </div>
                 <button
                   type="button"
-                  onClick={() => setAmount(remainingQuoteUsd < 0.01 ? remainingQuoteUsd.toFixed(4) : remainingQuoteUsd.toFixed(2))}
+                  onClick={() => setAmount(formatRemainingFillAmount(remainingQuoteUsd))}
                   className="shrink-0 font-semibold underline hover:text-white cursor-pointer"
                 >
                   Fill cap
@@ -914,7 +936,7 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
               : hasInsufficientTokens
               ? `Insufficient $${token.symbol} Balance`
               : exceedsCap
-              ? `Exceeds Cap (${remainingQuoteUsd < 0.01 ? `$${remainingQuoteUsd.toFixed(4)}` : `$${remainingQuoteUsd.toFixed(2)}`} Max)`
+              ? `Exceeds Cap (${formatRemainingDisplay(remainingQuoteUsd)} Max)`
               : tradeMode === "buy"
               ? `Buy $${token.symbol}`
               : `Sell $${token.symbol}`}
