@@ -242,7 +242,7 @@ export class GraduationStepPendingError extends SubmittedTransactionError {
 interface DbcGraduationPlan {
   action: "migrate" | "settle";
   networkGenesisHash: string;
-  pool?: { address: string };
+  pool?: { address: string; quoteReserve?: string; migrationThreshold?: string } | string;
   dammConfig?: string;
   amounts?: { minEquityTokensExpected: string };
   accounts?: Record<string, string>;
@@ -276,11 +276,12 @@ async function graduateDbcToken(
 
   let migrationSignature: string | undefined;
   if (plan.action === "migrate") {
-    if (!plan.pool?.address || !plan.dammConfig) throw new Error("Meteora did not return a complete migration plan.");
+    const poolAddress = typeof plan.pool === "object" ? plan.pool?.address : plan.pool;
+    if (!poolAddress || !plan.dammConfig) throw new Error("Meteora did not return a complete migration plan.");
     const { DynamicBondingCurveClient } = await import("@meteora-ag/dynamic-bonding-curve-sdk");
     const migration = await DynamicBondingCurveClient.create(connection, "confirmed").migration.migrateToDammV2({
       payer: wallet.publicKey,
-      pool: new PublicKey(plan.pool.address),
+      pool: new PublicKey(poolAddress),
       dammConfig: new PublicKey(plan.dammConfig),
     });
     const transaction = migration.transaction;
@@ -344,5 +345,6 @@ async function graduateDbcToken(
     method: "POST", headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ signature, mint, protocol: "meteora-dbc", purpose: "graduation" }),
   }).catch(() => null);
-  return { signature, poolAddress: plan.pool?.address || "", migrationSignature };
+  const finalPoolAddress = typeof plan.pool === "object" ? (plan.pool?.address || "") : (plan.pool || "");
+  return { signature, poolAddress: finalPoolAddress, migrationSignature };
 }

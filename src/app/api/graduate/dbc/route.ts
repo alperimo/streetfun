@@ -106,7 +106,11 @@ export async function POST(request: Request) {
       return NextResponse.json({
         action: "migrate",
         networkGenesisHash,
-        pool: registry.dbcPool.toBase58(),
+        pool: {
+          address: registry.dbcPool.toBase58(),
+          quoteReserve: quoteReserve.toString(),
+          migrationThreshold: threshold.toString(),
+        },
         dammConfig: migrationDammConfig.toBase58(),
         quoteReserve: quoteReserve.toString(),
         migrationThreshold: threshold.toString(),
