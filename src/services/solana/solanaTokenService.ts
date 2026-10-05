@@ -36,7 +36,6 @@ export class SolanaTokenService implements ITokenService {
     if (!wallet || wallet instanceof PublicKey || typeof wallet.sendTransaction !== "function") {
       throw new Error("Connect a wallet that can sign the token launch.");
     }
-    if (!wallet.signTransaction) throw new Error("This wallet must support transaction signing to safely recover a pending launch.");
     const initialBuyUsdc = params.initialBuyUsdc ?? 0;
     if (!Number.isFinite(initialBuyUsdc) || initialBuyUsdc < 0) throw new Error("Enter a valid initial buy amount.");
     if (initialBuyUsdc > 0) throw new Error("Initial buys are not supported by this launch flow. Buy after confirmation.");
@@ -90,11 +89,24 @@ export class SolanaTokenService implements ITokenService {
     if (uri.searchParams.get("v") !== await launchMetadataDigest(metadata)) throw new Error("The prepared launch does not commit to your image and description.");
     const expectedMessage = transaction.serializeMessage();
     transaction.partialSign(memeMint);
-    const signed = await wallet.signTransaction(transaction);
-    if (!signed.serializeMessage().equals(expectedMessage) || !signed.verifySignatures() || !signed.signature) {
-      throw new Error("The wallet returned a modified or incomplete launch transaction.");
+    let signature: string;
+    if (typeof wallet.sendTransaction === "function") {
+      signature = await wallet.sendTransaction(transaction, connection, {
+        signers: [memeMint],
+        skipPreflight: false,
+        preflightCommitment: "confirmed",
+      });
+    } else if (wallet.signTransaction) {
+      const signed = await wallet.signTransaction(transaction);
+      if (!signed.serializeMessage().equals(expectedMessage) || !signed.verifySignatures() || !signed.signature) {
+        throw new Error("The wallet returned a modified or incomplete launch transaction.");
+      }
+      signature = bs58.encode(signed.signature);
+      await connection.sendRawTransaction(signed.serialize(), { skipPreflight: false, preflightCommitment: "confirmed" });
+    } else {
+      throw new Error("Connected wallet does not support sending transactions.");
     }
-    const signature = bs58.encode(signed.signature);
+
     const pending: PendingLaunch = {
       version: 1, wallet: wallet.publicKey.toBase58(), mint: memeMint.publicKey.toBase58(),
       signature, genesisHash, ...blockhash,
@@ -102,7 +114,6 @@ export class SolanaTokenService implements ITokenService {
     };
     savePendingLaunch(pending.wallet, pending);
     try {
-      await connection.sendRawTransaction(signed.serialize(), { skipPreflight: false, preflightCommitment: "confirmed" });
       await confirmSubmittedTransaction(connection, signature, blockhash);
     } catch {
       // Even a send error can mean the RPC accepted the transaction. Recovery
