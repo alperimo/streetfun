@@ -173,12 +173,12 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
         connection.getTokenAccountBalance(memeAccount, "confirmed").catch(() => null),
       ]);
       if (request !== balanceRequest.current) return;
-      setQuoteBalance(quoteInfo?.value.uiAmount ?? null);
-      setTokenBalance(memeInfo?.value.uiAmount ?? null);
+      setQuoteBalance(quoteInfo?.value.uiAmount ?? 0);
+      setTokenBalance(memeInfo?.value.uiAmount ?? 0);
     } catch {
       if (request !== balanceRequest.current) return;
-      setQuoteBalance(null);
-      setTokenBalance(null);
+      setQuoteBalance(0);
+      setTokenBalance(0);
     }
   }, [connection, publicKey, token.bondingCurve.quoteMint, token.mint]);
 
@@ -255,9 +255,23 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
     }
   }, [amount, tradeMode, virtualQuote, virtualTokens, realTokens, token.bondingCurve.realQuoteReservesUsd, token.bondingCurve.dynamicFeeBps, token.bondingCurve.protocol, liveQuote, liveQuoteError]);
 
+  const numAmount = parseFloat(amount) || 0;
+  const hasInsufficientUsdc =
+    connected && tradeMode === "buy" && numAmount > 0 && quoteBalance !== null && numAmount > quoteBalance;
+  const hasInsufficientTokens =
+    connected && tradeMode === "sell" && numAmount > 0 && tokenBalance !== null && numAmount > tokenBalance;
+
   const handleExecuteTrade = async () => {
     if (!connected) { setWalletDialogOpen(true); return; }
     if (orderInFlight.current || pendingSignature) return;
+    if (tradeMode === "buy" && hasInsufficientUsdc) {
+      setTradeErrorMsg("Insufficient USDC balance in your wallet.");
+      return;
+    }
+    if (tradeMode === "sell" && hasInsufficientTokens) {
+      setTradeErrorMsg(`Insufficient $${token.symbol} balance in your wallet.`);
+      return;
+    }
     try { toTokenUnits(Number(amount)); }
     catch (error) { setTradeErrorMsg((error as Error).message); return; }
     orderInFlight.current = true;
@@ -673,8 +687,8 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
               <span>{tradeMode === "buy" ? "You Pay (USDC)" : `You Sell (${token.symbol})`}</span>
               <span className="font-mono">
                 Balance: {tradeMode === "buy"
-                  ? quoteBalance === null ? "—" : `${quoteBalance.toLocaleString("en-US", { maximumFractionDigits: 2 })} USDC`
-                  : tokenBalance === null ? "—" : `${tokenBalance.toLocaleString("en-US", { maximumFractionDigits: 2 })} ${token.symbol}`}
+                  ? quoteBalance === null ? (connected ? "0.00 USDC" : "—") : `${quoteBalance.toLocaleString("en-US", { maximumFractionDigits: 2 })} USDC`
+                  : tokenBalance === null ? (connected ? `0.00 ${token.symbol}` : "—") : `${tokenBalance.toLocaleString("en-US", { maximumFractionDigits: 2 })} ${token.symbol}`}
               </span>
             </div>
 
@@ -800,17 +814,24 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
           {/* Action Button */}
           <button
             onClick={handleExecuteTrade}
-            disabled={isTrading || Boolean(pendingSignature) || buyAnimation === "success" || (connected && (!simulation || "error" in simulation))}
+            disabled={
+              isTrading ||
+              Boolean(pendingSignature) ||
+              buyAnimation === "success" ||
+              (connected && (!simulation || "error" in simulation || hasInsufficientUsdc || hasInsufficientTokens))
+            }
             data-buy-state={tradeMode === "buy" ? (isTrading ? "confirming" : buyAnimation) : undefined}
             className={`trade-action-button relative mt-4 w-full overflow-visible rounded-lg py-3 text-sm font-bold transition-colors shadow-xs disabled:opacity-50 ${
               !connected
                 ? "bg-brand-cyan hover:bg-brand-cyan-hover text-background font-semibold"
+                : hasInsufficientUsdc || hasInsufficientTokens
+                ? "bg-card-subtle border border-border text-muted cursor-not-allowed"
                 : tradeMode === "buy"
                 ? "buy-action bg-brand-cyan hover:bg-brand-cyan-hover text-background"
                 : "bg-rose-500 hover:bg-rose-600 text-white"
             }`}
           >
-            {tradeMode === "buy" && connected && (
+            {tradeMode === "buy" && connected && !hasInsufficientUsdc && (
               <span className="buy-particles pointer-events-none absolute inset-0" aria-hidden="true">
                 {Array.from({ length: 7 }).map((_, index) => <span key={index} />)}
               </span>
@@ -822,6 +843,10 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
               ? <><span className="buy-confirming-icon inline-flex h-4 w-4 items-center justify-center"><TrendingUp className="h-4 w-4" /></span>Confirming on Solana...</>
               : !connected
               ? "Connect Wallet to Trade"
+              : hasInsufficientUsdc
+              ? "Insufficient USDC Balance"
+              : hasInsufficientTokens
+              ? `Insufficient $${token.symbol} Balance`
               : tradeMode === "buy"
               ? `Buy $${token.symbol}`
               : `Sell $${token.symbol}`}

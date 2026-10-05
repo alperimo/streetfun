@@ -25,17 +25,35 @@ export function formatUsd(value: number): string {
   return Math.abs(value) < 1_000 ? USD_PRECISE.format(value) : USD_COMPACT.format(value);
 }
 
+const SUBSCRIPT_DIGITS = ["₀", "₁", "₂", "₃", "₄", "₅", "₆", "₇", "₈", "₉"];
+
 export function formatTokenPrice(value: number): string {
   if (!Number.isFinite(value) || value <= 0) return "—";
-  if (value < 0.000001) return `$${value.toPrecision(4)}`;
+  if (value < 0.0001) {
+    const exp = value.toExponential();
+    const [mantissa, exponent] = exp.split("e");
+    const expNum = parseInt(exponent, 10);
+    if (expNum <= -4) {
+      const zeroCount = Math.abs(expNum) - 1;
+      const digits = mantissa.replace(".", "").padEnd(4, "0").slice(0, 4);
+      const sub = zeroCount
+        .toString()
+        .split("")
+        .map((d) => SUBSCRIPT_DIGITS[parseInt(d, 10)] ?? d)
+        .join("");
+      return `$0.0${sub}${digits}`;
+    }
+  }
   if (value < 0.01) {
     return `$${value.toLocaleString("en-US", {
-      minimumFractionDigits: 6,
-      maximumFractionDigits: 10,
-      useGrouping: false,
+      minimumFractionDigits: 4,
+      maximumFractionDigits: 6,
     })}`;
   }
-  return `$${value.toLocaleString("en-US", { maximumFractionDigits: 6 })}`;
+  return `$${value.toLocaleString("en-US", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 4,
+  })}`;
 }
 
 export function calculateBondingProgress(reserveUsd: number, thresholdUsd: number): number {
