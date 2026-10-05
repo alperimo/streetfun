@@ -256,6 +256,21 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
   }, [amount, tradeMode, virtualQuote, virtualTokens, realTokens, token.bondingCurve.realQuoteReservesUsd, token.bondingCurve.dynamicFeeBps, token.bondingCurve.protocol, liveQuote, liveQuoteError]);
 
   const numAmount = parseFloat(amount) || 0;
+  const remainingQuoteUsd = Math.max(
+    0,
+    token.bondingCurve.graduationThresholdUsd - token.bondingCurve.realQuoteReservesUsd
+  );
+  const isNearCap =
+    !token.bondingCurve.isGraduated &&
+    token.bondingCurve.progressPct < 100 &&
+    remainingQuoteUsd > 0 &&
+    remainingQuoteUsd < 50;
+  const exceedsCap =
+    tradeMode === "buy" &&
+    !token.bondingCurve.isGraduated &&
+    remainingQuoteUsd > 0 &&
+    numAmount > remainingQuoteUsd;
+
   const hasInsufficientUsdc =
     connected && tradeMode === "buy" && numAmount > 0 && quoteBalance !== null && numAmount > quoteBalance;
   const hasInsufficientTokens =
@@ -264,6 +279,12 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
   const handleExecuteTrade = async () => {
     if (!connected) { setWalletDialogOpen(true); return; }
     if (orderInFlight.current || pendingSignature) return;
+    if (tradeMode === "buy" && exceedsCap) {
+      setTradeErrorMsg(
+        `Amount exceeds remaining curve capacity ($${remainingQuoteUsd < 0.01 ? remainingQuoteUsd.toFixed(4) : remainingQuoteUsd.toFixed(2)} USDC remaining).`
+      );
+      return;
+    }
     if (tradeMode === "buy" && hasInsufficientUsdc) {
       setTradeErrorMsg("Insufficient USDC balance in your wallet.");
       return;
@@ -654,7 +675,18 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
               />
             </div>
             <div className="flex items-center justify-between text-[10px] text-muted mt-1.5 font-mono">
-              <span>{formatUsd(token.bondingCurve.realQuoteReservesUsd)} / {formatUsd(token.bondingCurve.graduationThresholdUsd)} USDC</span>
+              <span>
+                {formatUsd(token.bondingCurve.realQuoteReservesUsd)} / {formatUsd(token.bondingCurve.graduationThresholdUsd)} USDC
+                {isNearCap && (
+                  <button
+                    type="button"
+                    onClick={() => setAmount(remainingQuoteUsd < 0.01 ? remainingQuoteUsd.toFixed(4) : remainingQuoteUsd.toFixed(2))}
+                    className="ml-1.5 text-brand-cyan hover:underline cursor-pointer"
+                  >
+                    ({remainingQuoteUsd < 0.01 ? `$${remainingQuoteUsd.toFixed(4)}` : `$${remainingQuoteUsd.toFixed(2)}`} left)
+                  </button>
+                )}
+              </span>
               <span>{token.bondingCurve.isGraduated ? "DAMM v2 market active" : token.bondingCurve.settlementPending ? "Meteora migration complete; equity settlement is pending" : token.bondingCurve.progressPct >= 100 ? "Ready to migrate into Meteora DAMM v2" : "Settlement starts at the funding threshold"}</span>
             </div>
             {!isMock && !token.bondingCurve.isGraduated && token.bondingCurve.progressPct >= 100 && token.bondingCurve.protocol === "meteora-dbc" && !canSettleDbc && (
@@ -730,28 +762,62 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
             {/* Quick Amount Chips - Borderless, subtle hover */}
             <div className="mt-2 grid grid-cols-4 gap-1.5 text-center text-xs font-mono">
               {tradeMode === "buy"
-                ? ["50", "250", "1000", "5000"].map((val) => (
-                    <button
-                      key={val}
-                      onClick={() => setAmount(val)}
-                      className="rounded-md bg-card-hover/40 py-1.5 text-muted hover:bg-card-hover hover:text-foreground transition-colors"
-                    >
-                      ${val}
-                    </button>
-                  ))
+                ? isNearCap
+                  ? ["25%", "50%", "75%", "Max"].map((pct) => (
+                      <button
+                        key={pct}
+                        type="button"
+                        onClick={() => {
+                          const frac = pct === "Max" ? 1 : parseInt(pct, 10) / 100;
+                          const val = remainingQuoteUsd * frac;
+                          setAmount(val < 0.01 ? val.toFixed(4) : val.toFixed(2));
+                        }}
+                        className="rounded-md bg-card-hover/40 py-1.5 text-muted hover:bg-card-hover hover:text-foreground transition-colors cursor-pointer"
+                      >
+                        {pct}
+                      </button>
+                    ))
+                  : ["50", "250", "1000", "5000"].map((val) => (
+                      <button
+                        key={val}
+                        type="button"
+                        onClick={() => setAmount(val)}
+                        className="rounded-md bg-card-hover/40 py-1.5 text-muted hover:bg-card-hover hover:text-foreground transition-colors cursor-pointer"
+                      >
+                        ${val}
+                      </button>
+                    ))
                 : ["25%", "50%", "75%", "100%"].map((pct) => (
                     <button
                       key={pct}
+                      type="button"
                       onClick={() => {
                         const frac = parseInt(pct) / 100;
                         setAmount(((tokenBalance || 0) * frac).toString());
                       }}
-                      className="rounded-md bg-card-hover/40 py-1.5 text-muted hover:bg-card-hover hover:text-foreground transition-colors"
+                      className="rounded-md bg-card-hover/40 py-1.5 text-muted hover:bg-card-hover hover:text-foreground transition-colors cursor-pointer"
                     >
                       {pct}
                     </button>
                   ))}
             </div>
+
+            {/* Exceeds Cap Notice */}
+            {exceedsCap && (
+              <div className="mt-2.5 flex items-center justify-between gap-2 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-300">
+                <div className="flex items-center gap-1.5">
+                  <AlertCircle className="h-3.5 w-3.5 shrink-0 text-amber-400" />
+                  <span>Remaining curve cap is {remainingQuoteUsd < 0.01 ? `$${remainingQuoteUsd.toFixed(4)}` : `$${remainingQuoteUsd.toFixed(2)}`} USDC</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setAmount(remainingQuoteUsd < 0.01 ? remainingQuoteUsd.toFixed(4) : remainingQuoteUsd.toFixed(2))}
+                  className="shrink-0 font-semibold underline hover:text-white cursor-pointer"
+                >
+                  Fill cap
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Trade Simulation Breakdown */}
@@ -818,20 +884,20 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
               isTrading ||
               Boolean(pendingSignature) ||
               buyAnimation === "success" ||
-              (connected && (!simulation || "error" in simulation || hasInsufficientUsdc || hasInsufficientTokens))
+              (connected && (!simulation || "error" in simulation || hasInsufficientUsdc || hasInsufficientTokens || exceedsCap))
             }
             data-buy-state={tradeMode === "buy" ? (isTrading ? "confirming" : buyAnimation) : undefined}
             className={`trade-action-button relative mt-4 w-full overflow-visible rounded-lg py-3 text-sm font-bold transition-colors shadow-xs disabled:opacity-50 ${
               !connected
                 ? "bg-brand-cyan hover:bg-brand-cyan-hover text-background font-semibold"
-                : hasInsufficientUsdc || hasInsufficientTokens
+                : hasInsufficientUsdc || hasInsufficientTokens || exceedsCap
                 ? "bg-card-subtle border border-border text-muted cursor-not-allowed"
                 : tradeMode === "buy"
                 ? "buy-action bg-brand-cyan hover:bg-brand-cyan-hover text-background"
                 : "bg-rose-500 hover:bg-rose-600 text-white"
             }`}
           >
-            {tradeMode === "buy" && connected && !hasInsufficientUsdc && (
+            {tradeMode === "buy" && connected && !hasInsufficientUsdc && !exceedsCap && (
               <span className="buy-particles pointer-events-none absolute inset-0" aria-hidden="true">
                 {Array.from({ length: 7 }).map((_, index) => <span key={index} />)}
               </span>
@@ -847,6 +913,8 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
               ? "Insufficient USDC Balance"
               : hasInsufficientTokens
               ? `Insufficient $${token.symbol} Balance`
+              : exceedsCap
+              ? `Exceeds Cap (${remainingQuoteUsd < 0.01 ? `$${remainingQuoteUsd.toFixed(4)}` : `$${remainingQuoteUsd.toFixed(2)}`} Max)`
               : tradeMode === "buy"
               ? `Buy $${token.symbol}`
               : `Sell $${token.symbol}`}

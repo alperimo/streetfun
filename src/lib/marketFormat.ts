@@ -63,9 +63,11 @@ export function calculateBondingProgress(reserveUsd: number, thresholdUsd: numbe
 
 export function formatBondingProgress(progressPct: number): string {
   if (!Number.isFinite(progressPct) || progressPct <= 0) return "0%";
+  if (progressPct >= 100) return "100%";
   if (progressPct < 0.001) return "<0.001%";
   if (progressPct < 0.1) return `${progressPct.toFixed(3).replace(/0+$/, "").replace(/\.$/, "")}%`;
   if (progressPct < 10) return `${progressPct.toFixed(2).replace(/0+$/, "").replace(/\.$/, "")}%`;
+  if (progressPct >= 99.9) return "99.9%";
   return `${progressPct.toFixed(1).replace(/\.0$/, "")}%`;
 }
 
