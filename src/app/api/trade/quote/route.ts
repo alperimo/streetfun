@@ -101,11 +101,11 @@ export async function POST(request: NextRequest) {
     if (registry.isGraduated) {
       const poolAddress: PublicKey = registry.meteoraDammV2Pool;
       const poolInfo = await connection.getAccountInfo(poolAddress, "confirmed");
-      if (!poolInfo || !poolInfo.owner.equals(METEORA_DAMM_V2_PROGRAM_ID)) throw new Error("The graduated Meteora pool is not verifiable on this cluster.");
-      const poolState: any = cpAmmCoder.accounts.decode("pool", poolInfo.data);
+      const quoteMint = registry.quoteMint || USDC_MINT;
+      const poolState: any = await new CpAmm(connection).fetchPoolState(poolAddress);
       const pairIsValid =
-        (poolState.tokenAMint.equals(USDC_MINT) && poolState.tokenBMint.equals(mint)) ||
-        (poolState.tokenBMint.equals(USDC_MINT) && poolState.tokenAMint.equals(mint));
+        (poolState.tokenAMint.equals(quoteMint) && poolState.tokenBMint.equals(mint)) ||
+        (poolState.tokenBMint.equals(quoteMint) && poolState.tokenAMint.equals(mint));
       if (!pairIsValid) throw new Error("The recorded graduated pool does not trade this token against USDC.");
       const [mintAInfo, mintBInfo] = await connection.getMultipleAccountsInfo([poolState.tokenAMint, poolState.tokenBMint], "confirmed");
       if (!mintAInfo || !mintBInfo) throw new Error("A graduated pool mint is missing.");
@@ -117,8 +117,8 @@ export async function POST(request: NextRequest) {
       }
       const tokenA = await getMint(connection, poolState.tokenAMint, "confirmed", tokenAProgram);
       const tokenB = await getMint(connection, poolState.tokenBMint, "confirmed", tokenBProgram);
-      const inputTokenMint = direction === "buy" ? USDC_MINT : mint;
-      const outputTokenMint = direction === "buy" ? mint : USDC_MINT;
+      const inputTokenMint = direction === "buy" ? quoteMint : mint;
+      const outputTokenMint = direction === "buy" ? mint : quoteMint;
       if ((await hasTransferHookExtension(connection, inputTokenMint)).hasTransferHook ||
           (await hasTransferHookExtension(connection, outputTokenMint)).hasTransferHook) {
         throw new Error("This pool uses a transfer hook that the available DAMM v2 swap route cannot execute.");

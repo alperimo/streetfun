@@ -17,6 +17,34 @@ import { getOfficialEquityLogo } from "@/lib/assetLogos";
 import { getAssetMarkPrice, getAssetValuationSource } from "./assetValuation";
 import { getDbcClient, getDbcMigrationDammConfigAddress } from "./meteoraDbc";
 
+export interface DecodedDammPoolState {
+  tokenAMint: PublicKey;
+  tokenBMint: PublicKey;
+  tokenAVault: PublicKey;
+  tokenBVault: PublicKey;
+  sqrtPrice: any;
+}
+
+export function decodeDammPoolState(data: Buffer): DecodedDammPoolState | undefined {
+  try {
+    let raw: any;
+    try {
+      raw = cpAmmCoder.accounts.decode("Pool", data);
+    } catch {
+      raw = cpAmmCoder.accounts.decode("pool", data);
+    }
+    const tokenAMint = raw.tokenAMint ?? raw.token_a_mint;
+    const tokenBMint = raw.tokenBMint ?? raw.token_b_mint;
+    const tokenAVault = raw.tokenAVault ?? raw.token_a_vault;
+    const tokenBVault = raw.tokenBVault ?? raw.token_b_vault;
+    const sqrtPrice = raw.sqrtPrice ?? raw.sqrt_price;
+    if (!tokenAMint || !tokenBMint || !tokenAVault || !tokenBVault || !sqrtPrice) return undefined;
+    return { tokenAMint, tokenBMint, tokenAVault, tokenBVault, sqrtPrice };
+  } catch {
+    return undefined;
+  }
+}
+
 /** Server snapshots are coalesced per process and invalidated by verified events. */
 export class SolanaTokenService {
   private connection: Connection;
@@ -161,21 +189,26 @@ export class SolanaTokenService {
         const curvePrice = !isGraduated && virtualTokens > 0 ? virtualQuote / virtualTokens : 0;
         // A collateral NAV is not a traded market price or market capitalization.
 
-        let poolState: any;
+        let poolState: DecodedDammPoolState | undefined;
         const poolAddress = isGraduated && !account.meteoraDammV2Pool.equals(PublicKey.default)
           ? account.meteoraDammV2Pool
           : undefined;
         if (poolAddress && dammPoolInfo?.owner.equals(METEORA_DAMM_V2_PROGRAM_ID)) {
-          try {
-            const decoded = cpAmmCoder.accounts.decode("pool", dammPoolInfo.data);
+          const decoded = decodeDammPoolState(dammPoolInfo.data);
+          if (decoded) {
             const expectedAddress = deriveCustomizablePoolAddress(USDC_MINT, account.memeMint);
             const validPair =
               (decoded.tokenAMint.equals(USDC_MINT) && decoded.tokenBMint.equals(account.memeMint)) ||
               (decoded.tokenBMint.equals(USDC_MINT) && decoded.tokenAMint.equals(account.memeMint));
             if (poolAddress.equals(expectedAddress) && validPair) poolState = decoded;
-          } catch {
-            // Invalid or incompatible DAMM account data never becomes a market-price source.
           }
+        }
+
+        let price = curvePrice;
+        if (poolState) {
+          const isAQuote = poolState.tokenAMint.equals(USDC_MINT);
+          const rawPrice = getPriceFromSqrtPrice(poolState.sqrtPrice, 6, 6).toNumber();
+          price = isAQuote ? (rawPrice > 0 ? 1 / rawPrice : 0) : rawPrice;
         }
 
         records.push({ token: {
@@ -183,7 +216,7 @@ export class SolanaTokenService {
           description: indexed?.description || "On-chain StreetFun market.",
           avatarUrl: indexed?.avatar_url || "/generated/streetfun-logo.png", creator: account.creator.toBase58(),
           createdAt: indexed?.created_at || "", totalSupply: supply,
-          priceUsd: curvePrice, marketCapUsd: curvePrice > 0 ? curvePrice * supply : 0, priceChange24h: 0, priceChange24hAvailable: false,
+          priceUsd: price, marketCapUsd: price > 0 ? price * supply : 0, priceChange24h: 0, priceChange24hAvailable: false,
           volume24hUsd: stats?.[mint]?.volume24hUsd || 0, volume24hAvailable: stats !== null,
           targetEquity: {
             symbol: asset?.symbol || indexed?.target_equity_symbol || "UNVERIFIED",
@@ -268,17 +301,17 @@ export class SolanaTokenService {
           : virtualPool.poolState.isMigrated
             ? deriveDammV2PoolAddress(getDbcMigrationDammConfigAddress(), mint, registry.quoteMint)
             : PublicKey.default;
-        let dammPoolState: any;
+        let dammPoolState: DecodedDammPoolState | undefined;
         const expectedDammPool = virtualPool.poolState.isMigrated
           ? deriveDammV2PoolAddress(getDbcMigrationDammConfigAddress(), mint, registry.quoteMint)
           : undefined;
         if (expectedDammPool && dammPool.equals(expectedDammPool) && dammPoolInfo?.owner.equals(METEORA_DAMM_V2_PROGRAM_ID)) {
-          try {
-            const decoded = cpAmmCoder.accounts.decode("pool", dammPoolInfo.data);
+          const decoded = decodeDammPoolState(dammPoolInfo.data);
+          if (decoded) {
             const pairMatches = (decoded.tokenAMint.equals(mint) && decoded.tokenBMint.equals(registry.quoteMint)) ||
               (decoded.tokenBMint.equals(mint) && decoded.tokenAMint.equals(registry.quoteMint));
             if (pairMatches) dammPoolState = decoded;
-          } catch { /* Bad pool data cannot become the market price source. */ }
+          }
         }
         treasuryAddresses.push(treasuryAddress);
         decodedEntries.push({ entry, registry, mintState, equityInfo, poolState: virtualPool, configState, dammPool, dammPoolState, treasuryAddress });
@@ -318,9 +351,14 @@ export class SolanaTokenService {
         const assetMarkPrice = getAssetMarkPrice(asset);
         const hasAssetMark = assetMarkPrice > 0;
         const equityValue = hasAssetMark ? equityBalance * assetMarkPrice : 0;
-        const price = poolState.poolState.isMigrated
-          ? 0
-          : getDbcPriceFromSqrtPrice(poolState.poolState.sqrtPrice, 6, 6).toNumber();
+        let price = 0;
+        if (dammPoolState) {
+          const isAQuote = dammPoolState.tokenAMint.equals(registry.quoteMint);
+          const rawPrice = getPriceFromSqrtPrice(dammPoolState.sqrtPrice, 6, 6).toNumber();
+          price = isAQuote ? (rawPrice > 0 ? 1 / rawPrice : 0) : rawPrice;
+        } else if (!poolState.poolState.isMigrated) {
+          price = getDbcPriceFromSqrtPrice(poolState.poolState.sqrtPrice, 6, 6).toNumber();
+        }
         const quoteReserveRaw = BigInt(poolState.poolState.quoteReserve.toString());
         const thresholdRaw = BigInt(configState.migrationQuoteThreshold.toString());
         const quoteReserveUsd = Number(quoteReserveRaw) / 1e6;

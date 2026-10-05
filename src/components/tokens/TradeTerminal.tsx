@@ -7,7 +7,7 @@ import Image from "next/image";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { PublicKey } from "@solana/web3.js";
 import { getAssociatedTokenAddress } from "@solana/spl-token";
-import { Settings, AlertCircle, Check, TrendingUp } from "lucide-react";
+import { Settings, AlertCircle, Check, TrendingUp, CheckCircle2 } from "lucide-react";
 import { TokenMetadata } from "@/lib/types";
 import { simulateBuyTokensOut, simulateSellQuoteOut } from "@/sdk/math";
 import { useMarket } from "@/context/MarketContext";
@@ -79,6 +79,7 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
   const [showSettings, setShowSettings] = useState(false);
   const [isTrading, setIsTrading] = useState(false);
   const [tradeErrorMsg, setTradeErrorMsg] = useState<string | null>(null);
+  const [tradeSuccessMsg, setTradeSuccessMsg] = useState<{ title: string; message: string; txHash?: string } | null>(null);
   const [buyAnimation, setBuyAnimation] = useState<"idle" | "success">("idle");
   const [quoteBalance, setQuoteBalance] = useState<number | null>(null);
   const [tokenBalance, setTokenBalance] = useState<number | null>(null);
@@ -386,6 +387,7 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
     orderInFlight.current = true;
     setIsTrading(true);
     setTradeErrorMsg(null);
+    setTradeSuccessMsg(null);
     try {
       if (pendingGraduationSignature) {
         const statuses = await connection.getSignatureStatuses([pendingGraduationSignature], { searchTransactionHistory: true });
@@ -407,19 +409,30 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
         if (pendingGraduationStep === "migration" && token.bondingCurve.protocol === "meteora-dbc") {
           const result = await graduateToken(token.mint, { publicKey, sendTransaction }, 100, "meteora-dbc");
           await refreshTokens();
-          setTradeErrorMsg(`DBC migration and equity settlement confirmed. DAMM v2 pool ${result.poolAddress}; settlement ${result.signature}`);
+          setTradeSuccessMsg({
+            title: "Graduation Confirmed",
+            message: `DAMM v2 pool initialized and collateral equity transferred to the treasury vault.`,
+            txHash: result.signature,
+          });
           onTradeSuccess?.();
           return;
         }
         await refreshTokens();
-        setTradeErrorMsg(`Graduation confirmed. DAMM v2 pool: ${token.bondingCurve.meteoraPoolAddress || "refreshing"}`);
+        setTradeSuccessMsg({
+          title: "Graduation Confirmed",
+          message: `DAMM v2 pool: ${token.bondingCurve.meteoraPoolAddress || "Initialized"}`,
+        });
         onTradeSuccess?.();
         return;
       }
 
       const result = await graduateToken(token.mint, { publicKey, sendTransaction }, 100, token.bondingCurve.protocol);
       await refreshTokens();
-      setTradeErrorMsg(`Graduation confirmed. ${result.migrationSignature ? `Meteora migration ${result.migrationSignature}; ` : ""}DAMM v2 pool ${result.poolAddress}; settlement ${result.signature}`);
+      setTradeSuccessMsg({
+        title: "Graduation Confirmed",
+        message: `DAMM v2 pool initialized and collateral equity transferred to the treasury vault.`,
+        txHash: result.signature,
+      });
       onTradeSuccess?.();
     } catch (error) {
       if (error instanceof SubmittedTransactionError) {
@@ -432,7 +445,16 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
         } catch {}
         setTradeErrorMsg(`The DBC ${step} transaction was submitted and is awaiting confirmation. Check its status before retrying: ${error.signature}`);
       } else {
-        setTradeErrorMsg(error instanceof Error ? error.message : "Graduation settlement failed.");
+        const msg = error instanceof Error ? error.message : "Graduation settlement failed.";
+        if (msg.includes("already completed settlement") || msg.includes("Settlement is complete")) {
+          await refreshTokens();
+          setTradeSuccessMsg({
+            title: "Already Graduated",
+            message: "This token has already completed settlement and is trading on Meteora DAMM v2.",
+          });
+        } else {
+          setTradeErrorMsg(msg);
+        }
       }
     } finally {
       orderInFlight.current = false;
@@ -624,11 +646,32 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
             </div>
           </div>
 
+          {/* Success Notification */}
+          {tradeSuccessMsg && (
+            <div className="mt-3 rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-3 text-xs text-emerald-300">
+              <div className="flex items-center gap-2 font-semibold text-emerald-400">
+                <CheckCircle2 className="h-4 w-4 flex-shrink-0" />
+                <span>{tradeSuccessMsg.title}</span>
+              </div>
+              <p className="mt-1 text-emerald-300/90 leading-relaxed break-words">{tradeSuccessMsg.message}</p>
+              {tradeSuccessMsg.txHash && (
+                <a
+                  href={`https://solscan.io/tx/${tradeSuccessMsg.txHash}?cluster=devnet`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-1.5 inline-flex items-center gap-1 font-mono text-[11px] text-emerald-400 hover:underline break-all"
+                >
+                  View on Solscan ↗
+                </a>
+              )}
+            </div>
+          )}
+
           {/* Error Notification */}
           {tradeErrorMsg && (
-            <div className="flex items-center gap-2 rounded-lg border border-rose-500/30 bg-rose-500/10 p-2.5 text-xs text-rose-400">
-              <AlertCircle className="h-4 w-4 flex-shrink-0" />
-              <span>{tradeErrorMsg}</span>
+            <div className="mt-3 flex items-start gap-2 rounded-lg border border-rose-500/30 bg-rose-500/10 p-2.5 text-xs text-rose-400">
+              <AlertCircle className="h-4 w-4 flex-shrink-0 mt-0.5" />
+              <span className="break-words leading-relaxed">{tradeErrorMsg}</span>
             </div>
           )}
 
@@ -898,11 +941,32 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
             </div>
           )}
 
+          {/* Trade Success Notification */}
+          {tradeSuccessMsg && (
+            <div className="mt-3 rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-3 text-xs text-emerald-300">
+              <div className="flex items-center gap-2 font-semibold text-emerald-400">
+                <CheckCircle2 className="h-4 w-4 flex-shrink-0" />
+                <span>{tradeSuccessMsg.title}</span>
+              </div>
+              <p className="mt-1 text-emerald-300/90 leading-relaxed break-words">{tradeSuccessMsg.message}</p>
+              {tradeSuccessMsg.txHash && (
+                <a
+                  href={`https://solscan.io/tx/${tradeSuccessMsg.txHash}?cluster=devnet`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-1.5 inline-flex items-center gap-1 font-mono text-[11px] text-emerald-400 hover:underline break-all"
+                >
+                  View on Solscan ↗
+                </a>
+              )}
+            </div>
+          )}
+
           {/* Trade Error Notification */}
           {tradeErrorMsg && (
-            <div className="mt-3 flex items-center gap-2 rounded-lg border border-rose-500/30 bg-rose-500/10 p-2.5 text-xs text-rose-400">
-              <AlertCircle className="h-4 w-4 flex-shrink-0" />
-              <span>{tradeErrorMsg}</span>
+            <div className="mt-3 flex items-start gap-2 rounded-lg border border-rose-500/30 bg-rose-500/10 p-2.5 text-xs text-rose-400">
+              <AlertCircle className="h-4 w-4 flex-shrink-0 mt-0.5" />
+              <span className="break-words leading-relaxed">{tradeErrorMsg}</span>
             </div>
           )}
 
