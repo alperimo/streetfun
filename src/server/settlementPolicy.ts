@@ -1,4 +1,4 @@
-import { Program, BN } from "@coral-xyz/anchor";
+import { Program, BN, AnchorProvider } from "@coral-xyz/anchor";
 import { Keypair, PublicKey, SystemProgram } from "@solana/web3.js";
 import { getGlobalConfigPda, getSettlementPolicyPda } from "@/sdk/pda";
 import { existsSync, readFileSync } from "node:fs";
@@ -49,7 +49,24 @@ export async function readSettlementPolicy(program: Program<any>, quote: PublicK
         const [globalConfig] = getGlobalConfigPda(program.programId);
         const slot = await program.provider.connection.getSlot("confirmed");
         const chainTime = (await program.provider.connection.getBlockTime(slot)) ?? now;
-        await (program.methods as any).updateSettlementPolicy({
+        const adminWallet = {
+          publicKey: adminKey.publicKey,
+          signTransaction: async (tx: any) => {
+            tx.partialSign(adminKey);
+            return tx;
+          },
+          signAllTransactions: async (txs: any[]) => {
+            txs.forEach((tx: any) => tx.partialSign(adminKey));
+            return txs;
+          },
+        };
+        const adminProvider = new AnchorProvider(
+          program.provider.connection,
+          adminWallet as any,
+          { commitment: "confirmed" },
+        );
+        const adminProgram = new Program(program.idl as any, adminProvider);
+        await (adminProgram.methods as any).updateSettlementPolicy({
           minimumOutputNumerator: policy.minimumOutputNumerator,
           minimumOutputDenominator: policy.minimumOutputDenominator,
           validUntil: new BN(chainTime + 240),
@@ -61,8 +78,8 @@ export async function readSettlementPolicy(program: Program<any>, quote: PublicK
           market: policy.market,
           settlementPolicy: address,
           systemProgram: SystemProgram.programId,
-        }).signers([adminKey]).rpc();
-        policy = await (program.account as any).settlementPolicy.fetch(address);
+        }).rpc();
+        policy = await (adminProgram.account as any).settlementPolicy.fetch(address);
       } catch (err) {
         console.warn("[SettlementPolicy] Auto-refresh failed:", err);
       }

@@ -781,7 +781,7 @@ fn validate_migrated_dbc_damm_pool(
 }
 
 fn ordered_mints(a: Pubkey, b: Pubkey) -> (Pubkey, Pubkey) {
-    if a.to_bytes() < b.to_bytes() {
+    if a.to_bytes() > b.to_bytes() {
         (a, b)
     } else {
         (b, a)
