@@ -126,7 +126,8 @@ export async function POST(request: Request) {
         !quoteMintInfo?.owner.equals(TOKEN_PROGRAM_ID) || !equityMintInfo) {
       throw new DbcGraduationError("The migrated pool or settlement mints are not owned by the expected Solana programs.", 409, "MIGRATION_ACCOUNTS_INVALID");
     }
-    const migratedState: any = cpAmmCoder.accounts.decode("pool", migratedPoolInfo.data);
+    const client = new CpAmm(connection);
+    const migratedState: any = await client.fetchPoolState(migratedPool);
     const migratedPairMatches = (migratedState.tokenAMint.equals(mint) && migratedState.tokenBMint.equals(registry.quoteMint)) ||
       (migratedState.tokenBMint.equals(mint) && migratedState.tokenAMint.equals(registry.quoteMint));
     if (!migratedPairMatches || !migratedPool.equals(deriveDammV2PoolAddress(migrationDammConfig, migratedState.tokenAMint, migratedState.tokenBMint))) {
@@ -143,7 +144,6 @@ export async function POST(request: Request) {
     const thresholdPartnerFee = threshold / 2n;
     if (thresholdPartnerFee <= 0n) throw new DbcGraduationError("The configured partner migration allocation is too small to settle.", 409, "EMPTY_PARTNER_MIGRATION_FEE");
 
-    const client = new CpAmm(connection);
     const [targetAsA, targetAsB] = await Promise.all([
       client.fetchPoolStatesByTokenAMint(registry.targetEquityMint),
       client.fetchPoolStatesByTokenBMint(registry.targetEquityMint),
