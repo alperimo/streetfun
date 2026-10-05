@@ -181,6 +181,24 @@ export async function POST(request: NextRequest) {
     if (!registry.quoteMint.equals(USDC_MINT)) throw new Error("This DBC pool does not use the configured USDC mint.");
     const swapBaseForQuote = direction === "sell";
     const currentPoint = await getDbcCurrentPoint(connection, config.activationType as any);
+
+    if (direction === "buy") {
+      const migrationThreshold = new BN(config.migrationQuoteThreshold.toString());
+      const currentQuoteReserve = new BN(virtualPool.poolState.quoteReserve.toString());
+      if (migrationThreshold.gt(currentQuoteReserve)) {
+        const remainingToGraduate = migrationThreshold.sub(currentQuoteReserve);
+        if (amountIn.gt(remainingToGraduate)) {
+          const remainingUsd = remainingToGraduate.toNumber() / 1e6;
+          const displayRemaining = remainingUsd < 0.01
+            ? remainingUsd.toFixed(6).replace(/0+$/, "")
+            : remainingUsd.toFixed(2);
+          throw new Error(
+            `Amount exceeds remaining curve capacity ($${displayRemaining} USDC left to graduate).`
+          );
+        }
+      }
+    }
+
     const quote = dbcClient.pool.swapQuote2({
       virtualPool,
       config,

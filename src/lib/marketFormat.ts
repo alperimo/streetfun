@@ -25,6 +25,14 @@ export function formatUsd(value: number): string {
   return Math.abs(value) < 1_000 ? USD_PRECISE.format(value) : USD_COMPACT.format(value);
 }
 
+export function formatCurveReserveUsd(reserveUsd: number, thresholdUsd: number): string {
+  if (!Number.isFinite(reserveUsd)) return "—";
+  if (thresholdUsd > 0 && reserveUsd < thresholdUsd && thresholdUsd - reserveUsd < 0.01) {
+    return `$${(Math.floor(reserveUsd * 100) / 100).toFixed(2)}`;
+  }
+  return formatUsd(reserveUsd);
+}
+
 const SUBSCRIPT_DIGITS = ["₀", "₁", "₂", "₃", "₄", "₅", "₆", "₇", "₈", "₉"];
 
 export function formatTokenPrice(value: number): string {

@@ -13,7 +13,7 @@ import { simulateBuyTokensOut, simulateSellQuoteOut } from "@/sdk/math";
 import { useMarket } from "@/context/MarketContext";
 import { TradeReceipt } from "./TradeReceipt";
 import { receiptFromTrade, receiptFromRedemption, receiptPreview, type TradeReceiptData } from "./tradeReceiptModel";
-import { formatBondingProgress, formatTokenPrice, formatUsd } from "@/lib/marketFormat";
+import { formatBondingProgress, formatTokenPrice, formatUsd, formatCurveReserveUsd } from "@/lib/marketFormat";
 import { GraduationStepPendingError, graduateToken } from "@/services/solana/solanaGraduationService";
 
 function formatCollateralUnits(value: number, decimals: number): string {
@@ -23,15 +23,21 @@ function formatCollateralUnits(value: number, decimals: number): string {
 
 function formatRemainingFillAmount(val: number): string {
   if (!Number.isFinite(val) || val <= 0) return "0";
-  if (val <= 0.0001) return "0.0001";
-  if (val < 0.01) return val.toFixed(4);
+  const rawMicros = Math.floor(Math.round(val * 1_000_000));
+  if (rawMicros <= 0) return "0";
+  if (val < 0.01) {
+    return (rawMicros / 1_000_000).toFixed(6).replace(/0+$/, "").replace(/\.$/, "") || "0.000001";
+  }
   return val.toFixed(2);
 }
 
 function formatRemainingDisplay(val: number): string {
   if (!Number.isFinite(val) || val <= 0) return "$0.00";
-  if (val <= 0.0001) return "$0.0001";
-  if (val < 0.01) return `$${val.toFixed(4)}`;
+  const rawMicros = Math.floor(Math.round(val * 1_000_000));
+  if (rawMicros <= 0) return "$0.00";
+  if (val < 0.01) {
+    return `$${(rawMicros / 1_000_000).toFixed(6).replace(/0+$/, "").replace(/\.$/, "")}`;
+  }
   return `$${val.toFixed(2)}`;
 }
 
@@ -286,9 +292,7 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
     tradeMode === "buy" &&
     !token.bondingCurve.isGraduated &&
     remainingQuoteUsd > 0 &&
-    (remainingQuoteUsd <= 0.00015
-      ? numAmount > 0.0002
-      : numAmount > remainingQuoteUsd + 0.000002);
+    numAmount > remainingQuoteUsd + 0.0000001;
 
   const hasInsufficientUsdc =
     connected && tradeMode === "buy" && numAmount > 0 && quoteBalance !== null && numAmount > quoteBalance;
@@ -696,7 +700,7 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
             </div>
             <div className="flex items-center justify-between text-[10px] text-muted mt-1.5 font-mono">
               <span>
-                {formatUsd(token.bondingCurve.realQuoteReservesUsd)} / {formatUsd(token.bondingCurve.graduationThresholdUsd)} USDC
+                {formatCurveReserveUsd(token.bondingCurve.realQuoteReservesUsd, token.bondingCurve.graduationThresholdUsd)} / {formatUsd(token.bondingCurve.graduationThresholdUsd)} USDC
                 {isNearCap && (
                   <button
                     type="button"

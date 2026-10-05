@@ -16,6 +16,7 @@ import {
   formatBondingProgress,
   formatTokenPrice,
   formatUsd,
+  formatCurveReserveUsd,
 } from "@/lib/marketFormat";
 import { createBrowserSupabaseClient } from "@/lib/supabase";
 
@@ -177,7 +178,7 @@ export default function TokenDetailPage({ params }: PageProps) {
   const currentReserves = token.bondingCurve.realQuoteReservesUsd;
   const currentProgressPct = token.bondingCurve.progressPct;
   const formattedProgress = formatBondingProgress(currentProgressPct);
-  const formattedReservesDetail = `(${formatUsd(currentReserves)} / ${formatUsd(
+  const formattedReservesDetail = `(${formatCurveReserveUsd(currentReserves, token.bondingCurve.graduationThresholdUsd)} / ${formatUsd(
     token.bondingCurve.graduationThresholdUsd
   )} USDC)`;
 
