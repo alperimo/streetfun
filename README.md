@@ -80,8 +80,6 @@ All mathematical operations use checked 128-bit unsigned integer arithmetic to p
 streetfun/
 ├── Anchor.toml                     # Anchor workspace configuration
 ├── Cargo.toml                      # Cargo workspace manifest
-├── keys/
-│   └── streetfun-keypair.json     # Program deploy keypair
 ├── programs/
 │   └── streetfun/
 │       ├── Cargo.toml              # Anchor dependencies
