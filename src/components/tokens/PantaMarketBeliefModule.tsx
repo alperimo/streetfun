@@ -3,32 +3,18 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { VersionedTransaction } from "@solana/web3.js";
-import { TrendingUp, Award, ExternalLink, AlertCircle, CheckCircle2, Loader2, Sparkles } from "lucide-react";
+import { TrendingUp, ExternalLink, AlertCircle, CheckCircle2, Loader2, Sparkles, Calendar, Layers, ShieldCheck } from "lucide-react";
 import { TokenMetadata } from "@/lib/types";
+import { LifecycleMarketInfo } from "@/lib/pantaTypes";
 
 interface PantaMarketBeliefModuleProps {
   token: TokenMetadata;
 }
 
-interface MarketData {
-  marketId: string;
-  question: string;
-  resolutionCriteria: string;
-  yesPercent: number;
-  noPercent: number;
-  yesPrice: string;
-  noPrice: string;
-  volumeUsdc: string;
-  status: string;
-  phase: string;
-  resolved: boolean;
-  poweredBy: string;
-}
-
 export function PantaMarketBeliefModule({ token }: PantaMarketBeliefModuleProps) {
   const { connected, publicKey, signTransaction, sendTransaction } = useWallet();
 
-  const [market, setMarket] = useState<MarketData | null>(null);
+  const [market, setMarket] = useState<LifecycleMarketInfo | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedSide, setSelectedSide] = useState<"yes" | "no">("yes");
   const [amountUsdc, setAmountUsdc] = useState<string>("20");
@@ -44,23 +30,43 @@ export function PantaMarketBeliefModule({ token }: PantaMarketBeliefModuleProps)
 
   const cleanEquityName = token.targetEquity.name.replace(/\s*\(.*?\)/g, "").trim();
 
-  // 1. Fetch Market Belief Data
+  // 1. Fetch System-Generated Lifecycle Market Data
   const fetchMarket = useCallback(async () => {
     try {
       setLoading(true);
-      const res = await fetch(
-        `/api/panta/market?symbol=${encodeURIComponent(token.symbol)}&target=${encodeURIComponent(cleanEquityName)}`
-      );
+      const params = new URLSearchParams({
+        mint: token.mint,
+        symbol: token.symbol,
+        target: cleanEquityName,
+        targetSymbol: token.targetEquity.symbol,
+        isGraduated: String(token.bondingCurve.isGraduated),
+        progressPct: String(Math.round(token.bondingCurve.progressPct || 0)),
+        ...(token.bondingCurve.graduatedAt ? { graduatedAt: token.bondingCurve.graduatedAt } : {}),
+        ...(token.createdAt ? { createdAt: token.createdAt } : {}),
+        ...(token.treasury.valuationSource ? { valuationSource: token.treasury.valuationSource } : {}),
+      });
+
+      const res = await fetch(`/api/panta/market?${params.toString()}`);
       if (res.ok) {
-        const data = await res.json();
+        const data: LifecycleMarketInfo = await res.json();
         setMarket(data);
       }
     } catch (err) {
-      console.error("Failed to load Panta market data:", err);
+      console.error("Failed to load Panta lifecycle market data:", err);
     } finally {
       setLoading(false);
     }
-  }, [token.symbol, cleanEquityName]);
+  }, [
+    token.mint,
+    token.symbol,
+    cleanEquityName,
+    token.targetEquity.symbol,
+    token.bondingCurve.isGraduated,
+    token.bondingCurve.progressPct,
+    token.bondingCurve.graduatedAt,
+    token.createdAt,
+    token.treasury.valuationSource,
+  ]);
 
   useEffect(() => {
     fetchMarket();
@@ -113,10 +119,9 @@ export function PantaMarketBeliefModule({ token }: PantaMarketBeliefModuleProps)
     setIsSubmitting(true);
 
     try {
-      // Step A: Request or reuse quote
       const quoteId = quote?.quoteId || `qt_sf_${Date.now()}`;
 
-      // Step B: Build Transaction
+      // Build Transaction
       const buildRes = await fetch("/api/panta/order/build", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -137,12 +142,10 @@ export function PantaMarketBeliefModule({ token }: PantaMarketBeliefModuleProps)
       const buildData = await buildRes.json();
       const tx = VersionedTransaction.deserialize(Buffer.from(buildData.transaction, "base64"));
 
-      // Step C: Wallet Signing & Broadcast
+      // Wallet Signing & Broadcast
       let txSignature: string;
       if (signTransaction) {
         const signedTx = await signTransaction(tx);
-        const { getServerConnection } = await import("@/server/rpc");
-        // Or send through wallet adapter
         txSignature = await sendTransaction(signedTx, (window as any).solanaConnection || undefined, {
           skipPreflight: false,
         });
@@ -150,8 +153,8 @@ export function PantaMarketBeliefModule({ token }: PantaMarketBeliefModuleProps)
         txSignature = await sendTransaction(tx, (window as any).solanaConnection || undefined);
       }
 
-      // Step D: Confirm & Report to Panta API
-      const confirmRes = await fetch("/api/panta/order/confirm", {
+      // Confirm & Report to Panta API
+      await fetch("/api/panta/order/confirm", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -180,10 +183,19 @@ export function PantaMarketBeliefModule({ token }: PantaMarketBeliefModuleProps)
     }
   };
 
+  const formatDateLabel = (isoDate: string) => {
+    try {
+      const d = new Date(isoDate);
+      return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+    } catch {
+      return "—";
+    }
+  };
+
   if (loading) {
     return (
       <div className="rounded-2xl border border-border bg-card p-5 animate-pulse">
-        <div className="h-4 w-32 bg-card-hover rounded mb-4" />
+        <div className="h-4 w-40 bg-card-hover rounded mb-4" />
         <div className="h-6 w-3/4 bg-card-hover rounded mb-6" />
         <div className="h-10 w-full bg-card-hover rounded" />
       </div>
@@ -194,26 +206,50 @@ export function PantaMarketBeliefModule({ token }: PantaMarketBeliefModuleProps)
 
   return (
     <div className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-4">
-      {/* Module Title & Powered By Panta Badge */}
-      <div className="flex items-center justify-between border-b border-border pb-3">
-        <div className="flex items-center gap-2">
-          <div className="flex h-5 w-5 items-center justify-center rounded-md border border-brand-cyan/40 bg-brand-cyan/10 text-brand-cyan">
-            <TrendingUp className="h-3 w-3" />
+      {/* Module Title, Lifecycle Stage & System Market Tag */}
+      <div className="flex flex-col gap-2 border-b border-border pb-3.5">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="flex h-5 w-5 items-center justify-center rounded-md border border-brand-cyan/40 bg-brand-cyan/10 text-brand-cyan">
+              <TrendingUp className="h-3 w-3" />
+            </div>
+            <span className="text-xs font-bold uppercase tracking-wider text-foreground">
+              Market Belief
+            </span>
           </div>
-          <span className="text-xs font-bold uppercase tracking-wider text-foreground">
-            Market Belief
-          </span>
-          <span className="rounded border border-amber-500/30 bg-amber-500/10 px-1.5 py-0.5 text-[9px] font-mono font-bold text-amber-300">
-            Post-Graduation
-          </span>
+
+          <div className="flex items-center gap-1.5 text-[10px] text-muted font-medium">
+            <span>Powered by</span>
+            <span className="font-bold text-foreground hover:text-brand-cyan transition-colors flex items-center gap-0.5">
+              Panta
+              <Sparkles className="h-2.5 w-2.5 text-brand-cyan" />
+            </span>
+          </div>
         </div>
 
-        <div className="flex items-center gap-1.5 text-[10px] text-muted">
-          <span>Powered by</span>
-          <span className="font-bold text-foreground hover:text-brand-cyan transition-colors flex items-center gap-0.5">
-            Panta
-            <Sparkles className="h-2.5 w-2.5 text-brand-cyan" />
-          </span>
+        {/* System Market + Lifecycle Sub-Bar */}
+        <div className="flex items-center justify-between text-[11px]">
+          <div className="flex items-center gap-1.5">
+            <span className="rounded border border-border bg-card-hover px-1.5 py-0.5 font-mono text-[10px] text-muted font-medium">
+              System Market
+            </span>
+            <span
+              className={`rounded px-1.5 py-0.5 font-mono text-[10px] font-bold border ${
+                market.stage === "post-graduation"
+                  ? "border-amber-500/30 bg-amber-500/10 text-amber-300"
+                  : "border-brand-cyan/30 bg-brand-cyan/10 text-brand-cyan"
+              }`}
+            >
+              {market.stageBadge}
+            </span>
+          </div>
+
+          <div className="flex items-center gap-1 text-[10px] font-mono text-muted">
+            <Calendar className="h-3 w-3 opacity-70" />
+            <span>Opened {formatDateLabel(market.openedAt)}</span>
+            <span>·</span>
+            <span>Res. {formatDateLabel(market.resolutionAt)}</span>
+          </div>
         </div>
       </div>
 
@@ -222,12 +258,20 @@ export function PantaMarketBeliefModule({ token }: PantaMarketBeliefModuleProps)
         <h4 className="text-sm font-semibold text-foreground leading-snug">
           {market.question}
         </h4>
-        <p className="mt-1 text-[11px] text-muted leading-relaxed line-clamp-2">
+        <p className="mt-1.5 text-[11px] text-muted leading-relaxed">
           {market.resolutionCriteria}
         </p>
       </div>
 
-      {/* Odds Bar */}
+      {/* Deterministic Resolution Anchor Info */}
+      <div className="flex items-center gap-2 rounded-xl border border-border bg-card-hover/40 px-3 py-2 text-[10px] text-muted">
+        <ShieldCheck className="h-3.5 w-3.5 text-brand-cyan shrink-0" />
+        <span className="truncate">
+          Resolution Feed: <strong className="text-foreground">{market.resolutionSource}</strong>
+        </span>
+      </div>
+
+      {/* Probability Odds Bar */}
       <div className="space-y-1.5">
         <div className="flex justify-between text-xs font-mono font-bold">
           <span className="text-emerald-400">YES {market.yesPercent}%</span>

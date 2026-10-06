@@ -23,6 +23,29 @@ export interface PantaMarket {
   createdByPartner?: boolean;
 }
 
+export type LifecycleStage = "pre-graduation" | "post-graduation";
+
+export interface LifecycleMarketInfo {
+  stage: LifecycleStage;
+  stageBadge: string;
+  marketTypeLabel: string; // "System Market"
+  marketId: string;
+  question: string;
+  resolutionCriteria: string;
+  resolutionSource: string;
+  openedAt: string;
+  resolutionAt: string;
+  yesPercent: number;
+  noPercent: number;
+  yesPrice: string;
+  noPrice: string;
+  volumeUsdc: string;
+  status: string;
+  phase: string;
+  resolved: boolean;
+  poweredBy: string;
+}
+
 export interface PantaOrderQuote {
   quoteId: string;
   marketId: string;

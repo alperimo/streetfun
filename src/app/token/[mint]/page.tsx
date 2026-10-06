@@ -473,10 +473,8 @@ export default function TokenDetailPage({ params }: PageProps) {
               onTradeSuccess={fetchTrades}
             />
 
-            {/* Panta Prediction Market: Post-Graduation Culture vs Equity Belief (Use-Case 3) */}
-            {token.bondingCurve.isGraduated && (
-              <PantaMarketBeliefModule token={token} />
-            )}
+            {/* Panta Prediction Market: Automated System-Generated Lifecycle Belief (Pre & Post Graduation) */}
+            <PantaMarketBeliefModule token={token} />
 
             <div className="rounded-2xl border border-border bg-card p-4 text-xs space-y-2.5 shadow-sm">
               <div className="font-bold text-foreground pb-2 border-b border-border">
