@@ -8,6 +8,7 @@ import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { TradingViewChart } from "@/components/tokens/TradingViewChart";
 import { TradeTerminal } from "@/components/tokens/TradeTerminal";
+import { PantaMarketBeliefModule } from "@/components/tokens/PantaMarketBeliefModule";
 import { SearchModal } from "@/components/modals/SearchModal";
 import { LaunchModal } from "@/components/modals/LaunchModal";
 import { useMarket } from "@/context/MarketContext";
@@ -471,6 +472,11 @@ export default function TokenDetailPage({ params }: PageProps) {
               token={token}
               onTradeSuccess={fetchTrades}
             />
+
+            {/* Panta Prediction Market: Post-Graduation Culture vs Equity Belief (Use-Case 3) */}
+            {token.bondingCurve.isGraduated && (
+              <PantaMarketBeliefModule token={token} />
+            )}
 
             <div className="rounded-2xl border border-border bg-card p-4 text-xs space-y-2.5 shadow-sm">
               <div className="font-bold text-foreground pb-2 border-b border-border">
