@@ -42,6 +42,10 @@ Requests use fixed official hosts, refuse redirects and have a ten-second timeou
 
 ## Verification
 
+The failure-isolation report is `artifacts/panta-completion-2026-10-08/isolation.md`. Valid standard and breaking requests using the same account succeed on the live API but fail on staging. Immediate blockhash checks establish that the live-built controls are mainnet transactions, so using that host cannot repair Devnet. StreetFun's previously truncated mainnet genesis hash has been corrected in the shared browser/server cluster identities; this separate defect did not cause the Devnet quote rejection. Some extended live probes also return opaque server exceptions, so failed payload variations alone do not prove a field is unsupported.
+
+Run `npm run diagnose:panta` for unsigned staging quote/build diagnostics. Add `-- --live-control` to compare with the live host and read mainnet cluster/configuration data. No transaction is signed, broadcast or registered. The script writes `artifacts/panta-api-diagnostics.json`; API keys and account personal details are excluded. Quotes reserve short-lived provider sessions. Inspect this report before selecting a program or changing network configuration.
+
 ```bash
 npm run test:unit
 npm run build

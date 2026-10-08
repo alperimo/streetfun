@@ -22,7 +22,8 @@
     "dev:indexer": "npx ts-node -P ./tests/tsconfig.json scripts/local_helius_indexer.ts",
     "test:unit": "node scripts/run_unit_tests.cjs",
     "worker:panta": "node scripts/panta_worker.cjs",
-    "verify:panta-devnet": "node scripts/verify_panta_devnet.cjs"
+    "verify:panta-devnet": "node scripts/verify_panta_devnet.cjs",
+    "diagnose:panta": "node scripts/diagnose_panta_api.cjs"
   },
   "dependencies": {
     "@coral-xyz/anchor": "0.31.0",

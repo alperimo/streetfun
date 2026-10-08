@@ -1,0 +1,1064 @@
+{
+  "run": "81c90b96-a232-47a2-bde7-5dfd82e045cf",
+  "checkedAt": "2026-10-08T11:37:46.452Z",
+  "signed": false,
+  "broadcast": false,
+  "requests": [
+    {
+      "host": "https://staging-api.panta.market/api/v1",
+      "route": "/whoami/",
+      "httpStatus": 200,
+      "durationMs": 259,
+      "requestId": "d27be3f0-4e67-4bf3-af3c-078e705d815c",
+      "cfRay": "a474db030f32da2c-FRA",
+      "response": {
+        "canCreateMarkets": true,
+        "status": "active",
+        "accountFingerprint": "a67d93890370c1ffec89f246f5d8b559e7cb7b6310d605610795f7920a49eef2"
+      }
+    },
+    {
+      "host": "https://live-api.panta.market/api/v1",
+      "route": "/whoami/",
+      "httpStatus": 200,
+      "durationMs": 237,
+      "requestId": "b794d9d9-69a1-4418-bdb9-1ceb9ca8badb",
+      "cfRay": "a474db045f30d2bb-FRA",
+      "response": {
+        "canCreateMarkets": true,
+        "status": "active",
+        "accountFingerprint": "a67d93890370c1ffec89f246f5d8b559e7cb7b6310d605610795f7920a49eef2"
+      }
+    },
+    {
+      "host": "https://staging-api.panta.market/api/v1",
+      "route": "/markets/create/quote/",
+      "payload": {
+        "wallet": "1YqxrFExzvJ6r1HqeaoRyZ8i4iUaZX5q8eZ3pFqaBmR"
+      },
+      "httpStatus": 400,
+      "durationMs": 151,
+      "requestId": "0bb66c49-24a3-4bb7-8d3b-8eaa43ed4e90",
+      "cfRay": "a474db0558eada2c-FRA",
+      "response": {
+        "code": "INVALID_MARKET_PARAMS",
+        "message": "question: This field is required.; resolutionRule: This field is required.; sourcesOfTruth: This field is required.; category: This field is required.; startTime: This field is required.; endTime: This field is required.; resolutionTime: This field is required.; imageUrl: This field is required.",
+        "fields": {
+          "question": [
+            "This field is required."
+          ],
+          "resolutionRule": [
+            "This field is required."
+          ],
+          "sourcesOfTruth": [
+            "This field is required."
+          ],
+          "category": [
+            "This field is required."
+          ],
+          "startTime": [
+            "This field is required."
+          ],
+          "endTime": [
+            "This field is required."
+          ],
+          "resolutionTime": [
+            "This field is required."
+          ],
+          "imageUrl": [
+            "This field is required."
+          ]
+        }
+      }
+    },
+    {
+      "host": "https://staging-api.panta.market/api/v1",
+      "route": "/markets/create/quote/",
+      "payload": {
+        "wallet": "1YqxrFExzvJ6r1HqeaoRyZ8i4iUaZX5q8eZ3pFqaBmR",
+        "resolutionRule": "CoinGecko daily close UTC greater than or equal to 5000.",
+        "sourcesOfTruth": [
+          "https://www.coingecko.com"
+        ],
+        "category": "crypto",
+        "imageUrl": "https://raw.githubusercontent.com/Kaito-HQ/panta-api-playground/main/public/sample-market-1024.png",
+        "question": "Panta API isolation 81c90b96-a232-47a2-bde7-5dfd82e045cf standard: ETH above 5000?",
+        "marketType": "standard",
+        "startTime": 1791466666,
+        "endTime": 1792064266,
+        "resolutionTime": 1792067866
+      },
+      "httpStatus": 400,
+      "durationMs": 1231,
+      "requestId": "1d136a54-1fc2-4839-93ad-ad368c7c2910",
+      "cfRay": "a474db067f5cf385-FRA",
+      "response": {
+        "code": "DUPLICATE_MARKET",
+        "message": "market creation already exists for this wallet and question"
+      }
+    },
+    {
+      "host": "https://live-api.panta.market/api/v1",
+      "route": "/markets/create/quote/",
+      "payload": {
+        "wallet": "1YqxrFExzvJ6r1HqeaoRyZ8i4iUaZX5q8eZ3pFqaBmR",
+        "resolutionRule": "CoinGecko daily close UTC greater than or equal to 5000.",
+        "sourcesOfTruth": [
+          "https://www.coingecko.com"
+        ],
+        "category": "crypto",
+        "imageUrl": "https://raw.githubusercontent.com/Kaito-HQ/panta-api-playground/main/public/sample-market-1024.png",
+        "question": "Panta API isolation 81c90b96-a232-47a2-bde7-5dfd82e045cf standard: ETH above 5000?",
+        "marketType": "standard",
+        "startTime": 1791466666,
+        "endTime": 1792064266,
+        "resolutionTime": 1792067866
+      },
+      "httpStatus": 200,
+      "durationMs": 1535,
+      "requestId": "e86ec52d-47d9-4922-949e-2b6dc77d6bf5",
+      "cfRay": "a474db0dfdded2bb-FRA",
+      "response": {
+        "createId": "cr_0a93c3e6d93d4512811520274fd1ae9f",
+        "userId": "usr_8SfJuhQ9A_l0zu2YnSctrQ",
+        "apiKeyId": "key_s38mrZnnuccMWoZarF_lRw",
+        "expectedEventPda": "5vVfAqmtDfm778wj4259CnSZ3QB7wBPti2zQnzayudFa",
+        "paymentUsdc": "50000000",
+        "liquidityInjectionUsdc": "10000000",
+        "platformRevenueUsdc": "40000000",
+        "marketType": "standard",
+        "expiresAt": "2026-10-08T11:43:08.517794Z",
+        "blockhashExpiryHintSec": 60
+      }
+    },
+    {
+      "host": "https://live-api.panta.market/api/v1",
+      "route": "/markets/create/build/",
+      "payload": {
+        "createId": "cr_0a93c3e6d93d4512811520274fd1ae9f",
+        "wallet": "1YqxrFExzvJ6r1HqeaoRyZ8i4iUaZX5q8eZ3pFqaBmR"
+      },
+      "httpStatus": 200,
+      "durationMs": 200,
+      "requestId": "3478fefd-46b3-4714-9225-6db529dd98b2",
+      "cfRay": "a474db179dd5d2bb-FRA",
+      "response": {
+        "createId": "cr_0a93c3e6d93d4512811520274fd1ae9f",
+        "expectedEventPda": "5vVfAqmtDfm778wj4259CnSZ3QB7wBPti2zQnzayudFa",
+        "transaction": "AQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAQAIEQAkAZ9kQQJAZoJYZM50M5VlZkAOx4QgaisOw3MNLccgBTWwFpuRdwIYUih4gHr3zhIKjW0a8uBTp7VQQbpE9MNJIu805OW/nHNNmp4kJ42I6l3ZvPhbOI5LAxO+XC0LXYFaaoL3NRFlwHqMm11ZKJjPYMwEqNx/h3eLIl0Vy8KFsJ2xBDB75AYZBj+G/+ciSKxW74/mo8lZZ2n6JTYThVGxw3UzadPfT4im5D6lUOmgxJkK3kss08SZY5Tz3U9+5NuuFawjTjlfttxUr9enhp4zd4+HDM0IHFxXkKdlXG1P46gPl3mpWpFDPlmNe3V2R3+s5vUtCtWb8+TE+2cvlIbuNjAaj84AbsEyZdQB/kvY+R6mekjTJ8ph1T3a1ZZQ5gAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAwZGb+UhFzL/7K26csOb57yM5bvF9xJrLEObOkAAAAAG3fbh12Whk9nL4UbO63msHLSF7V9bN5E6jPWFfv8AqSgj5fK672ebG0qKvqytmbJyLaxSCJR4b0brJDOkbWENVF7KIBZj7LY/0UC7ZoTJpoZL1HzOEVaf+6th8u3ycwdzW2r89NtAtgRMz+3R31ydzAHNeUlOo6kqAKng1SelMIyXJY9OJInxuz0QKRSODYMLWhOZ2v8QhASOe9jb6fhZxvp6877brTo9ZfNqq8l0MbG75MLS9uDkfKYCA0UvXWFYr7FRv96YJfSGwTLBceBqMYbciNkD3OVaMaDNOMLNvwMKAAUCgBoGAA8GAAUAEAkLAQENDwAODAIBCAcGBBAFAwsPCdsBUAnM1ZbbV6KqnMdqAAAAAAq70GoAAAAAGsnQagAAAABSAAAAUGFudGEgQVBJIGlzb2xhdGlvbiA4MWM5MGI5Ni1hMjMyLTQ3YTItYmRlNy01ZGZkODJlMDQ1Y2Ygc3RhbmRhcmQ6IEVUSCBhYm92ZSA1MDAwP4Dw+gIAAAAAOAAAAENvaW5HZWNrbyBkYWlseSBjbG9zZSBVVEMgZ3JlYXRlciB0aGFuIG9yIGVxdWFsIHRvIDUwMDAuAQAAABkAAABodHRwczovL3d3dy5jb2luZ2Vja28uY29tAA==",
+        "recentBlockhash": "6yCG8b9CWnMgyrPJnZgLcvva6CDkP2D3CwR1sJaonTQS",
+        "lastValidBlockHeight": 432571108,
+        "blockhashExpiryHintSec": 60,
+        "buildFingerprint": "1c85a1954706a5e959744c8f064523e95b97a213797b374f760f59df5afea44b",
+        "paymentUsdc": "50000000",
+        "liquidityInjectionUsdc": "10000000",
+        "platformRevenueUsdc": "40000000",
+        "marketType": "standard",
+        "derived": {
+          "event": "5vVfAqmtDfm778wj4259CnSZ3QB7wBPti2zQnzayudFa",
+          "vaultAuthority": "MLXBG2gPFffh1wbi7YDDew9KumAaBdV22RnPMj7USBc",
+          "marketConfig": "8mJjfx7SuWwS4yfVZXtqC2cvzxr3TQHsCgKyjpuDWKAP",
+          "creatorWhitelist": "3hh4H3AdyqmSeJhyPq2h7Pro2t8QrC7iwYgC8YRDLgGt",
+          "creatorFeeVault": "GKgBWvQk13qY1ZM51vhmSd1v6twAZnCStpujejdKZaZ3",
+          "creatorPosition": "CtSDeA2FUwqq4gbBHSNtLm17E8C29rHrMLEWCsfaWhQc",
+          "creatorTokenAccount": "Cxv2XmPde7Md3537D67UtUAV8krUtMrVqh1xPA7Fvohu",
+          "vaultTokenAccount": "H2sxTQXQ63Qy9CHaEcdpgTHqntmbootLTXBic51wRMZw",
+          "treasuryTokenAccount": "9hwZLD2JZuWFDDQXEnHsnny7EF2LeyHqwcMFVssYEGpC"
+        },
+        "expiresAt": "2026-10-08T11:39:08.786312Z"
+      },
+      "decoded": {
+        "blockhash": "6yCG8b9CWnMgyrPJnZgLcvva6CDkP2D3CwR1sJaonTQS",
+        "programs": [
+          "ComputeBudget111111111111111111111111111111",
+          "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL",
+          "6gM5afTQBq5VZCfgpGqcsqzfWd5maLSCKWtGjbEobZMp"
+        ],
+        "accountKeys": [
+          "1YqxrFExzvJ6r1HqeaoRyZ8i4iUaZX5q8eZ3pFqaBmR",
+          "MLXBG2gPFffh1wbi7YDDew9KumAaBdV22RnPMj7USBc",
+          "5vVfAqmtDfm778wj4259CnSZ3QB7wBPti2zQnzayudFa",
+          "9hwZLD2JZuWFDDQXEnHsnny7EF2LeyHqwcMFVssYEGpC",
+          "CtSDeA2FUwqq4gbBHSNtLm17E8C29rHrMLEWCsfaWhQc",
+          "Cxv2XmPde7Md3537D67UtUAV8krUtMrVqh1xPA7Fvohu",
+          "FnYFLTbFGkxhT7JgWY5xxJ5JMRKtWCtpMyB7moDx4Ltn",
+          "GKgBWvQk13qY1ZM51vhmSd1v6twAZnCStpujejdKZaZ3",
+          "H2sxTQXQ63Qy9CHaEcdpgTHqntmbootLTXBic51wRMZw",
+          "11111111111111111111111111111111",
+          "ComputeBudget111111111111111111111111111111",
+          "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+          "3hh4H3AdyqmSeJhyPq2h7Pro2t8QrC7iwYgC8YRDLgGt",
+          "6gM5afTQBq5VZCfgpGqcsqzfWd5maLSCKWtGjbEobZMp",
+          "8mJjfx7SuWwS4yfVZXtqC2cvzxr3TQHsCgKyjpuDWKAP",
+          "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL",
+          "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
+        ]
+      }
+    },
+    {
+      "host": "https://staging-api.panta.market/api/v1",
+      "route": "/markets/create/quote/",
+      "payload": {
+        "wallet": "1YqxrFExzvJ6r1HqeaoRyZ8i4iUaZX5q8eZ3pFqaBmR",
+        "resolutionRule": "CoinGecko daily close UTC greater than or equal to 5000.",
+        "sourcesOfTruth": [
+          "https://www.coingecko.com"
+        ],
+        "category": "crypto",
+        "imageUrl": "https://raw.githubusercontent.com/Kaito-HQ/panta-api-playground/main/public/sample-market-1024.png",
+        "question": "Panta API isolation 81c90b96-a232-47a2-bde7-5dfd82e045cf breaking: ETH above 5000?",
+        "marketType": "breaking",
+        "startTime": 1791459406,
+        "endTime": 1792064266,
+        "resolutionTime": 1792067866,
+        "eventInProgress": true
+      },
+      "httpStatus": 400,
+      "durationMs": 1235,
+      "requestId": "74cd06c7-feb4-4cae-8b9f-9c0854435831",
+      "cfRay": "a474db193906da2c-FRA",
+      "response": {
+        "code": "DUPLICATE_MARKET",
+        "message": "market creation already exists for this wallet and question"
+      }
+    },
+    {
+      "host": "https://live-api.panta.market/api/v1",
+      "route": "/markets/create/quote/",
+      "payload": {
+        "wallet": "1YqxrFExzvJ6r1HqeaoRyZ8i4iUaZX5q8eZ3pFqaBmR",
+        "resolutionRule": "CoinGecko daily close UTC greater than or equal to 5000.",
+        "sourcesOfTruth": [
+          "https://www.coingecko.com"
+        ],
+        "category": "crypto",
+        "imageUrl": "https://raw.githubusercontent.com/Kaito-HQ/panta-api-playground/main/public/sample-market-1024.png",
+        "question": "Panta API isolation 81c90b96-a232-47a2-bde7-5dfd82e045cf breaking: ETH above 5000?",
+        "marketType": "breaking",
+        "startTime": 1791459406,
+        "endTime": 1792064266,
+        "resolutionTime": 1792067866,
+        "eventInProgress": true
+      },
+      "httpStatus": 200,
+      "durationMs": 1356,
+      "requestId": "2f248491-8865-466a-bfb3-a5c1032b913a",
+      "cfRay": "a474db20ea2cd2bb-FRA",
+      "response": {
+        "createId": "cr_e8157a63ca8b4522b2cbba364e467751",
+        "userId": "usr_8SfJuhQ9A_l0zu2YnSctrQ",
+        "apiKeyId": "key_s38mrZnnuccMWoZarF_lRw",
+        "expectedEventPda": "6gyzqi5zResP1iY9ie3JZyN84uYpHoXJmadChhPiMppP",
+        "paymentUsdc": "20000000",
+        "liquidityInjectionUsdc": "5000000",
+        "platformRevenueUsdc": "15000000",
+        "marketType": "breaking",
+        "expiresAt": "2026-10-08T11:43:11.434961Z",
+        "blockhashExpiryHintSec": 60
+      }
+    },
+    {
+      "host": "https://live-api.panta.market/api/v1",
+      "route": "/markets/create/build/",
+      "payload": {
+        "createId": "cr_e8157a63ca8b4522b2cbba364e467751",
+        "wallet": "1YqxrFExzvJ6r1HqeaoRyZ8i4iUaZX5q8eZ3pFqaBmR"
+      },
+      "httpStatus": 200,
+      "durationMs": 217,
+      "requestId": "5530867e-9dc6-4b43-94a3-dcc0601b58b6",
+      "cfRay": "a474db296da5d2bb-FRA",
+      "response": {
+        "createId": "cr_e8157a63ca8b4522b2cbba364e467751",
+        "expectedEventPda": "6gyzqi5zResP1iY9ie3JZyN84uYpHoXJmadChhPiMppP",
+        "transaction": "AQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAQAIEQAkAZ9kQQJAZoJYZM50M5VlZkAOx4QgaisOw3MNLccgCDzPLB2b23t4fgJE0QtHII70fmYV1nIDs6n70IAAn5JUiIh9s+LnrsYz5cuLGewFaNfVCczVfUNhtJ0Fk49XyIFaaoL3NRFlwHqMm11ZKJjPYMwEqNx/h3eLIl0Vy8KFscN1M2nT30+IpuQ+pVDpoMSZCt5LLNPEmWOU891PfuTA+8ztMD5gHMFYXGgK9Zr/U5VTG2pDVdCeWn/3A31RVcsmQuAmN2vsK8cSE4Kmq5CZ5nwFa8sqDprJ7yifek7o8/5uCoINsxlhPCDnBUzKXFkGJbSTV+XqrQ4QMBMJD1v2I+OoYgN665Ru7B+C8RG1ralQ+aRjZ9dV1gtHAfZLMAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAwZGb+UhFzL/7K26csOb57yM5bvF9xJrLEObOkAAAAAG3fbh12Whk9nL4UbO63msHLSF7V9bN5E6jPWFfv8AqSgj5fK672ebG0qKvqytmbJyLaxSCJR4b0brJDOkbWENVF7KIBZj7LY/0UC7ZoTJpoZL1HzOEVaf+6th8u3ycwdzW2r89NtAtgRMz+3R31ydzAHNeUlOo6kqAKng1SelMIyXJY9OJInxuz0QKRSODYMLWhOZ2v8QhASOe9jb6fhZxvp6877brTo9ZfNqq8l0MbG75MLS9uDkfKYCA0UvXWGECs7FmHiOMM0O80G/HzwVU4f1xo/4kh/kbNXsHw3LTQMKAAUCgBoGAA8GAAQAEAkLAQENDwAODAIHBgEFCBAEAwsPCdwBGWdLxuBJLEVOgMdqAAAAAAq70GoAAAAAGsnQagAAAABSAAAAUGFudGEgQVBJIGlzb2xhdGlvbiA4MWM5MGI5Ni1hMjMyLTQ3YTItYmRlNy01ZGZkODJlMDQ1Y2YgYnJlYWtpbmc6IEVUSCBhYm92ZSA1MDAwPwAtMQEAAAAAOAAAAENvaW5HZWNrbyBkYWlseSBjbG9zZSBVVEMgZ3JlYXRlciB0aGFuIG9yIGVxdWFsIHRvIDUwMDAuAQAAABkAAABodHRwczovL3d3dy5jb2luZ2Vja28uY29tAQA=",
+        "recentBlockhash": "9tSNinmihBdiZjM49Zy7P153QpzhUXsSEHnsXxDgmFN4",
+        "lastValidBlockHeight": 432571119,
+        "blockhashExpiryHintSec": 60,
+        "buildFingerprint": "2022011e376250e0902f62fc8bd48abf1bb086c1871c77d6a0784882a6b5d32f",
+        "paymentUsdc": "20000000",
+        "liquidityInjectionUsdc": "5000000",
+        "platformRevenueUsdc": "15000000",
+        "marketType": "breaking",
+        "derived": {
+          "event": "6gyzqi5zResP1iY9ie3JZyN84uYpHoXJmadChhPiMppP",
+          "vaultAuthority": "HRT6CRfR8gQSXeqK9YSW56dmCFGSpuLmoquaeWKeJhk6",
+          "marketConfig": "8mJjfx7SuWwS4yfVZXtqC2cvzxr3TQHsCgKyjpuDWKAP",
+          "creatorWhitelist": "3hh4H3AdyqmSeJhyPq2h7Pro2t8QrC7iwYgC8YRDLgGt",
+          "creatorFeeVault": "ZA3QxqAeZMr3ngagLkqx4Q4Zg9ze1nTf17bDrtokhYu",
+          "creatorPosition": "HZq2zSmfFHRCdS26MBWWvsi1Pk83Dmtu2WDf6c3RsvgP",
+          "creatorTokenAccount": "Cxv2XmPde7Md3537D67UtUAV8krUtMrVqh1xPA7Fvohu",
+          "vaultTokenAccount": "Eg1bs1hXBvMHmEEbXbFE1QQum4bmwmAmTbdgaN2R5zQo",
+          "treasuryTokenAccount": "9hwZLD2JZuWFDDQXEnHsnny7EF2LeyHqwcMFVssYEGpC"
+        },
+        "expiresAt": "2026-10-08T11:39:11.657208Z"
+      },
+      "decoded": {
+        "blockhash": "9tSNinmihBdiZjM49Zy7P153QpzhUXsSEHnsXxDgmFN4",
+        "programs": [
+          "ComputeBudget111111111111111111111111111111",
+          "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL",
+          "6gM5afTQBq5VZCfgpGqcsqzfWd5maLSCKWtGjbEobZMp"
+        ],
+        "accountKeys": [
+          "1YqxrFExzvJ6r1HqeaoRyZ8i4iUaZX5q8eZ3pFqaBmR",
+          "ZA3QxqAeZMr3ngagLkqx4Q4Zg9ze1nTf17bDrtokhYu",
+          "6gyzqi5zResP1iY9ie3JZyN84uYpHoXJmadChhPiMppP",
+          "9hwZLD2JZuWFDDQXEnHsnny7EF2LeyHqwcMFVssYEGpC",
+          "Cxv2XmPde7Md3537D67UtUAV8krUtMrVqh1xPA7Fvohu",
+          "DzKyMUYVv2fQfxqSqgWLZ4XDrjDjAjNdWnUWqGSK1Hoi",
+          "Eg1bs1hXBvMHmEEbXbFE1QQum4bmwmAmTbdgaN2R5zQo",
+          "HRT6CRfR8gQSXeqK9YSW56dmCFGSpuLmoquaeWKeJhk6",
+          "HZq2zSmfFHRCdS26MBWWvsi1Pk83Dmtu2WDf6c3RsvgP",
+          "11111111111111111111111111111111",
+          "ComputeBudget111111111111111111111111111111",
+          "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+          "3hh4H3AdyqmSeJhyPq2h7Pro2t8QrC7iwYgC8YRDLgGt",
+          "6gM5afTQBq5VZCfgpGqcsqzfWd5maLSCKWtGjbEobZMp",
+          "8mJjfx7SuWwS4yfVZXtqC2cvzxr3TQHsCgKyjpuDWKAP",
+          "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL",
+          "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
+        ]
+      }
+    }
+  ],
+  "completedAt": "2026-10-08T11:51:18.494Z",
+  "rpcChecks": {
+    "devnetGenesis": "EtWTRABZaYq6iMfeYKouRu166VU2xqa1wcaWoxPkrZBG",
+    "mainnetGenesis": "5eykt4UsFv8P8NJdTREpY1vzqKqZKvdpKuc147dw2N9d",
+    "programs": [
+      {
+        "network": "devnet",
+        "program": "6gM5afTQBq5VZCfgpGqcsqzfWd5maLSCKWtGjbEobZMp",
+        "config": "8mJjfx7SuWwS4yfVZXtqC2cvzxr3TQHsCgKyjpuDWKAP",
+        "exists": true,
+        "bytes": 324,
+        "mint": "11111111111111111111111111111111"
+      },
+      {
+        "network": "mainnet-beta",
+        "program": "6gM5afTQBq5VZCfgpGqcsqzfWd5maLSCKWtGjbEobZMp",
+        "config": "8mJjfx7SuWwS4yfVZXtqC2cvzxr3TQHsCgKyjpuDWKAP",
+        "exists": true,
+        "bytes": 356,
+        "mint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+        "breakingPayment": "20000000"
+      },
+      {
+        "network": "devnet",
+        "program": "4CQ4LWv7194V3Qe3iEYZq33cFPQbmKU3e1xVQkpTegLU",
+        "config": "3a4GuktDEyjqi5X9AQu8WDJcT2mgXD8Dr6v9j2teuWTk",
+        "exists": true,
+        "bytes": 356,
+        "mint": "8Qm44MpHDMs3mdiqryHxhgqLBVrecWmTdVKwqUoxywEY",
+        "breakingPayment": "20000000"
+      },
+      {
+        "network": "mainnet-beta",
+        "program": "4CQ4LWv7194V3Qe3iEYZq33cFPQbmKU3e1xVQkpTegLU",
+        "config": "3a4GuktDEyjqi5X9AQu8WDJcT2mgXD8Dr6v9j2teuWTk",
+        "exists": false,
+        "mint": null
+      }
+    ],
+    "builds": [
+      {
+        "createId": "cr_0a93c3e6d93d4512811520274fd1ae9f",
+        "programs": [
+          "ComputeBudget111111111111111111111111111111",
+          "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL",
+          "6gM5afTQBq5VZCfgpGqcsqzfWd5maLSCKWtGjbEobZMp"
+        ],
+        "expectedEvent": "5vVfAqmtDfm778wj4259CnSZ3QB7wBPti2zQnzayudFa",
+        "eventExistsDevnet": false,
+        "eventExistsMainnet": false,
+        "blockhashValidDevnet": false,
+        "blockhashValidMainnet": false
+      },
+      {
+        "createId": "cr_e8157a63ca8b4522b2cbba364e467751",
+        "programs": [
+          "ComputeBudget111111111111111111111111111111",
+          "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL",
+          "6gM5afTQBq5VZCfgpGqcsqzfWd5maLSCKWtGjbEobZMp"
+        ],
+        "expectedEvent": "6gyzqi5zResP1iY9ie3JZyN84uYpHoXJmadChhPiMppP",
+        "eventExistsDevnet": false,
+        "eventExistsMainnet": false,
+        "blockhashValidDevnet": false,
+        "blockhashValidMainnet": false
+      }
+    ],
+    "refreshedLiveBuild": {
+      "checkedAt": "2026-10-08T11:39:33.855Z",
+      "httpStatus": 400
+    },
+    "initialBuildBlockhashNote": "Initial blockhash checks were performed near/after the build expiry and are not used to infer the transaction network."
+  },
+  "liveFreshControl": {
+    "checkedAt": "2026-10-08T11:40:12.057Z",
+    "payload": {
+      "wallet": "1YqxrFExzvJ6r1HqeaoRyZ8i4iUaZX5q8eZ3pFqaBmR",
+      "resolutionRule": "CoinGecko daily close UTC greater than or equal to 5000.",
+      "sourcesOfTruth": [
+        "https://www.coingecko.com"
+      ],
+      "category": "crypto",
+      "imageUrl": "https://raw.githubusercontent.com/Kaito-HQ/panta-api-playground/main/public/sample-market-1024.png",
+      "question": "Panta network isolation cbd56319-2ce6-4d0a-b4f9-d245399ae983",
+      "marketType": "breaking",
+      "startTime": 1791459601,
+      "endTime": 1792064411,
+      "resolutionTime": 1792068011,
+      "eventInProgress": true
+    },
+    "quote": {
+      "httpStatus": 400,
+      "response": {
+        "code": "INVALID_MARKET_PARAMS",
+        "message": "unexpected create quote failure — check server logs"
+      }
+    }
+  },
+  "exactPlaygroundControl": {
+    "checkedAt": "2026-10-08T11:42:57.223Z",
+    "payload": {
+      "wallet": "1YqxrFExzvJ6r1HqeaoRyZ8i4iUaZX5q8eZ3pFqaBmR",
+      "question": "Will ETH be above 5000 in seven days? StreetFun diagnostic 58eda752-c962-40d3-9192-53407a0ebdcc",
+      "title": "Will ETH be above 5000 in seven days? StreetFun diagnostic 58eda752-c962-40d3-9192-53407a0ebdcc",
+      "description": "Unsigned API diagnostic. No market will be registered or transaction signed.",
+      "resolutionRule": "CoinGecko daily close UTC >= 5000",
+      "sourcesOfTruth": [
+        "https://www.coingecko.com"
+      ],
+      "category": "crypto",
+      "startTime": 1791459717,
+      "endTime": 1792064577,
+      "resolutionTime": 1792068177,
+      "marketType": "breaking",
+      "eventInProgress": true,
+      "imageUrl": "https://raw.githubusercontent.com/Kaito-HQ/panta-api-playground/main/public/sample-market-1024.png",
+      "region": "Global"
+    },
+    "hosts": [
+      {
+        "host": "https://staging-api.panta.market/api/v1",
+        "httpStatus": 400,
+        "quote": {
+          "code": "DUPLICATE_MARKET",
+          "message": "market creation already exists for this wallet and question"
+        }
+      },
+      {
+        "host": "https://live-api.panta.market/api/v1",
+        "httpStatus": 400,
+        "quote": {
+          "code": "INVALID_MARKET_PARAMS",
+          "message": "unexpected create quote failure — check server logs"
+        }
+      }
+    ]
+  },
+  "optionalFieldIsolation": {
+    "checkedAt": "2026-10-08T11:44:54.322Z",
+    "host": "https://live-api.panta.market/api/v1",
+    "rows": [
+      {
+        "name": "minimal",
+        "payload": {
+          "wallet": "1YqxrFExzvJ6r1HqeaoRyZ8i4iUaZX5q8eZ3pFqaBmR",
+          "resolutionRule": "CoinGecko daily close UTC greater than or equal to 5000.",
+          "sourcesOfTruth": [
+            "https://www.coingecko.com"
+          ],
+          "category": "crypto",
+          "imageUrl": "https://raw.githubusercontent.com/Kaito-HQ/panta-api-playground/main/public/sample-market-1024.png",
+          "question": "Panta API isolation e5011428-ee58-441b-bcb6-6fa483894c05 breaking: ETH above 5000?",
+          "marketType": "breaking",
+          "startTime": 1791459818,
+          "endTime": 1792064678,
+          "resolutionTime": 1792068278,
+          "eventInProgress": true
+        },
+        "httpStatus": 200,
+        "response": {
+          "createId": "cr_41faa8fa7f794b39a7e2cd299e9bcbd3",
+          "userId": "usr_8SfJuhQ9A_l0zu2YnSctrQ",
+          "apiKeyId": "key_s38mrZnnuccMWoZarF_lRw",
+          "expectedEventPda": "4DYTVLFJdKXcuSK8YR51WuFgUcSfDBrYJLK7UBmk23Es",
+          "paymentUsdc": "20000000",
+          "liquidityInjectionUsdc": "5000000",
+          "platformRevenueUsdc": "15000000",
+          "marketType": "breaking",
+          "expiresAt": "2026-10-08T11:50:32.253362Z",
+          "blockhashExpiryHintSec": 60
+        }
+      },
+      {
+        "name": "title",
+        "payload": {
+          "wallet": "1YqxrFExzvJ6r1HqeaoRyZ8i4iUaZX5q8eZ3pFqaBmR",
+          "resolutionRule": "CoinGecko daily close UTC greater than or equal to 5000.",
+          "sourcesOfTruth": [
+            "https://www.coingecko.com"
+          ],
+          "category": "crypto",
+          "imageUrl": "https://raw.githubusercontent.com/Kaito-HQ/panta-api-playground/main/public/sample-market-1024.png",
+          "question": "Panta API isolation bb47baa9-04a9-4b8c-a697-291d814ac678 breaking: ETH above 5000?",
+          "marketType": "breaking",
+          "startTime": 1791459818,
+          "endTime": 1792064678,
+          "resolutionTime": 1792068278,
+          "eventInProgress": true,
+          "title": "ETH above 5000?"
+        },
+        "httpStatus": 200,
+        "response": {
+          "createId": "cr_44fa1f9882f8448da9914ef09bcacfaf",
+          "userId": "usr_8SfJuhQ9A_l0zu2YnSctrQ",
+          "apiKeyId": "key_s38mrZnnuccMWoZarF_lRw",
+          "expectedEventPda": "4NcaLG9nPmj6GaZba1ad5CPoFLNAVN8aTYzDpoCiMPX8",
+          "paymentUsdc": "20000000",
+          "liquidityInjectionUsdc": "5000000",
+          "platformRevenueUsdc": "15000000",
+          "marketType": "breaking",
+          "expiresAt": "2026-10-08T11:50:37.309161Z",
+          "blockhashExpiryHintSec": 60
+        }
+      },
+      {
+        "name": "description",
+        "payload": {
+          "wallet": "1YqxrFExzvJ6r1HqeaoRyZ8i4iUaZX5q8eZ3pFqaBmR",
+          "resolutionRule": "CoinGecko daily close UTC greater than or equal to 5000.",
+          "sourcesOfTruth": [
+            "https://www.coingecko.com"
+          ],
+          "category": "crypto",
+          "imageUrl": "https://raw.githubusercontent.com/Kaito-HQ/panta-api-playground/main/public/sample-market-1024.png",
+          "question": "Panta API isolation d57ffb78-5b12-49ea-880b-a3bffbaefbce breaking: ETH above 5000?",
+          "marketType": "breaking",
+          "startTime": 1791459818,
+          "endTime": 1792064678,
+          "resolutionTime": 1792068278,
+          "eventInProgress": true,
+          "description": "Unsigned API diagnostic."
+        },
+        "httpStatus": 200,
+        "response": {
+          "createId": "cr_94c88714dbdc41a0857e077f4e0ca1be",
+          "userId": "usr_8SfJuhQ9A_l0zu2YnSctrQ",
+          "apiKeyId": "key_s38mrZnnuccMWoZarF_lRw",
+          "expectedEventPda": "9DKWQ2GkdC9VSfASfmT1RCE53mpTzcBzHaedntvKZeg8",
+          "paymentUsdc": "20000000",
+          "liquidityInjectionUsdc": "5000000",
+          "platformRevenueUsdc": "15000000",
+          "marketType": "breaking",
+          "expiresAt": "2026-10-08T11:50:40.144518Z",
+          "blockhashExpiryHintSec": 60
+        }
+      },
+      {
+        "name": "region",
+        "payload": {
+          "wallet": "1YqxrFExzvJ6r1HqeaoRyZ8i4iUaZX5q8eZ3pFqaBmR",
+          "resolutionRule": "CoinGecko daily close UTC greater than or equal to 5000.",
+          "sourcesOfTruth": [
+            "https://www.coingecko.com"
+          ],
+          "category": "crypto",
+          "imageUrl": "https://raw.githubusercontent.com/Kaito-HQ/panta-api-playground/main/public/sample-market-1024.png",
+          "question": "Panta API isolation 6570006d-3f38-4b98-aa2c-ce12e470ee4b breaking: ETH above 5000?",
+          "marketType": "breaking",
+          "startTime": 1791459818,
+          "endTime": 1792064678,
+          "resolutionTime": 1792068278,
+          "eventInProgress": true,
+          "region": "Global"
+        },
+        "httpStatus": 200,
+        "response": {
+          "createId": "cr_dd3b8f95696e435d951f9dc486ebab82",
+          "userId": "usr_8SfJuhQ9A_l0zu2YnSctrQ",
+          "apiKeyId": "key_s38mrZnnuccMWoZarF_lRw",
+          "expectedEventPda": "Aw9LwN6sqYkrLFwrqF2MZ98ofmcJBV47c6EdDfEEhsj7",
+          "paymentUsdc": "20000000",
+          "liquidityInjectionUsdc": "5000000",
+          "platformRevenueUsdc": "15000000",
+          "marketType": "breaking",
+          "expiresAt": "2026-10-08T11:50:42.605254Z",
+          "blockhashExpiryHintSec": 60
+        }
+      },
+      {
+        "name": "all_optional",
+        "payload": {
+          "wallet": "1YqxrFExzvJ6r1HqeaoRyZ8i4iUaZX5q8eZ3pFqaBmR",
+          "resolutionRule": "CoinGecko daily close UTC greater than or equal to 5000.",
+          "sourcesOfTruth": [
+            "https://www.coingecko.com"
+          ],
+          "category": "crypto",
+          "imageUrl": "https://raw.githubusercontent.com/Kaito-HQ/panta-api-playground/main/public/sample-market-1024.png",
+          "question": "Panta API isolation ca0f4d48-458f-444b-8b17-dcaccc698162 breaking: ETH above 5000?",
+          "marketType": "breaking",
+          "startTime": 1791459818,
+          "endTime": 1792064678,
+          "resolutionTime": 1792068278,
+          "eventInProgress": true,
+          "title": "ETH above 5000?",
+          "description": "Unsigned API diagnostic.",
+          "region": "Global"
+        },
+        "httpStatus": 200,
+        "response": {
+          "createId": "cr_8f579200f6d54937886781a6a32eba9c",
+          "userId": "usr_8SfJuhQ9A_l0zu2YnSctrQ",
+          "apiKeyId": "key_s38mrZnnuccMWoZarF_lRw",
+          "expectedEventPda": "6R9KQs9yqX1ENjeyLrZ3j5i4DQ8kcyPmWzLcCYTdaAQw",
+          "paymentUsdc": "20000000",
+          "liquidityInjectionUsdc": "5000000",
+          "platformRevenueUsdc": "15000000",
+          "marketType": "breaking",
+          "expiresAt": "2026-10-08T11:50:45.416700Z",
+          "blockhashExpiryHintSec": 60
+        }
+      }
+    ]
+  },
+  "questionAndLengthIsolation": {
+    "checkedAt": "2026-10-08T11:46:47.525Z",
+    "host": "https://live-api.panta.market/api/v1",
+    "rows": [
+      {
+        "name": "no_question_mark",
+        "payload": {
+          "wallet": "1YqxrFExzvJ6r1HqeaoRyZ8i4iUaZX5q8eZ3pFqaBmR",
+          "resolutionRule": "CoinGecko daily close UTC greater than or equal to 5000.",
+          "sourcesOfTruth": [
+            "https://www.coingecko.com"
+          ],
+          "category": "crypto",
+          "imageUrl": "https://raw.githubusercontent.com/Kaito-HQ/panta-api-playground/main/public/sample-market-1024.png",
+          "question": "Panta API isolation 994cba09-75b9-406a-8cb0-4ba45c16d854 breaking: ETH above 5000",
+          "marketType": "breaking",
+          "startTime": 1791459938,
+          "endTime": 1792064798,
+          "resolutionTime": 1792068398,
+          "eventInProgress": true
+        },
+        "httpStatus": 200,
+        "response": {
+          "createId": "cr_c4470f638c9f4e248e72a0c82a36059a",
+          "userId": "usr_8SfJuhQ9A_l0zu2YnSctrQ",
+          "apiKeyId": "key_s38mrZnnuccMWoZarF_lRw",
+          "expectedEventPda": "CDQ3eP4dkBrGVps5NhZo2133ZApsQf8RrfcAJ6piNsgY",
+          "paymentUsdc": "20000000",
+          "liquidityInjectionUsdc": "5000000",
+          "platformRevenueUsdc": "15000000",
+          "marketType": "breaking",
+          "expiresAt": "2026-10-08T11:52:32.856651Z",
+          "blockhashExpiryHintSec": 60
+        }
+      },
+      {
+        "name": "natural_question",
+        "payload": {
+          "wallet": "1YqxrFExzvJ6r1HqeaoRyZ8i4iUaZX5q8eZ3pFqaBmR",
+          "resolutionRule": "CoinGecko daily close UTC greater than or equal to 5000.",
+          "sourcesOfTruth": [
+            "https://www.coingecko.com"
+          ],
+          "category": "crypto",
+          "imageUrl": "https://raw.githubusercontent.com/Kaito-HQ/panta-api-playground/main/public/sample-market-1024.png",
+          "question": "Will ETH be above 5000? Diagnostic 81050be2-f2b5-4d77-9ad5-e94e18aecb64?",
+          "marketType": "breaking",
+          "startTime": 1791459938,
+          "endTime": 1792064798,
+          "resolutionTime": 1792068398,
+          "eventInProgress": true
+        },
+        "httpStatus": 200,
+        "response": {
+          "createId": "cr_769d97dd4fa6423fbbee683fe68e6fb5",
+          "userId": "usr_8SfJuhQ9A_l0zu2YnSctrQ",
+          "apiKeyId": "key_s38mrZnnuccMWoZarF_lRw",
+          "expectedEventPda": "FhyrV2wkfF2ABws67qk6FWweKJ4N4vchPUnKggJPhRcL",
+          "paymentUsdc": "20000000",
+          "liquidityInjectionUsdc": "5000000",
+          "platformRevenueUsdc": "15000000",
+          "marketType": "breaking",
+          "expiresAt": "2026-10-08T11:52:34.245562Z",
+          "blockhashExpiryHintSec": 60
+        }
+      },
+      {
+        "name": "long_title",
+        "payload": {
+          "wallet": "1YqxrFExzvJ6r1HqeaoRyZ8i4iUaZX5q8eZ3pFqaBmR",
+          "resolutionRule": "CoinGecko daily close UTC greater than or equal to 5000.",
+          "sourcesOfTruth": [
+            "https://www.coingecko.com"
+          ],
+          "category": "crypto",
+          "imageUrl": "https://raw.githubusercontent.com/Kaito-HQ/panta-api-playground/main/public/sample-market-1024.png",
+          "question": "Panta API isolation 1973aed3-9313-45f9-8648-e5ed649ec529 breaking: ETH above 5000?",
+          "marketType": "breaking",
+          "startTime": 1791459938,
+          "endTime": 1792064798,
+          "resolutionTime": 1792068398,
+          "eventInProgress": true,
+          "title": "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT"
+        },
+        "httpStatus": 200,
+        "response": {
+          "createId": "cr_3f672d832a90462287feb49048791916",
+          "userId": "usr_8SfJuhQ9A_l0zu2YnSctrQ",
+          "apiKeyId": "key_s38mrZnnuccMWoZarF_lRw",
+          "expectedEventPda": "C4DnZg4B5HXHMuZXjgkKgjCqdumQHDC8EWLTG1AmTpAQ",
+          "paymentUsdc": "20000000",
+          "liquidityInjectionUsdc": "5000000",
+          "platformRevenueUsdc": "15000000",
+          "marketType": "breaking",
+          "expiresAt": "2026-10-08T11:52:36.106090Z",
+          "blockhashExpiryHintSec": 60
+        }
+      },
+      {
+        "name": "long_description",
+        "payload": {
+          "wallet": "1YqxrFExzvJ6r1HqeaoRyZ8i4iUaZX5q8eZ3pFqaBmR",
+          "resolutionRule": "CoinGecko daily close UTC greater than or equal to 5000.",
+          "sourcesOfTruth": [
+            "https://www.coingecko.com"
+          ],
+          "category": "crypto",
+          "imageUrl": "https://raw.githubusercontent.com/Kaito-HQ/panta-api-playground/main/public/sample-market-1024.png",
+          "question": "Panta API isolation 52cab3e8-3d9f-4c50-a616-aa20b3ba0565 breaking: ETH above 5000?",
+          "marketType": "breaking",
+          "startTime": 1791459938,
+          "endTime": 1792064798,
+          "resolutionTime": 1792068398,
+          "eventInProgress": true,
+          "description": "DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD"
+        },
+        "httpStatus": 200,
+        "response": {
+          "createId": "cr_399706fe8def43ee89104f8ca217b054",
+          "userId": "usr_8SfJuhQ9A_l0zu2YnSctrQ",
+          "apiKeyId": "key_s38mrZnnuccMWoZarF_lRw",
+          "expectedEventPda": "o6C614TyqdrDcpPC4S3s9oS9Y11UHYyY6b6vQqS2LZU",
+          "paymentUsdc": "20000000",
+          "liquidityInjectionUsdc": "5000000",
+          "platformRevenueUsdc": "15000000",
+          "marketType": "breaking",
+          "expiresAt": "2026-10-08T11:52:38.443384Z",
+          "blockhashExpiryHintSec": 60
+        }
+      },
+      {
+        "name": "canonical_terms",
+        "payload": {
+          "wallet": "1YqxrFExzvJ6r1HqeaoRyZ8i4iUaZX5q8eZ3pFqaBmR",
+          "resolutionRule": "YES iff confirmed StreetFun collateral settlement sets isGraduated=true before the deadline. Curve completion or Meteora migration alone excluded. NO requires full chain review at deadline. Panta oracle settles.",
+          "sourcesOfTruth": [
+            "https://explorer.solana.com/address/FNY1D4HZtKaAj2GNwpLPxubh2WFxiefL86ogxQVgjVd5?cluster=devnet"
+          ],
+          "category": "crypto",
+          "imageUrl": "https://raw.githubusercontent.com/Kaito-HQ/panta-api-playground/main/public/sample-market-1024.png",
+          "question": "StreetFun e3d22f06-418f-42eb-8426-8e7c11dcb827: will DTyL8pSGmLBRMyHP3DEsqzPByZ4CadEKkCvKaZ2x3bzc graduate on devnet?",
+          "marketType": "breaking",
+          "startTime": 1791459938,
+          "endTime": 1794051998,
+          "resolutionTime": 1794051998,
+          "eventInProgress": true,
+          "title": "Will $PANTEST graduate into T-OpenAI backing by 2026-11-07?",
+          "description": "System market. Resolves from confirmed StreetFun collateral settlement before 2026-11-07T10:53:42.000Z. Panta verifies the outcome before winnings become claimable."
+        },
+        "httpStatus": 400,
+        "response": {
+          "code": "INVALID_MARKET_PARAMS",
+          "message": "unexpected create quote failure — check server logs"
+        }
+      }
+    ]
+  },
+  "immediateNetworkControl": {
+    "checkedAt": "2026-10-08T11:47:08.014Z",
+    "httpStatus": 400,
+    "createId": "cr_399706fe8def43ee89104f8ca217b054",
+    "quoteCase": "long_description",
+    "code": "INVALID_MARKET_PARAMS",
+    "message": "unexpected create build failure — check server logs"
+  },
+  "canonicalFieldIsolation": {
+    "checkedAt": "2026-10-08T11:49:06.976Z",
+    "host": "https://live-api.panta.market/api/v1",
+    "rows": [
+      {
+        "name": "30_day_window",
+        "payload": {
+          "wallet": "1YqxrFExzvJ6r1HqeaoRyZ8i4iUaZX5q8eZ3pFqaBmR",
+          "resolutionRule": "CoinGecko daily close UTC greater than or equal to 5000.",
+          "sourcesOfTruth": [
+            "https://www.coingecko.com"
+          ],
+          "category": "crypto",
+          "imageUrl": "https://raw.githubusercontent.com/Kaito-HQ/panta-api-playground/main/public/sample-market-1024.png",
+          "question": "Panta API isolation 9fcf1451-43f9-4ef5-8fad-9c76d34f7f7f breaking: ETH above 5000?",
+          "marketType": "breaking",
+          "startTime": 1791460083,
+          "endTime": 1794052143,
+          "resolutionTime": 1794052143,
+          "eventInProgress": true
+        },
+        "httpStatus": 200,
+        "response": {
+          "createId": "cr_b19e9e4625b140bba0a51170b2ce76ef",
+          "userId": "usr_8SfJuhQ9A_l0zu2YnSctrQ",
+          "apiKeyId": "key_s38mrZnnuccMWoZarF_lRw",
+          "expectedEventPda": "7X1csFu9b8hypZko6nZedpereSBmPzJsPbpdkPZ5Y1d9",
+          "paymentUsdc": "20000000",
+          "liquidityInjectionUsdc": "5000000",
+          "platformRevenueUsdc": "15000000",
+          "marketType": "breaking",
+          "expiresAt": "2026-10-08T11:54:23.775902Z",
+          "blockhashExpiryHintSec": 60
+        }
+      },
+      {
+        "name": "canonical_rule",
+        "payload": {
+          "wallet": "1YqxrFExzvJ6r1HqeaoRyZ8i4iUaZX5q8eZ3pFqaBmR",
+          "resolutionRule": "YES iff confirmed StreetFun collateral settlement sets isGraduated=true before the deadline. Curve completion or Meteora migration alone excluded. NO requires full chain review at deadline. Panta oracle settles.",
+          "sourcesOfTruth": [
+            "https://www.coingecko.com"
+          ],
+          "category": "crypto",
+          "imageUrl": "https://raw.githubusercontent.com/Kaito-HQ/panta-api-playground/main/public/sample-market-1024.png",
+          "question": "Panta API isolation 69897c48-1b3b-47a2-b14b-a9c7d84b0c02 breaking: ETH above 5000?",
+          "marketType": "breaking",
+          "startTime": 1791460083,
+          "endTime": 1792064943,
+          "resolutionTime": 1792068543,
+          "eventInProgress": true
+        },
+        "httpStatus": 200,
+        "response": {
+          "createId": "cr_6d68bc06b088455890b644a1819e17cf",
+          "userId": "usr_8SfJuhQ9A_l0zu2YnSctrQ",
+          "apiKeyId": "key_s38mrZnnuccMWoZarF_lRw",
+          "expectedEventPda": "3KSS2q3AWdVotsp4xKpQZM7fgJ3C5CMtz59vAKoLJgHX",
+          "paymentUsdc": "20000000",
+          "liquidityInjectionUsdc": "5000000",
+          "platformRevenueUsdc": "15000000",
+          "marketType": "breaking",
+          "expiresAt": "2026-10-08T11:54:25.239153Z",
+          "blockhashExpiryHintSec": 60
+        }
+      },
+      {
+        "name": "explorer_source",
+        "payload": {
+          "wallet": "1YqxrFExzvJ6r1HqeaoRyZ8i4iUaZX5q8eZ3pFqaBmR",
+          "resolutionRule": "CoinGecko daily close UTC greater than or equal to 5000.",
+          "sourcesOfTruth": [
+            "https://explorer.solana.com/address/FNY1D4HZtKaAj2GNwpLPxubh2WFxiefL86ogxQVgjVd5?cluster=devnet"
+          ],
+          "category": "crypto",
+          "imageUrl": "https://raw.githubusercontent.com/Kaito-HQ/panta-api-playground/main/public/sample-market-1024.png",
+          "question": "Panta API isolation 7812fecf-52c4-4f41-abbe-404ee98dd725 breaking: ETH above 5000?",
+          "marketType": "breaking",
+          "startTime": 1791460083,
+          "endTime": 1792064943,
+          "resolutionTime": 1792068543,
+          "eventInProgress": true
+        },
+        "httpStatus": 400,
+        "response": {
+          "code": "INVALID_MARKET_PARAMS",
+          "message": "unexpected create quote failure — check server logs"
+        }
+      },
+      {
+        "name": "canonical_catalog_text",
+        "payload": {
+          "wallet": "1YqxrFExzvJ6r1HqeaoRyZ8i4iUaZX5q8eZ3pFqaBmR",
+          "resolutionRule": "CoinGecko daily close UTC greater than or equal to 5000.",
+          "sourcesOfTruth": [
+            "https://www.coingecko.com"
+          ],
+          "category": "crypto",
+          "imageUrl": "https://raw.githubusercontent.com/Kaito-HQ/panta-api-playground/main/public/sample-market-1024.png",
+          "question": "Panta API isolation 2de9c146-8f40-4ac0-8500-60c06b894c6e breaking: ETH above 5000?",
+          "marketType": "breaking",
+          "startTime": 1791460083,
+          "endTime": 1792064943,
+          "resolutionTime": 1792068543,
+          "eventInProgress": true,
+          "title": "Will $PANTEST graduate into T-OpenAI backing by 2026-11-07?",
+          "description": "System market. Resolves from confirmed StreetFun collateral settlement before 2026-11-07T10:53:42.000Z. Panta verifies the outcome before winnings become claimable."
+        },
+        "httpStatus": 400,
+        "response": {
+          "code": "INVALID_MARKET_PARAMS",
+          "message": "unexpected create quote failure — check server logs"
+        }
+      },
+      {
+        "name": "canonical_question",
+        "payload": {
+          "wallet": "1YqxrFExzvJ6r1HqeaoRyZ8i4iUaZX5q8eZ3pFqaBmR",
+          "resolutionRule": "CoinGecko daily close UTC greater than or equal to 5000.",
+          "sourcesOfTruth": [
+            "https://www.coingecko.com"
+          ],
+          "category": "crypto",
+          "imageUrl": "https://raw.githubusercontent.com/Kaito-HQ/panta-api-playground/main/public/sample-market-1024.png",
+          "question": "Will DTyL8pSGmLBRMyHP3DEsqzPByZ4CadEKkCvKaZ2x3bzc graduate on devnet before 1794052143?",
+          "marketType": "breaking",
+          "startTime": 1791460083,
+          "endTime": 1792064943,
+          "resolutionTime": 1792068543,
+          "eventInProgress": true
+        },
+        "httpStatus": 400,
+        "response": {
+          "code": "INVALID_MARKET_PARAMS",
+          "message": "unexpected create quote failure — check server logs"
+        }
+      }
+    ]
+  },
+  "interleavedIsolation": {
+    "checkedAt": "2026-10-08T11:51:18.491Z",
+    "host": "https://live-api.panta.market/api/v1",
+    "rows": [
+      {
+        "name": "control_before",
+        "payload": {
+          "wallet": "1YqxrFExzvJ6r1HqeaoRyZ8i4iUaZX5q8eZ3pFqaBmR",
+          "resolutionRule": "CoinGecko daily close UTC greater than or equal to 5000.",
+          "sourcesOfTruth": [
+            "https://www.coingecko.com"
+          ],
+          "category": "crypto",
+          "imageUrl": "https://raw.githubusercontent.com/Kaito-HQ/panta-api-playground/main/public/sample-market-1024.png",
+          "question": "Panta API isolation 61301da4-bc7e-4083-86b7-fc61a049a30a breaking: ETH above 5000?",
+          "marketType": "breaking",
+          "startTime": 1791460216,
+          "endTime": 1792065076,
+          "resolutionTime": 1792068676,
+          "eventInProgress": true
+        },
+        "httpStatus": 200,
+        "response": {
+          "createId": "cr_e0e7cab918cb4276b1ea244d4a94a4b9",
+          "userId": "usr_8SfJuhQ9A_l0zu2YnSctrQ",
+          "apiKeyId": "key_s38mrZnnuccMWoZarF_lRw",
+          "expectedEventPda": "37JhgLqJnQjtVZWFBh8x7P9pXVD5ZZmBL7bZ4M5gvodq",
+          "paymentUsdc": "20000000",
+          "liquidityInjectionUsdc": "5000000",
+          "platformRevenueUsdc": "15000000",
+          "marketType": "breaking",
+          "expiresAt": "2026-10-08T11:57:08.900654Z",
+          "blockhashExpiryHintSec": 60
+        }
+      },
+      {
+        "name": "explorer_source",
+        "payload": {
+          "wallet": "1YqxrFExzvJ6r1HqeaoRyZ8i4iUaZX5q8eZ3pFqaBmR",
+          "resolutionRule": "CoinGecko daily close UTC greater than or equal to 5000.",
+          "sourcesOfTruth": [
+            "https://explorer.solana.com/address/FNY1D4HZtKaAj2GNwpLPxubh2WFxiefL86ogxQVgjVd5?cluster=devnet"
+          ],
+          "category": "crypto",
+          "imageUrl": "https://raw.githubusercontent.com/Kaito-HQ/panta-api-playground/main/public/sample-market-1024.png",
+          "question": "Panta API isolation dff5a757-5cd5-4f71-9e2d-7307f8aa4652 breaking: ETH above 5000?",
+          "marketType": "breaking",
+          "startTime": 1791460216,
+          "endTime": 1792065076,
+          "resolutionTime": 1792068676,
+          "eventInProgress": true
+        },
+        "httpStatus": 400,
+        "response": {
+          "code": "INVALID_MARKET_PARAMS",
+          "message": "unexpected create quote failure — check server logs"
+        }
+      },
+      {
+        "name": "control_between",
+        "payload": {
+          "wallet": "1YqxrFExzvJ6r1HqeaoRyZ8i4iUaZX5q8eZ3pFqaBmR",
+          "resolutionRule": "CoinGecko daily close UTC greater than or equal to 5000.",
+          "sourcesOfTruth": [
+            "https://www.coingecko.com"
+          ],
+          "category": "crypto",
+          "imageUrl": "https://raw.githubusercontent.com/Kaito-HQ/panta-api-playground/main/public/sample-market-1024.png",
+          "question": "Panta API isolation b26a9247-86a0-4f00-898f-6f8c4fd47ac8 breaking: ETH above 5000?",
+          "marketType": "breaking",
+          "startTime": 1791460216,
+          "endTime": 1792065076,
+          "resolutionTime": 1792068676,
+          "eventInProgress": true
+        },
+        "httpStatus": 400,
+        "response": {
+          "code": "INVALID_MARKET_PARAMS",
+          "message": "unexpected create quote failure — check server logs"
+        }
+      },
+      {
+        "name": "canonical_catalog_text",
+        "payload": {
+          "wallet": "1YqxrFExzvJ6r1HqeaoRyZ8i4iUaZX5q8eZ3pFqaBmR",
+          "resolutionRule": "CoinGecko daily close UTC greater than or equal to 5000.",
+          "sourcesOfTruth": [
+            "https://www.coingecko.com"
+          ],
+          "category": "crypto",
+          "imageUrl": "https://raw.githubusercontent.com/Kaito-HQ/panta-api-playground/main/public/sample-market-1024.png",
+          "question": "Panta API isolation 5ad2d694-3e0f-4158-9b97-fef4974e8eea breaking: ETH above 5000?",
+          "marketType": "breaking",
+          "startTime": 1791460216,
+          "endTime": 1792065076,
+          "resolutionTime": 1792068676,
+          "eventInProgress": true,
+          "title": "Will $PANTEST graduate into T-OpenAI backing by 2026-11-07?",
+          "description": "System market. Resolves from confirmed StreetFun collateral settlement before 2026-11-07T10:53:42.000Z. Panta verifies the outcome before winnings become claimable."
+        },
+        "httpStatus": 400,
+        "response": {
+          "code": "INVALID_MARKET_PARAMS",
+          "message": "unexpected create quote failure — check server logs"
+        }
+      },
+      {
+        "name": "control_after",
+        "payload": {
+          "wallet": "1YqxrFExzvJ6r1HqeaoRyZ8i4iUaZX5q8eZ3pFqaBmR",
+          "resolutionRule": "CoinGecko daily close UTC greater than or equal to 5000.",
+          "sourcesOfTruth": [
+            "https://www.coingecko.com"
+          ],
+          "category": "crypto",
+          "imageUrl": "https://raw.githubusercontent.com/Kaito-HQ/panta-api-playground/main/public/sample-market-1024.png",
+          "question": "Panta API isolation d2cbd775-6b4f-42b5-aff7-2c8df296ffcb breaking: ETH above 5000?",
+          "marketType": "breaking",
+          "startTime": 1791460216,
+          "endTime": 1792065076,
+          "resolutionTime": 1792068676,
+          "eventInProgress": true
+        },
+        "httpStatus": 400,
+        "response": {
+          "code": "INVALID_MARKET_PARAMS",
+          "message": "unexpected create quote failure — check server logs"
+        }
+      }
+    ]
+  }
+}

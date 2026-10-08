@@ -1,0 +1,359 @@
+{
+  "run": "09c67947-be11-4de2-967b-8ff90f61899b",
+  "checkedAt": "2026-10-08T11:53:33.146Z",
+  "signed": false,
+  "broadcast": false,
+  "requests": [
+    {
+      "checkedAt": "2026-10-08T11:53:33.831Z",
+      "host": "https://staging-api.panta.market/api/v1",
+      "route": "/whoami/",
+      "httpStatus": 200,
+      "requestId": "3bb07377-270e-4d95-bcf0-e3c879c0364b",
+      "response": {
+        "status": "active",
+        "canCreateMarkets": true,
+        "accountFingerprint": "a67d93890370c1ffec89f246f5d8b559e7cb7b6310d605610795f7920a49eef2"
+      }
+    },
+    {
+      "checkedAt": "2026-10-08T11:53:33.947Z",
+      "host": "https://live-api.panta.market/api/v1",
+      "route": "/whoami/",
+      "httpStatus": 200,
+      "requestId": "115aa798-e30c-4f6e-99b3-a057ad563b40",
+      "response": {
+        "status": "active",
+        "canCreateMarkets": true,
+        "accountFingerprint": "a67d93890370c1ffec89f246f5d8b559e7cb7b6310d605610795f7920a49eef2"
+      }
+    },
+    {
+      "checkedAt": "2026-10-08T11:53:34.066Z",
+      "host": "https://staging-api.panta.market/api/v1",
+      "route": "/markets/create/quote/",
+      "payload": {
+        "wallet": "1YqxrFExzvJ6r1HqeaoRyZ8i4iUaZX5q8eZ3pFqaBmR"
+      },
+      "httpStatus": 400,
+      "requestId": "76f33686-bb45-4c0f-9b79-530fab551783",
+      "response": {
+        "code": "INVALID_MARKET_PARAMS",
+        "message": "question: This field is required.; resolutionRule: This field is required.; sourcesOfTruth: This field is required.; category: This field is required.; startTime: This field is required.; endTime: This field is required.; resolutionTime: This field is required.; imageUrl: This field is required.",
+        "fields": {
+          "question": [
+            "This field is required."
+          ],
+          "resolutionRule": [
+            "This field is required."
+          ],
+          "sourcesOfTruth": [
+            "This field is required."
+          ],
+          "category": [
+            "This field is required."
+          ],
+          "startTime": [
+            "This field is required."
+          ],
+          "endTime": [
+            "This field is required."
+          ],
+          "resolutionTime": [
+            "This field is required."
+          ],
+          "imageUrl": [
+            "This field is required."
+          ]
+        }
+      }
+    },
+    {
+      "checkedAt": "2026-10-08T11:53:35.788Z",
+      "host": "https://staging-api.panta.market/api/v1",
+      "route": "/markets/create/quote/",
+      "payload": {
+        "wallet": "1YqxrFExzvJ6r1HqeaoRyZ8i4iUaZX5q8eZ3pFqaBmR",
+        "question": "Panta API isolation 09c67947-be11-4de2-967b-8ff90f61899b standard: ETH above 5000?",
+        "resolutionRule": "CoinGecko daily close UTC >= 5000",
+        "sourcesOfTruth": [
+          "https://www.coingecko.com"
+        ],
+        "category": "crypto",
+        "imageUrl": "https://raw.githubusercontent.com/Kaito-HQ/panta-api-playground/main/public/sample-market-1024.png",
+        "marketType": "standard",
+        "startTime": 1791467614,
+        "endTime": 1792065214,
+        "resolutionTime": 1792068814
+      },
+      "httpStatus": 400,
+      "requestId": "a38ee0ae-0ca8-4619-9b20-90eeda87f089",
+      "response": {
+        "code": "DUPLICATE_MARKET",
+        "message": "market creation already exists for this wallet and question"
+      }
+    },
+    {
+      "checkedAt": "2026-10-08T11:53:37.003Z",
+      "host": "https://live-api.panta.market/api/v1",
+      "route": "/markets/create/quote/",
+      "payload": {
+        "wallet": "1YqxrFExzvJ6r1HqeaoRyZ8i4iUaZX5q8eZ3pFqaBmR",
+        "question": "Panta API isolation 09c67947-be11-4de2-967b-8ff90f61899b standard: ETH above 5000?",
+        "resolutionRule": "CoinGecko daily close UTC >= 5000",
+        "sourcesOfTruth": [
+          "https://www.coingecko.com"
+        ],
+        "category": "crypto",
+        "imageUrl": "https://raw.githubusercontent.com/Kaito-HQ/panta-api-playground/main/public/sample-market-1024.png",
+        "marketType": "standard",
+        "startTime": 1791467614,
+        "endTime": 1792065214,
+        "resolutionTime": 1792068814
+      },
+      "httpStatus": 200,
+      "requestId": "d9e2f070-af33-4468-a78b-9db8df89abf0",
+      "response": {
+        "createId": "cr_75d73ffcf13e440f90becece9c1860c2",
+        "userId": "usr_8SfJuhQ9A_l0zu2YnSctrQ",
+        "apiKeyId": "key_s38mrZnnuccMWoZarF_lRw",
+        "expectedEventPda": "2QCCc8jk4aZo8ej5yrxLaFJiMXoCnJGZfwwDFKbEek5Q",
+        "paymentUsdc": "50000000",
+        "liquidityInjectionUsdc": "10000000",
+        "platformRevenueUsdc": "40000000",
+        "marketType": "standard",
+        "expiresAt": "2026-10-08T11:58:55.726768Z",
+        "blockhashExpiryHintSec": 60
+      }
+    },
+    {
+      "checkedAt": "2026-10-08T11:53:37.128Z",
+      "host": "https://live-api.panta.market/api/v1",
+      "route": "/markets/create/build/",
+      "payload": {
+        "createId": "cr_75d73ffcf13e440f90becece9c1860c2",
+        "wallet": "1YqxrFExzvJ6r1HqeaoRyZ8i4iUaZX5q8eZ3pFqaBmR"
+      },
+      "httpStatus": 200,
+      "requestId": "1af5dbee-4fb8-4d80-9783-7a738906907d",
+      "response": {
+        "createId": "cr_75d73ffcf13e440f90becece9c1860c2",
+        "expectedEventPda": "2QCCc8jk4aZo8ej5yrxLaFJiMXoCnJGZfwwDFKbEek5Q",
+        "transaction": "AQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAQAIEQAkAZ9kQQJAZoJYZM50M5VlZkAOx4QgaisOw3MNLccgFMy1o5hTThjp8JYN+AVpw3DcOZo02djec3I3fEFkOmMpfYDW/4PYsQ8C3s3gDSdegJW2cSSFdjwMxkNQTH3niIFaaoL3NRFlwHqMm11ZKJjPYMwEqNx/h3eLIl0Vy8KFmppK8reY9lnw1kwaJR8BsU0/g0CQ3Lu0fOFmW+u5cNOxw3UzadPfT4im5D6lUOmgxJkK3kss08SZY5Tz3U9+5LZLs2rFFA3XdTJpVVF3BIlqKoM7NNO20tZk4J0Fky3czxGWnTu7kqsQYTxZfkiXsr67bJVAQg2xzCERnrrtVeTmsQVEFtyTqV4EuUelE8y4cOQBhPVFDIazHEtVC/P/1AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAwZGb+UhFzL/7K26csOb57yM5bvF9xJrLEObOkAAAAAG3fbh12Whk9nL4UbO63msHLSF7V9bN5E6jPWFfv8AqSgj5fK672ebG0qKvqytmbJyLaxSCJR4b0brJDOkbWENVF7KIBZj7LY/0UC7ZoTJpoZL1HzOEVaf+6th8u3ycwdzW2r89NtAtgRMz+3R31ydzAHNeUlOo6kqAKng1SelMIyXJY9OJInxuz0QKRSODYMLWhOZ2v8QhASOe9jb6fhZxvp6877brTo9ZfNqq8l0MbG75MLS9uDkfKYCA0UvXWEPGlj4cbqwPUUD9rQTMwtSMF3YEhNoz5xYUdcDL5wpFgMKAAUCgBoGAA8GAAUAEAkLAQENDwAODAEHAgQIBhAFAwsPCcQBUAnM1ZbbV6JeoMdqAAAAAL6+0GoAAAAAzszQagAAAABSAAAAUGFudGEgQVBJIGlzb2xhdGlvbiAwOWM2Nzk0Ny1iZTExLTRkZTItOTY3Yi04ZmY5MGY2MTg5OWIgc3RhbmRhcmQ6IEVUSCBhYm92ZSA1MDAwP4Dw+gIAAAAAIQAAAENvaW5HZWNrbyBkYWlseSBjbG9zZSBVVEMgPj0gNTAwMAEAAAAZAAAAaHR0cHM6Ly93d3cuY29pbmdlY2tvLmNvbQA=",
+        "recentBlockhash": "21xRD1xi4ar5TzzU3UyvE7MPdF797cYZd3tGiq27FfJu",
+        "lastValidBlockHeight": 432574654,
+        "blockhashExpiryHintSec": 60,
+        "buildFingerprint": "4281cae60314699d71623caa16de400d1f961fdaf0ebaf8359b5cb6f498acd38",
+        "paymentUsdc": "50000000",
+        "liquidityInjectionUsdc": "10000000",
+        "platformRevenueUsdc": "40000000",
+        "marketType": "standard",
+        "derived": {
+          "event": "2QCCc8jk4aZo8ej5yrxLaFJiMXoCnJGZfwwDFKbEek5Q",
+          "vaultAuthority": "EwJx2G8xSZ47hXd8KvuVe3BGc6rrdXhRHac87k2szVsy",
+          "marketConfig": "8mJjfx7SuWwS4yfVZXtqC2cvzxr3TQHsCgKyjpuDWKAP",
+          "creatorWhitelist": "3hh4H3AdyqmSeJhyPq2h7Pro2t8QrC7iwYgC8YRDLgGt",
+          "creatorFeeVault": "BQWF5eLKsQvF8wMEzgHcw7FAgx93DMqSEMAMX92xEySr",
+          "creatorPosition": "DGc9mf9VEmY2NM91y7AXj8tzSn1zPzxcP761kv1aZC3D",
+          "creatorTokenAccount": "Cxv2XmPde7Md3537D67UtUAV8krUtMrVqh1xPA7Fvohu",
+          "vaultTokenAccount": "3nxiFy6ytpELvkYnXfdhKqwJ45FPBqdDEp7xTU45yZLT",
+          "treasuryTokenAccount": "9hwZLD2JZuWFDDQXEnHsnny7EF2LeyHqwcMFVssYEGpC"
+        },
+        "expiresAt": "2026-10-08T11:55:28.251512Z"
+      },
+      "transactionNetwork": {
+        "checkedAt": "2026-10-08T11:53:37.310Z",
+        "bytes": 881,
+        "blockhashValidDevnet": false,
+        "blockhashValidMainnet": true,
+        "programs": [
+          "ComputeBudget111111111111111111111111111111",
+          "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL",
+          "6gM5afTQBq5VZCfgpGqcsqzfWd5maLSCKWtGjbEobZMp"
+        ],
+        "includesMainnetUsdc": true
+      }
+    },
+    {
+      "checkedAt": "2026-10-08T11:53:38.503Z",
+      "host": "https://staging-api.panta.market/api/v1",
+      "route": "/markets/create/quote/",
+      "payload": {
+        "wallet": "1YqxrFExzvJ6r1HqeaoRyZ8i4iUaZX5q8eZ3pFqaBmR",
+        "question": "Panta API isolation 09c67947-be11-4de2-967b-8ff90f61899b breaking: ETH above 5000?",
+        "resolutionRule": "CoinGecko daily close UTC >= 5000",
+        "sourcesOfTruth": [
+          "https://www.coingecko.com"
+        ],
+        "category": "crypto",
+        "imageUrl": "https://raw.githubusercontent.com/Kaito-HQ/panta-api-playground/main/public/sample-market-1024.png",
+        "marketType": "breaking",
+        "startTime": 1791460354,
+        "endTime": 1792065214,
+        "resolutionTime": 1792068814,
+        "eventInProgress": true
+      },
+      "httpStatus": 400,
+      "requestId": "1aae1a60-12cf-4fc8-85a7-4bbac9cbb5df",
+      "response": {
+        "code": "DUPLICATE_MARKET",
+        "message": "market creation already exists for this wallet and question"
+      }
+    },
+    {
+      "checkedAt": "2026-10-08T11:53:39.854Z",
+      "host": "https://live-api.panta.market/api/v1",
+      "route": "/markets/create/quote/",
+      "payload": {
+        "wallet": "1YqxrFExzvJ6r1HqeaoRyZ8i4iUaZX5q8eZ3pFqaBmR",
+        "question": "Panta API isolation 09c67947-be11-4de2-967b-8ff90f61899b breaking: ETH above 5000?",
+        "resolutionRule": "CoinGecko daily close UTC >= 5000",
+        "sourcesOfTruth": [
+          "https://www.coingecko.com"
+        ],
+        "category": "crypto",
+        "imageUrl": "https://raw.githubusercontent.com/Kaito-HQ/panta-api-playground/main/public/sample-market-1024.png",
+        "marketType": "breaking",
+        "startTime": 1791460354,
+        "endTime": 1792065214,
+        "resolutionTime": 1792068814,
+        "eventInProgress": true
+      },
+      "httpStatus": 200,
+      "requestId": "4a83619b-4355-44e2-aa5a-b952fb30e354",
+      "response": {
+        "createId": "cr_22ce6511af51424e97b1cb2c685b44eb",
+        "userId": "usr_8SfJuhQ9A_l0zu2YnSctrQ",
+        "apiKeyId": "key_s38mrZnnuccMWoZarF_lRw",
+        "expectedEventPda": "F55zt28MdRR5o11DVWntu8GtErYRbQWFcV7y7E9cGpGM",
+        "paymentUsdc": "20000000",
+        "liquidityInjectionUsdc": "5000000",
+        "platformRevenueUsdc": "15000000",
+        "marketType": "breaking",
+        "expiresAt": "2026-10-08T11:59:30.979250Z",
+        "blockhashExpiryHintSec": 60
+      }
+    },
+    {
+      "checkedAt": "2026-10-08T11:53:39.990Z",
+      "host": "https://live-api.panta.market/api/v1",
+      "route": "/markets/create/build/",
+      "payload": {
+        "createId": "cr_22ce6511af51424e97b1cb2c685b44eb",
+        "wallet": "1YqxrFExzvJ6r1HqeaoRyZ8i4iUaZX5q8eZ3pFqaBmR"
+      },
+      "httpStatus": 200,
+      "requestId": "3ec25a78-8a31-4ca4-a228-2dbe7b187b62",
+      "response": {
+        "createId": "cr_22ce6511af51424e97b1cb2c685b44eb",
+        "expectedEventPda": "F55zt28MdRR5o11DVWntu8GtErYRbQWFcV7y7E9cGpGM",
+        "transaction": "AQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAQAIEQAkAZ9kQQJAZoJYZM50M5VlZkAOx4QgaisOw3MNLccgSaDE1umBov/vjEXJ7odYLdeK2/O/9KbqdcNg/iAykZJhyXrz4qrDiz+hGT9BjkeVyc3LAMYqfn8bt7OpDqlDhoFaaoL3NRFlwHqMm11ZKJjPYMwEqNx/h3eLIl0Vy8KFscN1M2nT30+IpuQ+pVDpoMSZCt5LLNPEmWOU891PfuS5FKIOWsFPZ1Q8bm7lfS9wnoIvBcH93DAPLFvdJZGZd9EPl2R67GxXzP3/WwzBLNBorONU7NH45N7wXwJRV5fe280QL0TTF8Q7pDZf+pISTHmQI47QoBq7/9lyKdfvk4HmUV0sRUZp9tUle0g/XrbmKj+PdUIcfv8S+LeIEsl6MQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAwZGb+UhFzL/7K26csOb57yM5bvF9xJrLEObOkAAAAAG3fbh12Whk9nL4UbO63msHLSF7V9bN5E6jPWFfv8AqSgj5fK672ebG0qKvqytmbJyLaxSCJR4b0brJDOkbWENVF7KIBZj7LY/0UC7ZoTJpoZL1HzOEVaf+6th8u3ycwdzW2r89NtAtgRMz+3R31ydzAHNeUlOo6kqAKng1SelMIyXJY9OJInxuz0QKRSODYMLWhOZ2v8QhASOe9jb6fhZxvp6877brTo9ZfNqq8l0MbG75MLS9uDkfKYCA0UvXWGy7rkbsKRyJ1LAoXltarNpuDDGej2fPHKXQELRsQjbAwMKAAUCgBoGAA8GAAQAEAkLAQENDwAODAYCBQgBBxAEAwsPCcUBGWdLxuBJLEUChMdqAAAAAL6+0GoAAAAAzszQagAAAABSAAAAUGFudGEgQVBJIGlzb2xhdGlvbiAwOWM2Nzk0Ny1iZTExLTRkZTItOTY3Yi04ZmY5MGY2MTg5OWIgYnJlYWtpbmc6IEVUSCBhYm92ZSA1MDAwPwAtMQEAAAAAIQAAAENvaW5HZWNrbyBkYWlseSBjbG9zZSBVVEMgPj0gNTAwMAEAAAAZAAAAaHR0cHM6Ly93d3cuY29pbmdlY2tvLmNvbQEA",
+        "recentBlockhash": "D3UhVRBcRXVMmXYfsSCSPMmSC8BQiLcCaiPmzspjB1R4",
+        "lastValidBlockHeight": 432574665,
+        "blockhashExpiryHintSec": 60,
+        "buildFingerprint": "edf422174597dc8b018dad5e6925ed70d297befceeb958ab471e2d13ed463668",
+        "paymentUsdc": "20000000",
+        "liquidityInjectionUsdc": "5000000",
+        "platformRevenueUsdc": "15000000",
+        "marketType": "breaking",
+        "derived": {
+          "event": "F55zt28MdRR5o11DVWntu8GtErYRbQWFcV7y7E9cGpGM",
+          "vaultAuthority": "7aijjpeqmjmupcY9HypML6A3gJ86cAR3aQNrb33AjjbB",
+          "marketConfig": "8mJjfx7SuWwS4yfVZXtqC2cvzxr3TQHsCgKyjpuDWKAP",
+          "creatorWhitelist": "3hh4H3AdyqmSeJhyPq2h7Pro2t8QrC7iwYgC8YRDLgGt",
+          "creatorFeeVault": "GW4jHxwv41dEocfjfitouLrEUMEfiT8236zkvCyDiA7i",
+          "creatorPosition": "Fo1ePyqDqaY2xsD59JzpFs96U4VidppFuuRqCDxZwADv",
+          "creatorTokenAccount": "Cxv2XmPde7Md3537D67UtUAV8krUtMrVqh1xPA7Fvohu",
+          "vaultTokenAccount": "DTUfykkkQawpEtvGxuH2kjzfFU8SuyVWj4QLdfV1Nd5x",
+          "treasuryTokenAccount": "9hwZLD2JZuWFDDQXEnHsnny7EF2LeyHqwcMFVssYEGpC"
+        },
+        "expiresAt": "2026-10-08T11:55:31.113011Z"
+      },
+      "transactionNetwork": {
+        "checkedAt": "2026-10-08T11:53:40.180Z",
+        "bytes": 882,
+        "blockhashValidDevnet": false,
+        "blockhashValidMainnet": true,
+        "programs": [
+          "ComputeBudget111111111111111111111111111111",
+          "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL",
+          "6gM5afTQBq5VZCfgpGqcsqzfWd5maLSCKWtGjbEobZMp"
+        ],
+        "includesMainnetUsdc": true
+      }
+    }
+  ],
+  "chainConfigurations": [
+    {
+      "network": "devnet",
+      "program": "6gM5afTQBq5VZCfgpGqcsqzfWd5maLSCKWtGjbEobZMp",
+      "config": "8mJjfx7SuWwS4yfVZXtqC2cvzxr3TQHsCgKyjpuDWKAP",
+      "exists": true,
+      "owner": "6gM5afTQBq5VZCfgpGqcsqzfWd5maLSCKWtGjbEobZMp",
+      "bytes": 324,
+      "mint": "11111111111111111111111111111111"
+    },
+    {
+      "network": "devnet",
+      "program": "4CQ4LWv7194V3Qe3iEYZq33cFPQbmKU3e1xVQkpTegLU",
+      "config": "3a4GuktDEyjqi5X9AQu8WDJcT2mgXD8Dr6v9j2teuWTk",
+      "exists": true,
+      "owner": "4CQ4LWv7194V3Qe3iEYZq33cFPQbmKU3e1xVQkpTegLU",
+      "bytes": 356,
+      "mint": "8Qm44MpHDMs3mdiqryHxhgqLBVrecWmTdVKwqUoxywEY"
+    },
+    {
+      "network": "mainnet-beta",
+      "program": "6gM5afTQBq5VZCfgpGqcsqzfWd5maLSCKWtGjbEobZMp",
+      "config": "8mJjfx7SuWwS4yfVZXtqC2cvzxr3TQHsCgKyjpuDWKAP",
+      "exists": true,
+      "owner": "6gM5afTQBq5VZCfgpGqcsqzfWd5maLSCKWtGjbEobZMp",
+      "bytes": 356,
+      "mint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
+    },
+    {
+      "network": "mainnet-beta",
+      "program": "4CQ4LWv7194V3Qe3iEYZq33cFPQbmKU3e1xVQkpTegLU",
+      "config": "3a4GuktDEyjqi5X9AQu8WDJcT2mgXD8Dr6v9j2teuWTk",
+      "exists": false,
+      "mint": null
+    }
+  ],
+  "completedAt": "2026-10-08T11:53:40.182Z",
+  "questionAccounts": [
+    {
+      "question": "Panta API isolation 09c67947-be11-4de2-967b-8ff90f61899b standard: ETH above 5000?",
+      "checkedAt": "2026-10-08T11:56:16.091Z",
+      "note": "Checked after unsigned probes; no transaction was signed or broadcast.",
+      "devnet": [
+        {
+          "program": "6gM5afTQBq5VZCfgpGqcsqzfWd5maLSCKWtGjbEobZMp",
+          "event": "2QCCc8jk4aZo8ej5yrxLaFJiMXoCnJGZfwwDFKbEek5Q",
+          "exists": false
+        },
+        {
+          "program": "4CQ4LWv7194V3Qe3iEYZq33cFPQbmKU3e1xVQkpTegLU",
+          "event": "FzaLbASd1Ey6WG5zao3bZSyVezbY5onVsyF8VTqu22MF",
+          "exists": false
+        }
+      ]
+    },
+    {
+      "question": "Panta API isolation 09c67947-be11-4de2-967b-8ff90f61899b breaking: ETH above 5000?",
+      "checkedAt": "2026-10-08T11:56:16.307Z",
+      "note": "Checked after unsigned probes; no transaction was signed or broadcast.",
+      "devnet": [
+        {
+          "program": "6gM5afTQBq5VZCfgpGqcsqzfWd5maLSCKWtGjbEobZMp",
+          "event": "F55zt28MdRR5o11DVWntu8GtErYRbQWFcV7y7E9cGpGM",
+          "exists": false
+        },
+        {
+          "program": "4CQ4LWv7194V3Qe3iEYZq33cFPQbmKU3e1xVQkpTegLU",
+          "event": "J9FD7NLzpNX6ypxuGgqK9LqqZNjhPxzWxfMT4ZD6Gn9g",
+          "exists": false
+        }
+      ]
+    }
+  ]
+}
