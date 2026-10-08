@@ -1,442 +1,177 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
-import { useWallet } from "@solana/wallet-adapter-react";
-import { VersionedTransaction } from "@solana/web3.js";
-import { TrendingUp, ExternalLink, AlertCircle, CheckCircle2, Loader2, Sparkles, Calendar, Layers, ShieldCheck } from "lucide-react";
-import { TokenMetadata } from "@/lib/types";
-import { LifecycleMarketInfo } from "@/lib/pantaTypes";
+import { useEffect, useRef, useState } from "react";
+import { useConnection, useWallet } from "@solana/wallet-adapter-react";
+import { AlertCircle, CheckCircle2, ExternalLink, Loader2, TrendingUp } from "lucide-react";
+import type { TokenMetadata } from "@/lib/types";
+import type { LifecycleMarketInfo, PantaOrderQuote, PantaPosition, PantaSide } from "@/lib/pantaTypes";
+import { compilePantaTransaction, validatePantaInstructions } from "@/lib/pantaTransaction";
+import { Buffer } from "buffer";
+import bs58 from "bs58";
+import { confirmSubmittedTransaction } from "@/services/solana/transactionConfirmation";
 
-interface PantaMarketBeliefModuleProps {
-  token: TokenMetadata;
+interface PendingOrder { signature: string; orderToken: string; mint: string; kind: "buy" | "claim"; }
+const network = process.env.NEXT_PUBLIC_SOLANA_NETWORK || "devnet";
+const genesis: Record<string, string> = { devnet: "EtWTRABZaYq6iMfeYKouRu166VU2xqa1wcaWoxPkrZBG", "mainnet-beta": "5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp" };
+const dateLabel = (value: number | null) => value === null ? "—" : new Date(value * 1000).toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" });
+const validAmount = (value: string) => /^(0|[1-9]\d*)(\.\d{1,6})?$/.test(value) && Number(value) > 0 && Number(value) <= 1000;
+const sameAmount = (a: unknown, b: unknown) => typeof a === "string" && typeof b === "string" && validAmount(a) && validAmount(b) && Number(a) === Number(b);
+async function jsonRequest(path: string, body?: unknown) {
+  const response = await fetch(path, body ? { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) } : { cache: "no-store" });
+  const result = await response.json();
+  if (!response.ok) throw Object.assign(new Error(result.error || "Prediction markets are temporarily unavailable."), { code: result.code });
+  return result;
 }
 
-export function PantaMarketBeliefModule({ token }: PantaMarketBeliefModuleProps) {
-  const { connected, publicKey, signTransaction, sendTransaction } = useWallet();
-
+export function PantaMarketBeliefModule({ token }: { token: TokenMetadata }) {
+  const { publicKey, signTransaction } = useWallet();
+  const { connection } = useConnection();
   const [market, setMarket] = useState<LifecycleMarketInfo | null>(null);
+  const [marketError, setMarketError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [selectedSide, setSelectedSide] = useState<"yes" | "no">("yes");
-  const [amountUsdc, setAmountUsdc] = useState<string>("20");
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [quote, setQuote] = useState<any>(null);
-  const [quoteLoading, setQuoteLoading] = useState(false);
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const [successResult, setSuccessResult] = useState<{
-    txHash: string;
-    shares: string;
-    side: string;
-  } | null>(null);
-
-  const cleanEquityName = token.targetEquity.name.replace(/\s*\(.*?\)/g, "").trim();
-
-  // 1. Fetch System-Generated Lifecycle Market Data
-  const fetchMarket = useCallback(async () => {
-    try {
-      setLoading(true);
-      const params = new URLSearchParams({
-        mint: token.mint,
-        symbol: token.symbol,
-        target: cleanEquityName,
-        targetSymbol: token.targetEquity.symbol,
-        isGraduated: String(token.bondingCurve.isGraduated),
-        progressPct: String(Math.round(token.bondingCurve.progressPct || 0)),
-        ...(token.bondingCurve.graduatedAt ? { graduatedAt: token.bondingCurve.graduatedAt } : {}),
-        ...(token.createdAt ? { createdAt: token.createdAt } : {}),
-        ...(token.treasury.valuationSource ? { valuationSource: token.treasury.valuationSource } : {}),
-      });
-
-      const res = await fetch(`/api/panta/market?${params.toString()}`);
-      if (res.ok) {
-        const data: LifecycleMarketInfo = await res.json();
-        setMarket(data);
-      }
-    } catch (err) {
-      console.error("Failed to load Panta lifecycle market data:", err);
-    } finally {
-      setLoading(false);
-    }
-  }, [
-    token.mint,
-    token.symbol,
-    cleanEquityName,
-    token.targetEquity.symbol,
-    token.bondingCurve.isGraduated,
-    token.bondingCurve.progressPct,
-    token.bondingCurve.graduatedAt,
-    token.createdAt,
-    token.treasury.valuationSource,
-  ]);
+  const [selectedSide, setSelectedSide] = useState<PantaSide>("yes");
+  const [amountUsdc, setAmountUsdc] = useState("20");
+  const [quote, setQuote] = useState<PantaOrderQuote | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+  const [positions, setPositions] = useState<PantaPosition[]>([]);
+  const [positionsError, setPositionsError] = useState<string | null>(null);
+  const [pending, setPending] = useState<PendingOrder | null>(null);
+  const actionInProgress = useRef(false);
+  const wallet = publicKey?.toBase58();
+  const pendingKey = wallet ? `streetfun:panta:${network}:${wallet}` : null;
 
   useEffect(() => {
-    fetchMarket();
-  }, [fetchMarket]);
+    const abort = new AbortController(); let active = true;
+    setMarket(null); setMarketError(null); setLoading(true);
+    fetch(`/api/panta/market?${new URLSearchParams({ mint: token.mint })}`, { signal: abort.signal, cache: "no-store" })
+      .then(async res => { const data = await res.json(); if (!res.ok) throw new Error(data.error); if (active) setMarket(data); })
+      .catch(err => { if (active) setMarketError(err.message || "Prediction markets are temporarily unavailable."); })
+      .finally(() => { if (active) setLoading(false); });
+    return () => { active = false; abort.abort(); };
+  }, [token.mint, token.bondingCurve.isGraduated]);
 
-  // 2. Fetch live quote when amount or side changes
+  useEffect(() => { setQuote(null); setError(null); }, [wallet, amountUsdc, selectedSide, market?.marketId]);
   useEffect(() => {
-    let active = true;
-    const fetchQuote = async () => {
-      const parsed = parseFloat(amountUsdc);
-      if (!publicKey || isNaN(parsed) || parsed <= 0 || !market) {
-        setQuote(null);
-        return;
-      }
-      setQuoteLoading(true);
-      try {
-        const res = await fetch("/api/panta/order/quote", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            wallet: publicKey.toBase58(),
-            marketId: market.marketId,
-            side: selectedSide,
-            amountUsdc: parsed.toFixed(2),
-          }),
-        });
-        if (res.ok) {
-          const q = await res.json();
-          if (active) setQuote(q);
-        }
-      } catch (err) {
-        console.warn("Quote error:", err);
-      } finally {
-        if (active) setQuoteLoading(false);
-      }
-    };
-
-    const timer = setTimeout(fetchQuote, 300);
-    return () => {
-      active = false;
-      clearTimeout(timer);
-    };
-  }, [amountUsdc, selectedSide, publicKey, market]);
-
-  // 3. Execute Prediction Order
-  const handlePredict = async () => {
-    if (!connected || !publicKey || !market) return;
-    setErrorMsg(null);
-    setSuccessResult(null);
-    setIsSubmitting(true);
-
+    if (!quote) return;
+    const timer = setTimeout(() => setQuote(null), Math.max(0, Date.parse(quote.expiresAt) - Date.now()));
+    return () => clearTimeout(timer);
+  }, [quote]);
+  useEffect(() => {
+    setPending(null);
+    if (!pendingKey) return;
     try {
-      const quoteId = quote?.quoteId || `qt_sf_${Date.now()}`;
+      const saved = JSON.parse(sessionStorage.getItem(pendingKey) || "null");
+      if (saved && saved.mint === token.mint && typeof saved.signature === "string" && typeof saved.orderToken === "string" && ["buy", "claim"].includes(saved.kind)) setPending(saved);
+    } catch { /* Browser storage can be unavailable; in-memory recovery remains available. */ }
+  }, [pendingKey, token.mint]);
+  useEffect(() => {
+    const abort = new AbortController(); setPositions([]); setPositionsError(null);
+    if (!wallet) return;
+    fetch(`/api/panta/positions?${new URLSearchParams({ mint: token.mint, wallet })}`, { signal: abort.signal, cache: "no-store" })
+      .then(async res => {
+        if (!res.ok) throw new Error("Position balances are temporarily unavailable.");
+        const data = await res.json();
+        if (!abort.signal.aborted) setPositions(data.positions);
+      })
+      .catch(() => { if (!abort.signal.aborted) setPositionsError("Position balances are temporarily unavailable."); });
+    return () => abort.abort();
+  }, [wallet, token.mint, success]);
 
-      // Build Transaction
-      const buildRes = await fetch("/api/panta/order/build", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          quoteId,
-          wallet: publicKey.toBase58(),
-          marketId: market.marketId,
-          side: selectedSide,
-          amountUsdc: parseFloat(amountUsdc || "20").toFixed(2),
-        }),
-      });
-
-      if (!buildRes.ok) {
-        const errData = await buildRes.json();
-        throw new Error(errData.error || "Failed to build transaction");
-      }
-
-      const buildData = await buildRes.json();
-      const tx = VersionedTransaction.deserialize(Buffer.from(buildData.transaction, "base64"));
-
-      // Wallet Signing & Broadcast
-      let txSignature: string;
-      if (signTransaction) {
-        const signedTx = await signTransaction(tx);
-        txSignature = await sendTransaction(signedTx, (window as any).solanaConnection || undefined, {
-          skipPreflight: false,
-        });
-      } else {
-        txSignature = await sendTransaction(tx, (window as any).solanaConnection || undefined);
-      }
-
-      // Confirm & Report to Panta API
-      await fetch("/api/panta/order/confirm", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          signature: txSignature,
-          wallet: publicKey.toBase58(),
-          marketId: market.marketId,
-          side: selectedSide,
-          quoteId,
-          amountUsdc,
-          shares: quote?.shares || (parseFloat(amountUsdc) / (selectedSide === "yes" ? 0.73 : 0.27)).toFixed(2),
-        }),
-      });
-
-      setSuccessResult({
-        txHash: txSignature,
-        shares: quote?.shares || (parseFloat(amountUsdc) / (selectedSide === "yes" ? 0.73 : 0.27)).toFixed(2),
-        side: selectedSide.toUpperCase(),
-      });
-
-      fetchMarket();
-    } catch (err: any) {
-      console.error("Prediction trade failed:", err);
-      setErrorMsg(err?.message || "Failed to sign or broadcast prediction transaction.");
-    } finally {
-      setIsSubmitting(false);
-    }
+  const remember = (order: PendingOrder | null) => {
+    setPending(order);
+    try { if (pendingKey) { if (order) sessionStorage.setItem(pendingKey, JSON.stringify(order)); else sessionStorage.removeItem(pendingKey); } } catch { /* Keep recovery in state. */ }
   };
-
-  const formatDateLabel = (isoDate: string) => {
+  const confirmOrder = async (order: PendingOrder) => {
+    let result;
+    try { result = await jsonRequest("/api/panta/order/confirm", { signature: order.signature, orderToken: order.orderToken }); }
+    catch (error) {
+      if (error instanceof Error && ["TRANSACTION_FAILED", "TRANSACTION_EXPIRED"].includes(String((error as Error & { code?: string }).code))) remember(null);
+      throw error;
+    }
+    if (result.status !== "confirmed") { setError("Transaction submitted. Confirmation is pending; check its status before placing another order."); return; }
+    remember(null); setQuote(null); setSuccess(order.signature);
+  };
+  const perform = async (action: "buy" | "claim", claimPosition?: PantaPosition) => {
+    const selection = action === "claim" ? claimPosition : market;
+    if (actionInProgress.current || !selection || !wallet || !publicKey || !signTransaction || pending) return;
+    actionInProgress.current = true; setBusy(true); setError(null); setSuccess(null);
     try {
-      const d = new Date(isoDate);
-      return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
-    } catch {
-      return "—";
-    }
+      if (!genesis[network] || await connection.getGenesisHash() !== genesis[network]) throw new Error("Wallet connection does not match this market's network.");
+      if (action === "buy" && !quote) {
+        const result = await jsonRequest("/api/panta/order/quote", { mint: token.mint, wallet, side: selectedSide, amountUsdc });
+        if (result.marketId !== selection.marketId || result.side !== selectedSide || !sameAmount(result.amountUsdc, amountUsdc) || Date.parse(result.expiresAt) <= Date.now()) throw new Error("Refresh the prediction quote.");
+        setQuote(result); return;
+      }
+      if (action === "buy" && (!quote || Date.parse(quote.expiresAt) <= Date.now())) { setQuote(null); throw new Error("Quote expired. Review a fresh quote."); }
+      const build = await jsonRequest(action === "buy" ? "/api/panta/order/build" : "/api/panta/claim/build", action === "buy" ? { quoteToken: quote!.quoteToken } : { mint: token.mint, wallet, marketId: selection.marketId });
+      if (build.wallet !== wallet || build.marketId !== selection.marketId || build.programId !== selection.programId || build.usdcMint !== selection.usdcMint ||
+          (action === "buy" && (build.quoteId !== quote!.quoteId || build.side !== selectedSide || !sameAmount(build.amountUsdc, amountUsdc))) ||
+          !Number.isSafeInteger(build.lastValidBlockHeight) || Date.parse(build.expiresAt) <= Date.now()) throw new Error("Prediction order does not match your selection.");
+      const instructions = validatePantaInstructions(build.instructions, { wallet, marketId: selection.marketId, programId: selection.programId, usdcMint: selection.usdcMint, kind: action });
+      const tx = compilePantaTransaction(instructions, wallet, build.recentBlockhash);
+      const expectedMessage = Buffer.from(tx.message.serialize()).toString("base64");
+      const signed = await signTransaction(tx);
+      if (Buffer.from(signed.message.serialize()).toString("base64") !== expectedMessage) throw new Error("Wallet changed the prediction transaction.");
+      if (Date.parse(build.expiresAt) <= Date.now()) throw new Error("Order expired while signing. Review a fresh quote.");
+      const signature = bs58.encode(signed.signatures[0]);
+      const order: PendingOrder = { signature, orderToken: build.orderToken, mint: token.mint, kind: action };
+      // Remember before broadcasting: an RPC timeout can still mean the transaction was sent.
+      remember(order);
+      const sentSignature = await connection.sendRawTransaction(signed.serialize(), { skipPreflight: false, preflightCommitment: "confirmed", maxRetries: 2 });
+      if (sentSignature !== signature) throw new Error("Check the submitted transaction status before placing another order.");
+      try { await confirmSubmittedTransaction(connection, signature, { blockhash: build.recentBlockhash, lastValidBlockHeight: build.lastValidBlockHeight }); }
+      catch { setError("Transaction submitted. Check confirmation before placing another order."); return; }
+      await confirmOrder(order);
+    } catch (err) { setError(err instanceof Error ? err.message : "Prediction request failed."); }
+    finally { actionInProgress.current = false; setBusy(false); }
   };
-
-  if (loading) {
-    return (
-      <div className="rounded-2xl border border-border bg-card p-5 animate-pulse">
-        <div className="h-4 w-40 bg-card-hover rounded mb-4" />
-        <div className="h-6 w-3/4 bg-card-hover rounded mb-6" />
-        <div className="h-10 w-full bg-card-hover rounded" />
-      </div>
-    );
-  }
-
-  if (!market) return null;
+  const retryConfirmation = async () => {
+    if (!pending || actionInProgress.current) return;
+    actionInProgress.current = true; setBusy(true); setError(null);
+    try { await confirmOrder(pending); } catch (err) { setError(err instanceof Error ? err.message : "Confirmation is unavailable. Please retry."); }
+    finally { actionInProgress.current = false; setBusy(false); }
+  };
+  const txUrl = (signature: string) => `https://solscan.io/tx/${signature}${network === "devnet" ? "?cluster=devnet" : ""}`;
 
   return (
-    <div className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-4">
-      {/* Module Title, Lifecycle Stage & System Market Tag */}
-      <div className="flex flex-col gap-2 border-b border-border pb-3.5">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="flex h-5 w-5 items-center justify-center rounded-md border border-brand-cyan/40 bg-brand-cyan/10 text-brand-cyan">
-              <TrendingUp className="h-3 w-3" />
-            </div>
-            <span className="text-xs font-bold uppercase tracking-wider text-foreground">
-              Market Belief
-            </span>
-          </div>
-
-          <div className="flex items-center gap-1.5 text-[10px] text-muted font-medium">
-            <span>Powered by</span>
-            <span className="font-bold text-foreground hover:text-brand-cyan transition-colors flex items-center gap-0.5">
-              Panta
-              <Sparkles className="h-2.5 w-2.5 text-brand-cyan" />
-            </span>
-          </div>
-        </div>
-
-        {/* System Market + Lifecycle Sub-Bar */}
-        <div className="flex items-center justify-between text-[11px]">
-          <div className="flex items-center gap-1.5">
-            <span className="rounded border border-border bg-card-hover px-1.5 py-0.5 font-mono text-[10px] text-muted font-medium">
-              System Market
-            </span>
-            <span
-              className={`rounded px-1.5 py-0.5 font-mono text-[10px] font-bold border ${
-                market.stage === "post-graduation"
-                  ? "border-amber-500/30 bg-amber-500/10 text-amber-300"
-                  : "border-brand-cyan/30 bg-brand-cyan/10 text-brand-cyan"
-              }`}
-            >
-              {market.stageBadge}
-            </span>
-          </div>
-
-          <div className="flex items-center gap-1 text-[10px] font-mono text-muted">
-            <Calendar className="h-3 w-3 opacity-70" />
-            <span>Opened {formatDateLabel(market.openedAt)}</span>
-            <span>·</span>
-            <span>Res. {formatDateLabel(market.resolutionAt)}</span>
-          </div>
-        </div>
+    <section className="rounded-2xl border border-border bg-card p-5 space-y-4" aria-label="Market belief">
+      <div className="flex items-center justify-between border-b border-border pb-3">
+        <div className="flex items-center gap-2"><TrendingUp className="h-4 w-4 text-brand-cyan" /><h3 className="text-xs font-bold uppercase tracking-wider text-foreground">Market Belief</h3></div>
+        <span className="text-[10px] text-muted">Powered by <strong className="text-foreground">Panta</strong></span>
       </div>
-
-      {/* Narrative Premise Question */}
-      <div>
-        <h4 className="text-sm font-semibold text-foreground leading-snug">
-          {market.question}
-        </h4>
-        <p className="mt-1.5 text-[11px] text-muted leading-relaxed">
-          {market.resolutionCriteria}
-        </p>
-      </div>
-
-      {/* Deterministic Resolution Anchor Info */}
-      <div className="flex items-center gap-2 rounded-xl border border-border bg-card-hover/40 px-3 py-2 text-[10px] text-muted">
-        <ShieldCheck className="h-3.5 w-3.5 text-brand-cyan shrink-0" />
-        <span className="truncate">
-          Resolution Feed: <strong className="text-foreground">{market.resolutionSource}</strong>
-        </span>
-      </div>
-
-      {/* Probability Odds Bar */}
-      <div className="space-y-1.5">
-        <div className="flex justify-between text-xs font-mono font-bold">
-          <span className="text-emerald-400">YES {market.yesPercent}%</span>
-          <span className="text-rose-400">NO {market.noPercent}%</span>
+      {loading ? <div className="space-y-3 animate-pulse"><div className="h-5 w-3/4 rounded bg-card-hover" /><div className="h-11 rounded-xl bg-card-hover" /></div> : !market ? (
+        <div className="space-y-2"><p className="text-sm font-medium text-foreground">Prediction market unavailable</p><p className="text-xs text-muted leading-relaxed">{marketError}</p></div>
+      ) : <>
+        <div className="flex items-center justify-between gap-2 text-[10px] text-muted">
+          <span className="rounded border border-border px-2 py-1">{market.stage === "pre-graduation" ? "Pre-Graduation" : "Post-Graduation"}</span>
+          <span>Resolves {dateLabel(market.resolutionTime)} UTC · {market.phase}</span>
         </div>
-
-        {/* Visual Probability Split */}
-        <div className="flex h-2 w-full overflow-hidden rounded-full bg-card-hover border border-border">
-          <div
-            className="bg-emerald-500 transition-all duration-500"
-            style={{ width: `${market.yesPercent}%` }}
-          />
-          <div
-            className="bg-rose-500 transition-all duration-500"
-            style={{ width: `${market.noPercent}%` }}
-          />
+        <div><h4 className="text-sm font-semibold text-foreground leading-snug break-words">{market.title}</h4><p className="mt-2 text-xs text-muted leading-relaxed whitespace-pre-line break-words">{market.description}</p></div>
+        <div className="grid grid-cols-2 gap-2" aria-label="Live share prices">
+          {(["yes", "no"] as const).map(orderSide => <button type="button" key={orderSide} disabled={busy || !!pending || !market.tradingEnabled} onClick={() => setSelectedSide(orderSide)}
+            className={`rounded-xl border p-3 text-left text-xs disabled:opacity-60 ${selectedSide === orderSide ? "border-brand-cyan/30 bg-brand-cyan/10 text-brand-cyan" : "border-border text-muted"}`}>
+            <span className="font-bold">{orderSide.toUpperCase()}</span><span className="float-right font-mono">{market[orderSide === "yes" ? "yesPrice" : "noPrice"] === null ? "—" : `$${market[orderSide === "yes" ? "yesPrice" : "noPrice"]}`}</span>
+          </button>)}
         </div>
-
-        <div className="flex justify-between text-[10px] text-muted font-mono pt-0.5">
-          <span>${market.yesPrice} / share</span>
-          <span>${market.noPrice} / share</span>
-        </div>
-      </div>
-
-      {/* Binary Selection Buttons */}
-      <div className="grid grid-cols-2 gap-2 pt-1">
-        <button
-          type="button"
-          onClick={() => setSelectedSide("yes")}
-          className={`flex items-center justify-between rounded-xl px-3.5 py-2.5 text-xs font-bold transition-all border ${
-            selectedSide === "yes"
-              ? "border-emerald-500/50 bg-emerald-500/15 text-emerald-300 shadow-sm"
-              : "border-border bg-card-hover hover:border-emerald-500/30 text-muted"
-          }`}
-        >
-          <span>Predict YES</span>
-          <span className="font-mono text-[11px] opacity-80">{market.yesPercent}%</span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setSelectedSide("no")}
-          className={`flex items-center justify-between rounded-xl px-3.5 py-2.5 text-xs font-bold transition-all border ${
-            selectedSide === "no"
-              ? "border-rose-500/50 bg-rose-500/15 text-rose-300 shadow-sm"
-              : "border-border bg-card-hover hover:border-rose-500/30 text-muted"
-          }`}
-        >
-          <span>Predict NO</span>
-          <span className="font-mono text-[11px] opacity-80">{market.noPercent}%</span>
-        </button>
-      </div>
-
-      {/* Deposit Input */}
-      <div className="space-y-1.5 pt-1">
-        <div className="flex justify-between text-[11px] text-muted font-medium">
-          <span>Deposit (USDC)</span>
-          <div className="flex gap-1.5 font-mono">
-            {["10", "20", "50", "100"].map((preset) => (
-              <button
-                key={preset}
-                type="button"
-                onClick={() => setAmountUsdc(preset)}
-                className={`rounded px-1.5 py-0.5 text-[10px] transition-colors ${
-                  amountUsdc === preset
-                    ? "bg-card-hover text-foreground font-bold border border-border"
-                    : "text-muted hover:text-foreground"
-                }`}
-              >
-                ${preset}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div className="relative flex items-center">
-          <input
-            type="number"
-            min="1"
-            step="1"
-            value={amountUsdc}
-            onChange={(e) => setAmountUsdc(e.target.value)}
-            placeholder="20"
-            className="w-full rounded-xl border border-border bg-card-subtle px-3.5 py-2.5 text-sm font-mono text-foreground placeholder-muted outline-none focus:border-brand-cyan transition-colors"
-          />
-          <span className="absolute right-3.5 text-xs font-mono font-bold text-muted">
-            USDC
-          </span>
-        </div>
-      </div>
-
-      {/* Quote Summary */}
-      {quote && (
-        <div className="rounded-xl border border-border bg-card-hover/50 p-2.5 text-[11px] font-mono space-y-1">
-          <div className="flex justify-between text-muted">
-            <span>Estimated Shares:</span>
-            <span className="font-bold text-foreground">
-              {quote.shares} {selectedSide.toUpperCase()}
-            </span>
-          </div>
-          <div className="flex justify-between text-muted">
-            <span>Potential Return:</span>
-            <span className="font-bold text-emerald-400">
-              ${(parseFloat(quote.shares) * 1.0).toFixed(2)} (+
-              {Math.round(((parseFloat(quote.shares) - parseFloat(amountUsdc || "0")) / parseFloat(amountUsdc || "1")) * 100)}
-              %)
-            </span>
-          </div>
-        </div>
-      )}
-
-      {/* Primary Action Button */}
-      <button
-        type="button"
-        disabled={isSubmitting || !amountUsdc || parseFloat(amountUsdc) <= 0}
-        onClick={handlePredict}
-        className={`w-full rounded-xl py-3 text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2 ${
-          !connected
-            ? "bg-card-hover text-muted cursor-not-allowed border border-border"
-            : selectedSide === "yes"
-            ? "bg-emerald-500 hover:bg-emerald-400 text-black shadow-lg shadow-emerald-500/10"
-            : "bg-rose-500 hover:bg-rose-400 text-white shadow-lg shadow-rose-500/10"
-        }`}
-      >
-        {isSubmitting ? (
-          <>
-            <Loader2 className="h-4 w-4 animate-spin" />
-            <span>Constructing & Signing on Solana…</span>
-          </>
-        ) : !connected ? (
-          "Connect Wallet to Predict"
-        ) : (
-          `Predict ${selectedSide.toUpperCase()} (${amountUsdc || "0"} USDC)`
-        )}
-      </button>
-
-      {/* Error Message */}
-      {errorMsg && (
-        <div className="flex items-start gap-2 rounded-xl border border-rose-500/30 bg-rose-500/10 p-2.5 text-xs text-rose-300">
-          <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
-          <span>{errorMsg}</span>
-        </div>
-      )}
-
-      {/* Success Notification */}
-      {successResult && (
-        <div className="flex flex-col gap-1.5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3 text-xs text-emerald-300">
-          <div className="flex items-center gap-2 font-bold">
-            <CheckCircle2 className="h-4 w-4 text-emerald-400" />
-            <span>Prediction Position Established!</span>
-          </div>
-          <p className="text-[11px] text-muted">
-            Received <strong>{successResult.shares}</strong> {successResult.side} outcome shares.
-          </p>
-          <a
-            href={`https://solscan.io/tx/${successResult.txHash}?cluster=devnet`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-1 text-[10px] font-mono text-brand-cyan hover:underline mt-1"
-          >
-            <span>View Transaction on Explorer</span>
-            <ExternalLink className="h-3 w-3" />
-          </a>
-        </div>
-      )}
-    </div>
+        <p className="text-[10px] text-muted">Live price per share · Volume {market.volumeUsdc === null ? "unavailable" : `${Number(market.volumeUsdc).toLocaleString("en-US", { maximumFractionDigits: 2 })} USDC`}</p>
+        {market.tradingEnabled && <>
+          <label className="block space-y-2 text-xs text-muted"><span>Deposit (USDC)</span><input type="text" inputMode="decimal" value={amountUsdc} onChange={event => setAmountUsdc(event.target.value)} disabled={busy || !!pending} maxLength={24}
+            className="w-full rounded-xl border border-border bg-card-subtle p-3 font-mono text-foreground outline-none focus:border-brand-cyan" /></label>
+          {quote && <div className="rounded-xl border border-border bg-card-hover p-3 text-xs space-y-1"><p>Estimated {quote.shares} {quote.side.toUpperCase()} shares</p><p className="text-muted">Fee {quote.feeUsdc} USDC · 1% maximum slippage</p><p className="text-muted">Actual fill may differ. Payout depends on the market outcome.</p></div>}
+          <button type="button" onClick={() => void perform("buy")} disabled={busy || !!pending || !signTransaction || !validAmount(amountUsdc)}
+            className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-brand-cyan text-background font-bold text-xs disabled:opacity-50">
+            {busy ? <><Loader2 className="h-4 w-4 animate-spin" />Processing…</> : !wallet ? "Connect Wallet to Predict" : !signTransaction ? "Wallet signing unavailable" : quote ? `Buy ${selectedSide.toUpperCase()} · ${amountUsdc} USDC` : "Review Prediction"}
+          </button>
+        </>}
+        <a href={market.marketUrl} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-1 text-xs text-brand-cyan hover:underline">View market and resolution on Panta <ExternalLink className="h-3 w-3" /></a>
+      </>}
+      {wallet && positionsError && <p className="text-xs text-muted" role="status">{positionsError}</p>}
+      {positions.filter(position => position.claimable && !position.claimed).map(position => <button key={`${position.marketId}:${position.side}`} type="button" disabled={busy || !!pending || !signTransaction} onClick={() => void perform("claim", position)} className="h-11 w-full rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-300 text-xs font-bold disabled:opacity-50">Claim {position.side.toUpperCase()} Winnings · {position.shares} shares</button>)}
+      {pending && <div className="rounded-xl border border-border bg-card-hover p-3 space-y-2 text-xs"><p className="text-muted">Transaction submitted; confirmation pending.</p><a className="text-brand-cyan hover:underline" href={txUrl(pending.signature)} target="_blank" rel="noopener noreferrer">View submitted transaction</a><button type="button" disabled={busy} onClick={() => void retryConfirmation()} className="block font-semibold text-foreground">Check Confirmation</button></div>}
+      {error && <p role="alert" className="flex gap-2 text-xs text-rose-300"><AlertCircle className="h-4 w-4 shrink-0" />{error}</p>}
+      {success && <div role="status" className="text-xs text-emerald-300 space-y-2"><p className="flex gap-2"><CheckCircle2 className="h-4 w-4" />Prediction transaction confirmed.</p><a href={txUrl(success)} target="_blank" rel="noopener noreferrer" className="text-brand-cyan hover:underline">View confirmed transaction</a></div>}
+    </section>
   );
 }

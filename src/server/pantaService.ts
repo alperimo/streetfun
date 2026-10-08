@@ -1,153 +1,47 @@
-import { PantaMarket, PantaOrderQuote, PantaOrderBuildResponse, PantaPosition, PantaClaimBuildResponse } from "@/lib/pantaTypes";
+import { createHash } from "node:crypto";
+import { unavailable, PantaError } from "./pantaValidation";
 
-const PANTA_API_URL = process.env.PANTA_API_URL || "https://live-api.panta.market/api/v1";
-const PANTA_API_KEY = process.env.PANTA_API_KEY || "pk_live_r1vXpULS03OHN6vOUO02uS5YTnDrU9NrfFAjJpkvSrw";
-
-function getHeaders() {
-  return {
-    "X-Api-Key": PANTA_API_KEY,
-    "Content-Type": "application/json",
-  };
+const API_URL = "https://live-api.panta.market/api/v1";
+// Reject the credential exposed in commit 664a515, even if it remains in deployment env.
+const RETIRED_KEY_HASH = "551f0f76a6ccefa653a2a2608d40ccc9d4b0b238aa604df7ad0341bccdd5d1da";
+export function pantaCredentials() {
+  const key = process.env.PANTA_API_KEY;
+  const url = process.env.PANTA_API_URL || API_URL;
+  if (url !== API_URL || !key || !/^pk_(test|live)_[A-Za-z0-9]+$/.test(key) ||
+      createHash("sha256").update(key).digest("hex") === RETIRED_KEY_HASH) throw unavailable();
+  return { key, url };
 }
-
-export class PantaClient {
-  /**
-   * Fetches the market detail from Panta API.
-   * If not found or RPC unavailable, provides realistic fallback data based on token state.
-   */
-  static async getMarket(marketId: string): Promise<PantaMarket | null> {
-    try {
-      const res = await fetch(`${PANTA_API_URL}/markets/${marketId}/`, {
-        headers: getHeaders(),
-        next: { revalidate: 10 },
-      });
-      if (res.ok) {
-        const data = await res.json();
-        return data as PantaMarket;
-      }
-      return null;
-    } catch (err) {
-      console.error("[PantaClient] getMarket error:", err);
-      return null;
-    }
-  }
-
-  /**
-   * Requests a buy quote for YES or NO shares on a Panta market.
-   */
-  static async quoteOrder(params: {
-    wallet: string;
-    marketId: string;
-    side: "yes" | "no";
-    amountUsdc: string;
-    userId?: string;
-  }): Promise<PantaOrderQuote> {
-    const res = await fetch(`${PANTA_API_URL}/primaryorderquote/`, {
-      method: "POST",
-      headers: getHeaders(),
-      body: JSON.stringify(params),
+/** Timeout, bounded JSON response, no redirects, sanitized errors, no financial fallbacks. */
+export async function pantaRequest(path: string, body?: Record<string, unknown>): Promise<unknown> {
+  const { key, url } = pantaCredentials();
+  const abort = new AbortController();
+  const timer = setTimeout(() => abort.abort(), 10_000);
+  try {
+    const res = await fetch(`${url}${path}`, {
+      method: body ? "POST" : "GET", redirect: "error", cache: "no-store", signal: abort.signal,
+      headers: { "X-Api-Key": key, "Content-Type": "application/json", Accept: "application/json" },
+      ...(body ? { body: JSON.stringify(body) } : {}),
     });
-
-    const data = await res.json();
     if (!res.ok) {
-      throw new Error(data.message || data.code || "Failed to fetch order quote from Panta");
+      await res.body?.cancel();
+      if (res.status === 429) throw new PantaError("RATE_LIMITED", 429, "Please wait before requesting another prediction quote.");
+      if ([400, 404, 409, 410, 422].includes(res.status))
+        throw new PantaError("PANTA_REQUEST_REJECTED", 409, "Panta could not complete this request. Refresh the market and try again.");
+      throw unavailable();
     }
-    return data as PantaOrderQuote;
-  }
-
-  /**
-   * Builds the unsigned instructions for a primary buy order.
-   */
-  static async buildOrder(params: {
-    quoteId: string;
-    wallet: string;
-    userId?: string;
-    maxSlippageBps?: number;
-  }): Promise<PantaOrderBuildResponse> {
-    const res = await fetch(`${PANTA_API_URL}/primaryorderbuild/`, {
-      method: "POST",
-      headers: getHeaders(),
-      body: JSON.stringify({
-        ...params,
-        maxSlippageBps: params.maxSlippageBps ?? 100,
-      }),
-    });
-
-    const data = await res.json();
-    if (!res.ok) {
-      throw new Error(data.message || data.code || "Failed to build order transaction from Panta");
+    if (!res.headers.get("content-type")?.includes("application/json") || !res.body) throw unavailable();
+    const reader = res.body.getReader();
+    const chunks: Uint8Array[] = []; let size = 0;
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      size += value.byteLength;
+      if (size > 256_000) { await reader.cancel(); throw unavailable(); }
+      chunks.push(value);
     }
-    return data as PantaOrderBuildResponse;
-  }
-
-  /**
-   * Registers a broadcast signature with Panta for attribution.
-   */
-  static async submitOrder(params: {
-    orderId: string;
-    signature: string;
-  }): Promise<{ status: string }> {
-    const res = await fetch(`${PANTA_API_URL}/primaryordersubmit/`, {
-      method: "POST",
-      headers: getHeaders(),
-      body: JSON.stringify(params),
-    });
-    return res.json();
-  }
-
-  /**
-   * Reports trade to Panta indexer for attribution.
-   */
-  static async reportTrade(params: {
-    signature: string;
-    wallet: string;
-    marketId: string;
-    side: "yes" | "no";
-    quoteId?: string;
-  }): Promise<{ status: string }> {
-    const res = await fetch(`${PANTA_API_URL}/trades/`, {
-      method: "POST",
-      headers: getHeaders(),
-      body: JSON.stringify(params),
-    });
-    return res.json();
-  }
-
-  /**
-   * Fetches user positions for a wallet.
-   */
-  static async getPositions(wallet: string): Promise<PantaPosition[]> {
-    try {
-      const res = await fetch(`${PANTA_API_URL}/positions/?wallet=${wallet}`, {
-        headers: getHeaders(),
-      });
-      if (res.ok) {
-        const data = await res.json();
-        return data.positions || [];
-      }
-      return [];
-    } catch (err) {
-      console.error("[PantaClient] getPositions error:", err);
-      return [];
-    }
-  }
-
-  /**
-   * Builds claim win transaction instructions.
-   */
-  static async buildClaimWin(params: {
-    wallet: string;
-    marketId: string;
-  }): Promise<PantaClaimBuildResponse> {
-    const res = await fetch(`${PANTA_API_URL}/claim/build/`, {
-      method: "POST",
-      headers: getHeaders(),
-      body: JSON.stringify(params),
-    });
-    const data = await res.json();
-    if (!res.ok) {
-      throw new Error(data.message || data.code || "Failed to build claim transaction from Panta");
-    }
-    return data as PantaClaimBuildResponse;
-  }
+    return JSON.parse(Buffer.concat(chunks).toString("utf8"));
+  } catch (error) {
+    if (error instanceof PantaError) throw error;
+    throw unavailable();
+  } finally { clearTimeout(timer); }
 }

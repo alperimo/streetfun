@@ -309,5 +309,9 @@ npx vercel --prod
 
 ---
 
+## Panta prediction markets
+
+The token detail page can display a reviewed Panta market for the token's current lifecycle stage. Prices and market terms come from Panta; purchases and eligible win claims use wallet-signed instructions and verified on-chain confirmation. There are no invented financial quotes or escrow-transfer fallbacks. Configuration is fail-closed: a rotated API credential, server session secret, shared rate-budget migration and real market bindings are required. See [Panta integration and activation](docs/panta-integration.md).
+
 ## 7. License
 MIT License.

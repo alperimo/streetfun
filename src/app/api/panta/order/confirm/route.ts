@@ -1,77 +1,46 @@
-import { NextRequest, NextResponse } from "next/server";
-import { PantaClient } from "@/server/pantaService";
-import { getServerConnection } from "@/server/rpc";
-import { createServerSupabaseClient } from "@/server/supabase";
-
+import { NextRequest } from "next/server";
+import { createHash } from "node:crypto";
+import bs58 from "bs58";
+import { readPantaSession } from "@/server/pantaSession";
+import { bindingFromSession } from "@/server/pantaMarket";
+import { pantaRequest } from "@/server/pantaService";
+import { getServerConnection, assertConfiguredCluster } from "@/server/rpc";
+import { invalid, object, PantaError, unavailable } from "@/server/pantaValidation";
+import { pantaBody, pantaFailure, pantaJson, pantaLimit } from "@/server/pantaHttp";
 export const dynamic = "force-dynamic";
-
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
-    const { signature, wallet, marketId, side, quoteId, orderId, amountUsdc, shares } = body;
-
-    if (!signature || !wallet) {
-      return NextResponse.json(
-        { error: "Missing signature or wallet" },
-        { status: 400 }
-      );
+    const body = await pantaBody(req, ["signature", "orderToken"]);
+    if (typeof body.signature !== "string" || body.signature.length > 88) invalid();
+    try { if (bs58.decode(body.signature).length !== 64) invalid(); } catch { invalid(); }
+    const signature = body.signature;
+    const session = readPantaSession(body.orderToken, "order");
+    bindingFromSession(session);
+    await pantaLimit();
+    const connection = getServerConnection(); await assertConfiguredCluster(connection);
+    const tx = await connection.getTransaction(signature, { commitment: "confirmed", maxSupportedTransactionVersion: 0 });
+    if (!tx || !tx.meta) {
+      const statuses = await connection.getSignatureStatuses([signature], { searchTransactionHistory: true });
+      if (statuses.value[0]?.err) throw new PantaError("TRANSACTION_FAILED", 409, "The prediction transaction failed on-chain.");
+      if (!statuses.value[0] && await connection.getBlockHeight("confirmed") > Number(session.lastValidBlockHeight))
+        throw new PantaError("TRANSACTION_EXPIRED", 409, "The prediction transaction expired without confirmation. Review a fresh quote.");
+      return pantaJson({ status: "pending", signature }, 202);
     }
-
-    // 1. Verify transaction on Solana Devnet
-    const connection = getServerConnection();
-    try {
-      const statusRes = await connection.getSignatureStatus(signature);
-      console.log(`[api/panta/order/confirm] Tx ${signature} status:`, statusRes.value?.confirmationStatus);
-    } catch (solErr) {
-      console.warn(`[api/panta/order/confirm] Could not fetch signature status immediately:`, solErr);
+    if (tx.meta.err) throw new PantaError("TRANSACTION_FAILED", 409, "The prediction transaction failed on-chain.");
+    const message = tx.transaction.message;
+    if (createHash("sha256").update(message.serialize()).digest("hex") !== session.messageHash ||
+        message.staticAccountKeys[0]?.toBase58() !== session.wallet || message.header.numRequiredSignatures !== 1)
+      throw new PantaError("TRANSACTION_MISMATCH", 409, "Transaction does not match the prediction order.");
+    if (session.action === "buy") {
+      const submitted = object(await pantaRequest("/primaryordersubmit/", { orderId: session.orderId, signature, wallet: session.wallet }));
+      if (submitted.orderId !== session.orderId || submitted.signature !== signature || !["submitted", "confirmed"].includes(String(submitted.status))) throw unavailable();
     }
-
-    // 2. Report to Panta API for attribution (idempotent fail-safe)
-    let pantaAttribution = "pending";
-    try {
-      const reportRes = await PantaClient.reportTrade({
-        signature,
-        wallet,
-        marketId: marketId || "F2nK5f6NTgVA8zVT2CzRYRNaMcntv3njEkNCozGMs2Sj",
-        side: side || "yes",
-        quoteId,
-      });
-      pantaAttribution = reportRes.status || "reported";
-    } catch (pantaErr: any) {
-      console.log(`[api/panta/order/confirm] Panta report note:`, pantaErr.message);
-    }
-
-    // 3. Persist position & trade record in Supabase database if available
-    const db = createServerSupabaseClient();
-    if (db) {
-      try {
-        await db.from("panta_predictions").insert({
-          signature,
-          wallet,
-          market_id: marketId,
-          side: side || "yes",
-          amount_usdc: amountUsdc ? parseFloat(amountUsdc) : 0,
-          shares: shares ? parseFloat(shares) : 0,
-          status: "confirmed",
-          created_at: new Date().toISOString(),
-        });
-      } catch (dbErr) {
-        // Table might not exist yet, log gracefully
-        console.warn("[api/panta/order/confirm] Supabase persist note:", dbErr);
-      }
-    }
-
-    return NextResponse.json({
-      success: true,
-      signature,
-      attribution: pantaAttribution,
-      message: `Prediction for ${side?.toUpperCase()} recorded successfully on-chain and attributed to Panta.`,
-    });
-  } catch (err: any) {
-    console.error("[api/panta/order/confirm] Error:", err);
-    return NextResponse.json(
-      { error: err.message || "Failed to confirm prediction trade" },
-      { status: 500 }
-    );
-  }
+    // Panta independently verifies instruction kind, wallet, market and quote amounts; idempotent by signature.
+    const report = object(await pantaRequest("/trades/", { signature, wallet: session.wallet, marketId: session.marketId,
+      ...(session.action === "buy" ? { quoteId: session.quoteId, clientOrderId: session.orderId } : {}) }));
+    if (report.status !== "processed" || report.signature !== signature || report.wallet !== session.wallet ||
+        report.marketId !== session.marketId || report.kind !== session.action ||
+        (session.action === "buy" && report.side !== session.side)) throw unavailable();
+    return pantaJson({ status: "confirmed", signature, kind: session.action });
+  } catch (error) { return pantaFailure(error); }
 }

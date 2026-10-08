@@ -1,34 +1,24 @@
-import { NextRequest, NextResponse } from "next/server";
-import { PantaClient } from "@/server/pantaService";
-
+import { NextRequest } from "next/server";
+import { pantaRequest } from "@/server/pantaService";
+import { reviewedBindingsForToken, checkedMarket } from "@/server/pantaMarket";
+import { buildCheckedTransaction } from "@/server/pantaBuild";
+import { address, decimal, object, PantaError, unavailable } from "@/server/pantaValidation";
+import { pantaBody, pantaFailure, pantaJson } from "@/server/pantaHttp";
 export const dynamic = "force-dynamic";
-
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
-    const { wallet, marketId } = body;
-
-    if (!wallet || !marketId) {
-      return NextResponse.json(
-        { error: "Wallet and marketId are required" },
-        { status: 400 }
-      );
-    }
-
-    try {
-      const claimBuild = await PantaClient.buildClaimWin({ wallet, marketId });
-      return NextResponse.json(claimBuild);
-    } catch (apiErr: any) {
-      return NextResponse.json(
-        { error: apiErr.message || "Claim is currently not available for this market" },
-        { status: 400 }
-      );
-    }
-  } catch (err: any) {
-    console.error("[api/panta/claim/build] Error:", err);
-    return NextResponse.json(
-      { error: err.message || "Internal server error" },
-      { status: 500 }
-    );
-  }
+    const body = await pantaBody(req, ["wallet", "mint", "marketId"]);
+    const wallet = address(body.wallet), mint = address(body.mint);
+    const marketId = address(body.marketId);
+    const { reviewed } = await reviewedBindingsForToken(mint);
+    const binding = reviewed.find(row => row.marketId === marketId);
+    if (!binding) throw new PantaError("MARKET_NOT_CONFIGURED", 404, "This claim market is not associated with the token.");
+    const market = await checkedMarket(binding);
+    if (!market.resolved || market.phase !== "resolved") throw new PantaError("NOT_CLAIMABLE", 409, "This market is not ready for claims.");
+    const raw = object(await pantaRequest("/claim/build/", { wallet, marketId: binding.marketId }));
+    if (raw.wallet !== wallet || raw.marketId !== binding.marketId || !["YES", "NO", "yes", "no"].includes(String(raw.outcome))) throw unavailable();
+    decimal(raw.winningShares, true);
+    const transaction = await buildCheckedTransaction(raw, binding, { wallet }, "claim");
+    return pantaJson({ ...transaction, winningShares: raw.winningShares, outcome: raw.outcome });
+  } catch (error) { return pantaFailure(error); }
 }

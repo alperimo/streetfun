@@ -1,102 +1,68 @@
+export type LifecycleStage = "pre-graduation" | "post-graduation";
+export type PantaSide = "yes" | "no";
+export type PantaPhase = "primary" | "secondary" | "resolved" | "cancelled";
+
 export interface PantaMarket {
   marketId: string;
-  category: string;
   title: string;
   description: string;
-  images: string[];
-  phase: "primary" | "secondary" | "resolved" | "cancelled";
-  marketType: "standard" | "breaking";
-  startTime: number;
-  endTime: number;
-  resolutionTime: number;
-  region: string;
+  phase: PantaPhase;
   resolved: boolean;
   status: string;
-  volumeUsdc: string | null;
-  volumeUsdcBase?: number | null;
+  startTime: number | null;
+  resolutionTime: number | null;
   yesPrice: string | null;
   noPrice: string | null;
-  primaryYesPrice?: string | null;
-  primaryNoPrice?: string | null;
-  secondaryYesPrice?: string | null;
-  secondaryNoPrice?: string | null;
-  createdByPartner?: boolean;
+  volumeUsdc: string | null;
 }
-
-export type LifecycleStage = "pre-graduation" | "post-graduation";
-
-export interface LifecycleMarketInfo {
+export interface LifecycleMarketInfo extends PantaMarket {
+  mint: string;
   stage: LifecycleStage;
-  stageBadge: string;
-  marketTypeLabel: string; // "System Market"
-  marketId: string;
-  question: string;
-  resolutionCriteria: string;
-  resolutionSource: string;
-  openedAt: string;
-  resolutionAt: string;
-  yesPercent: number;
-  noPercent: number;
-  yesPrice: string;
-  noPrice: string;
-  volumeUsdc: string;
-  status: string;
-  phase: string;
-  resolved: boolean;
-  poweredBy: string;
+  marketUrl: string;
+  tradingEnabled: boolean;
+  programId: string;
+  usdcMint: string;
 }
-
 export interface PantaOrderQuote {
   quoteId: string;
   marketId: string;
-  wallet: string;
-  side: "yes" | "no";
+  side: PantaSide;
   amountUsdc: string;
   shares: string;
-  avgPrice?: string;
+  avgPrice: string;
   feeUsdc: string;
   expiresAt: string;
-  blockhashExpiryHintSec?: number;
+  quoteToken: string;
 }
-
-export interface PantaPosition {
-  marketId: string;
-  category: string | null;
-  side: "yes" | "no";
-  shares: string;
-  phase: string;
-  claimable: boolean;
-  claimed: boolean;
-  outcome: string | null;
+export interface PantaInstruction {
+  programId: string;
+  data: string;
+  accounts: { pubkey: string; isSigner: boolean; isWritable: boolean }[];
 }
-
 export interface PantaOrderBuildResponse {
   orderId: string;
   quoteId: string;
   wallet: string;
-  instructions: {
-    programId: string;
-    data: string;
-    accounts: { pubkey: string; isSigner: boolean; isWritable: boolean }[];
-  }[];
-  recentBlockhash: string;
-  lastValidBlockHeight: number;
-  expectedShares?: string;
-  feeUsdc?: string;
-  expiresAt?: string;
-}
-
-export interface PantaClaimBuildResponse {
-  wallet: string;
   marketId: string;
-  outcome: string;
-  winningShares: string;
-  instructions: {
-    programId: string;
-    data: string;
-    accounts: { pubkey: string; isSigner: boolean; isWritable: boolean }[];
-  }[];
+  side: PantaSide;
+  amountUsdc: string;
+  expectedShares: string;
+  feeUsdc: string;
+  instructions: PantaInstruction[];
   recentBlockhash: string;
   lastValidBlockHeight: number;
-  derived?: Record<string, string>;
+  expiresAt: string;
+  transaction: string;
+  orderToken: string;
+}
+export interface PantaPosition {
+  marketId: string;
+  programId: string;
+  usdcMint: string;
+  side: PantaSide;
+  shares: string;
+  phase: PantaPhase;
+  claimable: boolean;
+  claimed: boolean;
+  outcome: PantaSide | null;
 }

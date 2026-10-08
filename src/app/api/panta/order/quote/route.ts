@@ -1,65 +1,25 @@
-import { NextRequest, NextResponse } from "next/server";
-import { PantaClient } from "@/server/pantaService";
-
+import { NextRequest } from "next/server";
+import { pantaRequest } from "@/server/pantaService";
+import { bindingForToken, requirePrimaryMarket } from "@/server/pantaMarket";
+import { address, decimal, object, side, text, unavailable, usdcUnits } from "@/server/pantaValidation";
+import { pantaBody, pantaFailure, pantaJson } from "@/server/pantaHttp";
+import { issuePantaSession } from "@/server/pantaSession";
 export const dynamic = "force-dynamic";
-
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
-    const { wallet, marketId, side, amountUsdc } = body;
-
-    if (!wallet || !marketId || !side || !amountUsdc) {
-      return NextResponse.json(
-        { error: "Missing required parameters: wallet, marketId, side, amountUsdc" },
-        { status: 400 }
-      );
-    }
-
-    const parsedAmount = parseFloat(amountUsdc);
-    if (isNaN(parsedAmount) || parsedAmount <= 0) {
-      return NextResponse.json(
-        { error: "Invalid amountUsdc" },
-        { status: 400 }
-      );
-    }
-
-    try {
-      // 1. Attempt official live quote from Panta API
-      const liveQuote = await PantaClient.quoteOrder({
-        wallet,
-        marketId,
-        side,
-        amountUsdc: parsedAmount.toFixed(2),
-      });
-
-      return NextResponse.json(liveQuote);
-    } catch (apiError: any) {
-      console.warn("[api/panta/order/quote] Live Panta quote returned error, applying calibrated fallback:", apiError.message);
-
-      // Calibrated mathematical prediction market CPMM quote for seamless Devnet UX
-      const currentPrice = side.toLowerCase() === "yes" ? 0.73 : 0.27;
-      const estimatedFee = parsedAmount * 0.02; // 2% protocol fee
-      const netAmount = parsedAmount - estimatedFee;
-      const shares = (netAmount / currentPrice).toFixed(4);
-
-      return NextResponse.json({
-        quoteId: `qt_sf_${Date.now()}_${Math.random().toString(36).substring(7)}`,
-        marketId,
-        wallet,
-        side: side.toLowerCase(),
-        amountUsdc: parsedAmount.toFixed(2),
-        shares,
-        avgPrice: currentPrice.toFixed(4),
-        feeUsdc: estimatedFee.toFixed(2),
-        expiresAt: new Date(Date.now() + 90_000).toISOString(),
-        blockhashExpiryHintSec: 60,
-      });
-    }
-  } catch (err: any) {
-    console.error("[api/panta/order/quote] Internal error:", err);
-    return NextResponse.json(
-      { error: err.message || "Internal server error" },
-      { status: 500 }
-    );
-  }
+    const body = await pantaBody(req, ["mint", "wallet", "side", "amountUsdc"]);
+    const mint = address(body.mint), wallet = address(body.wallet), orderSide = side(body.side);
+    const amountUsdc = text(body.amountUsdc, 24); usdcUnits(amountUsdc);
+    const binding = await bindingForToken(mint);
+    await requirePrimaryMarket(binding);
+    const quote = object(await pantaRequest("/primaryorderquote/", { wallet, marketId: binding.marketId, side: orderSide, amountUsdc }));
+    const quoteId = text(quote.quoteId, 128), expiresAt = text(quote.expiresAt, 64);
+    const expires = Date.parse(expiresAt);
+    if (!/^qt_[A-Za-z0-9_-]+$/.test(quoteId) || quote.marketId !== binding.marketId || quote.side !== orderSide ||
+        usdcUnits(quote.amountUsdc) !== usdcUnits(amountUsdc) || !Number.isFinite(expires) || expires <= Date.now() || expires > Date.now() + 120_000) throw unavailable();
+    const shares = decimal(quote.shares, true), feeUsdc = decimal(quote.feeUsdc), avgPrice = decimal(quote.avgPrice, true);
+    if (Number(avgPrice) > 1 || usdcUnits(feeUsdc, true) > usdcUnits(amountUsdc)) throw unavailable();
+    const quoteToken = issuePantaSession({ kind: "quote", ...binding, wallet, side: orderSide, amountUsdc, quoteId, shares, feeUsdc, avgPrice, expires });
+    return pantaJson({ quoteId, marketId: binding.marketId, side: orderSide, amountUsdc, shares, feeUsdc, avgPrice, expiresAt, quoteToken });
+  } catch (error) { return pantaFailure(error); }
 }
