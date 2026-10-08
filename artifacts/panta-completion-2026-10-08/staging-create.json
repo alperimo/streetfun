@@ -1,0 +1,29 @@
+{
+  "at": "2026-10-08T11:02:01.144Z",
+  "api": "https://staging-api.panta.market/api/v1/markets/create/quote/",
+  "expectedEvent": "9awy2md531Ca9gjrBru76PpGUaZfRvww6JeNUfPqKxxQ",
+  "accountExistedBeforeQuote": false,
+  "request": {
+    "wallet": "qjmdD4dASGmMwFQFq4Dy9EoUUeDfCS3hiQCbmir6qr8",
+    "question": "Will DTyL8pSGmLBRMyHP3DEsqzPByZ4CadEKkCvKaZ2x3bzc graduate on devnet before 1794048822?",
+    "title": "Will $PANTEST graduate into T-OpenAI backing by 2026-11-07?",
+    "description": "System market. Resolves from confirmed StreetFun collateral settlement before 2026-11-07T10:53:42.000Z. Panta verifies the outcome before winnings become claimable.",
+    "resolutionRule": "YES iff confirmed StreetFun collateral settlement sets isGraduated=true before the deadline. Curve completion or Meteora migration alone excluded. NO requires full chain review at deadline. Panta oracle settles.",
+    "sourcesOfTruth": [
+      "https://explorer.solana.com/address/FNY1D4HZtKaAj2GNwpLPxubh2WFxiefL86ogxQVgjVd5?cluster=devnet"
+    ],
+    "category": "crypto",
+    "startTime": 1791456822,
+    "endTime": 1794048822,
+    "resolutionTime": 1794048822,
+    "imageUrl": "https://streetfun.xyz/logos/openai.png",
+    "marketType": "breaking",
+    "eventInProgress": true
+  },
+  "httpStatus": 400,
+  "response": {
+    "code": "DUPLICATE_MARKET",
+    "message": "market creation already exists for this wallet and question"
+  },
+  "transactionSigned": false
+}

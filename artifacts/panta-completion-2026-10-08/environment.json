@@ -1,0 +1,80 @@
+{
+  "checkedAt": "2026-10-08T11:11:30.347Z",
+  "network": "devnet",
+  "solana": {
+    "genesis": "EtWTRABZaYq6iMfeYKouRu166VU2xqa1wcaWoxPkrZBG",
+    "panta": {
+      "program": "6gM5afTQBq5VZCfgpGqcsqzfWd5maLSCKWtGjbEobZMp",
+      "executable": true,
+      "config": "8mJjfx7SuWwS4yfVZXtqC2cvzxr3TQHsCgKyjpuDWKAP",
+      "configBytes": 324,
+      "configuredUsdcMint": "11111111111111111111111111111111",
+      "ready": false,
+      "code": "PANTA_CONFIGURATION_INCOMPLETE"
+    }
+  },
+  "database": {
+    "panta_lifecycle_markets": {
+      "ok": true,
+      "rows": [
+        {
+          "network": "devnet",
+          "mint": "DTyL8pSGmLBRMyHP3DEsqzPByZ4CadEKkCvKaZ2x3bzc",
+          "stage": "pre-graduation",
+          "status": "queued",
+          "failure_code": "PANTA_CONFIGURATION_INCOMPLETE",
+          "source_signature": "5UxQAfVrdWozkn6aSTiXnFvHdh1h2r6DfwBh76M4jfsGR8g51ZbCCwrHYrY6QjH2NC8DB2m67NhanMXkD2X4sLL9",
+          "source_slot": 508792914,
+          "anchor_time": 1791456822,
+          "deadline": 1794048822,
+          "create_signature": null,
+          "baseline": null,
+          "final_snapshot": null
+        },
+        {
+          "network": "devnet",
+          "mint": "EJVkPsPBnin6vwxfRUL5xPihSDcXMjBtdAthobVGjoSq",
+          "stage": "pre-graduation",
+          "status": "queued",
+          "failure_code": "PANTA_CONFIGURATION_INCOMPLETE",
+          "source_signature": "2K9sCNoRGPLdNigqf6H2ssPRV7RYJtqbqktZQGYiUwuamyPYrnWGkPYj7rfpEYJ6Rv5nNDkDA4Pry9FxZXvvuveT",
+          "source_slot": 508786552,
+          "anchor_time": 1791455304,
+          "deadline": 1794047304,
+          "create_signature": null,
+          "baseline": null,
+          "final_snapshot": null
+        }
+      ]
+    },
+    "panta_issuer_reservations": {
+      "ok": true,
+      "rows": []
+    },
+    "consume_panta_request_budget": {
+      "exists": true
+    },
+    "reserve_panta_issuer_budget": {
+      "exists": true
+    },
+    "lease_panta_lifecycle": {
+      "exists": true
+    },
+    "anonymousLifecycleRead": {
+      "denied": true,
+      "errorCode": "42501"
+    }
+  },
+  "provider": {
+    "/whoami/": {
+      "httpStatus": 200,
+      "canCreateMarkets": true
+    },
+    "/markets/?limit=1": {
+      "httpStatus": 200,
+      "marketIds": [
+        "AESrMoZxcTGQibC1rNEmq3oz9qoDqHhomUe6MQEw1k9F"
+      ]
+    }
+  }
+}

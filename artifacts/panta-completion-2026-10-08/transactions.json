@@ -1,0 +1,90 @@
+{
+  "network": "devnet",
+  "transactions": [
+    {
+      "signature": "5UxQAfVrdWozkn6aSTiXnFvHdh1h2r6DfwBh76M4jfsGR8g51ZbCCwrHYrY6QjH2NC8DB2m67NhanMXkD2X4sLL9",
+      "status": "confirmed",
+      "kind": "launch",
+      "recordedAt": "2026-10-08T10:53:41.614Z"
+    }
+  ],
+  "creator": "1YqxrFExzvJ6r1HqeaoRyZ8i4iUaZX5q8eZ3pFqaBmR",
+  "mint": "DTyL8pSGmLBRMyHP3DEsqzPByZ4CadEKkCvKaZ2x3bzc",
+  "metadata": {
+    "name": "Panta Lifecycle Test",
+    "symbol": "PANTEST",
+    "targetEquitySymbol": "T-OpenAI",
+    "description": "Real Devnet lifecycle verification. Test collateral has no real-world equity value.",
+    "avatarUrl": ""
+  },
+  "pool": "GZzxRZ3wGrrwzf1Pramf74xSbsPaMSEgzKxQxFo3HGBQ",
+  "launchSignature": "5UxQAfVrdWozkn6aSTiXnFvHdh1h2r6DfwBh76M4jfsGR8g51ZbCCwrHYrY6QjH2NC8DB2m67NhanMXkD2X4sLL9",
+  "launch": {
+    "success": true,
+    "signature": "5UxQAfVrdWozkn6aSTiXnFvHdh1h2r6DfwBh76M4jfsGR8g51ZbCCwrHYrY6QjH2NC8DB2m67NhanMXkD2X4sLL9",
+    "token": {
+      "mint": "DTyL8pSGmLBRMyHP3DEsqzPByZ4CadEKkCvKaZ2x3bzc",
+      "name": "Panta Lifecycle Test",
+      "symbol": "PANTEST",
+      "description": "Real Devnet lifecycle verification. Test collateral has no real-world equity value.",
+      "avatarUrl": "/generated/streetfun-logo.png",
+      "creator": "1YqxrFExzvJ6r1HqeaoRyZ8i4iUaZX5q8eZ3pFqaBmR",
+      "createdAt": "2026-10-08T10:53:42+00:00",
+      "totalSupply": 1000000000,
+      "priceUsd": 3.750005636043994e-8,
+      "marketCapUsd": 37.500056360439935,
+      "priceChange24h": 0,
+      "priceChange24hAvailable": false,
+      "volume24hUsd": 0,
+      "volume24hAvailable": true,
+      "targetEquity": {
+        "symbol": "T-OpenAI",
+        "name": "OpenAI",
+        "mintAddress": "3PFKgvU4P8hcuW1X2VjAgRHNsz1TnA4SLyjEDNfhzLC7",
+        "issuer": "Tessera",
+        "custodian": "Tessera Institutional Custody",
+        "legalFramework": "Tessera loan participation right; tokenized pre-IPO equity",
+        "logoUrl": "/logos/openai.png",
+        "stockPriceUsd": 1,
+        "isPreIpo": false,
+        "decimals": 6,
+        "verifiedTessera": false,
+        "verifiedPreStocks": false,
+        "isTestCollateral": true,
+        "transferFee": null
+      },
+      "bondingCurve": {
+        "protocol": "meteora-dbc",
+        "dbcPoolAddress": "GZzxRZ3wGrrwzf1Pramf74xSbsPaMSEgzKxQxFo3HGBQ",
+        "settlementPending": false,
+        "realQuoteReservesUsd": 0,
+        "graduationThresholdUsd": 60,
+        "progressPct": 0,
+        "dbcQuoteReserveRaw": "0",
+        "dbcBaseReserveRaw": "1000000000000000",
+        "quoteMint": "DuQ1T5B6tmf5ZfSNpPomVcDntLEzR1mkoB81yHP5rGHG",
+        "isGraduated": false
+      },
+      "treasury": {
+        "totalEquityLocked": 0,
+        "totalEquityValueUsd": 0,
+        "vaultPda": "zCj8s3bvCnTqB9wz9qsAGH8GqV9gSGcvfHd3kL3A1ZK",
+        "proofOfReserveVerified": false,
+        "valuationAvailable": true,
+        "valuationSource": "Devnet collateral pool price (test asset)"
+      },
+      "dataSource": "onchain",
+      "lastUpdatedAt": "2026-10-08T10:53:48.126Z",
+      "observedSlot": 508792935
+    }
+  },
+  "market": {
+    "status": "provisioning",
+    "stage": "pre-graduation",
+    "title": "Will $PANTEST graduate into T-OpenAI backing by 2026-11-07?",
+    "description": "System market. Resolves from confirmed StreetFun collateral settlement before 2026-11-07T10:53:42.000Z. Panta verifies the outcome before winnings become claimable.",
+    "availabilityLabel": "Awaiting provider setup",
+    "message": "Panta prediction trading is unavailable on this network. The system market will retry after provider setup is available."
+  },
+  "lastCheckedAt": "2026-10-08T11:07:22.021Z"
+}
