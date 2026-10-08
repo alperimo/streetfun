@@ -4,12 +4,16 @@ export function memoryDatabase(initial: Record<string, Record<string, unknown>[]
   return { from(table: string) {
     const predicates: ((row: Record<string, unknown>) => boolean)[] = [];
     let sort: { key: string; ascending: boolean } | null = null, offset = 0, count = Infinity;
+    let patch: Record<string, unknown> | undefined;
     const query = {
       select(_fields = "*") { return query; },
       eq(key: string, value: unknown) { predicates.push(row => row[key] === value); return query; },
-      is(key: string, value: unknown) { return query.eq(key, value); },
+      neq(key: string, value: unknown) { predicates.push(row => row[key] !== value); return query; },
+      is(key: string, value: unknown) { predicates.push(row => value === null ? row[key] == null : row[key] === value); return query; },
       in(key: string, values: unknown[]) { predicates.push(row => values.includes(row[key])); return query; },
-      gte(key: string, value: string) { predicates.push(row => String(row[key]) >= value); return query; },
+      gte(key: string, value: string | number) { predicates.push(row => typeof value === "number" ? Number(row[key]) >= value : String(row[key]) >= value); return query; },
+      lte(key: string, value: string | number) { predicates.push(row => typeof value === "number" ? Number(row[key]) <= value : String(row[key]) <= value); return query; },
+      update(value: Record<string, unknown>) { patch = value; return query; },
       order(key: string, options = { ascending: true }) { sort = { key, ...options }; return query; },
       limit(value: number) { count = value; return query; },
       range(start: number, end: number) { offset = start; count = end - start + 1; return query; },
@@ -22,6 +26,7 @@ export function memoryDatabase(initial: Record<string, Record<string, unknown>[]
       async maybeSingle(): Promise<{ data: Record<string, unknown> | null; error: null }> { const result = await query; return { data: result.data[0] || null, error: null }; },
       then(resolve: (value: { data: Record<string, unknown>[]; error: null }) => unknown) {
         let rows = (tables.get(table) || []).filter(row => predicates.every(p => p(row)));
+        if (patch) rows.forEach(row => Object.assign(row, patch));
         if (sort) { const { key, ascending } = sort; rows = [...rows].sort((a, b) => String(a[key]).localeCompare(String(b[key])) * (ascending ? 1 : -1)); }
         return Promise.resolve({ data: rows.slice(offset, offset + count), error: null }).then(resolve);
       },

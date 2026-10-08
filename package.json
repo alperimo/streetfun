@@ -20,7 +20,9 @@
     "capture:transactions": "npx ts-node -P ./tests/tsconfig.json scripts/capture_all_solana_explorer.ts",
     "test:webhook": "npx ts-node -P ./tests/tsconfig.json scripts/test_webhook.ts",
     "dev:indexer": "npx ts-node -P ./tests/tsconfig.json scripts/local_helius_indexer.ts",
-    "test:unit": "node scripts/run_unit_tests.cjs"
+    "test:unit": "node scripts/run_unit_tests.cjs",
+    "worker:panta": "node scripts/panta_worker.cjs",
+    "verify:panta-devnet": "node scripts/verify_panta_devnet.cjs"
   },
   "dependencies": {
     "@coral-xyz/anchor": "0.31.0",

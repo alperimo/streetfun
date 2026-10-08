@@ -120,8 +120,7 @@ streetfun/
 │   ├── services/                   # Service layer
 │   │   ├── indexer/tradeStore.ts   # Supabase trade store & local fallback cache
 │   │   ├── solana/                 # On-chain Solana RPC services
-│   │   └── mock/                   # In-memory simulation services
-│   └── lib/                        # Data models, types & mock state
+│   └── lib/                        # Data models, types & market helpers
 ├── supabase/
 │   └── schema.sql                  # PostgreSQL schema, get_ohlcv RPC function & RLS
 ├── tests/
@@ -173,7 +172,7 @@ solana-test-validator --reset --quiet
 
 ### Configure Meteora DBC for a cluster
 
-Deploy and initialize the current StreetFun program first. Set `NEXT_PUBLIC_SOLANA_NETWORK`, `NEXT_PUBLIC_USE_MOCK_DATA=false`, and a funded `ANCHOR_WALLET` in `.env.local`. Leave `NEXT_PUBLIC_METEORA_DBC_CONFIG_ADDRESS` unset, then run:
+Deploy and initialize the current StreetFun program first. Set `NEXT_PUBLIC_SOLANA_NETWORK` and a funded `ANCHOR_WALLET` in `.env.local`. Leave `NEXT_PUBLIC_METEORA_DBC_CONFIG_ADDRESS` unset, then run:
 
 ```bash
 npm run setup:meteora-dbc
@@ -207,9 +206,7 @@ npx ts-node --transpile-only -P ./tests/tsconfig.json scripts/localnet_demo.ts
 
 ### 6. Build & Run Next.js Frontend
 ```bash
-# Toggle simulation vs live on-chain in .env.local:
-# NEXT_PUBLIC_USE_MOCK_DATA=true  -> Instant interactive simulation demo
-# NEXT_PUBLIC_USE_MOCK_DATA=false -> Live on-chain Anchor smart contract calls
+# All market reads and transactions use live on-chain sources.
 
 # Start development server on localhost:3000
 npm run dev
@@ -219,7 +216,7 @@ npm run build
 npm run start
 ```
 
-With `NEXT_PUBLIC_SOLANA_NETWORK=localnet`, a loopback RPC, and mock data off,
+With `NEXT_PUBLIC_SOLANA_NETWORK=localnet`, a loopback RPC,
 the wallet menu offers **Localnet Dev Wallet**. It creates a disposable browser
 signer for this tab and funds it with 2 test SOL and 10,000 test USDC from the
 local validator. The configured test USDC mint must be controlled by the local
@@ -311,7 +308,7 @@ npx vercel --prod
 
 ## Panta prediction markets
 
-The token detail page can display a reviewed Panta market for the token's current lifecycle stage. Prices and market terms come from Panta; purchases and eligible win claims use wallet-signed instructions and verified on-chain confirmation. There are no invented financial quotes or escrow-transfer fallbacks. Configuration is fail-closed: a rotated API credential, server session secret, shared rate-budget migration and real market bindings are required. See [Panta integration and activation](docs/panta-integration.md).
+Confirmed launches and collateral graduations enqueue one system Panta market per token and lifecycle stage. A dedicated issuer creates, signs and registers markets through Panta; the background worker recovers interrupted transactions and retries provider outages. Prices, purchases and eligible win claims require real Panta responses and verified Solana transactions. There are no manual market bindings, invented quotes or escrow-transfer fallbacks. Panta's Devnet USDC configuration and authorized resolution service must be operational before this lifecycle can run end to end. See [Panta integration and activation](docs/panta-integration.md).
 
 ## 7. License
 MIT License.

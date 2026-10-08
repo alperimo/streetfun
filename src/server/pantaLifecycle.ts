@@ -29,6 +29,16 @@ export async function enqueueLifecycle(input: {
       graduated_signature: input.signature, graduated_slot: input.slot, graduated_time: input.time,
     }).eq("network", network).eq("mint", input.mint).eq("stage", "pre-graduation").is("graduated_signature", null);
     if (result.error) throw unavailable();
+  } else {
+    // Webhooks can arrive out of order. Replaying a launch after settlement
+    // must still link the confirmed graduation to the earlier market.
+    const graduated = (await lifecycleRows(input.mint)).find(row => row.stage === "post-graduation");
+    if (graduated) {
+      const result = await lifecycleDb().from("panta_lifecycle_markets").update({
+        graduated_signature: graduated.source_signature, graduated_slot: graduated.source_slot, graduated_time: graduated.anchor_time,
+      }).eq("network", network).eq("mint", input.mint).eq("stage", "pre-graduation").is("graduated_signature", null);
+      if (result.error) throw unavailable();
+    }
   }
 }
 
@@ -85,16 +95,28 @@ async function persist(row: LifecycleRow, patch: Record<string, unknown>) {
   Object.assign(row, patch);
 }
 async function createMarket(row: LifecycleRow) {
+  if (!row.create_signature) {
+    if (row.deadline <= Date.now() / 1000)
+      throw new PantaError("LIFECYCLE_WINDOW_EXPIRED", 409, "The prediction window expired before its market could be opened.");
+    if (row.stage === "pre-graduation" && row.graduated_signature)
+      throw new PantaError("LIFECYCLE_ALREADY_GRADUATED", 409, "The token graduated before its prediction market could open.");
+    if (row.stage === "post-graduation" && !row.baseline) {
+      if (Date.now() / 1000 <= row.anchor_time + 60)
+        throw new PantaError("PRICE_BASELINE_PENDING", 409, "The graduation price observations are being verified.");
+      throw new PantaError("PRICE_BASELINE_MISSING", 409, "The graduation price observations could not be recorded in time.");
+    }
+  }
   const { config, mint, rpc } = await pantaChainConfig();
   const signer = await systemSigner();
-  if (row.deadline <= Date.now() / 1000 && !row.create_signature) throw new PantaError("LIFECYCLE_WINDOW_EXPIRED", 409, "The prediction window expired before its market could be opened.");
   // Recover the exact signed transaction before obtaining any new quote/build.
   if (row.signed_transaction && row.create_signature) {
     const status = (await rpc.getSignatureStatuses([row.create_signature], { searchTransactionHistory: true })).value[0];
     if (status?.err) throw new PantaError("CREATE_TRANSACTION_FAILED", 409, "The system market transaction failed.");
     if (!status || !["confirmed", "finalized"].includes(status.confirmationStatus || "")) {
-      const height = await rpc.getBlockHeight("confirmed");
-      if (!status && height > Number(row.last_valid_block_height)) {
+      const height = await rpc.getBlockHeight("finalized");
+      const finalStatus = height > Number(row.last_valid_block_height)
+        ? (await rpc.getSignatureStatuses([row.create_signature], { searchTransactionHistory: true })).value[0] : status;
+      if (!finalStatus && height > Number(row.last_valid_block_height)) {
         // Expiry plus absent historical signature permits a fresh build of the same create.
         await persist(row, { signed_transaction: null, create_signature: null, last_valid_block_height: null, status: "quoted" });
       } else {
@@ -114,9 +136,14 @@ async function createMarket(row: LifecycleRow) {
       return;
     }
   }
+  // An expired quote cannot be rebuilt. Only discard it when no signed payment
+  // remains to recover; confirmed payments always retain their original createId.
+  if (row.create_id && !row.create_signature && Date.parse(row.quote_expires_at || "") <= Date.now()) {
+    await persist(row, { status: "queued", create_id: null, market_id: null, quote: null,
+      quote_expires_at: null, payment_units: null });
+  }
   if (!row.create_id) {
     if (row.stage === "post-graduation") {
-      if (!row.baseline) throw new PantaError("PRICE_BASELINE_MISSING", 409, "The graduation price observations could not be recorded in time.");
       const evidenceSource = row.sources.find(source => new URL(source).pathname === `/api/panta/evidence/${row.mint}`);
       if (!evidenceSource) throw new PantaError("PUBLIC_EVIDENCE_UNAVAILABLE", 503, "The public price observation feed is awaiting setup.");
       const response = await fetch(evidenceSource, { redirect: "error", cache: "no-store", signal: AbortSignal.timeout(5000) });
@@ -181,29 +208,42 @@ export async function processLifecycleMarket(mint: string, stage: LifecycleStage
   const { data, error } = await lifecycleDb().rpc("lease_panta_lifecycle", { p_network: lifecycleNetwork(), p_mint: address(mint), p_stage: stage, p_lease: lease });
   if (error) throw unavailable();
   const row = data?.[0] as LifecycleRow | undefined;
-  if (!row) return;
+  if (!row) return false;
   try { await createMarket(row); }
   catch (error) {
     const failure = error instanceof PantaError ? error.code : "PANTA_UNAVAILABLE";
-    await persist(row, { failure_code: failure, next_attempt_at: new Date(Date.now() + Math.min(3600, 15 * 2 ** Math.min(row.attempts, 8)) * 1000).toISOString() });
+    const terminal = ["LIFECYCLE_WINDOW_EXPIRED", "LIFECYCLE_ALREADY_GRADUATED", "CREATE_TRANSACTION_FAILED", "PRICE_BASELINE_MISSING"].includes(failure);
+    await persist(row, { ...(terminal ? { status: "blocked" } : {}), failure_code: failure,
+      next_attempt_at: new Date(Date.now() + Math.min(3600, 15 * 2 ** Math.min(row.attempts, 8)) * 1000).toISOString() });
   } finally { await persist(row, { lease_id: null, lease_until: null }); }
+  return true;
 }
 export async function runLifecycleWorker(mint?: string) {
   const network = lifecycleNetwork();
   const now = Math.floor(Date.now() / 1000);
+  // Price capture is independent of market registration/retry state. A provider
+  // outage must not cause the graduation baseline to miss its one-minute window.
+  let baselines = lifecycleDb().from("panta_lifecycle_markets").select("mint")
+    .eq("network", network).eq("stage", "post-graduation").is("baseline", null)
+    .lte("anchor_time", now).gte("anchor_time", now - 60).order("anchor_time").limit(10);
+  if (mint) baselines = baselines.eq("mint", address(mint));
+  const baselineRows = await baselines;
+  if (baselineRows.error) throw unavailable();
+  for (const row of baselineRows.data || []) await captureLifecyclePrices(row.mint).catch(() => undefined);
   // Capture the narrow final window before processing slower create retries.
   const finals = await lifecycleDb().from("panta_lifecycle_markets").select("mint")
     .eq("network", network).eq("stage", "post-graduation").is("final_snapshot", null).lte("deadline", now).gte("deadline", now - 300).limit(100);
   if (finals.error) throw unavailable();
   for (const row of finals.data || []) await captureLifecyclePrices(row.mint).catch(() => undefined);
   let query = lifecycleDb().from("panta_lifecycle_markets").select("mint,stage,status,anchor_time,deadline,baseline,final_snapshot")
-    .eq("network", network).neq("status", "registered").lte("next_attempt_at", new Date().toISOString()).order("next_attempt_at").limit(1);
+    .eq("network", network).in("status", ["queued", "quoted", "signed"]).lte("next_attempt_at", new Date().toISOString()).order("next_attempt_at").limit(10);
   if (mint) query = query.eq("mint", address(mint));
   const { data, error } = await query;
   if (error) throw unavailable();
+  let examined = 0;
   for (const row of data || []) {
     if (row.stage === "post-graduation") await captureLifecyclePrices(row.mint).catch(() => undefined);
-    if (row.status !== "registered") await processLifecycleMarket(row.mint, row.stage);
+    if (await processLifecycleMarket(row.mint, row.stage)) { examined++; break; }
   }
-  return { examined: data?.length || 0 };
+  return { examined };
 }

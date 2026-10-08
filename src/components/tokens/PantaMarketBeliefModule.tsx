@@ -28,7 +28,7 @@ export function PantaMarketBeliefModule({ token }: { token: TokenMetadata }) {
   const { connection } = useConnection();
   const [market, setMarket] = useState<LifecycleMarketInfo | null>(null);
   const [marketError, setMarketError] = useState<string | null>(null);
-  const [provisioning, setProvisioning] = useState<{ title: string; description: string; message: string } | null>(null);
+  const [provisioning, setProvisioning] = useState<{ title: string; description: string; message: string; availabilityLabel: string } | null>(null);
   const [marketRefresh, setMarketRefresh] = useState(0);
   const [loading, setLoading] = useState(true);
   const [selectedSide, setSelectedSide] = useState<PantaSide>("yes");
@@ -46,7 +46,7 @@ export function PantaMarketBeliefModule({ token }: { token: TokenMetadata }) {
 
   useEffect(() => {
     const abort = new AbortController(); let active = true;
-    setMarket(null); setMarketError(null); setLoading(true);
+    setMarket(null); setProvisioning(null); setMarketError(null); setLoading(true);
     fetch(`/api/panta/market?${new URLSearchParams({ mint: token.mint })}`, { signal: abort.signal, cache: "no-store" })
       .then(async res => { const data = await res.json(); if (!res.ok) throw new Error(data.error); if (active) {
         if (data.status === "provisioning") { setMarket(null); setProvisioning(data); }
@@ -153,7 +153,7 @@ export function PantaMarketBeliefModule({ token }: { token: TokenMetadata }) {
       </div>
       {loading ? <div className="space-y-3 animate-pulse"><div className="h-5 w-3/4 rounded bg-card-hover" /><div className="h-11 rounded-xl bg-card-hover" /></div> : !market ? (
         <div className="space-y-2">{provisioning ? <>
-          <span className="rounded border border-border px-2 py-1 text-[10px] text-muted">System Market · Awaiting confirmation</span>
+          <span className="rounded border border-border px-2 py-1 text-[10px] text-muted">System Market · {provisioning.availabilityLabel}</span>
           <p className="pt-2 text-sm font-medium text-foreground">{provisioning.title}</p>
           <p className="text-xs text-muted leading-relaxed">{provisioning.description}</p>
           <p role="status" className="text-xs text-muted leading-relaxed">{provisioning.message}</p>
