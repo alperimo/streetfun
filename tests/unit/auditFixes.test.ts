@@ -1,4 +1,5 @@
 import { expect } from "chai";
+import * as pantaLifecycle from "../../src/server/pantaLifecycle";
 import { Connection, Keypair, PublicKey, SystemProgram, Transaction } from "@solana/web3.js";
 import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { NextRequest } from "next/server";
@@ -71,7 +72,7 @@ describe("Audit: immutable launch metadata and production write boundary", () =>
     process.env.NEXT_PUBLIC_USE_MOCK_DATA = "true";
     let reachedStore = false;
     replace(TradeStoreService, "getInstance", () => { reachedStore = true; throw new Error("Must not access storage"); }, restore);
-    expect((await record(request("/api/trades/record", { token: { mint: "fake" } }))).status).to.equal(403);
+    expect((await record(request("/api/trades/record", { token: { mint: "fake" } }))).status).to.equal(410);
     expect(reachedStore).to.equal(false);
   });
 
@@ -106,6 +107,8 @@ describe("Audit: immutable launch metadata and production write boundary", () =>
     replace(catalog, "getNetworkAssetCatalog", async () => [{ mintAddress: accounts[3].toBase58(), symbol: "EQ" }], restore);
     replace(TradeStoreService, "getInstance", () => ({ recordToken: async (token: any) => { writes.push(token); } }), restore);
     replace(serverTokens, "invalidate", () => {}, restore);
+    replace(pantaLifecycle, "enqueueLifecycle", async () => {}, restore);
+    replace(pantaLifecycle, "captureLifecyclePrices", async () => {}, restore);
     await indexer.indexConfirmedTransaction(connection, bs58.encode(new Uint8Array(64)), undefined, accounts[2].toBase58());
     expect(writes).to.have.length(1);
     expect(writes[0].is_graduated).to.equal(true);

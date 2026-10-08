@@ -26,9 +26,21 @@ export function validatePantaInstructions(value: unknown, intent: PantaTransacti
     if (programId === intent.programId) {
       trades++;
       if (data.subarray(0, 8).toString("hex") !== discriminators[intent.kind] ||
-          !accounts.some((a: PantaInstruction["accounts"][number]) => a.pubkey === intent.marketId && a.isWritable) ||
+          !accounts.some((a: PantaInstruction["accounts"][number]) => a.pubkey === intent.marketId && (intent.kind === "claim" || a.isWritable)) ||
           !accounts.some((a: PantaInstruction["accounts"][number]) => a.pubkey === intent.wallet && a.isSigner) ||
           !accounts.some((a: PantaInstruction["accounts"][number]) => a.pubkey === intent.usdcMint)) throw new Error("Panta order does not match the requested market.");
+      const pda = (seed: string, ...keys: PublicKey[]) => PublicKey.findProgramAddressSync([Buffer.from(seed), ...keys.map(k => k.toBuffer())], new PublicKey(intent.programId))[0].toBase58();
+      const wallet = new PublicKey(intent.wallet), market = new PublicKey(intent.marketId);
+      const userAta = getAssociatedTokenAddressSync(new PublicKey(intent.usdcMint), wallet).toBase58();
+      if (accounts.length !== 12 || accounts[0].pubkey !== intent.wallet || !accounts[0].isSigner || !accounts[0].isWritable ||
+          accounts[intent.kind === "buy" ? 1 : 2].pubkey !== intent.marketId ||
+          accounts[intent.kind === "buy" ? 2 : 1].pubkey !== pda("market_config") ||
+          accounts[5].pubkey !== pda("position", market, wallet) || accounts[7].pubkey !== userAta ||
+          accounts[intent.kind === "buy" ? 6 : 8].pubkey !== intent.usdcMint ||
+          accounts[9].pubkey !== TOKEN_PROGRAM_ID.toBase58() || accounts[10].pubkey !== ASSOCIATED_TOKEN_PROGRAM_ID.toBase58() ||
+          accounts[11].pubkey !== "11111111111111111111111111111111") throw new Error("Unexpected Panta account layout.");
+      if (intent.kind === "buy" && (data.length !== 17 || ![0, 1].includes(data[8]) || data.readBigUInt64LE(9) === 0n)) throw new Error("Invalid Panta purchase data.");
+      if (intent.kind === "claim" && (data.length !== 40 || !data.subarray(8).equals(wallet.toBuffer()) || accounts[6].pubkey !== pda("win_claim", market, wallet))) throw new Error("Claim does not belong to this wallet.");
     } else if (programId === ComputeBudgetProgram.programId.toBase58()) {
       if (accounts.length) throw new Error("Invalid compute budget accounts.");
       if (data[0] === 2 && data.length === 5 && ++computeLimit === 1 && data.readUInt32LE(1) <= 400_000) {

@@ -10,6 +10,7 @@ export interface PantaMarket {
   resolved: boolean;
   status: string;
   startTime: number | null;
+  endTime: number | null;
   resolutionTime: number | null;
   yesPrice: string | null;
   noPrice: string | null;

@@ -7,7 +7,6 @@ import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { SearchModal } from "@/components/modals/SearchModal";
 import { LaunchModal } from "@/components/modals/LaunchModal";
-import { INITIAL_TREASURY_STATS } from "@/lib/mockData";
 import { getOfficialEquityLogo } from "@/lib/assetLogos";
 import { useMarket } from "@/context/MarketContext";
 import { createBrowserSupabaseClient } from "@/lib/supabase";
@@ -68,15 +67,15 @@ function timeAgo(value: string): string {
 }
 
 export default function TreasuryPage() {
-  const { tokens, isMock } = useMarket();
+  const { tokens } = useMarket();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isLaunchOpen, setIsLaunchOpen] = useState(false);
   const [treasuryData, setTreasuryData] = useState<TreasuryData | null>(null);
-  const [isLoading, setIsLoading] = useState(!isMock);
+  const [isLoading, setIsLoading] = useState(true);
   const [hasLoadError, setHasLoadError] = useState(false);
 
   useEffect(() => {
-    if (isMock) return;
+    
 
     let disposed = false;
     let refreshTimer: ReturnType<typeof setTimeout> | null = null;
@@ -132,22 +131,9 @@ export default function TreasuryPage() {
       document.removeEventListener("visibilitychange", refreshWhenVisible);
       if (supabase && channel) void supabase.removeChannel(channel);
     };
-  }, [isMock]);
+  }, []);
 
-  const holdings = useMemo<VaultHolding[]>(() => {
-    if (!isMock) return treasuryData?.holdings || [];
-    return INITIAL_TREASURY_STATS.assetBreakdown.map((asset, index) => ({
-      mint: `mock-vault-${index}`,
-      tokenName: asset.name,
-      tokenSymbol: asset.symbol,
-      tokenAvatarUrl: asset.logoUrl || null,
-      equityMint: asset.mintAddress,
-      equitySymbol: asset.symbol,
-      equityAmount: String(asset.sharesLocked),
-      observedSlot: index + 1,
-      updatedAt: new Date().toISOString(),
-    }));
-  }, [isMock, treasuryData]);
+  const holdings = treasuryData?.holdings || [];
 
   const holdingGroups = useMemo(() => {
     const groups = new Map<string, {
@@ -173,32 +159,13 @@ export default function TreasuryPage() {
     return Array.from(groups.values()).sort((a, b) => a.equitySymbol.localeCompare(b.equitySymbol));
   }, [holdings]);
 
-  const redemptions = useMemo<TreasuryRedemption[]>(() => {
-    if (!isMock) return treasuryData?.recentRedemptions || [];
-    return INITIAL_TREASURY_STATS.recentRedemptions.map((redemption, index) => ({
-      id: redemption.id,
-      mint: `mock-redemption-${index}`,
-      tokenName: redemption.tokenSymbol,
-      tokenSymbol: redemption.tokenSymbol,
-      tokenAvatarUrl: redemption.tokenAvatarUrl || null,
-      equitySymbol: redemption.equitySymbol,
-      burnedAmount: redemption.burnedMemeAmount.replace(/[^0-9,.]/g, ""),
-      equityAmount: String(redemption.sharesRedeemed),
-      redeemer: redemption.redeemerAddress,
-      signature: redemption.txHash,
-      createdAt: new Date(Date.now() - (index + 1) * 5 * 60_000).toISOString(),
-    }));
-  }, [isMock, treasuryData]);
+  const redemptions = treasuryData?.recentRedemptions || [];
 
   const stats = {
-    collateralAssetCount: isMock ? holdingGroups.length : treasuryData?.collateralAssetCount || 0,
-    redemptionCount: isMock ? redemptions.length : treasuryData?.redemptionCount || 0,
-    graduatedVaultCount: isMock
-      ? INITIAL_TREASURY_STATS.totalGraduatedCurves
-      : treasuryData?.graduatedVaultCount || 0,
-    uniqueRedeemerCount: isMock
-      ? INITIAL_TREASURY_STATS.walletsRedeemed
-      : treasuryData?.uniqueRedeemerCount || 0,
+    collateralAssetCount: treasuryData?.collateralAssetCount || 0,
+    redemptionCount: treasuryData?.redemptionCount || 0,
+    graduatedVaultCount: treasuryData?.graduatedVaultCount || 0,
+    uniqueRedeemerCount: treasuryData?.uniqueRedeemerCount || 0,
   };
 
   const statCards = [
@@ -243,13 +210,13 @@ export default function TreasuryPage() {
           </p>
         </div>
 
-        {hasLoadError && !isMock && (
+        {hasLoadError && (
           <div role="status" className="mb-5 rounded-xl border border-border bg-card px-4 py-3 text-sm text-muted">
             Current balances could not be verified. {treasuryData?.asOf ? `Showing the last verified snapshot from ${new Date(treasuryData.asOf).toLocaleString()}.` : "Retrying…"}
           </div>
         )}
 
-        {!isMock && treasuryData?.asOf && (
+        {treasuryData?.asOf && (
           <p className="mb-4 text-xs text-muted">Balances verified {new Date(treasuryData.asOf).toLocaleString()}.</p>
         )}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -260,7 +227,7 @@ export default function TreasuryPage() {
                 <Icon className="h-4 w-4 text-muted" aria-hidden="true" />
               </div>
               <div className="mt-1 font-mono text-2xl font-bold tracking-tight text-foreground sm:text-3xl tabular-nums">
-                {isLoading && !isMock ? "…" : hasLoadError && !isMock ? "—" : value.toLocaleString("en-US")}
+                {isLoading ? "…" : hasLoadError ? "—" : value.toLocaleString("en-US")}
               </div>
               <div className="mt-1 text-[11px] text-muted">{detail}</div>
             </div>
@@ -274,7 +241,7 @@ export default function TreasuryPage() {
               <span className="text-right text-xs text-muted">Verified collateral balances by asset</span>
             </div>
 
-            {isLoading && !isMock ? (
+            {isLoading ? (
               <div className="flex flex-col gap-3 py-5" aria-label="Loading vault holdings">
                 <div className="h-14 animate-pulse rounded-xl bg-card-hover/50" />
                 <div className="h-14 animate-pulse rounded-xl bg-card-hover/50" />
@@ -333,7 +300,7 @@ export default function TreasuryPage() {
               <span className="text-xs text-muted">Newest first</span>
             </div>
 
-            {isLoading && !isMock ? (
+            {isLoading ? (
               <div className="flex flex-col gap-3 py-5" aria-label="Loading redemptions">
                 <div className="h-14 animate-pulse rounded-xl bg-card-hover/50" />
                 <div className="h-14 animate-pulse rounded-xl bg-card-hover/50" />

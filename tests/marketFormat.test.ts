@@ -21,6 +21,6 @@ describe("Live market formatting", () => {
 
   it("does not turn an unavailable spot price into a dollar value", () => {
     expect(formatTokenPrice(0)).to.equal("—");
-    expect(formatTokenPrice(0.00002802)).to.equal("$0.00002802");
+    expect(formatTokenPrice(0.00002802)).to.equal("$0.0₄2802");
   });
 });

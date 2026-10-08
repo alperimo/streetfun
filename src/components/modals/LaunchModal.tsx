@@ -4,7 +4,6 @@ import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import { X, Rocket, ShieldCheck, Info } from "lucide-react";
 import type { TesseraPreIpoAsset } from "@/sdk/constants";
-import { DEMO_TOKENIZED_EQUITIES } from "@/lib/demoAssets";
 import { useRouter } from "next/navigation";
 import { TokenMetadata } from "@/lib/types";
 import { loadPendingLaunch, LAUNCH_PENDING_EVENT, PendingLaunch } from "@/services/solana/pendingLaunch";
@@ -31,11 +30,11 @@ export function LaunchModal({
   onTokenCreated,
 }: LaunchModalProps) {
   const router = useRouter();
-  const { launchToken, resumeLaunch, walletPublicKey, isMock } = useMarket();
+  const { launchToken, resumeLaunch, walletPublicKey } = useMarket();
   const [pendingLaunch, setPendingLaunch] = useState<PendingLaunch | null>(null);
   const [pendingReadError, setPendingReadError] = useState(false);
   const isDevnet = (process.env.NEXT_PUBLIC_SOLANA_NETWORK || "devnet") === "devnet";
-  const usesDevnetTestAssets = isDevnet && !isMock;
+  const usesDevnetTestAssets = isDevnet;
   const [name, setName] = useState("");
   const [symbol, setSymbol] = useState("");
   const [description, setDescription] = useState("");
@@ -48,7 +47,7 @@ export function LaunchModal({
   const [liveAssets, setLiveAssets] = useState<LaunchAsset[]>([]);
   const [assetError, setAssetError] = useState<string | null>(null);
   const [isLoadingAssets, setIsLoadingAssets] = useState(false);
-  const assets: LaunchAsset[] = isMock ? DEMO_TOKENIZED_EQUITIES : liveAssets;
+  const assets: LaunchAsset[] = liveAssets;
 
   const filteredAssets = assets.filter((eq: any) => {
     if (providerFilter === "all") return true;
@@ -62,7 +61,7 @@ export function LaunchModal({
   });
 
   useEffect(() => {
-    if (!isOpen || isMock) return;
+    if (!isOpen) return;
     const controller = new AbortController();
     setAssetError(null);
     setIsLoadingAssets(true);
@@ -84,7 +83,7 @@ export function LaunchModal({
     }).catch(error => { if (!controller.signal.aborted) setAssetError(error.message); })
       .finally(() => { setIsLoadingAssets(false); });
     return () => controller.abort();
-  }, [isOpen, isMock]);
+  }, [isOpen, false]);
   useEffect(() => {
     if (!isOpen) return;
     const dismiss = (event: KeyboardEvent) => { if (event.key === "Escape") onClose(); };
@@ -94,7 +93,7 @@ export function LaunchModal({
   useEffect(() => {
     const readPending = () => {
       try {
-        setPendingLaunch(!isMock && walletPublicKey ? loadPendingLaunch(walletPublicKey.toBase58()) : null);
+        setPendingLaunch(walletPublicKey ? loadPendingLaunch(walletPublicKey.toBase58()) : null);
         setPendingReadError(false);
       } catch (error) {
         setPendingReadError(true);
@@ -108,7 +107,7 @@ export function LaunchModal({
       window.removeEventListener("storage", readPending);
       window.removeEventListener(LAUNCH_PENDING_EVENT, readPending);
     };
-  }, [isOpen, isMock, walletPublicKey]);
+  }, [isOpen, walletPublicKey]);
 
   const handleResume = async () => {
     setIsSubmitting(true);
@@ -203,7 +202,7 @@ export function LaunchModal({
         {/* Form */}
         <form onSubmit={handleSubmit} className="mt-5 space-y-4 text-xs">
           {assetError && <p role="alert" className="text-rose-400">{assetError}</p>}
-          {!isMock && Boolean(selectedEquity && "unavailableReason" in selectedEquity && (selectedEquity as any).unavailableReason) && (
+          {Boolean(selectedEquity && "unavailableReason" in selectedEquity && (selectedEquity as any).unavailableReason) && (
             <p role="status" className="text-amber-300">{String((selectedEquity as any).unavailableReason)}</p>
           )}
           {launchError && <p role="alert" className="text-rose-400">{launchError}</p>}
@@ -306,12 +305,12 @@ export function LaunchModal({
                     <button
                       type="button"
                       key={eq.symbol}
-                      disabled={!isMock && !eq.launchEnabled}
+                      disabled={!eq.launchEnabled}
                       onClick={() => setSelectedEquitySymbol(eq.symbol)}
                       className={`flex flex-col justify-between p-3 rounded-xl border text-left transition-all ${
                         isSelected
                           ? "border-brand-cyan bg-brand-cyan/10 text-foreground shadow-xs"
-                          : !isMock && !eq.launchEnabled
+                          : !eq.launchEnabled
                             ? "border-border bg-card text-muted opacity-55 cursor-not-allowed"
                             : "border-border bg-card text-muted hover:border-brand-cyan/40 hover:text-foreground"
                       }`}
@@ -387,7 +386,7 @@ export function LaunchModal({
           {/* Submit Button */}
           <button
             type="submit"
-            disabled={isSubmitting || Boolean(pendingLaunch) || pendingReadError || (!isMock && (!selectedEquity || !("launchEnabled" in selectedEquity) || !selectedEquity.launchEnabled))}
+            disabled={isSubmitting || Boolean(pendingLaunch) || pendingReadError || ((!selectedEquity || !("launchEnabled" in selectedEquity) || !selectedEquity.launchEnabled))}
             className="w-full rounded-xl bg-brand-cyan py-3 text-sm font-bold text-slate-950 hover:opacity-90 transition-opacity disabled:opacity-50 shadow-md shadow-brand-cyan/20 flex items-center justify-center gap-2 cursor-pointer"
           >
             {isSubmitting ? (

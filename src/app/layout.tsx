@@ -7,7 +7,6 @@ import { AlphaPassProvider } from "@/context/AlphaPassContext";
 
 import { getLiveTokens } from "@/services/tokens/liveTokens";
 import { TokenMetadata } from "@/lib/types";
-import { isMockMode } from "@/services";
 
 export const dynamic = "force-dynamic";
 
@@ -60,7 +59,7 @@ export default async function RootLayout({
     (process.env.NODE_ENV === "production" && process.env.NEXT_PUBLIC_FULL_APP !== "true");
 
   let initialTokens: TokenMetadata[] = [];
-  if (!isAlphaOnly && !isMockMode()) {
+  if (!isAlphaOnly) {
     try {
       initialTokens = await getLiveTokens();
     } catch (err) {

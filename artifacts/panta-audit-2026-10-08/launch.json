@@ -1,0 +1,15 @@
+{
+  "network": "devnet",
+  "caller": "GqvNAH1czAqNrD7CRhsDyEgkQwP6BXqrN5y6ocN61hgh",
+  "mint": "EJVkPsPBnin6vwxfRUL5xPihSDcXMjBtdAthobVGjoSq",
+  "targetEquitySymbol": "T-OpenAI",
+  "name": "Lifecycle Verification",
+  "symbol": "VERIFY",
+  "description": "Actual Devnet launch and collateral graduation verification. Test collateral has no real-world equity value.",
+  "avatarUrl": "",
+  "pool": "5NDf8JRcgHTxcS5QmwhvmxDY8YqPCBL8UtobdtKBSkB4",
+  "settlementMarket": "6HtStioVvKwMAqt1eqhp9eQ9XvnpJ2pysZKCVGbzSmD3",
+  "signature": "2K9sCNoRGPLdNigqf6H2ssPRV7RYJtqbqktZQGYiUwuamyPYrnWGkPYj7rfpEYJ6Rv5nNDkDA4Pry9FxZXvvuveT",
+  "lastValidBlockHeight": 496022644,
+  "blockhash": "9dK1sQ3Z75NYpBmNcpShevRWx4QZxcUifnt7fzZ3CyaM"
+}

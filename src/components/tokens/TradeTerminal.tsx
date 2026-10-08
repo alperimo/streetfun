@@ -12,7 +12,7 @@ import { TokenMetadata } from "@/lib/types";
 import { simulateBuyTokensOut, simulateSellQuoteOut } from "@/sdk/math";
 import { useMarket } from "@/context/MarketContext";
 import { TradeReceipt } from "./TradeReceipt";
-import { receiptFromTrade, receiptFromRedemption, receiptPreview, type TradeReceiptData } from "./tradeReceiptModel";
+import { receiptFromTrade, receiptFromRedemption, type TradeReceiptData } from "./tradeReceiptModel";
 import { formatBondingProgress, formatTokenPrice, formatUsd, formatCurveReserveUsd } from "@/lib/marketFormat";
 import { GraduationStepPendingError, graduateToken } from "@/services/solana/solanaGraduationService";
 
@@ -52,7 +52,7 @@ interface TradeTerminalProps {
 export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
   const { connection } = useConnection();
   const { connected: walletAdapterConnected, publicKey, sendTransaction } = useWallet();
-  const { isWalletConnected, executeTrade, executeRedeem, isMock, refreshTokens, setWalletDialogOpen } = useMarket();
+  const { isWalletConnected, executeTrade, executeRedeem, refreshTokens, setWalletDialogOpen } = useMarket();
   const isDbcCreator = Boolean(publicKey && token.bondingCurve.protocol === "meteora-dbc" && token.creator === publicKey.toBase58());
   const [unixNow, setUnixNow] = useState(() => Math.floor(Date.now() / 1000));
   useEffect(() => {
@@ -119,7 +119,7 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
         savePending(null);
         setAmount("");
         setTradeErrorMsg("Transaction confirmed. Your balances and trade history are updating.");
-        if (!isMock) {
+        {
           // Recover indexing as well as balances when the original confirmation timed out.
           await fetch("/api/trades/confirm", {
             method: "POST",
@@ -338,7 +338,7 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
         });
 
         if (res.success) {
-          setReceipt(receiptFromRedemption(token, "stock", numTokensToRedeem, res, isMock));
+          setReceipt(receiptFromRedemption(token, "stock", numTokensToRedeem, res));
           setAmount("");
           if (onTradeSuccess) onTradeSuccess();
         } else {
@@ -353,8 +353,8 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
         });
 
         if (res.success) {
-          setReceipt(receiptFromTrade(token, tradeMode, res, isMock));
-          if (!isMock && (!res.tokensAmount || res.message.includes("index"))) {
+          setReceipt(receiptFromTrade(token, tradeMode, res));
+          if ((!res.tokensAmount || res.message.includes("index"))) {
             setTradeErrorMsg(res.message);
           }
           setAmount("");
@@ -759,12 +759,12 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
               </span>
               <span>{token.bondingCurve.isGraduated ? "DAMM v2 market active" : token.bondingCurve.settlementPending ? "Meteora migration complete; equity settlement is pending" : token.bondingCurve.progressPct >= 100 ? "Ready to migrate into Meteora DAMM v2" : "Settlement starts at the funding threshold"}</span>
             </div>
-            {!isMock && !token.bondingCurve.isGraduated && token.bondingCurve.progressPct >= 100 && token.bondingCurve.protocol === "meteora-dbc" && !canSettleDbc && (
+            {!token.bondingCurve.isGraduated && token.bondingCurve.progressPct >= 100 && token.bondingCurve.protocol === "meteora-dbc" && !canSettleDbc && (
               <p className="mt-3 text-center text-[10px] text-muted">
                 The creator can settle now. Any wallet can complete settlement 24 hours after Meteora records curve completion.
               </p>
             )}
-            {!isMock && !token.bondingCurve.isGraduated && token.bondingCurve.progressPct >= 100 && (token.bondingCurve.protocol !== "meteora-dbc" || canSettleDbc) && (
+            {!token.bondingCurve.isGraduated && token.bondingCurve.progressPct >= 100 && (token.bondingCurve.protocol !== "meteora-dbc" || canSettleDbc) && (
               <>
                 <button
                   type="button"
@@ -1016,7 +1016,7 @@ export function TradeTerminal({ token, onTradeSuccess }: TradeTerminalProps) {
         </>
       )}
       {receipt && receipt.token.mint === token.mint && <TradeReceipt key={receipt.timestamp} data={receipt} onDismiss={() => setReceipt(null)} />}
-      {isMock && !receipt && <button type="button" disabled={isTrading} onClick={() => setReceipt(receiptPreview(token))} className="mt-4 w-full text-center text-[10px] text-muted underline decoration-border underline-offset-4 hover:text-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-cyan">Preview receipt</button>}
+      
     </div>
   );
 }

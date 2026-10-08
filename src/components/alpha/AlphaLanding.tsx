@@ -31,15 +31,7 @@ export function AlphaLanding() {
   useEffect(() => {
     if (typeof window !== "undefined") {
       const params = new URLSearchParams(window.location.search);
-      if (process.env.NODE_ENV !== "production" && process.env.NEXT_PUBLIC_USE_MOCK_DATA === "true" && params.get("demo_pass") === "true") {
-        setPassData({
-          passNumber: 421,
-          walletAddress: "7xKpQvD9mZaN8bK3YwE5cF2rL4pG1sT6vU8xW9zB2n",
-          createdAt: new Date().toISOString(),
-          isNew: true,
-        });
-        return;
-      }
+
     }
 
     if (publicKey) {

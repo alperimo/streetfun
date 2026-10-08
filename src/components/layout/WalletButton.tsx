@@ -10,7 +10,7 @@ import { useWalletConnectionError } from "./WalletProvider";
 
 export function WalletButton() {
   const { connected, publicKey, disconnect, connecting, wallets, select } = useWallet();
-  const { isWalletConnected, walletPublicKey, connectDevWallet, disconnectDevWallet, isMock, walletDialogOpen: connectMenuOpen, setWalletDialogOpen: setConnectMenuOpen } = useMarket();
+  const { isWalletConnected, walletPublicKey, walletDialogOpen: connectMenuOpen, setWalletDialogOpen: setConnectMenuOpen } = useMarket();
   const { error: walletError, clearError: clearWalletError } = useWalletConnectionError();
   const [copied, setCopied] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -81,7 +81,6 @@ export function WalletButton() {
 
   const handleDisconnect = () => {
     disconnect();
-    disconnectDevWallet();
     setDropdownOpen(false);
   };
 
@@ -189,26 +188,7 @@ export function WalletButton() {
                 </div>
               )}
 
-              {isLocalnet && isMock && (
-              <button
-                onClick={() => {
-                  setConnectMenuOpen(false);
-                  connectDevWallet();
-                }}
-                className="mt-4 flex w-full items-center gap-2.5 border-t border-border/50 px-1 pt-4 text-left text-foreground transition-colors hover:text-emerald-300"
-              >
-                <Terminal className="h-4 w-4 text-emerald-400" />
-                <div>
-                  <div className="flex items-center gap-1.5 font-semibold">
-                    Localnet Dev Wallet
-                    <span className="rounded border border-emerald-500/20 bg-emerald-500/10 px-1 py-0.2 font-mono text-[9px] text-emerald-400">
-                      Funded
-                    </span>
-                  </div>
-                  <div className="font-mono text-[10px] text-muted">519j..Cv2 (500M SOL)</div>
-                </div>
-              </button>
-            )}
+              
             </div>
           </div>,
           document.body

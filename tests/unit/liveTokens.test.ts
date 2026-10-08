@@ -1,4 +1,5 @@
 import { expect } from "chai";
+import { solanaTokenService } from "../../src/server/tokenData";
 import { getLiveTokens } from "../../src/services/tokens/liveTokens";
 
 describe("Server token source selection", () => {
@@ -9,10 +10,12 @@ describe("Server token source selection", () => {
     else process.env.NEXT_PUBLIC_USE_MOCK_DATA = previous;
   });
 
-  it("does not contact the local RPC when mock mode is enabled", async () => {
+  it("keeps the real server source even when the removed mock flag is enabled", async () => {
     process.env.NEXT_PUBLIC_USE_MOCK_DATA = "true";
-    const tokens = await getLiveTokens();
-    expect(tokens.length).to.be.greaterThan(0);
-    expect(tokens.every((token) => token.dataSource === "mock")).to.equal(true);
+    const original = solanaTokenService.getTokens;
+    const fixture = [{ dataSource: "onchain", mint: "verified-test-source" }];
+    solanaTokenService.getTokens = async () => fixture as any;
+    try { expect(await getLiveTokens()).to.equal(fixture); }
+    finally { solanaTokenService.getTokens = original; }
   });
 });

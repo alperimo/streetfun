@@ -16,6 +16,8 @@ import { persistVaultHoldingSnapshot } from "./treasury";
 import { persistDbcVaultHoldingSnapshot } from "./treasury";
 import { getDbcMigrationDammConfigAddress } from "./meteoraDbc";
 import { getNetworkAssetCatalog } from "./assetCatalog";
+import { enqueueLifecycle, captureLifecyclePrices, runLifecycleWorker } from "./pantaLifecycle";
+import { after } from "next/server";
 
 const coder = new BorshCoder(new Program({ ...idl, address: PROGRAM_ID.toBase58() } as any, { connection: getServerConnection() } as any).idl);
 const dbcCoder = new BorshCoder(DynamicBondingCurveIdl as any);
@@ -242,6 +244,7 @@ export async function readConfirmedTransaction(connection: Connection, signature
   catch { throw new InvalidCurveTradeError("Invalid Solana signature."); }
   const tx = await connection.getParsedTransaction(signature, { commitment: "confirmed", maxSupportedTransactionVersion: 0 });
   if (!tx || tx.blockTime == null) throw new PendingCurveTradeError("Confirmed transaction is not available yet.");
+  if (!tx.meta || tx.meta.err) throw new InvalidCurveTradeError("Transaction failed on-chain.");
   return tx;
 }
 
@@ -305,9 +308,14 @@ export async function indexConfirmedTransaction(
         target_equity_mint: registry.targetEquityMint.toBase58(), creator: creator.toBase58(),
         description: existing?.description || "", avatar_url: existing?.avatar_url || undefined,
         is_graduated: Boolean(registry.isGraduated),
+        created_at: new Date(tx.blockTime! * 1000).toISOString(),
         meteora_pool: registry.isGraduated && !registry.meteoraDammV2Pool.equals(PublicKey.default)
           ? registry.meteoraDammV2Pool.toBase58() : undefined,
       });
+      await enqueueLifecycle({ mint: mint.toBase58(), symbol: metadata.symbol,
+        targetSymbol: asset?.symbol || existing?.target_equity_symbol || registry.targetEquityMint.toBase58(),
+        targetMint: registry.targetEquityMint.toBase58(), signature, slot: tx.slot, time: tx.blockTime!,
+        stage: "pre-graduation", protocol: "meteora-dbc" });
       indexedMints.add(mint.toBase58());
       indexed++;
       continue;
@@ -327,6 +335,11 @@ export async function indexConfirmedTransaction(
         ...existing, mint: mint.toBase58(), target_equity_mint: launch.targetEquityMint.toBase58(),
         creator: launch.creator.toBase58(), is_graduated: Boolean(launch.isGraduated), meteora_pool: pool,
       });
+      if (isDbcGraduate && launch.isGraduated) {
+        await enqueueLifecycle({ mint: mint.toBase58(), symbol: existing.symbol,
+          targetSymbol: existing.target_equity_symbol, targetMint: launch.targetEquityMint.toBase58(),
+          signature, slot: tx.slot, time: tx.blockTime!, stage: "post-graduation", protocol: "meteora-dbc" });
+      }
       indexedMints.add(mint.toBase58());
       if (isDbcRedeem) {
         const redeemer = entry.instruction.accounts[0];
@@ -376,6 +389,11 @@ export async function indexConfirmedTransaction(
       ...(isLaunch ? { created_at: new Date(tx.blockTime! * 1000).toISOString() } : {}),
     };
     await store.recordToken(token);
+    if (isLaunch || (isGraduate && curve.isGraduated)) {
+      await enqueueLifecycle({ mint: mint.toBase58(), symbol: token.symbol,
+        targetSymbol: token.target_equity_symbol, targetMint: token.target_equity_mint,
+        signature, slot: tx.slot, time: tx.blockTime!, stage: isLaunch ? "pre-graduation" : "post-graduation", protocol: "streetfun-legacy" });
+    }
     if (isTrade) {
       const isolated = {
         ...tx, transaction: { ...tx.transaction, message: { ...tx.transaction.message, instructions: [entry.instruction] } },
@@ -409,5 +427,9 @@ export async function indexConfirmedTransaction(
   if (expectedMint && !indexedMints.has(expectedMint)) throw new InvalidCurveTradeError("Confirmed transaction does not contain a supported event for the requested mint.");
   if (!indexed) throw new InvalidCurveTradeError("No supported market event.");
   solanaTokenService.invalidate();
+  for (const mint of indexedMints) await captureLifecyclePrices(mint).catch(() => undefined);
+  // The durable rows survive provider outages or a terminated background response.
+  // CLI indexers have no Next response context; the authenticated worker drains them.
+  try { after(async () => { for (const mint of indexedMints) await runLifecycleWorker(mint).catch(() => undefined); }); } catch { /* Worker recovers queued jobs. */ }
   return { indexed, trades };
 }

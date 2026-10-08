@@ -4,25 +4,23 @@ import { solanaTokenService } from "./tokenData";
 import { getServerConnection, assertConfiguredCluster } from "./rpc";
 import { pantaLimit } from "./pantaHttp";
 import { pantaRequest } from "./pantaService";
-import { address, bindings, findBinding, MarketBinding, parseMarket, PantaError, unavailable } from "./pantaValidation";
+import { address, MarketBinding, parseMarket, PantaError, unavailable } from "./pantaValidation";
+import { lifecycleBinding, lifecycleRows, rowBinding } from "./pantaLifecycleStore";
 
 export async function reviewedBindingsForToken(mint: string) {
   address(mint);
-  const network = process.env.NEXT_PUBLIC_SOLANA_NETWORK || "devnet";
-  const reviewed = bindings().filter(b => b.network === network && b.mint === mint);
-  if (!reviewed.length)
-    throw new PantaError("MARKET_NOT_CONFIGURED", 404, "A prediction market is not available for this token yet.");
   await pantaLimit();
   const token = await solanaTokenService.getToken(mint);
   if (!token) throw new PantaError("TOKEN_NOT_FOUND", 404, "Token not found.");
+  const reviewed = (await lifecycleRows(mint)).filter(row => row.status === "registered").map(rowBinding);
   return { reviewed, token };
 }
 export async function bindingForToken(mint: string): Promise<MarketBinding> {
   const { token } = await reviewedBindingsForToken(mint);
-  return findBinding(mint, token.bondingCurve.isGraduated ? "post-graduation" : "pre-graduation");
+  return lifecycleBinding(mint, token.bondingCurve.isGraduated ? "post-graduation" : "pre-graduation");
 }
-export function bindingFromSession(session: Record<string, unknown>): MarketBinding {
-  const binding = findBinding(address(session.mint), session.stage as LifecycleStage);
+export async function bindingFromSession(session: Record<string, unknown>): Promise<MarketBinding> {
+  const binding = await lifecycleBinding(address(session.mint), session.stage as LifecycleStage);
   if (session.network !== binding.network || session.marketId !== binding.marketId || session.programId !== binding.programId || session.usdcMint !== binding.usdcMint) throw unavailable();
   return binding;
 }
@@ -36,7 +34,7 @@ export async function checkedMarket(binding: MarketBinding): Promise<LifecycleMa
   return { ...market, mint: binding.mint, stage: binding.stage, programId: binding.programId, usdcMint: binding.usdcMint,
     marketUrl: `https://panta.market/market/${binding.marketId}`,
     tradingEnabled: !market.resolved && market.phase === "primary" && market.status === "open" &&
-      market.startTime !== null && market.startTime * 1000 <= Date.now(),
+      market.startTime !== null && market.startTime * 1000 <= Date.now() && market.endTime !== null && market.endTime * 1000 > Date.now(),
   };
 }
 export async function requirePrimaryMarket(binding: MarketBinding) {

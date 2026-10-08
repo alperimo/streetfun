@@ -73,7 +73,6 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
     const rpcHost = new URL(endpoint).hostname;
     const localnet = process.env.NEXT_PUBLIC_SOLANA_NETWORK === "localnet";
     const loopback = rpcHost === "localhost" || rpcHost === "127.0.0.1";
-    if (process.env.NEXT_PUBLIC_USE_MOCK_DATA === "true") return [];
     if (localnet && loopback) return [new LocalnetWalletAdapter()];
     return [];
   }, [endpoint]);

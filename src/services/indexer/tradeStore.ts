@@ -27,6 +27,8 @@ export interface TokenRecord {
   avatar_url?: string;
   is_graduated?: boolean;
   meteora_pool?: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 let cachedSupabaseClient: any = null;
@@ -37,12 +39,7 @@ export function isVerifiedChainTrade(trade: Pick<TradeRecord, "tx_signature" | "
   return SOLANA_SIGNATURE_PATTERN.test(trade.tx_signature) && Number.isInteger(trade.slot) && Number(trade.slot) > 0;
 }
 
-function isMockDataEnabled(): boolean {
-  return process.env.NODE_ENV !== "production" && process.env.NEXT_PUBLIC_USE_MOCK_DATA === "true";
-}
-
 function getSupabaseClient() {
-  if (isMockDataEnabled()) return null;
   if (cachedSupabaseClient) return cachedSupabaseClient;
 
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -100,7 +97,7 @@ export class TradeStoreService {
       created_at: trade.created_at || new Date().toISOString(),
     };
 
-    if (!isMockDataEnabled() && !isVerifiedChainTrade(tradeWithTime)) {
+    if (!isVerifiedChainTrade(tradeWithTime)) {
       throw new Error("Live indexing rejected a trade without a confirmed Solana signature and slot.");
     }
 
@@ -120,7 +117,7 @@ export class TradeStoreService {
     }
 
     const supabase = this.getClient();
-    if (!supabase && !isMockDataEnabled()) {
+    if (!supabase) {
       throw new Error("Live trade index is not configured.");
     }
     if (supabase) {
@@ -136,18 +133,8 @@ export class TradeStoreService {
         if (!existingToken) {
           const indexedToken = this.localTokensStore.get(trade.mint);
 
-          const { error: tokenError } = await supabase.from("tokens").upsert({
-            mint: trade.mint,
-            name: indexedToken?.name || "Unindexed StreetFun Token",
-            symbol: indexedToken?.symbol || "TOKEN",
-            target_equity_symbol: indexedToken?.target_equity_symbol || "UNKNOWN",
-            target_equity_mint:
-              indexedToken?.target_equity_mint || "11111111111111111111111111111111",
-            creator: trade.trader || indexedToken?.creator || "11111111111111111111111111111111",
-            avatar_url: indexedToken?.avatar_url,
-            is_graduated: indexedToken?.is_graduated || false,
-            meteora_pool: indexedToken?.meteora_pool,
-          }, { onConflict: "mint", ignoreDuplicates: true });
+          if (!indexedToken) throw new Error("Verified token metadata must be indexed before its trades.");
+          const { error: tokenError } = await supabase.from("tokens").upsert(indexedToken, { onConflict: "mint", ignoreDuplicates: true });
           if (tokenError) throw new Error(`Could not index curve metadata: ${tokenError.message}`);
         }
 
@@ -189,7 +176,7 @@ export class TradeStoreService {
     }
 
     const supabase = this.getClient();
-    if (!supabase && !isMockDataEnabled()) throw new Error("Live metadata index is not configured.");
+    if (!supabase) throw new Error("Live metadata index is not configured.");
     if (supabase) {
       const { error } = await supabase.from("tokens").upsert(token);
       if (error) throw new Error(`Could not persist token metadata: ${error.message}`);
@@ -221,8 +208,8 @@ export class TradeStoreService {
               mint: item.mint,
               name: item.name,
               symbol: item.symbol,
-              target_equity_symbol: item.target_equity_symbol || "$TSPACEX",
-              target_equity_mint: item.target_equity_mint || "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+              target_equity_symbol: item.target_equity_symbol,
+              target_equity_mint: item.target_equity_mint,
               creator: item.creator || "",
               description: item.description || "",
               avatar_url: item.avatar_url || "",
@@ -270,7 +257,7 @@ export class TradeStoreService {
             if (
               !prices[trade.mint] &&
               trade.price_usd &&
-              (isMockDataEnabled() || isVerifiedChainTrade(trade as TradeRecord))
+              isVerifiedChainTrade(trade as TradeRecord)
             ) {
               const price = Number(trade.price_usd);
               prices[trade.mint] = {
@@ -290,7 +277,7 @@ export class TradeStoreService {
       if (
         !prices[trade.mint] &&
         trade.price_usd &&
-        (isMockDataEnabled() || isVerifiedChainTrade(trade))
+        isVerifiedChainTrade(trade)
       ) {
         const price = Number(trade.price_usd);
         prices[trade.mint] = {
@@ -341,7 +328,7 @@ export class TradeStoreService {
       }
     }
     for (const trade of tradesBySignature.values()) {
-      if (!isMockDataEnabled() && !isVerifiedChainTrade(trade)) continue;
+      if (!isVerifiedChainTrade(trade)) continue;
       const amount = Number(trade.quote_amount_usd) || 0;
       reserves[trade.mint] ??= 0;
       if (trade.trade_type === "BUY") reserves[trade.mint] += amount;
@@ -358,7 +345,7 @@ export class TradeStoreService {
     return reserves;
   }
 
-  async getTrades(mint: string, limit = 20, verifiedOnly = !isMockDataEnabled()): Promise<TradeRecord[]> {
+  async getTrades(mint: string, limit = 20, verifiedOnly = true): Promise<TradeRecord[]> {
     const supabase = this.getClient();
     if (supabase) {
       const matches: TradeRecord[] = [];
@@ -371,7 +358,7 @@ export class TradeStoreService {
           .order("created_at", { ascending: false })
           .range(offset, offset + pageSize - 1);
         if (error) {
-          if (!isMockDataEnabled()) throw new Error(`Verified trade index unavailable: ${error.message}`);
+          throw new Error(`Verified trade index unavailable: ${error.message}`);
           break;
         }
         const page = (data || []) as TradeRecord[];
@@ -381,16 +368,8 @@ export class TradeStoreService {
       return matches.slice(0, limit);
     }
 
-    if (!isMockDataEnabled()) throw new Error("Verified trade index is not configured.");
+    throw new Error("Verified trade index is not configured.");
 
-    // Fallback to local store
-    return this.localTradesStore
-      .filter(
-        (t) =>
-          t.mint === mint &&
-          (!verifiedOnly || isVerifiedChainTrade(t))
-      )
-      .slice(0, limit);
   }
 
   async getRedemptions(limit = 20): Promise<TradeRecord[]> {
@@ -404,17 +383,10 @@ export class TradeStoreService {
         .limit(limit);
       if (error) throw new Error(`Redemption index unavailable: ${error.message}`);
       const trades = (data || []) as TradeRecord[];
-      return isMockDataEnabled() ? trades : trades.filter(isVerifiedChainTrade);
+      return trades.filter(isVerifiedChainTrade);
     }
 
-    if (!isMockDataEnabled()) throw new Error("Redemption index is not configured.");
-    return this.localTradesStore
-      .filter(
-        (t) =>
-          t.trade_type === "REDEEM" &&
-          (isMockDataEnabled() || isVerifiedChainTrade(t))
-      )
-      .slice(0, limit);
+    throw new Error("Redemption index is not configured.");
   }
 
   async getMarketStats(mints: string[]): Promise<
@@ -439,12 +411,12 @@ export class TradeStoreService {
     let trades: TradeRecord[] = [];
     const supabase = this.getClient();
 
-    if (!supabase && !isMockDataEnabled()) {
+    if (!supabase) {
       throw new Error("Verified trade index is not configured.");
     }
 
     if (supabase) {
-      if (!isMockDataEnabled() && typeof supabase.rpc === "function") {
+      if (typeof supabase.rpc === "function") {
         const { data, error } = await supabase.rpc("get_verified_market_stats", { p_mints: mints });
         if (!error) {
           for (const row of data || []) result[row.mint] = { volume24hUsd: Number(row.volume_24h), referencePriceUsd: null, latestTradePriceUsd: row.latest_price == null ? null : Number(row.latest_price) };
@@ -476,7 +448,7 @@ export class TradeStoreService {
     const seen = new Set(trades.map((trade) => `${trade.tx_signature}:${trade.instruction_index || 0}`));
     trades.push(...localTrades.filter((trade) => !seen.has(`${trade.tx_signature}:${trade.instruction_index || 0}`)));
 
-    if (!isMockDataEnabled()) trades = trades.filter(isVerifiedChainTrade);
+    trades = trades.filter(isVerifiedChainTrade);
     trades.sort(
       (a, b) => new Date(a.created_at || 0).getTime() - new Date(b.created_at || 0).getTime()
     );
@@ -502,44 +474,13 @@ export class TradeStoreService {
     intervalMinutes = 15,
     limit = 100
   ): Promise<OHLCVBar[]> {
-    if (!isMockDataEnabled()) {
-      const client = this.getClient();
-      if (client && typeof client.rpc === "function") {
-        const { data, error } = await client.rpc("get_verified_ohlcv", { p_mint: mint, p_interval_minutes: intervalMinutes, p_limit: limit });
-        if (!error) return (data || []).map((bar: any) => Object.fromEntries(Object.entries(bar).map(([key, value]) => [key, Number(value)]))) as unknown as OHLCVBar[];
-        if (error.code !== "PGRST202") throw new Error("Verified chart aggregation is unavailable.");
-      }
-      const verifiedTrades = await this.getTrades(mint, 10_000, true);
-      return this.aggregateOHLCV(verifiedTrades, intervalMinutes).slice(-limit);
+    const client = this.getClient();
+    if (client && typeof client.rpc === "function") {
+      const { data, error } = await client.rpc("get_verified_ohlcv", { p_mint: mint, p_interval_minutes: intervalMinutes, p_limit: limit });
+      if (!error) return (data || []).map((bar: any) => Object.fromEntries(Object.entries(bar).map(([key, value]) => [key, Number(value)]))) as unknown as OHLCVBar[];
+      if (error.code !== "PGRST202") throw new Error("Verified chart aggregation is unavailable.");
     }
-    const supabase = this.getClient();
-    if (supabase) {
-      const { data, error } = await supabase.rpc("get_ohlcv", {
-        p_mint: mint,
-        p_interval_minutes: intervalMinutes,
-        p_limit: limit,
-      });
-
-      if (!error && data && data.length > 0) {
-        return data.map((b: any) => ({
-          time: Number(b.time),
-          open: Number(b.open),
-          high: Number(b.high),
-          low: Number(b.low),
-          close: Number(b.close),
-          volume: Number(b.volume),
-        }));
-      }
-    }
-
-    // Local in-memory OHLCV aggregation from real trades
-    const trades = this.localTradesStore.filter(
-      (t) =>
-        t.mint === mint &&
-        (isMockDataEnabled() || isVerifiedChainTrade(t))
-    );
-
-    return this.aggregateOHLCV(trades, intervalMinutes).slice(-limit);
+    return this.aggregateOHLCV(await this.getTrades(mint, 10_000, true), intervalMinutes).slice(-limit);
   }
 
   private aggregateOHLCV(

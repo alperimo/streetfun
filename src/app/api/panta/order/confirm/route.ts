@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
     try { if (bs58.decode(body.signature).length !== 64) invalid(); } catch { invalid(); }
     const signature = body.signature;
     const session = readPantaSession(body.orderToken, "order");
-    bindingFromSession(session);
+    await bindingFromSession(session);
     await pantaLimit();
     const connection = getServerConnection(); await assertConfiguredCluster(connection);
     const tx = await connection.getTransaction(signature, { commitment: "confirmed", maxSupportedTransactionVersion: 0 });

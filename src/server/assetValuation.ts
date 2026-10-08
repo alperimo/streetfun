@@ -13,6 +13,6 @@ export function getAssetValuationSource(asset?: PricedAsset | null): string | un
   if (!asset || getAssetMarkPrice(asset) <= 0) return undefined;
   if (asset.priceSource === "prestocks-api") return "PreStocks live provider mark";
   if (asset.priceSource === "tessera-mark") return "Tessera live provider mark";
-  if (asset.priceSource === "devnet-test") return "Tessera live provider mark";
+  if (asset.priceSource === "devnet-test") return "Devnet collateral pool price (test asset)";
   return "Live collateral market";
 }

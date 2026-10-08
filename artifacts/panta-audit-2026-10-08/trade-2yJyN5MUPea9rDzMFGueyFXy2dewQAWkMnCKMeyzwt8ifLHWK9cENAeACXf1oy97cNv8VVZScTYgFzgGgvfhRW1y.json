@@ -1,0 +1,42 @@
+{
+  "mint": "EJVkPsPBnin6vwxfRUL5xPihSDcXMjBtdAthobVGjoSq",
+  "trader": "GqvNAH1czAqNrD7CRhsDyEgkQwP6BXqrN5y6ocN61hgh",
+  "direction": "buy",
+  "amount": "5",
+  "slippageBps": 100,
+  "network": "devnet",
+  "signature": "2yJyN5MUPea9rDzMFGueyFXy2dewQAWkMnCKMeyzwt8ifLHWK9cENAeACXf1oy97cNv8VVZScTYgFzgGgvfhRW1y",
+  "quote": {
+    "protocol": "meteora-dbc",
+    "pool": "5NDf8JRcgHTxcS5QmwhvmxDY8YqPCBL8UtobdtKBSkB4",
+    "registry": "H3YmXU7V6tz7B8nXMR4nCymV39hnGxWv3B5MGyg6Xav9",
+    "lastValidBlockHeight": 496022790,
+    "success": true,
+    "direction": "buy",
+    "inputAmountRaw": "5000000",
+    "outputAmountRaw": "111800797088290",
+    "minimumOutputRaw": "110682789117407",
+    "tokensAmount": 111800797.08829,
+    "quoteAmountUsd": 5,
+    "effectivePriceUsd": 4.472240028889471e-8,
+    "priceImpactPct": 19.259554863159796
+  },
+  "usdcBefore": "150000000",
+  "usdcAfter": "145000000",
+  "confirmation": {
+    "success": true,
+    "indexed": true,
+    "trade": {
+      "tx_signature": "2yJyN5MUPea9rDzMFGueyFXy2dewQAWkMnCKMeyzwt8ifLHWK9cENAeACXf1oy97cNv8VVZScTYgFzgGgvfhRW1y",
+      "instruction_index": 1000,
+      "mint": "EJVkPsPBnin6vwxfRUL5xPihSDcXMjBtdAthobVGjoSq",
+      "trade_type": "BUY",
+      "tokens_amount": 111800797.08829,
+      "quote_amount_usd": 5,
+      "price_usd": 4.472240028889471e-8,
+      "trader": "GqvNAH1czAqNrD7CRhsDyEgkQwP6BXqrN5y6ocN61hgh",
+      "slot": 508786699,
+      "created_at": "2026-10-08T10:28:59.000Z"
+    }
+  }
+}

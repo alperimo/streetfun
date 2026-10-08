@@ -1,17 +1,11 @@
 import { TokenMetadata } from "@/lib/types";
 import { IChartService, OHLCVBar, TimeframeOption } from "./types";
-import { mockChartService } from "./mock/mockChartService";
-import { isMockMode } from "./index";
 
 export class RealtimeChartService implements IChartService {
   async getOHLCV(
     token: TokenMetadata,
     timeframe: TimeframeOption
   ): Promise<OHLCVBar[]> {
-    if (isMockMode()) {
-      return mockChartService.getOHLCV(token, timeframe);
-    }
-
     try {
       const res = await fetch(
         `/api/charts/${token.mint}?timeframe=${timeframe}&price=${token.priceUsd}`

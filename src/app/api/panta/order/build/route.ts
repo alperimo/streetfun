@@ -10,7 +10,7 @@ export async function POST(req: NextRequest) {
   try {
     const body = await pantaBody(req, ["quoteToken"]);
     const session = readPantaSession(body.quoteToken, "quote");
-    const binding = bindingFromSession(session);
+    const binding = await bindingFromSession(session);
     if ((await bindingForToken(binding.mint)).marketId !== binding.marketId) throw unavailable();
     await requirePrimaryMarket(binding);
     const raw = object(await pantaRequest("/primaryorderbuild/", { quoteId: session.quoteId, wallet: session.wallet, maxSlippageBps: 100 }));

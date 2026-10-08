@@ -28,6 +28,8 @@ export function PantaMarketBeliefModule({ token }: { token: TokenMetadata }) {
   const { connection } = useConnection();
   const [market, setMarket] = useState<LifecycleMarketInfo | null>(null);
   const [marketError, setMarketError] = useState<string | null>(null);
+  const [provisioning, setProvisioning] = useState<{ title: string; description: string; message: string } | null>(null);
+  const [marketRefresh, setMarketRefresh] = useState(0);
   const [loading, setLoading] = useState(true);
   const [selectedSide, setSelectedSide] = useState<PantaSide>("yes");
   const [amountUsdc, setAmountUsdc] = useState("20");
@@ -46,11 +48,19 @@ export function PantaMarketBeliefModule({ token }: { token: TokenMetadata }) {
     const abort = new AbortController(); let active = true;
     setMarket(null); setMarketError(null); setLoading(true);
     fetch(`/api/panta/market?${new URLSearchParams({ mint: token.mint })}`, { signal: abort.signal, cache: "no-store" })
-      .then(async res => { const data = await res.json(); if (!res.ok) throw new Error(data.error); if (active) setMarket(data); })
+      .then(async res => { const data = await res.json(); if (!res.ok) throw new Error(data.error); if (active) {
+        if (data.status === "provisioning") { setMarket(null); setProvisioning(data); }
+        else { setMarket(data); setProvisioning(null); setMarketError(null); }
+      } })
       .catch(err => { if (active) setMarketError(err.message || "Prediction markets are temporarily unavailable."); })
       .finally(() => { if (active) setLoading(false); });
     return () => { active = false; abort.abort(); };
-  }, [token.mint, token.bondingCurve.isGraduated]);
+  }, [token.mint, token.bondingCurve.isGraduated, marketRefresh]);
+  useEffect(() => {
+    const timer = setInterval(() => { if (document.visibilityState === "visible") setMarketRefresh(value => value + 1); }, 30_000);
+    return () => clearInterval(timer);
+  }, []);
+  useEffect(() => { if (success) setMarketRefresh(value => value + 1); }, [success]);
 
   useEffect(() => { setQuote(null); setError(null); }, [wallet, amountUsdc, selectedSide, market?.marketId]);
   useEffect(() => {
@@ -142,10 +152,15 @@ export function PantaMarketBeliefModule({ token }: { token: TokenMetadata }) {
         <span className="text-[10px] text-muted">Powered by <strong className="text-foreground">Panta</strong></span>
       </div>
       {loading ? <div className="space-y-3 animate-pulse"><div className="h-5 w-3/4 rounded bg-card-hover" /><div className="h-11 rounded-xl bg-card-hover" /></div> : !market ? (
-        <div className="space-y-2"><p className="text-sm font-medium text-foreground">Prediction market unavailable</p><p className="text-xs text-muted leading-relaxed">{marketError}</p></div>
+        <div className="space-y-2">{provisioning ? <>
+          <span className="rounded border border-border px-2 py-1 text-[10px] text-muted">System Market · Awaiting confirmation</span>
+          <p className="pt-2 text-sm font-medium text-foreground">{provisioning.title}</p>
+          <p className="text-xs text-muted leading-relaxed">{provisioning.description}</p>
+          <p role="status" className="text-xs text-muted leading-relaxed">{provisioning.message}</p>
+        </> : <><p className="text-sm font-medium text-foreground">Prediction market unavailable</p><p className="text-xs text-muted leading-relaxed">{marketError}</p></>}</div>
       ) : <>
         <div className="flex items-center justify-between gap-2 text-[10px] text-muted">
-          <span className="rounded border border-border px-2 py-1">{market.stage === "pre-graduation" ? "Pre-Graduation" : "Post-Graduation"}</span>
+          <span className="rounded border border-border px-2 py-1">System Market · {market.stage === "pre-graduation" ? "Pre-Graduation" : "Post-Graduation"}</span>
           <span>Resolves {dateLabel(market.resolutionTime)} UTC · {market.phase}</span>
         </div>
         <div><h4 className="text-sm font-semibold text-foreground leading-snug break-words">{market.title}</h4><p className="mt-2 text-xs text-muted leading-relaxed whitespace-pre-line break-words">{market.description}</p></div>
@@ -159,7 +174,7 @@ export function PantaMarketBeliefModule({ token }: { token: TokenMetadata }) {
         {market.tradingEnabled && <>
           <label className="block space-y-2 text-xs text-muted"><span>Deposit (USDC)</span><input type="text" inputMode="decimal" value={amountUsdc} onChange={event => setAmountUsdc(event.target.value)} disabled={busy || !!pending} maxLength={24}
             className="w-full rounded-xl border border-border bg-card-subtle p-3 font-mono text-foreground outline-none focus:border-brand-cyan" /></label>
-          {quote && <div className="rounded-xl border border-border bg-card-hover p-3 text-xs space-y-1"><p>Estimated {quote.shares} {quote.side.toUpperCase()} shares</p><p className="text-muted">Fee {quote.feeUsdc} USDC · 1% maximum slippage</p><p className="text-muted">Actual fill may differ. Payout depends on the market outcome.</p></div>}
+          {quote && <div className="rounded-xl border border-border bg-card-hover p-3 text-xs space-y-1"><p>Estimated {quote.shares} {quote.side.toUpperCase()} shares</p><p className="text-muted">Fee {quote.feeUsdc} USDC</p><p className="text-muted">Prices can move before confirmation. Final shares depend on the execution price. Payout depends on the market outcome.</p></div>}
           <button type="button" onClick={() => void perform("buy")} disabled={busy || !!pending || !signTransaction || !validAmount(amountUsdc)}
             className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-brand-cyan text-background font-bold text-xs disabled:opacity-50">
             {busy ? <><Loader2 className="h-4 w-4 animate-spin" />Processing…</> : !wallet ? "Connect Wallet to Predict" : !signTransaction ? "Wallet signing unavailable" : quote ? `Buy ${selectedSide.toUpperCase()} · ${amountUsdc} USDC` : "Review Prediction"}
@@ -168,6 +183,10 @@ export function PantaMarketBeliefModule({ token }: { token: TokenMetadata }) {
         <a href={market.marketUrl} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-1 text-xs text-brand-cyan hover:underline">View market and resolution on Panta <ExternalLink className="h-3 w-3" /></a>
       </>}
       {wallet && positionsError && <p className="text-xs text-muted" role="status">{positionsError}</p>}
+      {positions.filter(position => Number(position.shares) > 0 && !position.claimed).map(position => <div key={`holding:${position.marketId}:${position.side}`} className="rounded-xl border border-border bg-card-hover p-3 text-xs text-muted">
+        <p className="font-medium text-foreground">Your {position.side.toUpperCase()} position · {Number(position.shares).toLocaleString("en-US", { maximumFractionDigits: 6 })} shares</p>
+        <p className="mt-1">{position.phase === "resolved" ? position.claimable ? "Winnings available to claim" : "Market resolved" : "Payout depends on Panta's verified outcome"}</p>
+      </div>)}
       {positions.filter(position => position.claimable && !position.claimed).map(position => <button key={`${position.marketId}:${position.side}`} type="button" disabled={busy || !!pending || !signTransaction} onClick={() => void perform("claim", position)} className="h-11 w-full rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-300 text-xs font-bold disabled:opacity-50">Claim {position.side.toUpperCase()} Winnings · {position.shares} shares</button>)}
       {pending && <div className="rounded-xl border border-border bg-card-hover p-3 space-y-2 text-xs"><p className="text-muted">Transaction submitted; confirmation pending.</p><a className="text-brand-cyan hover:underline" href={txUrl(pending.signature)} target="_blank" rel="noopener noreferrer">View submitted transaction</a><button type="button" disabled={busy} onClick={() => void retryConfirmation()} className="block font-semibold text-foreground">Check Confirmation</button></div>}
       {error && <p role="alert" className="flex gap-2 text-xs text-rose-300"><AlertCircle className="h-4 w-4 shrink-0" />{error}</p>}

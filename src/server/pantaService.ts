@@ -6,8 +6,10 @@ const API_URL = "https://live-api.panta.market/api/v1";
 const RETIRED_KEY_HASH = "551f0f76a6ccefa653a2a2608d40ccc9d4b0b238aa604df7ad0341bccdd5d1da";
 export function pantaCredentials() {
   const key = process.env.PANTA_API_KEY;
-  const url = process.env.PANTA_API_URL || API_URL;
-  if (url !== API_URL || !key || !/^pk_(test|live)_[A-Za-z0-9]+$/.test(key) ||
+  const network = process.env.NEXT_PUBLIC_SOLANA_NETWORK || "devnet";
+  const expected = network === "devnet" ? "https://staging-api.panta.market/api/v1" : API_URL;
+  const url = process.env.PANTA_API_URL || expected;
+  if (!["devnet", "mainnet-beta"].includes(network) || url !== expected || !key || !/^pk_(test|live)_[A-Za-z0-9_-]{20,100}$/.test(key) ||
       createHash("sha256").update(key).digest("hex") === RETIRED_KEY_HASH) throw unavailable();
   return { key, url };
 }

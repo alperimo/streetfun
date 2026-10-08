@@ -1,26 +1,19 @@
 import { expect } from "chai";
+import { createHash } from "node:crypto";
+import bs58 from "bs58";
+import { memoryDatabase } from "./support/memoryDatabase";
 import { TradeStoreService, TradeRecord } from "../src/services/indexer/tradeStore";
 
 describe("Trade index consistency", () => {
-  const store = new TradeStoreService();
-  const envKeys = ["NEXT_PUBLIC_USE_MOCK_DATA", "NEXT_PUBLIC_SUPABASE_URL"];
-  const saved = envKeys.map((key) => process.env[key]);
+  const database = memoryDatabase();
+  const store = new TradeStoreService(() => database);
   const mint = "CaseSensitiveMint";
   const time = new Date().toISOString();
   const trade = (signature: string, overrides: Partial<TradeRecord> = {}): TradeRecord => ({
-    tx_signature: signature, mint, trade_type: "BUY", price_usd: 2,
+    tx_signature: bs58.encode(createHash("sha512").update(signature).digest()), slot: 1, mint, trade_type: "BUY", price_usd: 2,
     tokens_amount: 5, quote_amount_usd: 10, trader: "trader", created_at: time,
     ...overrides,
   });
-
-  before(() => {
-    process.env.NEXT_PUBLIC_USE_MOCK_DATA = "true";
-    delete process.env.NEXT_PUBLIC_SUPABASE_URL;
-  });
-  after(() => envKeys.forEach((key, i) => {
-    if (saved[i] === undefined) delete process.env[key];
-    else process.env[key] = saved[i];
-  }));
 
   it("keeps metadata for addresses differing only by case separate", async () => {
     for (const address of [mint, mint.toLowerCase()]) {
@@ -53,7 +46,7 @@ describe("Trade index consistency", () => {
     await store.recordTrade(trade("older", {
       created_at: new Date(Date.now() - 60_000).toISOString(), price_usd: 1,
     }));
-    expect((await store.getTrades(mint))[0].tx_signature).to.equal("duplicate");
+    expect((await store.getTrades(mint))[0].tx_signature).to.equal(bs58.encode(createHash("sha512").update("duplicate").digest()));
     expect((await store.getLatestPrices())[mint].priceUsd).to.equal(2);
   });
 
@@ -63,6 +56,6 @@ describe("Trade index consistency", () => {
     await store.recordTrade(trade("redemption", { trade_type: "REDEEM", price_usd: 0, quote_amount_usd: 100 }));
     expect(await store.getOHLCV(mint)).to.deep.equal(before);
     expect((await store.getReservesPerMint())[mint]).to.equal(reserves);
-    expect((await store.getRedemptions()).some((item) => item.tx_signature === "redemption")).to.equal(true);
+    expect((await store.getRedemptions()).some((item) => item.tx_signature === bs58.encode(createHash("sha512").update("redemption").digest()))).to.equal(true);
   });
 });

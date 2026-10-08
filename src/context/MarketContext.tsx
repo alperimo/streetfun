@@ -11,28 +11,22 @@ import {
   getTokenService,
   getTradeService,
   getRedeemService,
-  isMockMode,
 } from "@/services";
 import { usePathname } from "next/navigation";
-import { INITIAL_TOKENS } from "@/lib/mockData";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { createBrowserSupabaseClient } from "@/lib/supabase";
 
 import { PublicKey } from "@solana/web3.js";
 
-const LOCAL_DEV_PUBKEY = new PublicKey("519jca26LioEQiPhwoHCkC8mNZiCF7cDmtaXdp98iCv2");
 
 interface MarketContextType {
   tokens: TokenMetadata[];
   loading: boolean;
   error: string | null;
-  isMock: boolean;
   isWalletConnected: boolean;
   walletDialogOpen: boolean;
   setWalletDialogOpen: React.Dispatch<React.SetStateAction<boolean>>;
   walletPublicKey: PublicKey | null;
-  connectDevWallet: () => void;
-  disconnectDevWallet: () => void;
   refreshTokens: () => Promise<void>;
   getToken: (mint: string) => TokenMetadata | undefined;
   launchToken: (params: TokenLaunchParams) => Promise<TokenMetadata>;
@@ -49,36 +43,25 @@ interface MarketProviderProps {
 }
 
 export function MarketProvider({ children, initialTokens = [] }: MarketProviderProps) {
-  const isMock = isMockMode();
   const [tokens, setTokens] = useState<TokenMetadata[]>(() => {
-    if (isMock) return INITIAL_TOKENS;
     return initialTokens;
   });
-  const [loading, setLoading] = useState(!isMock && initialTokens.length === 0);
+  const [loading, setLoading] = useState(initialTokens.length === 0);
   const [error, setError] = useState<string | null>(null);
   const wallet = useWallet();
   const [walletDialogOpen, setWalletDialogOpen] = useState(false);
-  const [devWalletConnected, setDevWalletConnected] = useState(false);
   const isFetchingRef = React.useRef(false);
   const mutationVersion = React.useRef(0);
   const isMutating = React.useRef(false);
 
-  const isWalletConnected = wallet.connected || (isMock && devWalletConnected);
-  const activePublicKey = wallet.publicKey || (isMock && devWalletConnected ? LOCAL_DEV_PUBKEY : null);
+  const isWalletConnected = wallet.connected;
+  const activePublicKey = wallet.publicKey;
 
   const pathname = usePathname();
   const isAlphaOnly =
     process.env.NEXT_PUBLIC_ALPHA_ONLY === "true" ||
     (process.env.NODE_ENV === "production" && process.env.NEXT_PUBLIC_FULL_APP !== "true");
   const isAlphaRoute = isAlphaOnly || pathname?.startsWith("/alpha");
-
-  const connectDevWallet = useCallback(() => {
-    setDevWalletConnected(true);
-  }, []);
-
-  const disconnectDevWallet = useCallback(() => {
-    setDevWalletConnected(false);
-  }, []);
 
   const refreshTokens = useCallback(async () => {
     if (isAlphaRoute || isFetchingRef.current || isMutating.current) return;
@@ -110,7 +93,7 @@ export function MarketProvider({ children, initialTokens = [] }: MarketProviderP
     const refreshWhenVisible = () => {
       if (document.visibilityState === "visible") refreshTokens();
     };
-    const interval = setInterval(refreshWhenVisible, isMock ? 4_000 : 30_000);
+    const interval = setInterval(refreshWhenVisible, 30_000);
     window.addEventListener("focus", refreshWhenVisible);
     document.addEventListener("visibilitychange", refreshWhenVisible);
     return () => {
@@ -118,10 +101,10 @@ export function MarketProvider({ children, initialTokens = [] }: MarketProviderP
       window.removeEventListener("focus", refreshWhenVisible);
       document.removeEventListener("visibilitychange", refreshWhenVisible);
     };
-  }, [isMock, isAlphaRoute, refreshTokens]);
+  }, [isAlphaRoute, refreshTokens]);
 
   useEffect(() => {
-    if (isMock || isAlphaRoute) return;
+    if (isAlphaRoute) return;
 
     let refreshTimer: ReturnType<typeof setTimeout> | null = null;
     const scheduleRefresh = () => {
@@ -143,7 +126,7 @@ export function MarketProvider({ children, initialTokens = [] }: MarketProviderP
       if (refreshTimer) clearTimeout(refreshTimer);
       if (supabase && channel) supabase.removeChannel(channel);
     };
-  }, [isMock, isAlphaRoute, refreshTokens]);
+  }, [isAlphaRoute, refreshTokens]);
 
   const getToken = useCallback(
     (mint: string) => {
@@ -159,7 +142,7 @@ export function MarketProvider({ children, initialTokens = [] }: MarketProviderP
       mutationVersion.current += 1;
       try {
         const tokenService = getTokenService();
-        const walletIdentity = !isMock && wallet.publicKey
+        const walletIdentity = wallet.publicKey
           ? { publicKey: wallet.publicKey, sendTransaction: wallet.sendTransaction, signTransaction: wallet.signTransaction }
           : activePublicKey;
         const newToken = await tokenService.launchToken(params, walletIdentity);
@@ -170,7 +153,7 @@ export function MarketProvider({ children, initialTokens = [] }: MarketProviderP
         isMutating.current = false;
       }
     },
-    [activePublicKey, isMock, wallet.publicKey, wallet.sendTransaction, wallet.signTransaction]
+    [activePublicKey, wallet.publicKey, wallet.sendTransaction, wallet.signTransaction]
   );
 
   const resumeLaunch = useCallback(async () => {
@@ -196,7 +179,7 @@ export function MarketProvider({ children, initialTokens = [] }: MarketProviderP
       try {
         const tradeService = getTradeService();
         const walletIdentity =
-          !isMock && wallet.publicKey
+          wallet.publicKey
             ? {
                 publicKey: wallet.publicKey,
                 sendTransaction: wallet.sendTransaction,
@@ -214,7 +197,7 @@ export function MarketProvider({ children, initialTokens = [] }: MarketProviderP
         isMutating.current = false;
       }
     },
-    [activePublicKey, isMock, wallet.publicKey, wallet.sendTransaction]
+    [activePublicKey, wallet.publicKey, wallet.sendTransaction]
   );
 
   const executeRedeem = useCallback(
@@ -225,7 +208,7 @@ export function MarketProvider({ children, initialTokens = [] }: MarketProviderP
       try {
         const redeemService = getRedeemService();
         const walletIdentity =
-          !isMock && wallet.publicKey
+          wallet.publicKey
             ? {
                 publicKey: wallet.publicKey,
                 sendTransaction: wallet.sendTransaction,
@@ -243,7 +226,7 @@ export function MarketProvider({ children, initialTokens = [] }: MarketProviderP
         isMutating.current = false;
       }
     },
-    [activePublicKey, isMock, wallet.publicKey, wallet.sendTransaction]
+    [activePublicKey, wallet.publicKey, wallet.sendTransaction]
   );
 
   return (
@@ -252,13 +235,10 @@ export function MarketProvider({ children, initialTokens = [] }: MarketProviderP
         tokens,
         loading,
         error,
-        isMock,
         isWalletConnected,
         walletDialogOpen,
         setWalletDialogOpen,
         walletPublicKey: activePublicKey,
-        connectDevWallet,
-        disconnectDevWallet,
         refreshTokens,
         getToken,
         launchToken,

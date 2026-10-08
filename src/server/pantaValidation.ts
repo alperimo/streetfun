@@ -59,7 +59,7 @@ export function parseMarket(value: unknown, marketId: string): PantaMarket {
       marketId: address(row.marketId), title: text(row.title, 500),
       description: text(row.description, 12000), phase: phase(row.phase),
       resolved: row.resolved, status: text(row.status, 64),
-      startTime: epoch(row.startTime), resolutionTime: epoch(row.resolutionTime),
+      startTime: epoch(row.startTime), endTime: epoch(row.endTime), resolutionTime: epoch(row.resolutionTime),
       yesPrice: price(row.yesPrice), noPrice: price(row.noPrice),
       volumeUsdc: row.volumeUsdc == null ? null : decimal(row.volumeUsdc),
     };
@@ -73,34 +73,6 @@ export interface MarketBinding {
   programId: string;
   usdcMint: string;
   expectedTitle: string;
-}
-/** Reviewed deployment configuration, never supplied by a browser or a default market. */
-export function bindings(raw = process.env.PANTA_MARKET_BINDINGS_JSON || "[]"): MarketBinding[] {
-  try {
-    const rows: unknown = JSON.parse(raw);
-    if (!Array.isArray(rows) || rows.length > 100) throw unavailable();
-    const seen = new Set<string>();
-    return rows.map(value => {
-      const row = object(value);
-      if (row.network !== "devnet" && row.network !== "mainnet-beta") throw unavailable();
-      if (row.stage !== "pre-graduation" && row.stage !== "post-graduation") throw unavailable();
-      const binding: MarketBinding = {
-        network: row.network, stage: row.stage, mint: address(row.mint), marketId: address(row.marketId),
-        programId: address(row.programId), usdcMint: address(row.usdcMint), expectedTitle: text(row.expectedTitle, 500),
-      };
-      const key = `${binding.network}:${binding.mint}:${binding.stage}`;
-      const marketKey = `${binding.network}:${binding.marketId}`;
-      if (seen.has(key) || seen.has(marketKey)) throw unavailable();
-      seen.add(key); seen.add(marketKey);
-      return binding;
-    });
-  } catch { throw unavailable(); }
-}
-export function findBinding(mint: string, stage: LifecycleStage): MarketBinding {
-  const network = process.env.NEXT_PUBLIC_SOLANA_NETWORK || "devnet";
-  const row = bindings().find(b => b.network === network && b.mint === mint && b.stage === stage);
-  if (!row) throw new PantaError("MARKET_NOT_CONFIGURED", 404, "A prediction market is not available for this token yet.");
-  return row;
 }
 
 export function shareUnits(value: unknown): bigint {

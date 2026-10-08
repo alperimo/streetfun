@@ -39,7 +39,7 @@ function devnetTestCatalog(): TesseraAsset[] {
       legalFramework: "Tessera loan participation right; tokenized pre-IPO equity",
       proofOfReserve: "", meteoraPoolAddress: "",
       logoUrl: getOfficialEquityLogo(name), isPreIpo: true,
-      priceSource: "tessera-mark", fetchedAt: new Date().toISOString(),
+      priceSource: "devnet-test", fetchedAt: new Date().toISOString(),
       network: "devnet", testCollateral: true,
     };
   });
@@ -119,13 +119,15 @@ export async function getTesseraAvailability(connection: Connection, assets: Tes
       a.ticker.toUpperCase() === asset.symbol.toUpperCase() ||
       a.name.toUpperCase() === asset.name.toUpperCase()
     );
-    const liveMark = liveAsset?.currentStockPriceUsd && liveAsset.currentStockPriceUsd > 0
+    const liveMark = asset.testCollateral
+      ? (market.available ? market.priceUsd || 0 : 0)
+      : liveAsset?.currentStockPriceUsd && liveAsset.currentStockPriceUsd > 0
       ? liveAsset.currentStockPriceUsd
-      : (asset.currentStockPriceUsd > 0 ? asset.currentStockPriceUsd : (asset.testCollateral && market.available ? market.priceUsd || 0 : 0));
+      : (asset.currentStockPriceUsd > 0 ? asset.currentStockPriceUsd : 0);
     return {
       ...asset,
       currentStockPriceUsd: liveMark,
-      priceSource: liveMark > 0 ? ("tessera-mark" as const) : asset.priceSource,
+      priceSource: asset.testCollateral ? ("devnet-test" as const) : asset.priceSource,
       settlementMarketAddress: market.poolAddress,
       settlementMarketAvailable,
       existsOnConfiguredNetwork: exists,

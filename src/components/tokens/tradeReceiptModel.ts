@@ -4,7 +4,7 @@ import type { TradeResult, RedeemResult } from "@/services/types";
 export interface TradeReceiptData {
   token: Pick<TokenMetadata, "name" | "symbol" | "mint" | "avatarUrl">;
   operation: "buy" | "sell" | "redeem";
-  kind: "preview" | "demo" | "result";
+  kind: "result";
   sent: { amount: number; symbol: string };
   received: { amount: number; symbol: string };
   timestamp: string;
@@ -12,37 +12,27 @@ export interface TradeReceiptData {
 }
 
 export const receiptLabel = (_kind: TradeReceiptData["kind"]) => "Receipt";
-export const receiptNote = (kind: TradeReceiptData["kind"]) =>
-  kind === "preview" ? "Illustrative amounts. No transaction submitted." : kind === "demo"
-    ? "" : "Confirmed on Solana.";
+export const receiptNote = (_kind: TradeReceiptData["kind"]) => "Confirmed on Solana.";
 export const receiptAmount = (value: number) => value.toLocaleString("en-US", { maximumFractionDigits: 6 });
 const valid = (...values: number[]) => values.every(value => Number.isFinite(value) && value > 0);
 const identity = ({ name, symbol, mint, avatarUrl }: TokenMetadata) => ({ name, symbol, mint, avatarUrl });
 
-export function receiptFromTrade(token: TokenMetadata, mode: "buy" | "sell", result: TradeResult, demo: boolean): TradeReceiptData | null {
-  if (!result.success || !valid(result.tokensAmount, result.quoteAmount)) return null;
+export function receiptFromTrade(token: TokenMetadata, mode: "buy" | "sell", result: TradeResult): TradeReceiptData | null {
+  if (!result.success || !result.txSignature || !valid(result.tokensAmount, result.quoteAmount)) return null;
   const quote = { amount: result.quoteAmount, symbol: "USDC" };
   const tokens = { amount: result.tokensAmount, symbol: token.symbol };
-  return { token: identity(token), operation: mode, kind: demo ? "demo" : "result",
+  return { token: identity(token), operation: mode, kind: "result",
     sent: mode === "buy" ? quote : tokens, received: mode === "buy" ? tokens : quote,
     timestamp: new Date().toISOString(), signature: result.txSignature };
 }
 
-export function receiptFromRedemption(token: TokenMetadata, action: "stock" | "usdc", input: number, result: RedeemResult, demo: boolean): TradeReceiptData | null {
+export function receiptFromRedemption(token: TokenMetadata, action: "stock" | "usdc", input: number, result: RedeemResult): TradeReceiptData | null {
   const amount = action === "stock" ? result.entitledShares : result.usdcValue;
-  if (!result.success || !valid(input, amount)) return null;
-  return { token: identity(token), operation: "redeem", kind: demo ? "demo" : "result",
+  if (!result.success || !result.txSignature || !valid(input, amount)) return null;
+  return { token: identity(token), operation: "redeem", kind: "result",
     sent: { amount: input, symbol: token.symbol },
     received: { amount, symbol: action === "stock" ? `${token.targetEquity.symbol} tokens` : "USDC" },
     timestamp: new Date().toISOString(), signature: result.txSignature };
-}
-
-/** Design inspection never executes a trade or writes to the market service. */
-export function receiptPreview(token: TokenMetadata): TradeReceiptData {
-  return { token: identity(token), operation: "buy", kind: "preview",
-    sent: { amount: 100, symbol: "USDC" },
-    received: { amount: valid(token.priceUsd) ? 100 / token.priceUsd : 1000, symbol: token.symbol },
-    timestamp: new Date().toISOString() };
 }
 
 const xml = (text: string) => text.replace(/[<>&"']/g, char => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;", '"': "&quot;", "'": "&apos;" }[char]!));

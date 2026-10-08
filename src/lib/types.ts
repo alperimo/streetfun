@@ -66,7 +66,7 @@ export interface TokenMetadata {
     valuationAvailable?: boolean;
     valuationSource?: string;
   };
-  dataSource?: "onchain" | "indexed" | "mock";
+  dataSource?: "onchain" | "indexed";
   lastUpdatedAt?: string;
   observedSlot?: number;
 }

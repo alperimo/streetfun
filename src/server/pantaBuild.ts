@@ -9,6 +9,11 @@ import { issuePantaSession } from "./pantaSession";
 export async function buildCheckedTransaction(raw: Record<string, unknown>, binding: MarketBinding, session: Record<string, unknown>, action: "buy" | "claim") {
   const wallet = address(session.wallet);
   const instructions = validatePantaInstructions(raw.instructions, { wallet, ...binding, kind: action });
+  if (action === "buy") {
+    const trade = instructions.find(ix => ix.programId === binding.programId)!;
+    const data = Buffer.from(trade.data, "base64");
+    if (data[8] !== (session.side === "yes" ? 0 : 1) || data.readBigUInt64LE(9) !== usdcUnits(session.amountUsdc)) throw unavailable();
+  }
   const connection = getServerConnection(); await assertConfiguredCluster(connection);
   const mint = new PublicKey(binding.usdcMint), owner = new PublicKey(wallet);
   const mintAccount = await connection.getAccountInfo(mint, "confirmed");
