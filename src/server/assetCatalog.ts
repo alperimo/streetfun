@@ -2,10 +2,9 @@ import { Connection } from "@solana/web3.js";
 import { getPreStocksAvailability, getPreStocksCatalog } from "./prestocks";
 import { getTesseraAvailability, getTesseraCatalog } from "./tessera";
 import { assertConfiguredCluster, DEVNET_GENESIS_HASH } from "./rpc";
+import { MAINNET_GENESIS_HASH } from "@/lib/solanaClusters";
 
 export type AssetProviderFilter = "all" | "prestocks" | "tessera";
-
-const MAINNET_GENESIS_HASH = "5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp";
 
 /** Resolve provider data and chain availability without crossing cluster identities. */
 export async function getNetworkAssetCatalog(

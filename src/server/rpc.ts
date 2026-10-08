@@ -1,6 +1,7 @@
 import { Connection, clusterApiUrl } from "@solana/web3.js";
+import { DEVNET_GENESIS_HASH, SOLANA_GENESIS_HASHES } from "@/lib/solanaClusters";
 
-export const DEVNET_GENESIS_HASH = "EtWTRABZaYq6iMfeYKouRu166VU2xqa1wcaWoxPkrZBG";
+export { DEVNET_GENESIS_HASH };
 
 export function assertDevnetNetwork(network: string, genesisHash: string): void {
   if (network !== "devnet" || genesisHash !== DEVNET_GENESIS_HASH) {
@@ -31,12 +32,8 @@ export function getServerConnection(): Connection {
 
 export async function assertConfiguredCluster(rpc: Connection): Promise<string> {
   const genesis = await rpc.getGenesisHash();
-  const expected: Record<string, string> = {
-    devnet: "EtWTRABZaYq6iMfeYKouRu166VU2xqa1wcaWoxPkrZBG",
-    "mainnet-beta": "5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp",
-  };
   const network = process.env.NEXT_PUBLIC_SOLANA_NETWORK || "devnet";
-  if (expected[network] && genesis !== expected[network]) throw new Error("RPC cluster does not match the configured network.");
+  if (SOLANA_GENESIS_HASHES[network] && genesis !== SOLANA_GENESIS_HASHES[network]) throw new Error("RPC cluster does not match the configured network.");
   return genesis;
 }
 

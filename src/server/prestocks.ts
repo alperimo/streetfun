@@ -3,6 +3,7 @@ import { TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID, unpackMint } from "@solana/spl
 import type { TesseraPreIpoAsset } from "@/sdk/constants";
 import { getOfficialEquityLogo } from "@/lib/assetLogos";
 import { getDammV2CollateralMarket } from "./dammV2CollateralMarket";
+import { MAINNET_GENESIS_HASH } from "@/lib/solanaClusters";
 
 export interface PreStocksAsset extends TesseraPreIpoAsset {
   priceSource: "prestocks-api";
@@ -100,8 +101,6 @@ export async function getPreStocksCatalog(): Promise<PreStocksAsset[]> {
 
   return pendingPreStocks;
 }
-
-const MAINNET_GENESIS_HASH = "5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp";
 
 export function resolvePreStocksAssetsForNetwork(
   isMainnet: boolean,

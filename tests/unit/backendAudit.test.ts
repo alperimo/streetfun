@@ -10,7 +10,7 @@ import { canLaunchTesseraAsset, parseTesseraCatalog, resolveTesseraAssetsForNetw
 import { getAssetMarkPrice } from "../../src/server/assetValuation";
 import { getUsdcPerCollateralFromSqrtPrice } from "../../src/server/dammV2CollateralMarket";
 import { parsePreStocksCatalog, resolvePreStocksAssetsForNetwork } from "../../src/server/prestocks";
-import { assertDevnetNetwork, getServerRpcUrl } from "../../src/server/rpc";
+import { assertConfiguredCluster, assertDevnetNetwork, getServerRpcUrl } from "../../src/server/rpc";
 import { alphaClaimMessage, validAlphaClaim } from "../../src/lib/alphaClaim";
 import { POST as trade } from "../../src/app/api/trade/route";
 import { POST as graduate } from "../../src/app/api/graduate/route";
@@ -81,7 +81,28 @@ describe("Backend audit regressions", () => {
     const devnetHash = "EtWTRABZaYq6iMfeYKouRu166VU2xqa1wcaWoxPkrZBG";
     expect(() => assertDevnetNetwork("devnet", devnetHash)).not.to.throw();
     expect(() => assertDevnetNetwork("mainnet-beta", devnetHash)).to.throw("Devnet-only");
-    expect(() => assertDevnetNetwork("devnet", "5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp")).to.throw("Devnet-only");
+    expect(() => assertDevnetNetwork("devnet", "5eykt4UsFv8P8NJdTREpY1vzqKqZKvdpKuc147dw2N9d")).to.throw("Devnet-only");
+  });
+  it("accepts the actual mainnet genesis and rejects truncated or wrong-cluster identities", async () => {
+    const original = process.env.NEXT_PUBLIC_SOLANA_NETWORK;
+    const actualMainnet = "5eykt4UsFv8P8NJdTREpY1vzqKqZKvdpKuc147dw2N9d";
+    const rpcWithGenesis = (hash: string) => ({ getGenesisHash: async () => hash } as any);
+    try {
+      process.env.NEXT_PUBLIC_SOLANA_NETWORK = "mainnet-beta";
+      expect(await assertConfiguredCluster(rpcWithGenesis(actualMainnet))).to.equal(actualMainnet);
+      for (const invalid of ["5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp", "EtWTRABZaYq6iMfeYKouRu166VU2xqa1wcaWoxPkrZBG"]) {
+        let error: Error | undefined;
+        try { await assertConfiguredCluster(rpcWithGenesis(invalid)); } catch (caught) { error = caught as Error; }
+        expect(error?.message).to.equal("RPC cluster does not match the configured network.");
+      }
+      process.env.NEXT_PUBLIC_SOLANA_NETWORK = "devnet";
+      let error: Error | undefined;
+      try { await assertConfiguredCluster(rpcWithGenesis(actualMainnet)); } catch (caught) { error = caught as Error; }
+      expect(error?.message).to.equal("RPC cluster does not match the configured network.");
+    } finally {
+      if (original === undefined) delete process.env.NEXT_PUBLIC_SOLANA_NETWORK;
+      else process.env.NEXT_PUBLIC_SOLANA_NETWORK = original;
+    }
   });
   it("uses Helius on the configured cluster without a public API key", () => {
     const keys = ["SOLANA_RPC_URL", "NEXT_PUBLIC_SOLANA_RPC", "HELIUS_API_KEY", "NEXT_PUBLIC_SOLANA_NETWORK"];

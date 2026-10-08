@@ -9,10 +9,10 @@ import { compilePantaTransaction, validatePantaInstructions } from "@/lib/pantaT
 import { Buffer } from "buffer";
 import bs58 from "bs58";
 import { confirmSubmittedTransaction } from "@/services/solana/transactionConfirmation";
+import { SOLANA_GENESIS_HASHES } from "@/lib/solanaClusters";
 
 interface PendingOrder { signature: string; orderToken: string; mint: string; kind: "buy" | "claim"; }
 const network = process.env.NEXT_PUBLIC_SOLANA_NETWORK || "devnet";
-const genesis: Record<string, string> = { devnet: "EtWTRABZaYq6iMfeYKouRu166VU2xqa1wcaWoxPkrZBG", "mainnet-beta": "5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp" };
 const dateLabel = (value: number | null) => value === null ? "—" : new Date(value * 1000).toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" });
 const validAmount = (value: string) => /^(0|[1-9]\d*)(\.\d{1,6})?$/.test(value) && Number(value) > 0 && Number(value) <= 1000;
 const sameAmount = (a: unknown, b: unknown) => typeof a === "string" && typeof b === "string" && validAmount(a) && validAmount(b) && Number(a) === Number(b);
@@ -108,7 +108,7 @@ export function PantaMarketBeliefModule({ token }: { token: TokenMetadata }) {
     if (actionInProgress.current || !selection || !wallet || !publicKey || !signTransaction || pending) return;
     actionInProgress.current = true; setBusy(true); setError(null); setSuccess(null);
     try {
-      if (!genesis[network] || await connection.getGenesisHash() !== genesis[network]) throw new Error("Wallet connection does not match this market's network.");
+      if (!SOLANA_GENESIS_HASHES[network] || await connection.getGenesisHash() !== SOLANA_GENESIS_HASHES[network]) throw new Error("Wallet connection does not match this market's network.");
       if (action === "buy" && !quote) {
         const result = await jsonRequest("/api/panta/order/quote", { mint: token.mint, wallet, side: selectedSide, amountUsdc });
         if (result.marketId !== selection.marketId || result.side !== selectedSide || !sameAmount(result.amountUsdc, amountUsdc) || Date.parse(result.expiresAt) <= Date.now()) throw new Error("Refresh the prediction quote.");
